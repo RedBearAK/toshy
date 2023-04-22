@@ -1,0 +1,60 @@
+{
+    "pip": [
+        "pip",
+        "wheel",
+        "pillow",
+        "setuptools",
+        "lockfile",
+        "systemd-python",
+        "dbus-python",
+        "pygobject",
+        "watchdog",
+        "tk",
+        "sv_ttk"
+    ],
+    "kde": [
+        "ibus",
+        "ibus-qt",
+        "ibus-gtk"
+    ],
+    "fedora": [
+        "git",
+        "evtest",
+        "cairo-devel",
+        "python3-devel",
+        "python3-tkinter",
+        "gobject-introspection-devel",
+        "libappindicator-gtk3",
+        "systemd-devel"
+    ],
+    "ubuntu": [
+        "git",
+        "input-utils",
+        "libcairo2-dev",
+        "python3-tk",
+        "python3-dev",
+        "libgirepository1.0-dev",
+        "gir1.2-appindicator3-0.1",
+        "systemd-dev"
+    ],
+    "debian": [
+        "git",
+        "input-utils",
+        "libcairo2-dev",
+        "python3-tk",
+        "python3-dev",
+        "libgirepository1.0-dev",
+        "gir1.2-appindicator3-0.1",
+        "systemd-dev"
+    ],
+    "arch": [
+        "git",
+        "evtest",
+        "cairo",
+        "tk",
+        "python",
+        "gobject-introspection",
+        "libappindicator-gtk3",
+        "systemd"
+    ]
+}

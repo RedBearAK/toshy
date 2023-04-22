@@ -1,0 +1,18 @@
+# Ignore local config and log files
+.vscode/
+*.log
+*.sqlite3
+
+# Ignore Python-specific files and directories
+*.env
+*.pyc
+.pytest_cache/
+# Supposed to be able to use `**` but it doesn't work for me
+__pycache__/
+*/__pycache__/
+*/*/__pycache__/
+*/*/*/__pycache__/
+*/*/*/*/__pycache__/
+
+# Ignore any copy of `keyszer` installed in local
+keyszer
