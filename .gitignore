@@ -1,6 +1,7 @@
 # Ignore local config and log files
 .vscode/
 *.log
+*.sqlite
 *.sqlite3
 
 # Ignore Python-specific files and directories
