@@ -52,7 +52,7 @@ There's no simple way around this, since the keymapper is only designed to send 
 
  1. Automatic categorizing of the keyboard type of the current keyboard device. No more switching of keyboard types from the tray icon menu, or re-running the installer, or being asked to press a certain key on the keyboard during install.  
 
- 1. 
+ 1. There's a lot more...  
 
 ## Requirements
 
