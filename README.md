@@ -52,7 +52,7 @@ There's no simple way around this, since the keymapper is only designed to send 
 
  1. Automatic categorizing of the keyboard type of the current keyboard device. No more switching of keyboard types from the tray icon menu, or re-running the installer, or being asked to press a certain key on the keyboard during install.  
 
- 1. There's a lot more...  
+ 1. More that I will add later when I remember...  
 
 ## Requirements
 
@@ -60,7 +60,7 @@ There's no simple way around this, since the keymapper is only designed to send 
 - `keyszer` (keymapper for Linux, forked from `xkeysnail`)
 - X11 (Wayland support in `keyszer` is possible in the future)
 - systemd (but you can just run the config from terminal or shell script)
-- dbus-python (for the tray indicator app)
+- dbus-python (for the tray indicator and GUI app)
 
 ## Installation
 
