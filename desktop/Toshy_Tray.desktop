@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Toshy Tray Icon
+GenericName=Toshy Tray Icon
+# Known working "Exec" line. Leaving this here as a backup:
+# Exec=/usr/bin/sh -c 'exec env TERM=xterm /usr/bin/python3 /home/$USER/.config/toshy/toshy_tray.py'
+Exec=/usr/bin/sh -c 'exec env TERM=xterm /home/$USER/.config/toshy/toshy_tray.py'
+Terminal=false
+NoDisplay=false
+Icon=/home/kris/.config/toshy/assets/toshy_app_icon_rainbow.svg
+Comment=Tray Icon Menu for Toshy. Make Linux work like a 'Tosh!
+Categories=Utility;

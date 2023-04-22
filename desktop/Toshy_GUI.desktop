@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Toshy Preferences
+GenericName=Toshy Preferences
+# Known working "Exec" line. Leaving this here as a backup. 
+# Exec=/usr/bin/sh -c 'exec env TERM=xterm /usr/bin/python3 /home/$USER/.config/toshy/toshy_gui.py'
+Exec=/usr/bin/sh -c 'exec env TERM=xterm /home/$USER/.config/toshy/toshy_gui.py'
+Terminal=false
+NoDisplay=false
+Icon=/home/kris/.config/toshy/assets/toshy_app_icon_rainbow.svg
+Comment=Prefereces GUI for Toshy. Make Linux work like a 'Tosh!
+Categories=Utility;
