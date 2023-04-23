@@ -15,5 +15,7 @@ __pycache__/
 */*/*/__pycache__/
 */*/*/*/__pycache__/
 
-# Ignore any copy of `keyszer` installed in local
-keyszer
+# Ignore any copy of `keyszer` installed in local root
+keyszer/
+keyszer-temp/
+keyszer*/

@@ -55,18 +55,20 @@ class Settings:
         self.pkgs_for_distro    = None
         self.pip_pkgs           = None
 
-        self.keyszer_branch     = 'https://github.com/joshgoebel/keyszer'
+        self.keyszer_branch     = 'https://github.com/RedBearAK/keyszer/tree/adapt_to_capslock'
+        # https://github.com/RedBearAK/keyszer/tree/adapt_to_capslock
+        # https://github.com/joshgoebel/keyszer
 
-        self.group_name         = 'input'
+        self.input_group_name         = 'input'
         self.user_name          = pwd.getpwuid(os.getuid()).pw_name
 
 
 def get_environment():
     """get back the distro, session and desktop info from `env.py` module"""
     cnfg.env_info_dct   = env.get_env_info()
-    cnfg.DISTRO_NAME    = cnfg.env_info_dct.get('DISTRO_NAME').casefold()
+    cnfg.DISTRO_NAME    = cnfg.env_info_dct.get('DISTRO_NAME' ).casefold()
     cnfg.SESSION_TYPE   = cnfg.env_info_dct.get('SESSION_TYPE').casefold()
-    cnfg.DESKTOP_ENV    = cnfg.env_info_dct.get('DESKTOP_ENV').casefold()
+    cnfg.DESKTOP_ENV    = cnfg.env_info_dct.get('DESKTOP_ENV' ).casefold()
     print(  f'Toshy installer sees this environment:'
             f'\n\t{cnfg.DISTRO_NAME  = }'
             f'\n\t{cnfg.SESSION_TYPE = }'
@@ -74,7 +76,7 @@ def get_environment():
 
 
 def load_package_list():
-    """load package list"""
+    """load package list from JSON file"""
     with open('packages.json') as f:
         cnfg.packages_json_dct = json.load(f)
     cnfg.pip_pkgs = cnfg.packages_json_dct['pip']
@@ -85,10 +87,14 @@ def install_distro_pkgs():
     """install needed packages from list for distro type"""
     print(f'\nInstalling native packages...\n')
 
-    if cnfg.DISTRO_NAME in ['ubuntu', 'debian']:
+    if True is False: pass  # dummy first line just because
+    
+    elif cnfg.DISTRO_NAME in ['ubuntu', 'debian']:
         subprocess.run(['sudo', 'apt', 'install', '-y'] + cnfg.pkgs_for_distro)
+    
     elif cnfg.DISTRO_NAME in ['fedora', 'fedoralinux']:
         subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro)
+    
     elif cnfg.DISTRO_NAME in ['arch', 'manjaro']:
         print('It is essential to have an Arch-based system completely updated.')
         response = input('Have you run "sudo pacman -Syyu" recently? [y/N]')
@@ -97,6 +103,7 @@ def install_distro_pkgs():
         else:
             print('Get your Arch system up to date first, then run the installer again. Exiting.')
             sys.exit(0)
+    
     else:
         print(f"Sorry, no package list available for distro: {cnfg.DISTRO_NAME}")
         sys.exit(0)
@@ -111,10 +118,10 @@ def install_pip_packages():
 def clone_keyszer():
     """clone the latest `keyszer` from GitHub"""
     print(f'\nCloning keyszer branch...\n')
-    if os.path.exists('./keyszer'):
+    if os.path.exists('./keyszer-temp'):
         # force a fresh copy of keyszer every time script is run
         shutil.rmtree('keyszer', ignore_errors=True)
-    subprocess.run(['git', 'clone', f'{cnfg.keyszer_branch}'])
+    subprocess.run(['git', 'clone', f'{cnfg.keyszer_branch}', 'keyszer-temp'])
 
 
 def install_keyszer_for_user():
@@ -208,34 +215,34 @@ def install_udev_rules():
 def verify_user_groups():
     """Check if the `input` group exists and user is in group"""
     try:
-        grp.getgrnam(cnfg.group_name)
+        grp.getgrnam(cnfg.input_group_name)
     except KeyError:
         # The group doesn't exist, so create it
         print(f'Creating "input" group...\n')
-        subprocess.run(['sudo', 'groupadd', cnfg.group_name])
+        subprocess.run(['sudo', 'groupadd', cnfg.input_group_name])
 
     # Check if the user is already in the `input` group
-    group_info = grp.getgrnam(cnfg.group_name)
+    group_info = grp.getgrnam(cnfg.input_group_name)
     if cnfg.user_name in group_info.gr_mem:
-        print(f'\nUser {cnfg.user_name} is already a member of group {cnfg.group_name}...\n')
+        print(f'\nUser {cnfg.user_name} is already a member of group {cnfg.input_group_name}...\n')
     else:
         # Add the user to the input group
-        subprocess.run(['sudo', 'usermod', '-aG', cnfg.group_name, cnfg.user_name])
-        print(f'\nUser {cnfg.user_name} added to group {cnfg.group_name}...')
+        subprocess.run(['sudo', 'usermod', '-aG', cnfg.input_group_name, cnfg.user_name])
+        print(f'\nUser {cnfg.user_name} added to group {cnfg.input_group_name}...')
         print(f'May need to REBOOT or at least LOG OUT/IN to have proper permissions...\n')
 
 
 if __name__ == '__main__':
     cnfg: Settings = Settings()
-    # get_environment()
-    # load_package_list()
-    # install_distro_pkgs()
-    # install_pip_packages()
-    # clone_keyszer()
-    # install_keyszer_for_user()
+    get_environment()
+    load_package_list()
+    install_distro_pkgs()
+    install_pip_packages()
+    clone_keyszer()
+    install_keyszer_for_user()
     backup_toshy_config()
-    # install_toshy()
-    # apply_desktop_tweaks()
-    # install_udev_rules()
-    # verify_user_groups()
+    install_toshy()
+    apply_desktop_tweaks()
+    install_udev_rules()
+    verify_user_groups()
     print()
