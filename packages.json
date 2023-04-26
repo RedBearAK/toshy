@@ -1,16 +1,29 @@
 {
-    "pip": [
-        "pip",
-        "wheel",
-        "pillow",
-        "setuptools",
-        "lockfile",
-        "systemd-python",
+    "pipx": [
         "dbus-python",
+        "lockfile",
+        "pillow",
+        "pip",
         "pygobject",
-        "watchdog",
+        "setuptools",
+        "sv_ttk",
+        "systemd-python",
         "tk",
-        "sv_ttk"
+        "watchdog",
+        "wheel"
+    ],
+    "pip": [
+        "dbus-python",
+        "lockfile",
+        "pillow",
+        "pip",
+        "pygobject",
+        "setuptools",
+        "sv_ttk",
+        "systemd-python",
+        "tk",
+        "watchdog",
+        "wheel"
     ],
     "kde": [
         "ibus",
@@ -21,6 +34,7 @@
         "git",
         "evtest",
         "cairo-devel",
+        "pipx",
         "python3-devel",
         "python3-tkinter",
         "gobject-introspection-devel",
@@ -31,6 +45,7 @@
         "git",
         "input-utils",
         "libcairo2-dev",
+        "pipx",
         "python3-tk",
         "python3-dev",
         "libgirepository1.0-dev",
@@ -41,6 +56,7 @@
         "git",
         "input-utils",
         "libcairo2-dev",
+        "pipx",
         "python3-tk",
         "python3-dev",
         "libgirepository1.0-dev",
@@ -48,13 +64,14 @@
         "systemd-dev"
     ],
     "arch": [
-        "git",
-        "evtest",
         "cairo",
-        "tk",
-        "python",
+        "evtest",
+        "git",
         "gobject-introspection",
         "libappindicator-gtk3",
-        "systemd"
+        "pipx",
+        "python",
+        "systemd",
+        "tk"
     ]
 }

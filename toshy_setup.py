@@ -109,13 +109,13 @@ def install_distro_pkgs():
         sys.exit(0)
 
 
-def install_pip_packages():
+def install_pip_pkgs():
     """install `pip` packages for Python"""
     print(f'\nInstalling/upgrading Python packages...\n')
     subprocess.run(['pip', 'install', '--user', '--upgrade'] + cnfg.pip_pkgs)
 
 
-def clone_keyszer():
+def clone_keyszer_branch():
     """clone the latest `keyszer` from GitHub"""
     print(f'\nCloning keyszer branch...\n')
     if os.path.exists('./keyszer-temp'):
@@ -155,7 +155,7 @@ def backup_toshy_config():
         print(f"Failed to create destination directory: {e}")
 
 
-def install_toshy():
+def install_toshy_files():
     """install Toshy files"""
     print(f'\nInstalling Toshy...\n')
     pass
@@ -224,7 +224,7 @@ def verify_user_groups():
     # Check if the user is already in the `input` group
     group_info = grp.getgrnam(cnfg.input_group_name)
     if cnfg.user_name in group_info.gr_mem:
-        print(f'\nUser {cnfg.user_name} is already a member of group {cnfg.input_group_name}...\n')
+        print(f'\nUser {cnfg.user_name} is a member of group {cnfg.input_group_name}, continuing...\n')
     else:
         # Add the user to the input group
         subprocess.run(['sudo', 'usermod', '-aG', cnfg.input_group_name, cnfg.user_name])
@@ -237,12 +237,12 @@ if __name__ == '__main__':
     get_environment()
     load_package_list()
     install_distro_pkgs()
-    install_pip_packages()
-    clone_keyszer()
+    install_pip_pkgs()
+    clone_keyszer_branch()
     install_keyszer_for_user()
     backup_toshy_config()
-    install_toshy()
-    apply_desktop_tweaks()
+    install_toshy_files()
+    # apply_desktop_tweaks()
     install_udev_rules()
     verify_user_groups()
-    print()
+    print(f'\n')
