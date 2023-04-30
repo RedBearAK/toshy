@@ -28,12 +28,14 @@ from lib.logger import debug, error
 
 def get_env_info():
     DISTRO_NAME = None
+    DISTRO_VER = None
     SESSION_TYPE = None
     DESKTOP_ENV = None
 
     env_info = {}
     _distro_name = ""
     _desktop_env = ""
+
     ########################################################################
     ##  Get distro name
     if 1 == 2:
@@ -59,7 +61,7 @@ def get_env_info():
     elif os.path.isfile('/etc/arch-release'):
         _distro_name = 'arch'
 
-    distro_names = {                # simplify distro names need special overrides
+    distro_names = {                # simplify distro names
         'elementary':               'eos',
         'Fedora':                   'fedora',
         'Manjaro':                  'manjaro',
@@ -74,12 +76,29 @@ def get_env_info():
             DISTRO_NAME = v
             break
 
-    # If distro name not found in list that needs overrides, just show original name
+    # If distro name not found in list, just show original name
     if not DISTRO_NAME:
         DISTRO_NAME = _distro_name
 
     env_info['DISTRO_NAME'] = DISTRO_NAME
 
+    ########################################################################
+    ##  Get distro version
+
+    if os.path.isfile('/etc/os-release'):
+        with open('/etc/os-release', 'r') as f:
+            for line in f:
+                if line.startswith('VERSION_ID='):
+                    DISTRO_VER = line.split('=')[1].strip().strip('"')
+                    break
+    elif os.path.isfile('/etc/lsb-release'):
+        with open('/etc/lsb-release', 'r') as f:
+            for line in f:
+                if line.startswith('DISTRIB_RELEASE='):
+                    DISTRO_VER = line.split('=')[1].strip().strip('"')
+                    break
+
+    env_info['DISTRO_VER'] = DISTRO_VER
 
     ########################################################################
     ##  Get session type

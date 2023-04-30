@@ -26,15 +26,21 @@ throttle_delays(
 )
 
 
-###################################################################
-########################   Welcome to Toshy!   ####################
-### This is a highly customized fork of the config file that powers
-### Kinto.sh, by Ben Reaves (https://kinto.sh)
-### All credit for the basis of this goes to Ben Reaves. 
-### (https://github.com/rbreaves/)
-### Much assistance was provided by Josh Goebel, the developer of the
-### xkeysnail fork "keyszer" (http://github.com/joshgoebel/keyszer)
-###################################################################
+###############################################################################
+############################   Welcome to Toshy!   ############################
+###  
+###  This is a highly customized fork of the config file that powers Kinto.sh, 
+###  by Ben Reaves
+###      (https://kinto.sh)
+###  
+###  All credit for the basis of this goes to Ben Reaves. 
+###      (https://github.com/rbreaves/)
+###  
+###  Much assistance was provided by Josh Goebel, the developer of the
+###  xkeysnail fork "keyszer"
+###      (http://github.com/joshgoebel/keyszer)
+###  
+###############################################################################
 
 # get the path of this file (not the main module loading it)
 config_globals = inspect.stack()[1][0].f_globals
@@ -48,6 +54,12 @@ from lib.settings_class import Settings
 TOSHY_PART      = 'config'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Config file'
 APP_VERSION     = '2023.0403'
+
+# Settings object used to tweak preferences "live" between gui, tray and config.
+cnfg = Settings(config_dir_path)
+cnfg.watch_database()   # activate watchdog observer on the sqlite3 db file
+debug("")
+debug(cnfg, ctx="CG")
 
 
 
@@ -65,20 +77,23 @@ APP_VERSION     = '2023.0403'
 # Set up some useful environment variables
 
 DISTRO_NAME     = None
+DISTRO_VER      = None
 SESSION_TYPE    = None
 DESKTOP_ENV     = None
 
-env_info = lib.env.get_env_info()
+env_info: Dict = lib.env.get_env_info()       # Returns a dict
 
-DISTRO_NAME = env_info.get('DISTRO_NAME')
-SESSION_TYPE = env_info.get('SESSION_TYPE')
-DESKTOP_ENV = env_info.get('DESKTOP_ENV')
+DISTRO_NAME     = env_info.get('DISTRO_NAME')
+DISTRO_VER      = env_info.get('DISTRO_VER')
+SESSION_TYPE    = env_info.get('SESSION_TYPE')
+DESKTOP_ENV     = env_info.get('DESKTOP_ENV')
 
 debug("")
 debug(  f'Toshy config sees this environment:'
-        f'\n\t{DISTRO_NAME  = }'
-        f'\n\t{SESSION_TYPE = }'
-        f'\n\t{DESKTOP_ENV  = }', ctx="CG")
+        f'\n\t{DISTRO_NAME      = }'
+        f'\n\t{DISTRO_VER       = }'
+        f'\n\t{SESSION_TYPE     = }'
+        f'\n\t{DESKTOP_ENV      = }', ctx="CG")
 
 # future API to inject environment info into `keyszer`
 # environ_context(
@@ -106,14 +121,6 @@ debug(  f'Toshy config sees this environment:'
 ST = to_US_keystrokes           # was 'to_keystrokes' originally
 UC = unicode_keystrokes
 ignore_combo = ComboHint.IGNORE
-
-# Settings object used to tweak preferences "live" between gui, tray and config.
-cnfg = Settings(config_dir_path)
-cnfg.watch_database()   # activate watchdog observer on the sqlite3 db file
-debug("")
-debug(cnfg, ctx="CG")
-
-
 
 ###############################################################################
 # This is a "trick" to negate the need to put quotes around all the key labels 
@@ -2568,11 +2575,16 @@ keymap("Transmission bittorrent client", {
     C("RC-comma"):             [C("Alt-e"),C("p")],             # Open preferences (settings) dialog
 }, when = matchProps(clas="^transmission-gtk$"))
 
-keymap("jDownloader", {
+JDownloader_lod = [
+    {clas: "^.*jdownloader.*$"},
+    {clas: "^java-lang-Thread$", name: "^JDownloader.*$"}       # Happens after auto-update of app
+]
+keymap("JDownloader", {
     C("RC-i"):                  C("Alt-Enter"),                 # Open properties
     C("RC-Backspace"):          C("Delete"),                    # Remove download from list
     C("RC-Comma"):              C("C-P"),                       # Open preferences (settings)
-}, when = matchProps(clas="^.*jdownloader.*$"))
+# }, when = matchProps(clas="^.*jdownloader.*$"))
+}, when = matchProps(lst=JDownloader_lod))
 
 keymap("Totem video player", {
     C("RC-dot"):                C("C-q"),                       # Stop (quit player, there is no "Stop" function)
@@ -2601,7 +2613,7 @@ keymap("GNOME image viewer", {
 
 # Boolean variable to toggle Enter key state between F2 and Enter
 # True = Enter key sends F2, False = Enter key sends Enter
-_enter_is_F2 = True # DON'T CHANGE THIS! Must be set to True here. 
+_enter_is_F2 = True     # DON'T CHANGE THIS! Must be set to True here. 
 
 
 def is_Enter_F2(combo_if_true, combo_if_false):

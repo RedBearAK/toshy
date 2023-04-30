@@ -601,6 +601,7 @@ menu.show_all()
 
 
 def main():
+    global loop
     # Start a separate thread to watch the status of Toshy systemd services (or script?)
     monitor_toshy_services_thread = threading.Thread(target=fn_monitor_toshy_services)
     monitor_toshy_services_thread.daemon = True
