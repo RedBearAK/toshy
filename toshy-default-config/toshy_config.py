@@ -93,7 +93,7 @@ debug(  f'Toshy config sees this environment:'
         f'\n\t{DISTRO_NAME      = }'
         f'\n\t{DISTRO_VER       = }'
         f'\n\t{SESSION_TYPE     = }'
-        f'\n\t{DESKTOP_ENV      = }', ctx="CG")
+        f'\n\t{DESKTOP_ENV      = }\n', ctx="CG")
 
 # future API to inject environment info into `keyszer`
 # environ_context(
@@ -3449,6 +3449,10 @@ keymap("GenGUI overrides: GNOME", {
     C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,eos)
     C("RC-Super-f"):            C("Alt-F10"),                   # Default SL - Maximize app (gnome/kde)
     C("RC-H"):                  C("Super-h"),                   # Default SL - Minimize app (gnome/budgie/popos/fedora) not-deepin
+    # Screenshot shortcuts for GNOME 42+
+    C("RC-Shift-Key_3"):        C("Shift-Print"),               # Take a screenshot immediately (gnome)
+    C("RC-Shift-Key_4"):        C("Alt-Print"),                 # Take a screenshot of a window (gnome)
+    C("RC-Shift-Key_5"):        C("Print"),                     # Take a screenshot interactively (gnome)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'gnome' )
 keymap("GenGUI overrides: KDE", {
     C("RC-Space"):              C("Alt-F1"),                    # Default SL - Launch Application Menu (gnome/kde)
