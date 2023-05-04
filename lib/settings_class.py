@@ -40,7 +40,7 @@ class Settings:
         self.Enter2Ent_Cmd      = False     # Default: False
         self.ST3_in_VSCode      = False     # Default: False
         
-        # Load user's custom settings from database
+        # Load user's custom settings from database (defaults will be saved if no DB)
         self.load_settings()
 
     def watch_database(self):
