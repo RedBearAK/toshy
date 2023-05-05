@@ -113,9 +113,14 @@ class Settings:
 
     def get_settings_list(self):
         # get all attributes from the object
-        all_attributes = [attr for attr in dir(self) if not callable(getattr(self, attr)) and not attr.startswith("__")]
+        all_attributes = [attr for attr in dir(self) 
+                            if not callable(getattr(self, attr)) and 
+                            not attr.startswith("__")]
+        
         # filter out attributes that are not strings or booleans
-        filtered_attributes = [attr for attr in all_attributes if isinstance(getattr(self, attr), (str, bool, int))]
+        filtered_attributes = [attr for attr in all_attributes 
+                                if isinstance(getattr(self, attr), (str, bool, int))]
+        
         # create a list of tuples with attribute name and value pairs
         settings_list = [(attr, getattr(self, attr)) for attr in filtered_attributes]
         return settings_list
