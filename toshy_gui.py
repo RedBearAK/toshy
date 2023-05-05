@@ -31,7 +31,7 @@ from lib import logger
 from lib.settings_class import Settings
 
 
-logger.VERBOSE = True
+logger.VERBOSE = False
 
 if not str(sys.platform) == "linux":
     raise OSError("This app is designed to be run only on Linux")
@@ -184,8 +184,8 @@ icon_file_inverse   = os.path.join(assets_path, "toshy_app_icon_rainbow_inverse.
 config_dir_path = current_folder_path
 cnfg = Settings(config_dir_path)
 cnfg.watch_database()
-# debug("")
-# debug(cnfg)   # prints out the __str__ method of Settings class
+debug("")
+debug(cnfg)   # prints out the __str__ method of Settings class
 
 
 def get_settings_list(settings_obj):
@@ -400,13 +400,7 @@ def save_radio_settings(cnfg: Settings, var: tk.StringVar, key: str):
 
 
 def save_switch_settings(cnfg: Settings, var: tk.BooleanVar, key: str):
-    # debug(f'Printing cnfg upon entering save_switch_settings()..')
-    # print(cnfg)   # prints out the __str__ method of Settings class
-    # debug(f'Value of key: {key}')
     setattr(cnfg, key, var.get())
-    # debug(f'Printing cnfg from save_switch_settings() after setattr...')
-    # print(cnfg)   # prints out the __str__ method of Settings class
-    # debug(f'Saving setting {key = }, {var.get() = }')
     cnfg.save_settings()
 
 
@@ -416,8 +410,6 @@ def load_radio_btn_settings(cnfg: Settings, var: tk.StringVar, key: str):
 
 
 def load_switch_settings(cnfg: Settings):
-    # debug(f'Printing cnfg from load_switch_settings()')
-    # print(cnfg)   # prints out the __str__ method of Settings class
     forced_numpad_switch_var.set(       cnfg.forced_numpad)
     media_arrows_fix_switch_var.set(    cnfg.media_arrows_fix)
     multi_lang_switch_var.set(          cnfg.multi_lang)
@@ -888,7 +880,6 @@ if __name__ == "__main__":
     # Get the window size
     window_width = root.winfo_width()
     window_height = root.winfo_height()
-    print(f'{window_width = }, {window_height = }')
 
     # Get the screen dimensions
     screen_width = root.winfo_screenwidth()
