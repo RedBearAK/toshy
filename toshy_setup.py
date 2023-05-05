@@ -48,18 +48,19 @@ class Settings:
     def __init__(self) -> None:
         self.env_info_dct       = None
         self.DISTRO_NAME        = None
+        self.DISTRO_VER         = None
         self.SESSION_TYPE       = None
         self.DESKTOP_ENV        = None
 
         self.packages_json_dct  = None
         self.pkgs_for_distro    = None
-        self.pip_pkgs           = None
+        self.pipx_pkgs          = None
 
         self.keyszer_branch     = 'https://github.com/RedBearAK/keyszer/tree/adapt_to_capslock'
         # https://github.com/RedBearAK/keyszer/tree/adapt_to_capslock
         # https://github.com/joshgoebel/keyszer
 
-        self.input_group_name         = 'input'
+        self.input_group_name   = 'input'
         self.user_name          = pwd.getpwuid(os.getuid()).pw_name
 
 
@@ -67,19 +68,21 @@ def get_environment():
     """get back the distro, session and desktop info from `env.py` module"""
     cnfg.env_info_dct   = env.get_env_info()
     cnfg.DISTRO_NAME    = cnfg.env_info_dct.get('DISTRO_NAME' ).casefold()
+    cnfg.DISTRO_VER     = cnfg.env_info_dct.get('DISTRO_VER' ).casefold()
     cnfg.SESSION_TYPE   = cnfg.env_info_dct.get('SESSION_TYPE').casefold()
     cnfg.DESKTOP_ENV    = cnfg.env_info_dct.get('DESKTOP_ENV' ).casefold()
     print(  f'Toshy installer sees this environment:'
-            f'\n\t{cnfg.DISTRO_NAME  = }'
-            f'\n\t{cnfg.SESSION_TYPE = }'
-            f'\n\t{cnfg.DESKTOP_ENV  = }')
+            f'\n\t{cnfg.DISTRO_NAME     = }'
+            f'\n\t{cnfg.DISTRO_VER      = }'
+            f'\n\t{cnfg.SESSION_TYPE    = }'
+            f'\n\t{cnfg.DESKTOP_ENV     = }')
 
 
 def load_package_list():
     """load package list from JSON file"""
     with open('packages.json') as f:
         cnfg.packages_json_dct = json.load(f)
-    cnfg.pip_pkgs = cnfg.packages_json_dct['pip']
+    cnfg.pipx_pkgs = cnfg.packages_json_dct['pipx']
     cnfg.pkgs_for_distro = cnfg.packages_json_dct[cnfg.DISTRO_NAME]
 
 
@@ -109,10 +112,10 @@ def install_distro_pkgs():
         sys.exit(0)
 
 
-def install_pip_pkgs():
-    """install `pip` packages for Python"""
+def install_pipx_pkgs():
+    """install `pipx` packages for Python"""
     print(f'\nInstalling/upgrading Python packages...\n')
-    subprocess.run(['pip', 'install', '--user', '--upgrade'] + cnfg.pip_pkgs)
+    subprocess.run(['pipx', 'reinstall'] + cnfg.pipx_pkgs)
 
 
 def clone_keyszer_branch():
@@ -127,10 +130,10 @@ def clone_keyszer_branch():
 def install_keyszer_for_user():
     """install `keyszer` for the local user"""
     print(f'\nInstalling keyszer for user...\n')
-    if os.path.exists('./keyszer'):
-        subprocess.run(['pip', 'install', '--user', '--upgrade', './keyszer'])
+    if os.path.exists('./keyszer-temp'):
+        subprocess.run(['pipx', 'reinstall', './keyszer-temp'])
     else:
-        print(f'"keyszer" folder missing... Unable to install "keyszer"...')
+        print(f'"keyszer-temp" folder missing... Unable to install "keyszer"...')
         sys.exit(1)
 
 
@@ -237,12 +240,12 @@ if __name__ == '__main__':
     get_environment()
     load_package_list()
     install_distro_pkgs()
-    install_pip_pkgs()
+    install_pipx_pkgs()
     clone_keyszer_branch()
     install_keyszer_for_user()
     backup_toshy_config()
     install_toshy_files()
-    # apply_desktop_tweaks()
+    apply_desktop_tweaks()
     install_udev_rules()
     verify_user_groups()
     print(f'\n')
