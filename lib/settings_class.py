@@ -1,5 +1,4 @@
 import os
-import time
 import sqlite3
 import inspect
 
@@ -14,22 +13,18 @@ from keyszer.lib.logger import debug
 
 class Settings:
     def __init__(self, config_dir_path: str = '..') -> None:
-        self.debounce_interval  = 3         # seconds to ignore changes to database file
-        self.last_modified      = None      # time database file was last changed
+        self.config_dir_path    = config_dir_path
+        self.db_file_path       = os.path.join(
+                                    self.config_dir_path, 'toshy_user_preferences.sqlite')
         self.first_run          = True
         self.last_settings      = None
         self.current_settings   = None
-
         # Get the name of the module that instantiated the class
-        calling_frame = inspect.stack()[1]
-        calling_file = calling_frame.filename
-        calling_module_path, _ = os.path.splitext(calling_file)
-        _, calling_module = os.path.split(calling_module_path)
-        self.calling_module = calling_module
-
+        calling_frame           = inspect.stack()[1]
+        calling_file_path       = calling_frame.filename
+        calling_module          = os.path.split(calling_file_path)[1]
+        self.calling_module     = calling_module
         # settings defaults
-        self.config_dir_path    = config_dir_path
-        self.db_file_path = os.path.join(config_dir_path, 'toshy_user_preferences.sqlite')
         self.gui_dark_theme     = True      # Default: True
         self.optspec_layout     = 'US'      # Default: 'US'
         self.forced_numpad      = True      # Default: True
@@ -39,7 +34,6 @@ class Settings:
         self.Caps2Esc_Cmd       = False     # Default: False
         self.Enter2Ent_Cmd      = False     # Default: False
         self.ST3_in_VSCode      = False     # Default: False
-        
         # Load user's custom settings from database (defaults will be saved if no DB)
         self.load_settings()
 
@@ -100,7 +94,8 @@ class Settings:
             elif row[0] == 'ST3_in_VSCode'      :   self.ST3_in_VSCode      = setting_value
         db_connection.close()
 
-        # Compare the current settings with the last settings, and update last_settings if they are different
+        # Compare the current settings with the last settings, and 
+        # update last_settings if they are different
         self.current_settings = self.get_settings_list()
         if self.last_settings != self.current_settings:
             self.last_settings = self.current_settings
@@ -130,6 +125,7 @@ class Settings:
         calling_module      = {self.calling_module}
         db_file_path        = {self.db_file_path}
         gui_dark_theme      = {self.gui_dark_theme}
+        -------------------------------------------
         optspec_layout      = '{self.optspec_layout}'
         forced_numpad       = {self.forced_numpad}
         media_arrows_fix    = {self.media_arrows_fix}
