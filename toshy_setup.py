@@ -13,6 +13,7 @@ import datetime
 import platform
 import subprocess
 
+from typing import Dict
 # local import
 import lib.env as env
 from lib.logger import debug, error
@@ -43,7 +44,7 @@ else:
 
 
 
-class Settings:
+class InstallerSettings:
     """set up variables for necessary information to be used by all functions"""
     def __init__(self) -> None:
         self.env_info_dct       = None
@@ -52,13 +53,12 @@ class Settings:
         self.SESSION_TYPE       = None
         self.DESKTOP_ENV        = None
 
-        self.packages_json_dct  = None
+        self.pkgs_json_dct      = None
         self.pkgs_for_distro    = None
         self.pipx_pkgs          = None
 
         self.keyszer_branch     = 'https://github.com/RedBearAK/keyszer/tree/adapt_to_capslock'
-        # https://github.com/RedBearAK/keyszer/tree/adapt_to_capslock
-        # https://github.com/joshgoebel/keyszer
+        # self.keyszer_branch     = https://github.com/joshgoebel/keyszer
 
         self.input_group_name   = 'input'
         self.user_name          = pwd.getpwuid(os.getuid()).pw_name
@@ -66,11 +66,11 @@ class Settings:
 
 def get_environment():
     """get back the distro, session and desktop info from `env.py` module"""
-    cnfg.env_info_dct   = env.get_env_info()
-    cnfg.DISTRO_NAME    = cnfg.env_info_dct.get('DISTRO_NAME' ).casefold()
-    cnfg.DISTRO_VER     = cnfg.env_info_dct.get('DISTRO_VER' ).casefold()
-    cnfg.SESSION_TYPE   = cnfg.env_info_dct.get('SESSION_TYPE').casefold()
-    cnfg.DESKTOP_ENV    = cnfg.env_info_dct.get('DESKTOP_ENV' ).casefold()
+    cnfg.env_info_dct: Dict[str, str]   = env.get_env_info()
+    cnfg.DISTRO_NAME    = cnfg.env_info_dct.get('DISTRO_NAME', ''   ).casefold()
+    cnfg.DISTRO_VER     = cnfg.env_info_dct.get('DISTRO_VER', ''    ).casefold()
+    cnfg.SESSION_TYPE   = cnfg.env_info_dct.get('SESSION_TYPE', ''  ).casefold()
+    cnfg.DESKTOP_ENV    = cnfg.env_info_dct.get('DESKTOP_ENV', ''   ).casefold()
     print(  f'Toshy installer sees this environment:'
             f'\n\t{cnfg.DISTRO_NAME     = }'
             f'\n\t{cnfg.DISTRO_VER      = }'
@@ -81,9 +81,9 @@ def get_environment():
 def load_package_list():
     """load package list from JSON file"""
     with open('packages.json') as f:
-        cnfg.packages_json_dct = json.load(f)
-    cnfg.pipx_pkgs = cnfg.packages_json_dct['pipx']
-    cnfg.pkgs_for_distro = cnfg.packages_json_dct[cnfg.DISTRO_NAME]
+        cnfg.pkgs_json_dct = json.load(f)
+    cnfg.pipx_pkgs = cnfg.pkgs_json_dct['pipx']
+    cnfg.pkgs_for_distro = cnfg.pkgs_json_dct[cnfg.DISTRO_NAME]
 
 
 def install_distro_pkgs():
@@ -236,7 +236,7 @@ def verify_user_groups():
 
 
 if __name__ == '__main__':
-    cnfg: Settings = Settings()
+    cnfg = InstallerSettings()
     get_environment()
     load_package_list()
     install_distro_pkgs()
