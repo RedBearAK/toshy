@@ -67,10 +67,10 @@ class InstallerSettings:
 def get_environment():
     """get back the distro, session and desktop info from `env.py` module"""
     cnfg.env_info_dct: Dict[str, str]   = env.get_env_info()
-    cnfg.DISTRO_NAME    = cnfg.env_info_dct.get('DISTRO_NAME', ''   ).casefold()
-    cnfg.DISTRO_VER     = cnfg.env_info_dct.get('DISTRO_VER', ''    ).casefold()
+    cnfg.DISTRO_NAME    = cnfg.env_info_dct.get('DISTRO_NAME',  ''  ).casefold()
+    cnfg.DISTRO_VER     = cnfg.env_info_dct.get('DISTRO_VER',   ''  ).casefold()
     cnfg.SESSION_TYPE   = cnfg.env_info_dct.get('SESSION_TYPE', ''  ).casefold()
-    cnfg.DESKTOP_ENV    = cnfg.env_info_dct.get('DESKTOP_ENV', ''   ).casefold()
+    cnfg.DESKTOP_ENV    = cnfg.env_info_dct.get('DESKTOP_ENV',  ''  ).casefold()
     print(  f'Toshy installer sees this environment:'
             f'\n\t{cnfg.DISTRO_NAME     = }'
             f'\n\t{cnfg.DISTRO_VER      = }'
@@ -144,6 +144,7 @@ def backup_toshy_config():
     toshy_dir_path = os.path.join(home_dir_path, '.config/toshy')
     timestamp = datetime.datetime.now().strftime('_%Y%m%d_%H%M%S')
     toshy_backup_dir_path = os.path.abspath(toshy_dir_path + timestamp)
+
     try:
         # Create destination directory if it doesn't exist
         if not os.path.exists(toshy_backup_dir_path):
@@ -155,12 +156,12 @@ def backup_toshy_config():
     except shutil.Error as e:
         print(f"Failed to copy directory: {e}")
     except OSError as e:
-        print(f"Failed to create destination directory: {e}")
+        print(f"Failed to create backup directory: {e}")
 
 
 def install_toshy_files():
     """install Toshy files"""
-    print(f'\nInstalling Toshy...\n')
+    print(f'\nInstalling Toshy files...\n')
     pass
 
 
