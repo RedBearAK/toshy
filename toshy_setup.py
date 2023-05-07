@@ -55,7 +55,7 @@ class InstallerSettings:
 
         self.pkgs_json_dct      = None
         self.pkgs_for_distro    = None
-        self.pipx_pkgs          = None
+        self.pip_pkgs          = None
 
         self.keyszer_branch     = 'https://github.com/RedBearAK/keyszer/tree/adapt_to_capslock'
         # self.keyszer_branch     = https://github.com/joshgoebel/keyszer
@@ -82,7 +82,7 @@ def load_package_list():
     """load package list from JSON file"""
     with open('packages.json') as f:
         cnfg.pkgs_json_dct = json.load(f)
-    cnfg.pipx_pkgs = cnfg.pkgs_json_dct['pipx']
+    cnfg.pip_pkgs = cnfg.pkgs_json_dct['pip']
     cnfg.pkgs_for_distro = cnfg.pkgs_json_dct[cnfg.DISTRO_NAME]
 
 
@@ -112,10 +112,10 @@ def install_distro_pkgs():
         sys.exit(0)
 
 
-def install_pipx_pkgs():
-    """install `pipx` packages for Python"""
+def install_pip_pkgs():
+    """install `pip` packages for Python"""
     print(f'\nInstalling/upgrading Python packages...\n')
-    subprocess.run(['pipx', 'reinstall'] + cnfg.pipx_pkgs)
+    subprocess.run(['pip', 'install', '--user', '--upgrade'] + cnfg.pip_pkgs)
 
 
 def clone_keyszer_branch():
@@ -131,7 +131,7 @@ def install_keyszer_for_user():
     """install `keyszer` for the local user"""
     print(f'\nInstalling keyszer for user...\n')
     if os.path.exists('./keyszer-temp'):
-        subprocess.run(['pipx', 'reinstall', './keyszer-temp'])
+        subprocess.run(['pip', 'install', '--user', '--upgrade', './keyszer-temp'])
     else:
         print(f'"keyszer-temp" folder missing... Unable to install "keyszer"...')
         sys.exit(1)
@@ -241,7 +241,7 @@ if __name__ == '__main__':
     get_environment()
     load_package_list()
     install_distro_pkgs()
-    install_pipx_pkgs()
+    install_pip_pkgs()
     clone_keyszer_branch()
     install_keyszer_for_user()
     backup_toshy_config()
