@@ -159,7 +159,13 @@ def install_toshy_files():
         if os.path.exists(cnfg.toshy_dir_path):
             shutil.rmtree(cnfg.toshy_dir_path, ignore_errors=True)
         # Copy files recursively from source to destination
-        shutil.copytree('.', cnfg.toshy_dir_path, ignore=shutil.ignore_patterns([script_name, cnfg.keyszer_tmp_path]))
+        shutil.copytree(
+            '.', 
+            cnfg.toshy_dir_path, 
+            ignore=shutil.ignore_patterns(
+                [script_name, cnfg.keyszer_tmp_path]
+            )
+        )
     except shutil.Error as e:
         print(f"Failed to copy directory: {e}")
     except OSError as e:
