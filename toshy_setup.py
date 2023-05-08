@@ -180,6 +180,10 @@ def install_pip_pkgs():
     """install `pip` packages for Python"""
     print(f'\nInstalling/upgrading Python packages...\n')
     pip_cmd = os.path.join(cnfg.venv_path, 'bin', 'pip')
+    # Avoid deprecation errors by making sure wheel is installed early
+    subprocess.run([pip_cmd, 'install', '--upgrade', 'wheel'])
+    subprocess.run([pip_cmd, 'install', '--upgrade', 'pip'])
+    subprocess.run([pip_cmd, 'install', '--upgrade', 'setuptools'])
     subprocess.run([pip_cmd, 'install', '--upgrade'] + cnfg.pip_pkgs)
 
     if os.path.exists('./keyszer-temp'):

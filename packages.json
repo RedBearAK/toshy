@@ -1,8 +1,5 @@
 {
     "pip": [
-        "pip",
-        "wheel",
-        "setuptools",
         "pillow",
         "lockfile",
         "dbus-python",
