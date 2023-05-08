@@ -7,6 +7,11 @@
 # Make sure keymapper binary can be found in user-home-local "bin" location
 export PATH=$HOME/.local/bin:$PATH
 
+# Start the virtual environment
+cd "$HOME/.config/toshy" || exit 1
+source .venv/bin/activate
+
+
 if command -v keyszer >/dev/null 2>&1; then
     : # no-op operator
 else
@@ -20,4 +25,4 @@ fi
 /usr/bin/pkill -f "bin/keyszer"
 /usr/bin/pkill -f "bin/xkeysnail"
 
-$(which keyszer) -w -c "$HOME/.config/toshy/toshy_config.py"
+keyszer -w -c "$HOME/.config/toshy/toshy_config.py"
