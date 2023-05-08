@@ -122,17 +122,17 @@ def clone_keyszer_branch():
     if os.path.exists(keyszer_tmp_dir_path):
         # force a fresh copy of keyszer every time script is run
         shutil.rmtree(keyszer_tmp_dir_path, ignore_errors=True)
-    subprocess.run([cnfg.keyszer_clone_cmd.split(), keyszer_tmp_dir_path])
+    subprocess.run(cnfg.keyszer_clone_cmd.split() + [keyszer_tmp_dir_path])
 
 
-def install_keyszer_for_user():
-    """install `keyszer` for the local user"""
-    print(f'\nInstalling keyszer for user...\n')
-    if os.path.exists('./keyszer-temp'):
-        subprocess.run(['pip', 'install', '--user', '--upgrade', './keyszer-temp'])
-    else:
-        print(f'"keyszer-temp" folder missing... Unable to install "keyszer"...')
-        sys.exit(1)
+# def install_keyszer_for_user():
+#     """install `keyszer` for the local user"""
+#     print(f'\nInstalling keyszer for user...\n')
+#     if os.path.exists('./keyszer-temp'):
+#         subprocess.run(['pip', 'install', '--user', '--upgrade', './keyszer-temp'])
+#     else:
+#         print(f'"keyszer-temp" folder missing... Unable to install "keyszer"...')
+#         sys.exit(1)
 
 
 def backup_toshy_config():
@@ -182,6 +182,12 @@ def install_pip_pkgs():
     pip_cmd = os.path.join(cnfg.venv_path, 'bin', 'pip')
     subprocess.run([pip_cmd, 'install', '--upgrade'] + cnfg.pip_pkgs)
 
+    if os.path.exists('./keyszer-temp'):
+        subprocess.run([pip_cmd, 'install', '--user', '--upgrade', './keyszer-temp'])
+    else:
+        print(f'"keyszer-temp" folder missing... Unable to install "keyszer"...')
+        sys.exit(1)
+
 
 def apply_desktop_tweaks():
     """
@@ -194,7 +200,7 @@ def apply_desktop_tweaks():
     # gsettings set org.gnome.mutter overlay-key ''
     if cnfg.DESKTOP_ENV == 'gnome':
         subprocess.run(['gsettings', 'set', 'org.gnome.mutter', 'overlay-key', "''"])
-    
+
     # if KDE Plasma, disable Meta key opening app menu
     # append this to ~/.config/kwinrc:
     # [ModifierOnlyShortcuts]
@@ -262,7 +268,7 @@ if __name__ == '__main__':
     load_package_list()
     install_distro_pkgs()
     clone_keyszer_branch()
-    install_keyszer_for_user()
+    # install_keyszer_for_user()
     backup_toshy_config()
     install_toshy_files()
     setup_virtual_env()
