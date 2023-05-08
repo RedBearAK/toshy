@@ -4,7 +4,9 @@ Name=Toshy Preferences
 GenericName=Toshy Preferences
 # Known working "Exec" line. Leaving this here as a backup. 
 # Exec=/usr/bin/sh -c 'exec env TERM=xterm /usr/bin/python3 /home/$USER/.config/toshy/toshy_gui.py'
-Exec=/usr/bin/sh -c 'exec env TERM=xterm /home/$USER/.config/toshy/toshy_gui.py'
+# Exec line to launch Python file directly (doesn't activate venv)
+# Exec=/usr/bin/sh -c 'exec env TERM=xterm /home/$USER/.config/toshy/toshy_gui.py'
+Exec=/usr/bin/sh -c 'exec env TERM=xterm $HOME/.local/bin/toshy-gui'
 Terminal=false
 NoDisplay=false
 Icon=/home/kris/.config/toshy/assets/toshy_app_icon_rainbow.svg
