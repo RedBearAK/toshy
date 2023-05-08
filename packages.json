@@ -1,17 +1,4 @@
 {
-    "pipx": [
-        "dbus-python",
-        "lockfile",
-        "pillow",
-        "pip",
-        "pygobject",
-        "setuptools",
-        "sv_ttk",
-        "systemd-python",
-        "tk",
-        "watchdog",
-        "wheel"
-    ],
     "pip": [
         "pip",
         "wheel",
