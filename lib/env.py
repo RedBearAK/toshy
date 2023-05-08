@@ -117,7 +117,8 @@ def get_env_info():
 
     ########################################################################
     ##  Get desktop environment
-    _desktop_env = os.environ.get("XDG_SESSION_DESKTOP") or os.environ.get("XDG_CURRENT_DESKTOP")
+    # _desktop_env = os.environ.get("XDG_SESSION_DESKTOP") or os.environ.get("XDG_CURRENT_DESKTOP")
+    _desktop_env = os.environ.get("XDG_CURRENT_DESKTOP") or os.environ.get("XDG_SESSION_DESKTOP")
 
     if not _desktop_env:
         _desktop_env = None
