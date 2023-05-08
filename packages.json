@@ -10,6 +10,7 @@
         "pygobject",
         "tk",
         "sv_ttk",
+        "psutil",
         "watchdog"
     ],
     "kde": [
