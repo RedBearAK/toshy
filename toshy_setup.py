@@ -141,13 +141,14 @@ def backup_toshy_config():
     timestamp = datetime.datetime.now().strftime('_%Y%m%d_%H%M%S')
     toshy_backup_dir_path = os.path.abspath(cnfg.toshy_dir_path + timestamp)
 
-    try:
-        # Copy files recursively from source to destination
-        shutil.copytree(cnfg.toshy_dir_path, toshy_backup_dir_path)
-    except shutil.Error as e:
-        print(f"Failed to copy directory: {e}")
-    except OSError as e:
-        print(f"Failed to create backup directory: {e}")
+    if os.path.exists(os.path.join(os.path.expanduser('~'), '.config', 'toshy')):
+        try:
+            # Copy files recursively from source to destination
+            shutil.copytree(cnfg.toshy_dir_path, toshy_backup_dir_path)
+        except shutil.Error as e:
+            print(f"Failed to copy directory: {e}")
+        except OSError as e:
+            print(f"Failed to create backup directory: {e}")
 
 
 def install_toshy_files():
