@@ -61,6 +61,7 @@ class InstallerSettings:
         self.toshy_dir_path     = os.path.join(self.home_dir_path, '.config', 'toshy')
         self.venv_path          = os.path.join(self.toshy_dir_path, '.venv')
 
+        self.keyszer_tmp_path   = os.path.join('.', 'keyszer-temp')
         self.keyszer_clone_cmd  = 'git clone -b adapt_to_capslock https://github.com/RedBearAK/keyszer.git'
 
         self.input_group_name   = 'input'
@@ -118,11 +119,10 @@ def install_distro_pkgs():
 def clone_keyszer_branch():
     """clone the latest `keyszer` from GitHub"""
     print(f'\nCloning keyszer branch...\n')
-    keyszer_tmp_dir_path = os.path.join('.', 'keyszer-temp')
-    if os.path.exists(keyszer_tmp_dir_path):
+    if os.path.exists(cnfg.keyszer_tmp_path):
         # force a fresh copy of keyszer every time script is run
-        shutil.rmtree(keyszer_tmp_dir_path, ignore_errors=True)
-    subprocess.run(cnfg.keyszer_clone_cmd.split() + [keyszer_tmp_dir_path])
+        shutil.rmtree(cnfg.keyszer_tmp_path, ignore_errors=True)
+    subprocess.run(cnfg.keyszer_clone_cmd.split() + [cnfg.keyszer_tmp_path])
 
 
 # def install_keyszer_for_user():
@@ -159,7 +159,7 @@ def install_toshy_files():
         if os.path.exists(cnfg.toshy_dir_path):
             shutil.rmtree(cnfg.toshy_dir_path, ignore_errors=True)
         # Copy files recursively from source to destination
-        shutil.copytree('.', cnfg.toshy_dir_path, ignore=shutil.ignore_patterns(script_name))
+        shutil.copytree('.', cnfg.toshy_dir_path, ignore=shutil.ignore_patterns([script_name, cnfg.keyszer_tmp_path]))
     except shutil.Error as e:
         print(f"Failed to copy directory: {e}")
     except OSError as e:
