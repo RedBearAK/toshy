@@ -55,3 +55,49 @@ echo ""
 echo "The commands will not be available until you close the current terminal, or "
 echo "run 'hash -r', or source your shell RC file to refresh executable hash table."
 echo ""
+
+
+# Check if ~/.local/bin is in the user's PATH
+if ! echo "$PATH" | grep -q -E "(^|:)$HOME/.local/bin(:|$)"; then
+    echo -e "\nIt looks like ~/.local/bin is not in your PATH. To add it permanently, append the following line to your shell RC file:"
+
+    # shellcheck disable=SC2016
+    case "$SHELL" in
+        */bash)
+            shell_rc="$HOME/.bashrc"
+            echo 'export PATH="$HOME/.local/bin:$PATH"'
+            ;;
+        */zsh)
+            shell_rc="$HOME/.zshrc"
+            echo 'export PATH="$HOME/.local/bin:$PATH"'
+            ;;
+        */fish)
+            shell_rc="$HOME/.config/fish/config.fish"
+            echo 'set -U fish_user_paths $HOME/.local/bin $fish_user_paths'
+            ;;
+        *)
+            echo "Shell not recognized. Please add the appropriate line to your shell's RC file manually."
+            shell_rc=""
+            ;;
+    esac
+
+    if [[ -n "$shell_rc" ]]; then
+        read -r -p "Do you want to append the line to your $shell_rc file now? (y/n) " yn
+
+        # shellcheck disable=SC2016
+        case $yn in
+            [Yy]* )
+                echo -e "\nAppending the line to $shell_rc..."
+                if [[ "$SHELL" == */fish ]]; then
+                    echo 'set -U fish_user_paths $HOME/.local/bin $fish_user_paths' >> "$shell_rc"
+                else
+                    echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$shell_rc"
+                fi
+                echo -e "Done. Please restart your shell or run 'source $shell_rc' to apply the changes."
+                ;;
+            * )
+                echo -e "Skipping. Please add the line to your shell RC file manually."
+                ;;
+        esac
+    fi
+fi
