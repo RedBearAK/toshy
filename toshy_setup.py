@@ -55,10 +55,13 @@ class InstallerSettings:
 
         self.pkgs_json_dct      = None
         self.pkgs_for_distro    = None
-        self.pip_pkgs          = None
+        self.pip_pkgs           = None
 
-        self.keyszer_branch     = 'https://github.com/RedBearAK/keyszer/tree/adapt_to_capslock'
-        # self.keyszer_branch     = https://github.com/joshgoebel/keyszer
+        self.home_dir_path      = os.path.abspath(os.path.expanduser('~'))
+        self.toshy_dir_path     = os.path.join(self.home_dir_path, '.config', 'toshy')
+        self.venv_path          = os.path.join(self.toshy_dir_path, '.venv')
+
+        self.keyszer_clone_cmd  = 'clone -b adapt_to_capslock https://github.com/RedBearAK/keyszer.git'
 
         self.input_group_name   = 'input'
         self.user_name          = pwd.getpwuid(os.getuid()).pw_name
@@ -112,19 +115,14 @@ def install_distro_pkgs():
         sys.exit(0)
 
 
-def install_pip_pkgs():
-    """install `pip` packages for Python"""
-    print(f'\nInstalling/upgrading Python packages...\n')
-    subprocess.run(['pip', 'install', '--user', '--upgrade'] + cnfg.pip_pkgs)
-
-
 def clone_keyszer_branch():
     """clone the latest `keyszer` from GitHub"""
     print(f'\nCloning keyszer branch...\n')
-    if os.path.exists('./keyszer-temp'):
+    keyszer_tmp_dir_path = os.path.join('.', 'keyszer-temp')
+    if os.path.exists(keyszer_tmp_dir_path):
         # force a fresh copy of keyszer every time script is run
-        shutil.rmtree('keyszer', ignore_errors=True)
-    subprocess.run(['git', 'clone', f'{cnfg.keyszer_branch}', 'keyszer-temp'])
+        shutil.rmtree(keyszer_tmp_dir_path, ignore_errors=True)
+    subprocess.run(['git', cnfg.keyszer_clone_cmd, keyszer_tmp_dir_path])
 
 
 def install_keyszer_for_user():
@@ -140,19 +138,12 @@ def install_keyszer_for_user():
 def backup_toshy_config():
     """backup existing Toshy config folder"""
     print(f'\nBacking up existing Toshy config folder...\n')
-    home_dir_path = os.path.abspath(os.path.expanduser('~'))
-    toshy_dir_path = os.path.join(home_dir_path, '.config/toshy')
     timestamp = datetime.datetime.now().strftime('_%Y%m%d_%H%M%S')
-    toshy_backup_dir_path = os.path.abspath(toshy_dir_path + timestamp)
+    toshy_backup_dir_path = os.path.abspath(cnfg.toshy_dir_path + timestamp)
 
     try:
-        # Create destination directory if it doesn't exist
-        if not os.path.exists(toshy_backup_dir_path):
-            os.makedirs(toshy_backup_dir_path)
-
         # Copy files recursively from source to destination
-        shutil.copytree(toshy_dir_path, toshy_backup_dir_path)
-
+        shutil.copytree(cnfg.toshy_dir_path, toshy_backup_dir_path)
     except shutil.Error as e:
         print(f"Failed to copy directory: {e}")
     except OSError as e:
@@ -162,7 +153,34 @@ def backup_toshy_config():
 def install_toshy_files():
     """install Toshy files"""
     print(f'\nInstalling Toshy files...\n')
-    pass
+    script_name = os.path.basename(__file__)
+
+    try:
+        if os.path.exists(cnfg.toshy_dir_path):
+            shutil.rmtree(cnfg.toshy_dir_path, ignore_errors=True)
+        # Copy files recursively from source to destination
+        shutil.copytree('.', cnfg.toshy_dir_path, ignore=shutil.ignore_patterns(script_name))
+    except shutil.Error as e:
+        print(f"Failed to copy directory: {e}")
+    except OSError as e:
+        print(f"Failed to create backup directory: {e}")
+
+
+def setup_virtual_env():
+    """setup a virtual environment to install Python packages"""
+    print(f'\nSetting up virtual environment...\n')
+
+    # Create the virtual environment if it doesn't exist
+    if not os.path.exists(cnfg.venv_path):
+        subprocess.run([sys.executable, '-m', 'venv', cnfg.venv_path])
+    # We do not need to "activate" the venv right now, just create it
+
+
+def install_pip_pkgs():
+    """install `pip` packages for Python"""
+    print(f'\nInstalling/upgrading Python packages...\n')
+    pip_cmd = os.path.join(cnfg.venv_path, 'bin', 'pip')
+    subprocess.run([pip_cmd, 'install', '--upgrade'] + cnfg.pip_pkgs)
 
 
 def apply_desktop_tweaks():
@@ -237,16 +255,20 @@ def verify_user_groups():
 
 
 if __name__ == '__main__':
+
     cnfg = InstallerSettings()
+
     get_environment()
     load_package_list()
     install_distro_pkgs()
-    install_pip_pkgs()
     clone_keyszer_branch()
     install_keyszer_for_user()
     backup_toshy_config()
     install_toshy_files()
+    setup_virtual_env()
+    install_pip_pkgs()
     apply_desktop_tweaks()
     install_udev_rules()
     verify_user_groups()
+
     print(f'\n')
