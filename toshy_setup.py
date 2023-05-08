@@ -167,8 +167,11 @@ def install_toshy_files():
         print(f"Failed to copy directory: {e}")
     except OSError as e:
         print(f"Failed to create backup directory: {e}")
-    
-    print(f'Toshy files installed in ~/.config/toshy...')
+
+    toshy_default_cfg = os.path.join(
+        cnfg.toshy_dir_path, 'toshy-default-config', 'toshy_config.py')
+    shutil.copy(toshy_default_cfg, cnfg.toshy_dir_path)
+    print(f'Toshy files installed in {cnfg.toshy_dir_path}...')
 
 
 def setup_virtual_env():
