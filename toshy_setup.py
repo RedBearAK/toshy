@@ -154,6 +154,7 @@ def install_toshy_files():
     """install Toshy files"""
     print(f'\nInstalling Toshy files...\n')
     script_name = os.path.basename(__file__)
+    keyszer_tmp = os.path.basename(cnfg.keyszer_tmp_path)
 
     try:
         if os.path.exists(cnfg.toshy_dir_path):
@@ -163,7 +164,7 @@ def install_toshy_files():
             '.', 
             cnfg.toshy_dir_path, 
             ignore=shutil.ignore_patterns(
-                [script_name, cnfg.keyszer_tmp_path]
+                [script_name, keyszer_tmp]
             )
         )
     except shutil.Error as e:
