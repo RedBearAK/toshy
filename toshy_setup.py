@@ -182,6 +182,7 @@ def setup_virtual_env():
     if not os.path.exists(cnfg.venv_path):
         subprocess.run([sys.executable, '-m', 'venv', cnfg.venv_path])
     # We do not need to "activate" the venv right now, just create it
+    print(f'Virtual environment setup complete.')
 
 
 def install_pip_pkgs():
