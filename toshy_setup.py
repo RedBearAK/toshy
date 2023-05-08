@@ -140,6 +140,8 @@ def backup_toshy_config():
             print(f"Failed to copy directory: {e}")
         except OSError as e:
             print(f"Failed to create backup directory: {e}")
+        
+        print(f'Backup completed.')
     else:
         print(f'No existing Toshy folder to backup...')
 
@@ -165,6 +167,8 @@ def install_toshy_files():
         print(f"Failed to copy directory: {e}")
     except OSError as e:
         print(f"Failed to create backup directory: {e}")
+    
+    print(f'Toshy files installed in ~/.config/toshy...')
 
 
 def setup_virtual_env():
