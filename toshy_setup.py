@@ -61,7 +61,7 @@ class InstallerSettings:
         self.toshy_dir_path     = os.path.join(self.home_dir_path, '.config', 'toshy')
         self.venv_path          = os.path.join(self.toshy_dir_path, '.venv')
 
-        self.keyszer_clone_cmd  = 'clone -b adapt_to_capslock https://github.com/RedBearAK/keyszer.git'
+        self.keyszer_clone_cmd  = 'git clone -b adapt_to_capslock https://github.com/RedBearAK/keyszer.git'
 
         self.input_group_name   = 'input'
         self.user_name          = pwd.getpwuid(os.getuid()).pw_name
@@ -122,7 +122,7 @@ def clone_keyszer_branch():
     if os.path.exists(keyszer_tmp_dir_path):
         # force a fresh copy of keyszer every time script is run
         shutil.rmtree(keyszer_tmp_dir_path, ignore_errors=True)
-    subprocess.run(['git', cnfg.keyszer_clone_cmd, keyszer_tmp_dir_path])
+    subprocess.run([cnfg.keyszer_clone_cmd, keyszer_tmp_dir_path])
 
 
 def install_keyszer_for_user():
