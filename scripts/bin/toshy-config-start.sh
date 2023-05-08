@@ -20,7 +20,6 @@ pkill -f "bin/keyszer"
 # systemctl stop xkeysnail.service
 pkill -f "bin/xkeysnail"
 
-cd "$HOME/.config/toshy" || exit 1
-source .venv/bin/activate
+source "$HOME/.config/toshy/.venv/bin/activate"
 
 keyszer -w -c "$HOME/.config/toshy/toshy_config.py"

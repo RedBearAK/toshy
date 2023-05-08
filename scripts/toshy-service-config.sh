@@ -8,8 +8,7 @@
 export PATH=$HOME/.local/bin:$PATH
 
 # Start the virtual environment
-cd "$HOME/.config/toshy" || exit 1
-source .venv/bin/activate
+source "$HOME/.config/toshy/.venv/bin/activate"
 
 
 if command -v keyszer >/dev/null 2>&1; then
