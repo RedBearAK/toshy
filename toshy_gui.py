@@ -11,19 +11,12 @@ APP_VERSION     = '2023.0417'
 import os
 import sys
 import time
-from turtle import bgcolor
 import dbus
 import fcntl
 import psutil
 import signal
-import select
 import threading
-import traceback
 import subprocess
-
-from constants import Constants
-from pprint import pprint, pp
-from collections import OrderedDict
 
 # Local imports
 from lib.logger import *
