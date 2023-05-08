@@ -129,7 +129,7 @@ def clone_keyszer_branch():
 #     """install `keyszer` for the local user"""
 #     print(f'\nInstalling keyszer for user...\n')
 #     if os.path.exists('./keyszer-temp'):
-#         subprocess.run(['pip', 'install', '--user', '--upgrade', './keyszer-temp'])
+#         subprocess.run(['pip', 'install', '--upgrade', './keyszer-temp'])
 #     else:
 #         print(f'"keyszer-temp" folder missing... Unable to install "keyszer"...')
 #         sys.exit(1)
@@ -183,7 +183,7 @@ def install_pip_pkgs():
     subprocess.run([pip_cmd, 'install', '--upgrade'] + cnfg.pip_pkgs)
 
     if os.path.exists('./keyszer-temp'):
-        subprocess.run([pip_cmd, 'install', '--user', '--upgrade', './keyszer-temp'])
+        subprocess.run([pip_cmd, 'install', '--upgrade', './keyszer-temp'])
     else:
         print(f'"keyszer-temp" folder missing... Unable to install "keyszer"...')
         sys.exit(1)
