@@ -13,17 +13,17 @@
         "wheel"
     ],
     "pip": [
-        "dbus-python",
-        "lockfile",
-        "pillow",
         "pip",
-        "pygobject",
+        "wheel",
         "setuptools",
-        "sv_ttk",
+        "pillow",
+        "lockfile",
+        "dbus-python",
         "systemd-python",
+        "pygobject",
         "tk",
-        "watchdog",
-        "wheel"
+        "sv_ttk",
+        "watchdog"
     ],
     "kde": [
         "ibus",
