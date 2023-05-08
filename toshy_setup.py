@@ -122,7 +122,7 @@ def clone_keyszer_branch():
     if os.path.exists(keyszer_tmp_dir_path):
         # force a fresh copy of keyszer every time script is run
         shutil.rmtree(keyszer_tmp_dir_path, ignore_errors=True)
-    subprocess.run([cnfg.keyszer_clone_cmd, keyszer_tmp_dir_path])
+    subprocess.run([cnfg.keyszer_clone_cmd.split(), keyszer_tmp_dir_path])
 
 
 def install_keyszer_for_user():
