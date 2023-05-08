@@ -47,6 +47,7 @@ else:
 class InstallerSettings:
     """set up variables for necessary information to be used by all functions"""
     def __init__(self) -> None:
+        self.separator          = '========================'
         self.env_info_dct       = None
         self.DISTRO_NAME        = None
         self.DISTRO_VER         = None
@@ -92,7 +93,7 @@ def load_package_list():
 
 def install_distro_pkgs():
     """install needed packages from list for distro type"""
-    print(f'\nInstalling native packages...\n')
+    print(f'\nInstalling native packages...\n{cnfg.separator}')
 
     if True is False: pass  # dummy first line just because
     
@@ -118,26 +119,16 @@ def install_distro_pkgs():
 
 def clone_keyszer_branch():
     """clone the latest `keyszer` from GitHub"""
-    print(f'\nCloning keyszer branch...\n')
+    print(f'\nCloning keyszer branch...\n{cnfg.separator}')
     if os.path.exists(cnfg.keyszer_tmp_path):
         # force a fresh copy of keyszer every time script is run
         shutil.rmtree(cnfg.keyszer_tmp_path, ignore_errors=True)
     subprocess.run(cnfg.keyszer_clone_cmd.split() + [cnfg.keyszer_tmp_path])
 
 
-# def install_keyszer_for_user():
-#     """install `keyszer` for the local user"""
-#     print(f'\nInstalling keyszer for user...\n')
-#     if os.path.exists('./keyszer-temp'):
-#         subprocess.run(['pip', 'install', '--upgrade', './keyszer-temp'])
-#     else:
-#         print(f'"keyszer-temp" folder missing... Unable to install "keyszer"...')
-#         sys.exit(1)
-
-
 def backup_toshy_config():
     """backup existing Toshy config folder"""
-    print(f'\nBacking up existing Toshy config folder...\n')
+    print(f'\nBacking up existing Toshy config folder...\n{cnfg.separator}')
     timestamp = datetime.datetime.now().strftime('_%Y%m%d_%H%M%S')
     toshy_backup_dir_path = os.path.abspath(cnfg.toshy_dir_path + timestamp)
 
@@ -149,11 +140,13 @@ def backup_toshy_config():
             print(f"Failed to copy directory: {e}")
         except OSError as e:
             print(f"Failed to create backup directory: {e}")
+    else:
+        print(f'No existing Toshy folder to backup...')
 
 
 def install_toshy_files():
     """install Toshy files"""
-    print(f'\nInstalling Toshy files...\n')
+    print(f'\nInstalling Toshy files...\n{cnfg.separator}')
     script_name = os.path.basename(__file__)
     keyszer_tmp = os.path.basename(cnfg.keyszer_tmp_path)
 
@@ -176,7 +169,7 @@ def install_toshy_files():
 
 def setup_virtual_env():
     """setup a virtual environment to install Python packages"""
-    print(f'\nSetting up virtual environment...\n')
+    print(f'\nSetting up virtual environment...\n{cnfg.separator}')
 
     # Create the virtual environment if it doesn't exist
     if not os.path.exists(cnfg.venv_path):
@@ -186,7 +179,7 @@ def setup_virtual_env():
 
 def install_pip_pkgs():
     """install `pip` packages for Python"""
-    print(f'\nInstalling/upgrading Python packages...\n')
+    print(f'\nInstalling/upgrading Python packages...\n{cnfg.separator}')
     pip_cmd = os.path.join(cnfg.venv_path, 'bin', 'pip')
     # Avoid deprecation errors by making sure wheel is installed early
     subprocess.run([pip_cmd, 'install', '--upgrade', 'wheel'])
@@ -206,7 +199,7 @@ def apply_desktop_tweaks():
     fix things like Meta key activating overview in GNOME or KDE Plasma
     and fix the Unicode sequences in KDE Plasma
     """
-    print(f'\nApplying any necessary desktop tweaks...\n')
+    print(f'\nApplying any necessary desktop tweaks...\n{cnfg.separator}')
     
     # if GNOME, disable `overlay-key`
     # gsettings set org.gnome.mutter overlay-key ''
@@ -243,7 +236,7 @@ def remove_desktop_tweaks():
 def install_udev_rules():
     """set up udev rules file to give user/keyszer access to uinput"""
     if not os.path.exists('/etc/udeb/rules.d/90-keymapper-input.rules'):
-        print(f'\nInstalling "udev" rules file for keymapper...\n')
+        print(f'\nInstalling "udev" rules file for keymapper...\n{cnfg.separator}')
         rule_content = 'SUBSYSTEM=="input", GROUP="input"\nKERNEL=="uinput", SUBSYSTEM=="misc", GROUP="input"\n'
         command = 'sudo tee /etc/udev/rules.d/90-keymapper-input.rules'
         try:
@@ -258,17 +251,17 @@ def verify_user_groups():
         grp.getgrnam(cnfg.input_group_name)
     except KeyError:
         # The group doesn't exist, so create it
-        print(f'Creating "input" group...\n')
+        print(f'Creating "input" group...\n{cnfg.separator}')
         subprocess.run(['sudo', 'groupadd', cnfg.input_group_name])
 
     # Check if the user is already in the `input` group
     group_info = grp.getgrnam(cnfg.input_group_name)
     if cnfg.user_name in group_info.gr_mem:
-        print(f'\nUser {cnfg.user_name} is a member of group {cnfg.input_group_name}, continuing...\n')
+        print(f'\nUser "{cnfg.user_name}" is a member of group "{cnfg.input_group_name}", continuing...\n')
     else:
         # Add the user to the input group
         subprocess.run(['sudo', 'usermod', '-aG', cnfg.input_group_name, cnfg.user_name])
-        print(f'\nUser {cnfg.user_name} added to group {cnfg.input_group_name}...')
+        print(f'\nUser "{cnfg.user_name}" added to group "{cnfg.input_group_name}"...')
         print(f'May need to REBOOT or at least LOG OUT/IN to have proper permissions...\n')
 
 
@@ -280,7 +273,6 @@ if __name__ == '__main__':
     load_package_list()
     install_distro_pkgs()
     clone_keyszer_branch()
-    # install_keyszer_for_user()
     backup_toshy_config()
     install_toshy_files()
     setup_virtual_env()
