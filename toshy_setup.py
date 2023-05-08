@@ -164,7 +164,7 @@ def install_toshy_files():
             '.', 
             cnfg.toshy_dir_path, 
             ignore=shutil.ignore_patterns(
-                [script_name, keyszer_tmp]
+                script_name, keyszer_tmp
             )
         )
     except shutil.Error as e:
