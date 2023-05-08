@@ -228,8 +228,10 @@ def monitor_toshy_services():
     # debug(f'Entering GUI monitoring function...')
     global last_settings_list
     global svc_status_config, svc_status_sessmon
-    toshy_svc_config_unit_state = None
-    toshy_svc_sessmon_unit_state = None
+    toshy_svc_config_unit_state     = None
+    toshy_svc_config_unit_path      = None
+    toshy_svc_sessmon_unit_state    = None
+    toshy_svc_sessmon_unit_path     = None
     last_svcs_state_tup = (None, None)
     _first_run = True
 
@@ -244,8 +246,19 @@ def monitor_toshy_services():
         'org.freedesktop.systemd1.Manager'
     )
 
-    toshy_svc_config_unit_path = systemd1_mgr_iface.GetUnit(toshy_svc_config)
-    toshy_svc_sessmon_unit_path = systemd1_mgr_iface.GetUnit(toshy_svc_session_monitor)
+    # Deal with the possibility that the services are not installed
+    while not toshy_svc_sessmon_unit_path and not toshy_svc_config_unit_path:
+        try:
+            toshy_svc_config_unit_path = systemd1_mgr_iface.GetUnit(toshy_svc_config)
+            toshy_svc_sessmon_unit_path = systemd1_mgr_iface.GetUnit(toshy_svc_session_monitor)
+        except dbus.exceptions.DBusException as e:
+            debug("DBusException: {}".format(str(e)))
+
+        if toshy_svc_sessmon_unit_path and toshy_svc_config_unit_path:
+            break
+        else:
+            time.sleep(5)
+
 
     def get_svc_states_dbus():
         nonlocal toshy_svc_config_unit_state, toshy_svc_sessmon_unit_state
