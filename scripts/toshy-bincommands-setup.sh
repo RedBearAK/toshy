@@ -32,6 +32,9 @@ ln -sf "$HOME/.config/toshy/scripts/bin/toshy-config-restart.sh" "$HOME/.local/b
 ln -sf "$HOME/.config/toshy/scripts/bin/toshy-config-start.sh" "$HOME/.local/bin/toshy-config-start"
 ln -sf "$HOME/.config/toshy/scripts/bin/toshy-config-stop.sh" "$HOME/.local/bin/toshy-config-stop"
 
+ln -sf "$HOME/.config/toshy/scripts/bin/toshy-tray.sh" "$HOME/.local/bin/toshy-tray"
+ln -sf "$HOME/.config/toshy/scripts/bin/toshy-gui.sh" "$HOME/.local/bin/toshy-gui"
+
 
 echo ""
 echo "Finished installing Toshy bin commands:"
@@ -46,6 +49,8 @@ echo "- toshy-services-log"
 echo "- toshy-config-restart"
 echo "- toshy-config-start"
 echo "- toshy-config-stop"
+echo "- toshy-tray"
+echo "- toshy-gui"
 echo ""
 echo "The commands will not be available until you close the current terminal, or "
 echo "run 'hash -r', or source your shell RC file to refresh executable hash table."

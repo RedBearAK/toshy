@@ -31,6 +31,9 @@ echo -e "\nRemoving Toshy bin commands..."
 /usr/bin/rm -f "$HOME/.local/bin/toshy-config-start"
 /usr/bin/rm -f "$HOME/.local/bin/toshy-config-stop"
 
+/usr/bin/rm -f "$HOME/.local/bin/toshy-tray"
+/usr/bin/rm -f "$HOME/.local/bin/toshy-gui"
+
 
 echo ""
 echo "Finished removing Toshy bin commands:"
@@ -42,6 +45,8 @@ echo "- toshy-services-restart"
 echo "- toshy-services-start"
 echo "- toshy-services-stop"
 echo "- toshy-services-log"
+echo "- toshy-tray"
+echo "- toshy-gui"
 echo ""
 echo "The commands will still be available until you close the current terminal, or "
 echo "run 'hash -r', or source your shell RC file to refresh executable hash table."
