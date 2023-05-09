@@ -63,10 +63,12 @@ while true
                 # echo "Session for user $USER is NOT active right now. $(date +%F_%H%M%S)" | tee -a /tmp/user-$USER.txt
                 if [[ "$SERVICE_STATUS" == "active" ]]
                     then
+                        echo "SESSMON: Stopping config service because session is inactive."
                         /usr/bin/systemctl --user stop toshy-config.service > /dev/null 2>&1
                         STOPPED_BY_ME="true"
                 fi
         fi
+
         sleep 3 # no need to check too frequently
-        
+
 done
