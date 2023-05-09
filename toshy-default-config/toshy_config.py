@@ -3448,7 +3448,8 @@ keymap("GenGUI overrides: Deepin", {
     C("Alt-RC-Space"):          C("Super-e"),                   # Open Finder - (deepin)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'deepin' )
 keymap("GenGUI overrides: GNOME", {
-    C("RC-Space"):              C("Alt-F1"),                    # Default SL - Launch Application Menu (gnome/kde)
+    # C("RC-Space"):              C("Alt-F1"),                    # Default SL - Launch Application Menu (gnome/kde)
+    C("RC-Space"):              C("Super-s"),                   # Show GNOME overview/app launcher
     C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,eos)
     C("RC-Super-f"):            C("Alt-F10"),                   # Default SL - Maximize app (gnome/kde)
     C("RC-H"):                  C("Super-h"),                   # Default SL - Minimize app (gnome/budgie/popos/fedora) not-deepin
