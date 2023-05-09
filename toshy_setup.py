@@ -216,6 +216,13 @@ def install_toshy_apps():
     subprocess.run([script_path])
 
 
+def setup_toshy_services():
+    """invoke the setup script to install the systemd service units"""
+    print(f'\nSetting up the Toshy systemd services...\n{cnfg.separator}')
+    script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'bin', 'toshy-systemd-setup.sh')
+    subprocess.run([script_path])
+
+
 def apply_desktop_tweaks():
     """
     fix things like Meta key activating overview in GNOME or KDE Plasma
@@ -301,6 +308,7 @@ if __name__ == '__main__':
     install_pip_pkgs()
     install_toshy_scripts()
     install_toshy_apps()
+    setup_toshy_services()
     apply_desktop_tweaks()
     install_udev_rules()
     verify_user_groups()
