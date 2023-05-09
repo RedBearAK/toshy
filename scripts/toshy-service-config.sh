@@ -14,13 +14,19 @@ source "$HOME/.config/toshy/.venv/bin/activate"
 
 # Check if the desktop session is X11
 if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
+    # Check if xset is installed
+    if ! command -v xset &> /dev/null; then
+        echo "Toshy Config Service: xset could not be found, please install it." >&2
+        exit 1
+    fi
     # Loop until the X server is ready
     while true; do
         if xset -q &>/dev/null; then
             break
         else
+            echo "Toshy Config Service: X server not ready?" >&2
             # Sleep for a short period before trying again
-            sleep 1
+            sleep 2
         fi
     done
 fi
