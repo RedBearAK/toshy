@@ -3440,6 +3440,9 @@ keymap("GenGUI overrides: Budgie", {
     C("Super-Left"):            C("C-Alt-Left"),                # Default SL - Change workspace (budgie)
     C("RC-H"):                  C("Super-h"),                   # Default SL - Minimize app (gnome/budgie/popos/fedora) not-deepin
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'budgie' )
+keymap("GenGUI overrides: Cinnamon", {
+    C("RC-Space"):              C("C-Esc"),                     # Right click, configure Mint menu shortcut to Ctrl+Esc
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'cinnamon' )
 keymap("GenGUI overrides: Deepin", {
     C("RC-H"):                  C("Super-n"),                   # Default SL - Minimize app (deepin)
     C("Alt-RC-Space"):          C("Super-e"),                   # Open Finder - (deepin)
