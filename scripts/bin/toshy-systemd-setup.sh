@@ -47,6 +47,8 @@ sleep $DELAY
 
 sleep $DELAY
 
+export SYSTEMD_PAGER=""
+
 echo -e "\nDisplaying status of Toshy systemd services...\n"
 
 /usr/bin/systemctl --user status toshy-session-monitor.service
