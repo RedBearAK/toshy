@@ -97,7 +97,7 @@ def install_distro_pkgs():
 
     if True is False: pass  # dummy first line just because
     
-    elif cnfg.DISTRO_NAME in ['ubuntu', 'debian']:
+    elif cnfg.DISTRO_NAME in ['ubuntu', 'linux mint', 'debian']:
         subprocess.run(['sudo', 'apt', 'install', '-y'] + cnfg.pkgs_for_distro)
     
     elif cnfg.DISTRO_NAME in ['fedora', 'fedoralinux']:
