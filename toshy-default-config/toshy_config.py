@@ -3471,8 +3471,8 @@ keymap("GenGUI overrides: Xfce4", {
     C("RC-H"):                  C("Alt-F9"),                    # SL - Minimize app xfce4
     # Screenshot shortcuts for Xfce desktops (xfce4-screenshooter app)
     C("RC-Shift-Key_3"):        C("Print"),                     # Take a screenshot immediately (kde)
-    C("RC-Shift-Key_4"):        C("Shift-Print"),               # Take a screenshot of a window (kde)
-    C("RC-Shift-Key_5"):        C("Alt-Print"),                 # Take a screenshot interactively (kde)
+    C("RC-Shift-Key_4"):        C("Alt-Print"),               # Take a screenshot of a window (kde)
+    C("RC-Shift-Key_5"):        C("Shift-Print"),                 # Take a screenshot interactively (kde)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'xfce' )
 
 
