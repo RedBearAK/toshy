@@ -223,17 +223,36 @@ def setup_toshy_services():
     subprocess.run([script_path])
 
 
+def autostart_tray():
+    """set the tray icon to autostart at login"""
+    print(f'\nSetting tray icon to load automatically at login...\n{cnfg.separator}')
+    tray_desktop_path = os.path.join(
+        os.path.expanduser('~'), '.local', 'share', 'applications', 'Toshy_Tray.desktop')
+    autostart_dir_path = os.path.join(
+        os.path.expanduser('~'), '.config', 'autostart', 'Toshy_Tray.desktop')
+    subprocess.run(['ln', '-sf', tray_desktop_path, autostart_dir_path])
+    # Try to start the tray icon immediately
+    subprocess.run(['gtk-launch', 'Toshy_Tray'])
+
+
 def apply_desktop_tweaks():
     """
     fix things like Meta key activating overview in GNOME or KDE Plasma
     and fix the Unicode sequences in KDE Plasma
+    
+    TODO: These tweaks should probably be done at startup of the config
+            instead of here in the installer. 
     """
     print(f'\nApplying any necessary desktop tweaks...\n{cnfg.separator}')
     
+    if cnfg.DESKTOP_ENV == 'xfce':
+        print(f'Nothing to be done for Xfce yet...')
+
     # if GNOME, disable `overlay-key`
     # gsettings set org.gnome.mutter overlay-key ''
     if cnfg.DESKTOP_ENV == 'gnome':
         subprocess.run(['gsettings', 'set', 'org.gnome.mutter', 'overlay-key', "''"])
+        print(f'Disabled Super/Meta/Win/Cmd key opening the GNOME overview...')
 
     # if KDE Plasma, disable Meta key opening app menu
     # append this to ~/.config/kwinrc:
@@ -309,6 +328,7 @@ if __name__ == '__main__':
     install_toshy_scripts()
     install_toshy_apps()
     setup_toshy_services()
+    autostart_tray()
     apply_desktop_tweaks()
     install_udev_rules()
     verify_user_groups()
