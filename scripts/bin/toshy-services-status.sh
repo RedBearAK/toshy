@@ -15,6 +15,7 @@ fi
 #     exit 1
 # fi
 
+export SYSTEMD_PAGER=""
 
 echo -e "\nCurrent status of Toshy systemd services..."
 echo "--------------------------------------------------------------------------------"
