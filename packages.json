@@ -26,7 +26,8 @@
         "python3-tkinter",
         "gobject-introspection-devel",
         "libappindicator-gtk3",
-        "systemd-devel"
+        "systemd-devel",
+        "xset"
     ],
     "ubuntu": [
         "git",
