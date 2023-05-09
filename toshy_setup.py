@@ -205,15 +205,15 @@ def install_pip_pkgs():
 def install_toshy_scripts():
     """install the convenient scripts to manage Toshy"""
     print(f'\nInstalling Toshy script commands...\n{cnfg.separator}')
-    scripts_path = os.path.join(cnfg.toshy_dir_path, 'scripts')
-    subprocess.run([scripts_path, 'toshy-bincommands-setup.sh'])
+    script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'toshy-bincommands-setup.sh')
+    subprocess.run([script_path])
 
 
 def install_toshy_apps():
     """install the convenient scripts to manage Toshy"""
     print(f'\nInstalling Toshy desktop apps...\n{cnfg.separator}')
-    scripts_path = os.path.join(cnfg.toshy_dir_path, 'scripts')
-    subprocess.run([scripts_path, 'toshy-desktopapps-setup.sh'])
+    script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'toshy-desktopapps-setup.sh')
+    subprocess.run([script_path])
 
 
 def apply_desktop_tweaks():
