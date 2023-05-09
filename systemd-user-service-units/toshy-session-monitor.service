@@ -4,7 +4,7 @@ Wants=default.target
 After=default.target
 
 [Service]
-ExecStart=/usr/bin/bash -c 'env TERM=xterm /home/$USER/.config/toshy/scripts/toshy-service-session-monitor.sh'
+ExecStart=/usr/bin/bash -c 'env TERM=xterm $HOME/.config/toshy/scripts/toshy-service-session-monitor.sh'
 Restart=always
 RestartSec=5
 

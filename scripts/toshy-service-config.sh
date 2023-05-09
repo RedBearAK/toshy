@@ -20,7 +20,7 @@ if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
             break
         else
             # Sleep for a short period before trying again
-            sleep 2
+            sleep 1
         fi
     done
 fi
