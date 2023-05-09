@@ -12,15 +12,18 @@ export PATH=$HOME/.local/bin:$PATH
 source "$HOME/.config/toshy/.venv/bin/activate"
 
 
-# Loop until the X server is ready
-while true; do
-    if xset -q &>/dev/null; then
-        break
-    else
-        # Sleep for a short period before trying again
-        sleep 2
-    fi
-done
+# Check if the desktop session is X11
+if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
+    # Loop until the X server is ready
+    while true; do
+        if xset -q &>/dev/null; then
+            break
+        else
+            # Sleep for a short period before trying again
+            sleep 2
+        fi
+    done
+fi
 
 
 if command -v keyszer >/dev/null 2>&1; then
