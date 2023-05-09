@@ -8,7 +8,6 @@
         "tk",
         "sv_ttk",
         "psutil",
-        "constants",
         "watchdog"
     ],
     "kde": [
