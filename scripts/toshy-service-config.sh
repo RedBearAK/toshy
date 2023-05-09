@@ -39,6 +39,4 @@ fi
 /usr/bin/pkill -f "bin/keyszer"
 /usr/bin/pkill -f "bin/xkeysnail"
 
-sleep 3
-
 keyszer -w -c "$HOME/.config/toshy/toshy_config.py"
