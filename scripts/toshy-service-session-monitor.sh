@@ -23,6 +23,23 @@ else
 fi
 
 
+# If XDG_RUNTIME_DIR is not set or is empty
+if [ -z "${XDG_RUNTIME_DIR}" ]; then
+    echo "Toshy Config Service: XDG_RUNTIME_DIR is not set. Unable to determine where to store the marker file."
+    # exit 1
+else
+    # Full path to the marker file
+    MARKER_FILE="${XDG_RUNTIME_DIR}/toshy-service-sessmon.start"
+    # Check if a marker file exists
+    if [ ! -f "${MARKER_FILE}" ]; then
+        # If it does not exist, wait for a certain time period
+        sleep 8
+        # Create the marker file to signify that the service has started once
+        touch "${MARKER_FILE}"
+    fi
+fi
+
+
 USER="$(whoami)"
 STOPPED_BY_ME="false"
 
@@ -70,7 +87,5 @@ while true
                         STOPPED_BY_ME="true"
                 fi
         fi
-
-        sleep 3 # no need to check too frequently
 
 done
