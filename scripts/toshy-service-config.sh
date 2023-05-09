@@ -8,6 +8,7 @@
 export PATH=$HOME/.local/bin:$PATH
 
 # Start the virtual environment
+# shellcheck disable=SC1091
 source "$HOME/.config/toshy/.venv/bin/activate"
 
 
