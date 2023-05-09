@@ -1,7 +1,7 @@
 [Unit]
 Description=Toshy Config Service
-Wants=graphical.target
-After=graphical.target
+Wants=default.target
+After=default.target
 
 [Service]
 ExecStart=/usr/bin/bash -c 'env TERM=xterm /home/$USER/.config/toshy/scripts/toshy-service-config.sh'
@@ -9,4 +9,4 @@ Restart=always
 RestartSec=5
 
 [Install]
-WantedBy=graphical.target
+WantedBy=default.target
