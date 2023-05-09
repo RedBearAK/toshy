@@ -202,6 +202,20 @@ def install_pip_pkgs():
         sys.exit(1)
 
 
+def install_toshy_scripts():
+    """install the convenient scripts to manage Toshy"""
+    print(f'\nInstalling Toshy script commands...\n{cnfg.separator}')
+    scripts_path = os.path.join(cnfg.toshy_dir_path, 'scripts')
+    subprocess.run([scripts_path, 'toshy-bincommands-setup.sh'])
+
+
+def install_toshy_apps():
+    """install the convenient scripts to manage Toshy"""
+    print(f'\nInstalling Toshy desktop apps...\n{cnfg.separator}')
+    scripts_path = os.path.join(cnfg.toshy_dir_path, 'scripts')
+    subprocess.run([scripts_path, 'toshy-desktopapps-setup.sh'])
+
+
 def apply_desktop_tweaks():
     """
     fix things like Meta key activating overview in GNOME or KDE Plasma
@@ -285,6 +299,8 @@ if __name__ == '__main__':
     install_toshy_files()
     setup_virtual_env()
     install_pip_pkgs()
+    install_toshy_scripts()
+    install_toshy_apps()
     apply_desktop_tweaks()
     install_udev_rules()
     verify_user_groups()
