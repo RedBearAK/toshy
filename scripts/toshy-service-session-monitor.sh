@@ -33,6 +33,8 @@ sleep 2
 while true
     do
 
+        sleep 3
+
         # get the current session ID (number)
         SESSION_ID="$(/usr/bin/loginctl session-status | head -n1 | cut -d' ' -f1)"
 
@@ -49,7 +51,7 @@ while true
                 if [[ "$SERVICE_STATUS" == "inactive" ]]
                     then
                         # only start Toshy Config service if we stopped it due to inactive session (below)
-                        if [[ "$STOPPED_BY_ME" == "1" ]]
+                        if [[ "$STOPPED_BY_ME" == "true" ]]
                             then
                                 /usr/bin/systemctl --user start toshy-config.service > /dev/null 2>&1
                                 STOPPED_BY_ME="false"
