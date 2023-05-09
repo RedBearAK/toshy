@@ -65,6 +65,18 @@
         "gir1.2-appindicator3-0.1",
         "systemd-dev"
     ],
+    "antix": [
+        "git",
+        "input-utils",
+        "libcairo2-dev",
+        "pipx",
+        "python3-dbus",
+        "python3-dev",
+        "python3-tk",
+        "libgirepository1.0-dev",
+        "gir1.2-appindicator3-0.1",
+        "systemd-dev"
+    ],
     "arch": [
         "cairo",
         "evtest",
