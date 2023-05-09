@@ -19,6 +19,7 @@
         "git",
         "evtest",
         "cairo-devel",
+        "cairo-gobject-devel",
         "dbus-devel",
         "python3-dbus",
         "python3-devel",
