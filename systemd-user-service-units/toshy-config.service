@@ -1,8 +1,8 @@
 [Unit]
 Description=Toshy Config Service
-# Wants=graphical-session.target
-# After=graphical-session.target
-# PartOf=graphical-session.target
+# Wants=default.target
+After=default.target
+# PartOf=default.target
 
 [Service]
 ExecStart=/usr/bin/bash -lc 'env TERM=xterm $HOME/.config/toshy/scripts/toshy-service-config.sh'
