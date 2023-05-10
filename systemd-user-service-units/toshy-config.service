@@ -1,7 +1,8 @@
 [Unit]
 Description=Toshy Config Service
-Wants=default.target
-After=default.target
+Wants=graphical.target
+After=graphical.target
+PartOf=graphical.target
 
 [Service]
 # ExecStartPre=/bin/bash -c 'for i in {1..9}; do if xset -q &> /dev/null; then break; else sleep $((2*i)); fi; done'
@@ -10,4 +11,4 @@ Restart=always
 RestartSec=5
 
 [Install]
-WantedBy=default.target
+WantedBy=graphical.target
