@@ -33,6 +33,10 @@ echo -e "\nIssuing systemctl daemon-reload..."
 
 /usr/bin/systemctl --user daemon-reload
 
+/usr/bin/systemctl --user reenable toshy-config.service
+/usr/bin/systemctl --user reenable toshy-session-monitor.service
+
+
 sleep $DELAY
 
 echo -e "\nStarting Toshy systemd services..."
