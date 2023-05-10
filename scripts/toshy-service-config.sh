@@ -47,6 +47,10 @@ if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
             sleep 2
         fi
     done
+elif [[ -z "$XDG_SESSION_TYPE" ]]; then
+    sleep 3
+    echo "Toshy Config Service: XDG_SESSION_TYPE not set. Restarting service." >&2
+    exit 1
 fi
 
 
