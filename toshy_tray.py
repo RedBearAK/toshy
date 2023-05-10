@@ -424,7 +424,7 @@ def fn_stop_toshy_services(widget):
     ntfy_id_last = ntfy_id_new
 
 def fn_open_preferences(widget):
-    subprocess.Popen(['/usr/bin/python3', f'{current_folder_path}/toshy_gui.py'])
+    subprocess.Popen(['python3', f'{current_folder_path}/toshy_gui.py'])
 
 def fn_open_config_folder(widget):
     try:
