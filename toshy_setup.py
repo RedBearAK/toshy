@@ -225,18 +225,6 @@ def setup_toshy_services():
     subprocess.run([script_path])
 
 
-def autostart_tray():
-    """set the tray icon to autostart at login"""
-    print(f'\nSetting tray icon to load automatically at login...\n{cnfg.separator}')
-    tray_desktop_path = os.path.join(
-        os.path.expanduser('~'), '.local', 'share', 'applications', 'Toshy_Tray.desktop')
-    autostart_dir_path = os.path.join(
-        os.path.expanduser('~'), '.config', 'autostart', 'Toshy_Tray.desktop')
-    subprocess.run(['ln', '-sf', tray_desktop_path, autostart_dir_path])
-    # Try to start the tray icon immediately
-    subprocess.run(['gtk-launch', 'Toshy_Tray'])
-
-
 def apply_desktop_tweaks():
     """
     fix things like Meta key activating overview in GNOME or KDE Plasma
@@ -281,6 +269,22 @@ def remove_desktop_tweaks():
     # qdbus org.kde.KWin /KWin reconfigure
     if cnfg.DESKTOP_ENV == 'kde':
         subprocess.run(['qdbus', 'org.kde.KWin', '/KWin', 'reconfigure'])
+
+
+def autostart_tray_icon():
+    """set the tray icon to autostart at login"""
+    print(f'\nSetting tray icon to load automatically at login...\n{cnfg.separator}')
+    user_path           = os.path.expanduser('~')
+    desktop_files_path  = os.path.join(user_path, '.local', 'share', 'applications')
+    tray_desktop_file   = os.path.join(desktop_files_path, 'Toshy_Tray.desktop')
+    autostart_dir_path  = os.path.join(user_path, '.config', 'autostart')
+    dest_link_file      = os.path.join(autostart_dir_path, 'Toshy_Tray.desktop')
+
+    # Need to create autostart folder if necessary
+    os.makedirs(autostart_dir_path, exist_ok=True)
+    subprocess.run(['ln', '-sf', tray_desktop_file, dest_link_file])
+    # Try to start the tray icon immediately
+    subprocess.run(['gtk-launch', 'Toshy_Tray'])
 
 
 def install_udev_rules():
@@ -330,7 +334,7 @@ if __name__ == '__main__':
     install_toshy_scripts()
     install_toshy_apps()
     setup_toshy_services()
-    autostart_tray()
+    autostart_tray_icon()
     apply_desktop_tweaks()
     install_udev_rules()
     verify_user_groups()
