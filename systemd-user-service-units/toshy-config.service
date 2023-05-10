@@ -1,11 +1,10 @@
 [Unit]
 Description=Toshy Config Service
-Wants=graphical-session.target
+# Wants=graphical-session.target
 # After=graphical-session.target
 PartOf=graphical-session.target
 
 [Service]
-# ExecStartPre=/bin/bash -c 'for i in {1..9}; do if xset -q &> /dev/null; then break; else sleep $((2*i)); fi; done'
 ExecStart=/usr/bin/bash -lc 'env TERM=xterm $HOME/.config/toshy/scripts/toshy-service-config.sh'
 Restart=always
 RestartSec=5
