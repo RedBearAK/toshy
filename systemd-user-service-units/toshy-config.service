@@ -1,7 +1,7 @@
 [Unit]
 Description=Toshy Config Service
 Wants=graphical-session.target
-After=graphical-session.target
+# After=graphical-session.target
 PartOf=graphical-session.target
 
 [Service]
