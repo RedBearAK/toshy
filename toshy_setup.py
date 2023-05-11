@@ -310,6 +310,9 @@ def install_udev_rules():
             subprocess.run(command, input=rule_content.encode(), shell=True, check=True)
         except subprocess.CalledProcessError as e:
             print(f'\nERROR: Problem when trying to install "udev" rules file for keymapper...\n')
+            error_output: bytes = e.output  # Type hinting the error_output variable
+            print(f'Command output:\n{error_output.decode()}')  # Decode bytes to string
+            sys.exit(1)
 
 
 def verify_user_groups():
@@ -319,18 +322,33 @@ def verify_user_groups():
     except KeyError:
         # The group doesn't exist, so create it
         print(f'Creating "input" group...\n{cnfg.separator}')
-        subprocess.run(['sudo', 'groupadd', cnfg.input_group_name])
+        try:
+            subprocess.run(['sudo', 'groupadd', cnfg.input_group_name], check=True)
+        except subprocess.CalledProcessError as e:
+            print(f'\nERROR: Problem when trying to create "input" group...\n')
+            error_output: bytes = e.output  # Type hinting the error_output variable
+            print(f'Command output:\n{error_output.decode()}')
+            sys.exit(1)
 
     # Check if the user is already in the `input` group
     group_info = grp.getgrnam(cnfg.input_group_name)
     if cnfg.user_name in group_info.gr_mem:
-        print(f'\nUser "{cnfg.user_name}" is a member of group "{cnfg.input_group_name}", continuing...\n')
+        print(f'\nUser "{cnfg.user_name}" is a member of '
+                f'group "{cnfg.input_group_name}", continuing...\n')
     else:
         # Add the user to the input group
-        subprocess.run(['sudo', 'usermod', '-aG', cnfg.input_group_name, cnfg.user_name])
+        try:
+            subprocess.run(
+                ['sudo', 'usermod', '-aG', cnfg.input_group_name, cnfg.user_name], check=True)
+        except subprocess.CalledProcessError as e:
+            print(f'\nERROR: Problem when trying to add user "{cnfg.user_name}" to '
+                    f'group "{cnfg.input_group_name}"...\n')
+            error_output: bytes = e.output  # Type hinting the error_output variable
+            print(f'Command output:\n{error_output.decode()}')
+            sys.exit(1)
+
         print(f'\nUser "{cnfg.user_name}" added to group "{cnfg.input_group_name}"...')
         cnfg.should_reboot = True
-        # print(f'May need to REBOOT or at least LOG OUT/IN to have proper permissions...\n')
 
 
 if __name__ == '__main__':
