@@ -66,18 +66,15 @@ There's no simple way around this, since the keymapper is only designed to send 
 
 ## Installation
 
-This section will be changing.  
-
-Basically, follow the instructions to install `keyszer`.  
-
-https://github.com/joshgoebel/keyszer
-
-Then, put the "toshy" folder in your `~/.config` folder.  
-
-Point `keyszer` at the Toshy config file:  
+Download the zip from the big green button. Unzip and open a terminal in the resulting folder. Run the `toshy_setup.py` script. 
 
 ```sh
-keyszer -w -c ~/.config/toshy/toshy_config.py
+./toshy_setup.py
 ```
 
-Technically, that's the least that needs to be done to get it working.  
+Currently working distros:
+
+- Ubuntu
+- Xubuntu
+- Linux Mint
+- Fedora
