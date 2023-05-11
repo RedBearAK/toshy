@@ -84,6 +84,63 @@ def get_environment():
             f'\n\t{cnfg.DESKTOP_ENV     = }')
 
 
+def install_udev_rules():
+    """set up udev rules file to give user/keyszer access to uinput"""
+    print(f'\nInstalling "udev" rules file for keymapper...\n{cnfg.separator}')
+    if not os.path.exists('/etc/udev/rules.d/90-keymapper-input.rules'):
+        rule_content = 'SUBSYSTEM=="input", GROUP="input"\nKERNEL=="uinput", SUBSYSTEM=="misc", GROUP="input"\n'
+        command = 'sudo tee /etc/udev/rules.d/90-keymapper-input.rules'
+        try:
+            subprocess.run(command, input=rule_content.encode(), shell=True, check=True)
+            print(f'"udev" rules file successfully installed.')
+        except subprocess.CalledProcessError as e:
+            print(f'\nERROR: Problem when trying to install "udev" rules file for keymapper...\n')
+            error_output: bytes = e.output  # Type hinting the error_output variable
+            print(f'Command output:\n{error_output.decode()}')  # Decode bytes to string
+            print(f'\nERROR: Install failed.')
+            sys.exit(1)
+    else:
+        print(f'"udev" rules file already in place.')
+
+
+def verify_user_groups():
+    """Check if the `input` group exists and user is in group"""
+    try:
+        grp.getgrnam(cnfg.input_group_name)
+    except KeyError:
+        # The group doesn't exist, so create it
+        print(f'Creating "input" group...\n{cnfg.separator}')
+        try:
+            subprocess.run(['sudo', 'groupadd', cnfg.input_group_name], check=True)
+        except subprocess.CalledProcessError as e:
+            print(f'\nERROR: Problem when trying to create "input" group...\n')
+            error_output: bytes = e.output  # Type hinting the error_output variable
+            print(f'Command output:\n{error_output.decode()}')  # Decode bytes to string
+            print(f'\nERROR: Install failed.')
+            sys.exit(1)
+
+    # Check if the user is already in the `input` group
+    group_info = grp.getgrnam(cnfg.input_group_name)
+    if cnfg.user_name in group_info.gr_mem:
+        print(f'\nUser "{cnfg.user_name}" is a member of '
+                f'group "{cnfg.input_group_name}", continuing...\n')
+    else:
+        # Add the user to the input group
+        try:
+            subprocess.run(
+                ['sudo', 'usermod', '-aG', cnfg.input_group_name, cnfg.user_name], check=True)
+        except subprocess.CalledProcessError as e:
+            print(f'\nERROR: Problem when trying to add user "{cnfg.user_name}" to '
+                    f'group "{cnfg.input_group_name}"...\n')
+            error_output: bytes = e.output  # Type hinting the error_output variable
+            print(f'Command output:\n{error_output.decode()}')  # Decode bytes to string
+            print(f'\nERROR: Install failed.')
+            sys.exit(1)
+
+        print(f'\nUser "{cnfg.user_name}" added to group "{cnfg.input_group_name}"...')
+        cnfg.should_reboot = True
+
+
 def load_package_list():
     """load package list from JSON file"""
     with open('packages.json') as f:
@@ -300,68 +357,13 @@ def remove_desktop_tweaks():
         subprocess.run(['qdbus', 'org.kde.KWin', '/KWin', 'reconfigure'])
 
 
-def install_udev_rules():
-    """set up udev rules file to give user/keyszer access to uinput"""
-    print(f'\nInstalling "udev" rules file for keymapper...\n{cnfg.separator}')
-    if not os.path.exists('/etc/udev/rules.d/90-keymapper-input.rules'):
-        rule_content = 'SUBSYSTEM=="input", GROUP="input"\nKERNEL=="uinput", SUBSYSTEM=="misc", GROUP="input"\n'
-        command = 'sudo tee /etc/udev/rules.d/90-keymapper-input.rules'
-        try:
-            subprocess.run(command, input=rule_content.encode(), shell=True, check=True)
-            print(f'"udev" rules file successfully installed.')
-        except subprocess.CalledProcessError as e:
-            print(f'\nERROR: Problem when trying to install "udev" rules file for keymapper...\n')
-            error_output: bytes = e.output  # Type hinting the error_output variable
-            print(f'Command output:\n{error_output.decode()}')  # Decode bytes to string
-            print(f'\nERROR: Install failed.')
-            sys.exit(1)
-    else:
-        print(f'"udev" rules file already in place.')
-
-
-def verify_user_groups():
-    """Check if the `input` group exists and user is in group"""
-    try:
-        grp.getgrnam(cnfg.input_group_name)
-    except KeyError:
-        # The group doesn't exist, so create it
-        print(f'Creating "input" group...\n{cnfg.separator}')
-        try:
-            subprocess.run(['sudo', 'groupadd', cnfg.input_group_name], check=True)
-        except subprocess.CalledProcessError as e:
-            print(f'\nERROR: Problem when trying to create "input" group...\n')
-            error_output: bytes = e.output  # Type hinting the error_output variable
-            print(f'Command output:\n{error_output.decode()}')  # Decode bytes to string
-            print(f'\nERROR: Install failed.')
-            sys.exit(1)
-
-    # Check if the user is already in the `input` group
-    group_info = grp.getgrnam(cnfg.input_group_name)
-    if cnfg.user_name in group_info.gr_mem:
-        print(f'\nUser "{cnfg.user_name}" is a member of '
-                f'group "{cnfg.input_group_name}", continuing...\n')
-    else:
-        # Add the user to the input group
-        try:
-            subprocess.run(
-                ['sudo', 'usermod', '-aG', cnfg.input_group_name, cnfg.user_name], check=True)
-        except subprocess.CalledProcessError as e:
-            print(f'\nERROR: Problem when trying to add user "{cnfg.user_name}" to '
-                    f'group "{cnfg.input_group_name}"...\n')
-            error_output: bytes = e.output  # Type hinting the error_output variable
-            print(f'Command output:\n{error_output.decode()}')  # Decode bytes to string
-            print(f'\nERROR: Install failed.')
-            sys.exit(1)
-
-        print(f'\nUser "{cnfg.user_name}" added to group "{cnfg.input_group_name}"...')
-        cnfg.should_reboot = True
-
-
 if __name__ == '__main__':
 
     cnfg = InstallerSettings()
 
     get_environment()
+    install_udev_rules()
+    verify_user_groups()
     load_package_list()
     install_distro_pkgs()
     clone_keyszer_branch()
@@ -374,8 +376,6 @@ if __name__ == '__main__':
     setup_toshy_services()
     apply_desktop_tweaks()
     autostart_tray_icon()
-    install_udev_rules()
-    verify_user_groups()
     
     if cnfg.should_reboot:
         print(f'\n\n{cnfg.separator}'
