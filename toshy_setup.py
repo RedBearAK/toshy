@@ -142,7 +142,7 @@ def backup_toshy_config():
         except OSError as e:
             print(f"Failed to create backup directory: {e}")
         
-        print(f'Backup completed.')
+        print(f'Backup completed to {toshy_backup_dir_path}')
     else:
         print(f'No existing Toshy folder to backup...')
 
