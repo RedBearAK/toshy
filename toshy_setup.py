@@ -302,18 +302,21 @@ def remove_desktop_tweaks():
 
 def install_udev_rules():
     """set up udev rules file to give user/keyszer access to uinput"""
-    if not os.path.exists('/etc/udeb/rules.d/90-keymapper-input.rules'):
-        print(f'\nInstalling "udev" rules file for keymapper...\n{cnfg.separator}')
+    print(f'\nInstalling "udev" rules file for keymapper...\n{cnfg.separator}')
+    if not os.path.exists('/etc/udev/rules.d/90-keymapper-input.rules'):
         rule_content = 'SUBSYSTEM=="input", GROUP="input"\nKERNEL=="uinput", SUBSYSTEM=="misc", GROUP="input"\n'
         command = 'sudo tee /etc/udev/rules.d/90-keymapper-input.rules'
         try:
             subprocess.run(command, input=rule_content.encode(), shell=True, check=True)
+            print(f'"udev" rules file successfully installed.')
         except subprocess.CalledProcessError as e:
             print(f'\nERROR: Problem when trying to install "udev" rules file for keymapper...\n')
             error_output: bytes = e.output  # Type hinting the error_output variable
             print(f'Command output:\n{error_output.decode()}')  # Decode bytes to string
             print(f'\nERROR: Install failed.')
             sys.exit(1)
+    else:
+        print(f'"udev" rules file already in place.')
 
 
 def verify_user_groups():
