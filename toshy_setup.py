@@ -67,6 +67,7 @@ class InstallerSettings:
 
         self.input_group_name   = 'input'
         self.user_name          = pwd.getpwuid(os.getuid()).pw_name
+        self.should_reboot      = None
 
 
 def get_environment():
@@ -225,6 +226,22 @@ def setup_toshy_services():
     subprocess.run([script_path])
 
 
+def autostart_tray_icon():
+    """set the tray icon to autostart at login"""
+    print(f'\nSetting tray icon to load automatically at login...\n{cnfg.separator}')
+    user_path           = os.path.expanduser('~')
+    desktop_files_path  = os.path.join(user_path, '.local', 'share', 'applications')
+    tray_desktop_file   = os.path.join(desktop_files_path, 'Toshy_Tray.desktop')
+    autostart_dir_path  = os.path.join(user_path, '.config', 'autostart')
+    dest_link_file      = os.path.join(autostart_dir_path, 'Toshy_Tray.desktop')
+
+    # Need to create autostart folder if necessary
+    os.makedirs(autostart_dir_path, exist_ok=True)
+    subprocess.run(['ln', '-sf', tray_desktop_file, dest_link_file])
+    # Try to start the tray icon immediately
+    subprocess.run(['gtk-launch', 'Toshy_Tray'])
+
+
 def apply_desktop_tweaks():
     """
     fix things like Meta key activating overview in GNOME or KDE Plasma
@@ -242,7 +259,19 @@ def apply_desktop_tweaks():
     # gsettings set org.gnome.mutter overlay-key ''
     if cnfg.DESKTOP_ENV == 'gnome':
         subprocess.run(['gsettings', 'set', 'org.gnome.mutter', 'overlay-key', "''"])
-        print(f'Disabled Super/Meta/Win/Cmd key opening the GNOME overview...')
+        print(f'Disabling Super/Meta/Win/Cmd key opening the GNOME overview...')
+
+        def is_extension_enabled(extension_uuid):
+            output = subprocess.check_output(['gsettings', 'get', 'org.gnome.shell', 'enabled-extensions'])
+            extensions = output.decode().strip().replace("'", "").split(",")
+            return extension_uuid in extensions
+
+        if is_extension_enabled("appindicatorsupport@rgcjonas.gmail.com"):
+            # print("AppIndicator extension is enabled")
+            pass
+        else:
+            print(f"RECOMMENDATION: Install AppIndicator GNOME extension\n"
+                    "Easiest way: flatpak install extensionmanager")
 
     # if KDE Plasma, disable Meta key opening app menu
     # append this to ~/.config/kwinrc:
@@ -269,22 +298,6 @@ def remove_desktop_tweaks():
     # qdbus org.kde.KWin /KWin reconfigure
     if cnfg.DESKTOP_ENV == 'kde':
         subprocess.run(['qdbus', 'org.kde.KWin', '/KWin', 'reconfigure'])
-
-
-def autostart_tray_icon():
-    """set the tray icon to autostart at login"""
-    print(f'\nSetting tray icon to load automatically at login...\n{cnfg.separator}')
-    user_path           = os.path.expanduser('~')
-    desktop_files_path  = os.path.join(user_path, '.local', 'share', 'applications')
-    tray_desktop_file   = os.path.join(desktop_files_path, 'Toshy_Tray.desktop')
-    autostart_dir_path  = os.path.join(user_path, '.config', 'autostart')
-    dest_link_file      = os.path.join(autostart_dir_path, 'Toshy_Tray.desktop')
-
-    # Need to create autostart folder if necessary
-    os.makedirs(autostart_dir_path, exist_ok=True)
-    subprocess.run(['ln', '-sf', tray_desktop_file, dest_link_file])
-    # Try to start the tray icon immediately
-    subprocess.run(['gtk-launch', 'Toshy_Tray'])
 
 
 def install_udev_rules():
@@ -316,7 +329,8 @@ def verify_user_groups():
         # Add the user to the input group
         subprocess.run(['sudo', 'usermod', '-aG', cnfg.input_group_name, cnfg.user_name])
         print(f'\nUser "{cnfg.user_name}" added to group "{cnfg.input_group_name}"...')
-        print(f'May need to REBOOT or at least LOG OUT/IN to have proper permissions...\n')
+        cnfg.should_reboot = True
+        # print(f'May need to REBOOT or at least LOG OUT/IN to have proper permissions...\n')
 
 
 if __name__ == '__main__':
@@ -334,9 +348,12 @@ if __name__ == '__main__':
     install_toshy_scripts()
     install_toshy_apps()
     setup_toshy_services()
-    autostart_tray_icon()
     apply_desktop_tweaks()
+    autostart_tray_icon()
     install_udev_rules()
     verify_user_groups()
+    
+    if cnfg.should_reboot:
+        print(f'\nALERT: You MUST reboot or log out/in for Toshy to work...\n')
 
     print(f'\n')
