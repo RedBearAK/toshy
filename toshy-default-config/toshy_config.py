@@ -76,17 +76,22 @@ debug(cnfg, ctx="CG")
 ##########################################################################
 # Set up some useful environment variables
 
+OVERRIDE_DISTRO_NAME     = None
+OVERRIDE_DISTRO_VER      = None
+OVERRIDE_SESSION_TYPE    = None
+OVERRIDE_DESKTOP_ENV     = None
+
 DISTRO_NAME     = None
 DISTRO_VER      = None
 SESSION_TYPE    = None
 DESKTOP_ENV     = None
 
-env_info: Dict = lib.env.get_env_info()       # Returns a dict
+env_info: Dict[str, str] = lib.env.get_env_info()   # Returns a dict
 
-DISTRO_NAME     = env_info.get('DISTRO_NAME')
-DISTRO_VER      = env_info.get('DISTRO_VER')
-SESSION_TYPE    = env_info.get('SESSION_TYPE')
-DESKTOP_ENV     = env_info.get('DESKTOP_ENV')
+DISTRO_NAME     = OVERRIDE_DISTRO_NAME  or env_info.get('DISTRO_NAME')
+DISTRO_VER      = OVERRIDE_DISTRO_VER   or env_info.get('DISTRO_VER')
+SESSION_TYPE    = OVERRIDE_SESSION_TYPE or env_info.get('SESSION_TYPE')
+DESKTOP_ENV     = OVERRIDE_DESKTOP_ENV  or env_info.get('DESKTOP_ENV')
 
 debug("")
 debug(  f'Toshy config sees this environment:'
