@@ -354,6 +354,7 @@ if __name__ == '__main__':
     verify_user_groups()
     
     if cnfg.should_reboot:
-        print(f'\nALERT: You MUST reboot or log out/in for Toshy to work...\n')
+        print(f'\n\n{cnfg.separator}'
+                '\nALERT: Permissions changed. You MUST reboot for Toshy to work...')
 
     print(f'\n')
