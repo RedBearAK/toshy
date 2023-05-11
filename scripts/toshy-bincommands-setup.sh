@@ -82,7 +82,7 @@ if ! echo "$PATH" | grep -q -E "(^|:)$HOME/.local/bin(:|$)"; then
     esac
 
     if [[ -n "$shell_rc" ]]; then
-        read -r -p "Do you want to append the line to your $shell_rc file now? (y/n) " yn
+        read -r -p "Do you want to append the line to your $shell_rc file now? [y/N] " yn
 
         # shellcheck disable=SC2016
         case $yn in
@@ -100,4 +100,5 @@ if ! echo "$PATH" | grep -q -E "(^|:)$HOME/.local/bin(:|$)"; then
                 ;;
         esac
     fi
+
 fi
