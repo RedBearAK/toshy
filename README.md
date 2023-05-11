@@ -50,9 +50,31 @@ There's no simple way around this, since the keymapper is only designed to send 
 
  1. The Option-key special characters, as described above. Two different layouts are available.  
 
- 1. Automatic categorizing of the keyboard type of the current keyboard device. No more switching of keyboard types from the tray icon menu, or re-running the installer, or being asked to press a certain key on the keyboard during install.  
+ 1. Automatic categorizing of the keyboard type of the current keyboard device. No more switching of keyboard types from the tray icon menu, or re-running the installer, or being asked to press a certain key on the keyboard during install. Some keyboard devices will need to be added to a Python list in the config to be recognized as the correct type. This will evolve over time from user feedback.  
 
  1. Changing of settings on-the-fly, without restarting the keymapper process. The tray icon menu and GUI preferences app will allow quickly enabling or disabling certain features, or changing the special characters layout. The change takes effect right away. (Adding or changing shortcuts in the config file will still require restarting the keymapper.)  
+
+ 1. Modmaps with `keyszer` are now concurrent/cascading rather than mutually exclusive. This enables some of the interesting fixes described in the following items.  
+
+ 1. Fix for "media" functions on arrow keys. Some laptop keyboards don't have the usual PgUp/PgDn/Home/End navigation functions on the arrow keys, when you hold the `Fn` key. Instead, they have PlayPause/Stop/Back/Forward. A `modmap` in the Toshy config will optionally fix this, making the arrow keys work more like a standard MacBook keyboard. This feature can be enabled from the tray icon or GUI preferences app.  
+
+ 1. This one is starting to become less relevant, with most common GTK apps already moving to GTK 4. But apps that use GTK 3 had a bug where they wouldn't recognize the "navigation" functions on the keypad keys (when NumLock is off) if you tried to use them with a modifier key (i.e., as part of a shortcut). Those keys would just get ignored. So if you didn't have the "real" navigation keys on your keyboard, there was no way to use shortcuts involving things like PgUp/PgDn/Home/End (on the numeric keypad). A `modmap` in the Toshy config will automatically fix this, if NumLock is off and the "Forced Numpad" feature (below) is disabled.  
+
+ 1. "Forced Numpad" feature: On PCs, if the keyboard has a numeric keypad, NumLock is typically off, so the keypad doesn't automatically act as a Numpad, but provides navigation functions until you turn NumLock on. But if you've used macOS for any length of time, you might have noticed that the numeric keypad is always a numeric keypad, and the "Clear" key sends `Escape` to clear calculator apps. You have to use `Fn+Clear` to disable NumLock and get to the navigation functions. A `modmap` in the Toshy config is enabled by default and makes the numeric keypad always a numeric keypad and turns the NumLock key into a "Clear" key. This can be disabled in the tray icon menu or GUI preferences app, or termporarily disabled with `Fn+Clear` (on Apple keyboards) or the equivalent of `Option+NumLock` on PC keyboards (usually this is physical `Win+NumLock`).  
+
+ 1. Sections of the config file are labeled with ASCII art designed to be readable on a "minimap" or "overview" sidebar view, to make finding certain parts of the config file a little easier. There's also a "tag" on each section that can be located easily with a `Find` search in any text editor.  
+
+ 1. Custom function to make the `Enter` key behave pretty much like it does in the Finder, in most Linux file managers. Mainly what this enables is using the `Enter` key to quickly rename files, while still leaving it usable in text fields like `Find` and the location bar. Not perfect, but works OK in most cases.  
+
+ 1. Evolving fix for the problem of `Cmd+W` unexpectedly failing to close a lot of Linux "child" windows and "dialog" windows (that want either `Escape` or `Alt+F4` to close), leading to a bad unconscious habit of hitting `Cmd+W` followed immediately by `Cmd+Q` (which becomes a problem when you're actually using macOS at the time). The list of windows targeted by this pair of keymaps will grow over time, with input from users encountering the issue.  
+
+ 1. Fix for shortcut behavior in file save/open dialogs in apps like Firefox, now that WM_NAME is available. This is an addition to the "Finder Mods" that mimic Finder keyboard behavior in most common Linux file manager apps.  
+
+ 1. A collection of tab navigation fixes for various apps with a tabbed UI that don't use the mostly standard Ctrl+PgUp/PgDn shortcuts.  
+
+ 1. Another growing collection of enhancements to various Linux apps to enable shortcuts like Cmd+comma (preferences) and Cmd+I (get info/properties) to work in more apps.  
+
+ 1. A function (`matchProps()`) that enables very powerful and complex (or simple) matching on multiple properties at the same time. Application class, window name/title, device name, NumLock and CapsLock LED state.  
 
  1. More that I will add later when I remember...  
 
@@ -78,3 +100,25 @@ Currently working distros:
 - Xubuntu
 - Linux Mint
 - Fedora
+
+## FAQ (Frequently Asked Questions)
+
+This section will list some common questions, issues and fixes/tweaks that may be necessary for different distros, desktops or devices. 
+
+### Xubuntu Meta/Super/Win/Cmd key
+
+Xubuntu appears to run a background app at startup called `xcape` that binds the `Super/Meta/Win/Cmd` key (all different names for the same key) to activate the Whisker Menu by itself. To deactivate this, open the "Session and Startup" control panel app, go to the "Application Autostart" tab, and uncheck the "Bind Super Key" item. That will stop the `xcape` command from running at startup. Until you log out or restart, there will still be the background `xcape` process binding the key, but that can be stopped with: 
+
+```sh
+killall xcape
+```
+
+### Linux Mint Application Menu (Cinnamon/Xfce/MATE)
+
+On Linux Mint they use a custom menu widget/applet that is set up to activate with the Meta/Super/Win/Cmd key. The shortcut for this is not exposed in the usual keyboard shortcuts control panels. Right-click on the menu applet icon and go to "Configure" or "Preferences" (make sure you're not opening the preferences for the entire panel, just the applet).  
+
+You will see a couple of things that vaguely look like buttons. You can click on the first one and set the shortcut to something `Ctrl+Esc`. Click on the other and hit `Backspace` and it will show "unassigned". This will disable the activation of the menu with the Meta/Super/Win/Cmd key.  
+
+If Cinnamon is detected by the Toshy config, `Cmd+Space` will be remapped onto `Ctrl+Esc`, so you should now be able to open the application menu with `Cmd+Space` if you assigned the suggested shortcut to it.  
+
+**_TODO: Make sure this also works correctly in Xfce and MATE variants of Linux Mint._**  
