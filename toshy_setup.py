@@ -60,6 +60,7 @@ class InstallerSettings:
 
         self.home_dir_path      = os.path.abspath(os.path.expanduser('~'))
         self.toshy_dir_path     = os.path.join(self.home_dir_path, '.config', 'toshy')
+        self.backup_succeeded   = None
         self.venv_path          = os.path.join(self.toshy_dir_path, '.venv')
 
         self.keyszer_tmp_path   = os.path.join('.', 'keyszer-temp')
@@ -196,13 +197,14 @@ def backup_toshy_config():
                 return ['.venv'] if '.venv' in filenames else []
             # Copy files recursively from source to destination
             shutil.copytree(cnfg.toshy_dir_path, toshy_backup_dir_path, ignore=ignore_venv)
-            print(f'Backup completed to {toshy_backup_dir_path}')
         except shutil.Error as e:
             print(f"Failed to copy directory: {e}")
             exit(1)
         except OSError as e:
             print(f"Failed to create backup directory: {e}")
             exit(1)
+        print(f'Backup completed to {toshy_backup_dir_path}')
+        cnfg.backup_succeeded = True
     else:
         print(f'No existing Toshy folder to backup...')
 
@@ -210,9 +212,11 @@ def backup_toshy_config():
 def install_toshy_files():
     """install Toshy files"""
     print(f'\nInstalling Toshy files...\n{cnfg.separator}')
+    if not cnfg.backup_succeeded:
+        print(f'Backup of Toshy config folder failed? Bailing out...')
+        exit(1)
     script_name = os.path.basename(__file__)
     keyszer_tmp = os.path.basename(cnfg.keyszer_tmp_path)
-
     try:
         if os.path.exists(cnfg.toshy_dir_path):
             shutil.rmtree(cnfg.toshy_dir_path, ignore_errors=True)
@@ -228,7 +232,6 @@ def install_toshy_files():
         print(f"Failed to copy directory: {e}")
     except OSError as e:
         print(f"Failed to create backup directory: {e}")
-
     toshy_default_cfg = os.path.join(
         cnfg.toshy_dir_path, 'toshy-default-config', 'toshy_config.py')
     shutil.copy(toshy_default_cfg, cnfg.toshy_dir_path)
