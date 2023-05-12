@@ -278,18 +278,36 @@ def install_pip_pkgs():
         sys.exit(1)
 
 
-def install_toshy_scripts():
+def install_bin_commands():
     """install the convenient scripts to manage Toshy"""
     print(f'\nInstalling Toshy script commands...\n{cnfg.separator}')
     script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'toshy-bincommands-setup.sh')
     subprocess.run([script_path])
 
 
-def install_toshy_apps():
+def install_desktop_apps():
     """install the convenient scripts to manage Toshy"""
     print(f'\nInstalling Toshy desktop apps...\n{cnfg.separator}')
     script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'toshy-desktopapps-setup.sh')
     subprocess.run([script_path])
+
+    # Replace $HOME with user home directory
+    def replace_home_in_file(filename):
+        # Read in the file
+        with open(filename, 'r') as file:
+            file_data = file.read()
+        # Replace the target string
+        file_data = file_data.replace('$HOME', cnfg.home_dir_path)
+        # Write the file out again
+        with open(filename, 'w') as file:
+            file.write(file_data)
+
+    desktop_files_path = os.path.join(cnfg.home_dir_path, '.local', 'share', 'applications')
+    tray_desktop_file = os.path.join(desktop_files_path, 'Toshy_Tray.desktop')
+    gui_desktop_file = os.path.join(desktop_files_path, 'Toshy_GUI.desktop')
+
+    replace_home_in_file(tray_desktop_file)
+    replace_home_in_file(gui_desktop_file)
 
 
 def setup_toshy_services():
@@ -388,8 +406,8 @@ if __name__ == '__main__':
     copy_desktop_app_icon()
     setup_virtual_env()
     install_pip_pkgs()
-    install_toshy_scripts()
-    install_toshy_apps()
+    install_bin_commands()
+    install_desktop_apps()
     setup_toshy_services()
     apply_desktop_tweaks()
     autostart_tray_icon()
