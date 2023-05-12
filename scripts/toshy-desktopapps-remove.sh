@@ -22,6 +22,7 @@ echo -e "\nRemoving Toshy GUI and Tray app launchers..."
 
 /usr/bin/rm -f "$HOME/.local/share/applications/Toshy_GUI.desktop"
 /usr/bin/rm -f "$HOME/.local/share/applications/Toshy_Tray.desktop"
+/usr/bin/rm -f "$HOME/.config/autostart/Toshy_Tray_Delayed.desktop"
 
 
 echo ""

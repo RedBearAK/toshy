@@ -20,9 +20,11 @@ fi
 echo -e "\nInstalling Toshy GUI and Tray app launchers..."
 
 mkdir -p "$HOME/.local/share/applications"
+mkdir -p "$HOME/.config/autostart"
 
 cp -f "$HOME/.config/toshy/desktop/Toshy_GUI.desktop" "$HOME/.local/share/applications"
 cp -f "$HOME/.config/toshy/desktop/Toshy_Tray.desktop" "$HOME/.local/share/applications"
+cp -f "$HOME/.config/toshy/desktop/Toshy_Tray_Delayed.desktop" "$HOME/.config/autostart"
 
 
 echo -e "\nFinished installing Toshy GUI and Tray app launchers:"
