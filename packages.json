@@ -1,4 +1,11 @@
 {
+    "comments": [
+        "pip packages list includes pre-installing keyszer support packages",
+        "keyszer support packages are from inotify-simple down to end of list",
+        "pip, wheel, setuptools are installed separately in main installer ...",
+        "... script before the rest of the pip list is installed, to minimize ...",
+        "... the presentation of warnings in the terminal"
+    ],
     "pip": [
         "pillow",
         "lockfile",
@@ -8,13 +15,13 @@
         "tk",
         "sv_ttk",
         "psutil",
+        "watchdog",
         "inotify-simple",
         "evdev",
         "appdirs",
         "ordered-set",
         "python-xlib",
-        "six",
-        "watchdog"
+        "six"
     ],
     "kde": [
         "ibus",
