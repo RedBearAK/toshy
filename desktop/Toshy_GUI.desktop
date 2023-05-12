@@ -10,6 +10,6 @@ GenericName=Toshy Preferences
 Exec=/usr/bin/sh -c 'exec env TERM=xterm $HOME/.local/bin/toshy-gui'
 Terminal=false
 NoDisplay=false
-Icon=/home/kris/.config/toshy/assets/toshy_app_icon_rainbow.svg
+Icon=toshy_app_icon_rainbow.svg
 Comment=Prefereces GUI for Toshy. Make Linux work like a 'Tosh!
 Categories=Utility;

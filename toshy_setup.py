@@ -239,6 +239,15 @@ def install_toshy_files():
     print(f'Toshy files installed in {cnfg.toshy_dir_path}...')
 
 
+def copy_desktop_app_icon():
+    """copy the icon asset image file for desktop apps"""
+    home_icons_path = os.path.join(cnfg.home_dir_path, '.local', 'share', 'icons')
+    os.makedirs(home_icons_path, exist_ok=True)
+    toshy_app_icon = os.path.join(
+        cnfg.home_dir_path, '.config', 'toshy', 'assets', 'toshy_app_icon_rainbow.svg')
+    shutil.copy(toshy_app_icon, home_icons_path)
+
+
 def setup_virtual_env():
     """setup a virtual environment to install Python packages"""
     print(f'\nSetting up virtual environment...\n{cnfg.separator}')
@@ -376,6 +385,7 @@ if __name__ == '__main__':
     clone_keyszer_branch()
     backup_toshy_config()
     install_toshy_files()
+    copy_desktop_app_icon()
     setup_virtual_env()
     install_pip_pkgs()
     install_toshy_scripts()
