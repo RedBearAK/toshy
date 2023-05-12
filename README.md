@@ -105,7 +105,7 @@ Currently working distros:
 
 This section will list some common questions, issues and fixes/tweaks that may be necessary for different distros, desktops or devices. 
 
-### Option-key Special Character Entry Acting Weird
+### Option-key Special Character Entry (or Macros) Acting Weird
 
 Sometimes, especially in virtual machines (but also on some bare metal installs) there is a problem in Linux with the "timing" of modifier key presses, leading to failures of some shortcut combos.  
 
@@ -144,7 +144,7 @@ For some reason, even when I am in GNOME, the Unicode character entry shortcut o
 
 ### Xubuntu and the Meta/Super/Win/Cmd key
 
-Xubuntu appears to run a background app at startup called `xcape` that binds the `Super/Meta/Win/Cmd` key (all different names for the same key) to activate the Whisker Menu by itself. To deactivate this, open the "Session and Startup" control panel app, go to the "Application Autostart" tab, and uncheck the "Bind Super Key" item. That will stop the `xcape` command from running at startup. Until you log out or restart, there will still be the background `xcape` process binding the key, but that can be stopped with:  
+Xubuntu (using Xfce desktop environment) appears to run a background app at startup called `xcape` that binds the `Super/Meta/Win/Cmd` key (all different names for the same key) to activate the Whisker Menu by itself. To deactivate this, open the "Session and Startup" control panel app, go to the "Application Autostart" tab, and uncheck the "Bind Super Key" item. That will stop the `xcape` command from running at startup. Until you log out or restart, there will still be the background `xcape` process binding the key, but that can be stopped with:  
 
 ```sh
 killall xcape
@@ -179,6 +179,25 @@ Enable/Re-enable:
 ```sh
 gsettings reset org.gnome.mutter overlay-key
 ```
+
+### KDE Plasma and the Meta/Super/Win/Cmd key
+
+KDE Plasma desktops tend to have the Meta/Super/Win/Cmd key bound to open the application menu. Like the other desktop environments that bind the `Meta` key to do something by itself, this appears to be an alien concept as far as the regular keyboard shortcut control panel is concerned. You won't find it there. To disable this secret modifier-only binding, you have to put something in a hidden dotfile and refresh `KWin`.  
+
+Open the file `~/.config/kwinrc`, or create it if it doesn't exist. Append this information at the end of the file: 
+
+```
+[ModifierOnlyShortcuts]
+Meta=
+```
+
+Then, run this command in the terminal: 
+
+```sh
+qdbus org.kde.KWin /KWin reconfigure
+```
+
+To undo, remove or comment out the same text in the file, and run the same command. The `Meta` key binding should be back.  
 
 ### More Will Follow...
 
