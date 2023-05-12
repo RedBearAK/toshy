@@ -196,12 +196,13 @@ def backup_toshy_config():
                 return ['.venv'] if '.venv' in filenames else []
             # Copy files recursively from source to destination
             shutil.copytree(cnfg.toshy_dir_path, toshy_backup_dir_path, ignore=ignore_venv)
+            print(f'Backup completed to {toshy_backup_dir_path}')
         except shutil.Error as e:
             print(f"Failed to copy directory: {e}")
+            exit(1)
         except OSError as e:
             print(f"Failed to create backup directory: {e}")
-        
-        print(f'Backup completed to {toshy_backup_dir_path}')
+            exit(1)
     else:
         print(f'No existing Toshy folder to backup...')
 
