@@ -16,4 +16,7 @@ fi
 # fi
 
 
-/usr/bin/journalctl --user -n300 -f -u toshy-config -u toshy-session-monitor
+echo "Showing systemd journal messages for Toshy services (since last boot):"
+
+# -b flag to only show messages since last boot
+/usr/bin/journalctl --user -n300 -b -f -u toshy-config -u toshy-session-monitor
