@@ -66,7 +66,7 @@ There's no simple way around this, since the keymapper is only designed to send 
 
  1. Custom function to make the `Enter` key behave pretty much like it does in the Finder, in most Linux file managers. Mainly what this enables is using the `Enter` key to quickly rename files, while still leaving it usable in text fields like `Find` and the location bar. Not perfect, but works OK in most cases.  
 
- 1. Evolving fix for the problem of `Cmd+W` unexpectedly failing to close a lot of Linux "child" windows and "dialog" windows (that want either `Escape` or `Alt+F4` to close), leading to a bad unconscious habit of hitting `Cmd+W` followed immediately by `Cmd+Q` (which becomes a problem when you're actually using macOS at the time). The list of windows targeted by this pair of keymaps will grow over time, with input from users encountering the issue.  
+ 1. Evolving fix for the problem of `Cmd+W` unexpectedly failing to close a lot of Linux "child" windows and "dialog" windows (that have no binding to `Ctrl+W` and want either `Escape` or `Alt+F4/Ctrl+Q` to close). This can lead to a bad unconscious habit of hitting `Cmd+W` followed immediately by `Cmd+Q` (which becomes a problem when you're actually using macOS). The list of windows targeted by this pair of keymaps will grow over time, with input from users encountering the issue.  
 
  1. Fix for shortcut behavior in file save/open dialogs in apps like Firefox, now that WM_NAME is available. This is an addition to the "Finder Mods" that mimic Finder keyboard behavior in most common Linux file manager apps.  
 
@@ -88,7 +88,7 @@ There's no simple way around this, since the keymapper is only designed to send 
 
 ## Installation
 
-Download the zip from the big green button. Unzip and open a terminal in the resulting folder. Run the `toshy_setup.py` script. 
+Download the latest zip from the big green button. Unzip it, and open a terminal in the resulting folder. Run the `toshy_setup.py` script.  
 
 ```sh
 ./toshy_setup.py
@@ -98,6 +98,7 @@ Currently working distros:
 
 - Ubuntu
 - Xubuntu
+- Kubuntu
 - Linux Mint
 - Fedora
 
@@ -122,7 +123,7 @@ throttle_delays(
 )
 ```
 
-For a bare metal install, a few milliseconds is usually sufficient. Sometimes even as little as 1 ms, but often 2-4 ms for both delays is a good value to start with. For operating inside a virtual machine it may be necessary to use values like 50 ms (pre) and 70 ms (post) to get completely reliable behavior. With the right value the reliablity can be so close to 100% that it becomes impractical to find the failure in testing.  
+For a bare metal install, a few milliseconds is usually sufficient to make infrequent glitches go away. Sometimes even as little as 1 ms, but often 2-4 ms for both delays is a good value to start with. For operating inside a virtual machine it may be necessary to use higher values like 50 ms (pre) and 70 ms (post) to get completely reliable behavior. With the right value the reliablity can be so close to 100% that it becomes impractical to find the failure in testing.  
 
 NB: A lengthy delay will of course cause macros to come out quite a bit more slowly as the delay gets longer. So really long macros will be potentially impractical inside a virtual machine, for instance. This is why the values are clamped to a maximum of 150 ms each. The keyboard will be unresponsive while a long macro is coming out. Currently there is no way to interrupt the macro in progress. Not a big deal when the delay is 1 ms per character, but a problem if the total delay between characters is 150 ms or more.  
 
@@ -134,13 +135,13 @@ See above for the fix.
 
 KDE Plasma desktops don't generally use `ibus` (like GNOME desktops usually do by default), or `fcitx` as an input manager. So you may find that the Option-key special character Unicode shortcut of `Shift+Ctrl+U` will not do anything, and the Unicode address of the special character will appear on screen instead of the desired character. This is unfortunately apparently not a shortcut that is built into the Linux kernel input system in general.  
 
-The fix for this, if you want to use those characters in KDE apps, is to install `ibus` and use `im-chooser` to choose `ibus` as the input manager. You may also be able to use `fcitx` as I have seen some references to it supporting the `Shift+Ctrl+U` shortct, but I haven't tested it.  
+The fix for this, if you want to use those characters in KDE apps, is to install `ibus` and use `im-chooser` to choose `ibus` as the input manager. You may also be able to use `fcitx` as I have seen some references to it supporting the `Shift+Ctrl+U` shortcut, but I haven't tested it.  
 
 Otherwise, without a compatible input manager that responds to the `Shift+Ctrl+U` shortcut to enable Unicode character entry, the special characters will only work correctly in GTK-based applications, which seem to have the `ibus` response to that shortcut built into the GTK framework.  
 
 ### Sublime Text 3 and Option-Key Special Characters
 
-For some reason, even when I am in GNOME, the Unicode character entry shortcut of `Shift+Ctrl+U` does not work in Sublime Text 3, so none of the Option-key special characters will work in that app. No idea why. Someone said that they couldn't replicate the problem in a build of Sublime Text 4, and that's all I know about it. No known workaround.  
+For some reason, even when I am in GNOME, the Unicode character entry shortcut of `Shift+Ctrl+U` does not work in Sublime Text 3, so none of the Option-key special characters will work in that app. No idea why. Someone said that they couldn't replicate the problem in a build of Sublime Text 4, and that's all I know about it. No known workaround. (Other than moving to ST4.)  
 
 ### Xubuntu and the Meta/Super/Win/Cmd key
 
@@ -150,7 +151,7 @@ Xubuntu (using Xfce desktop environment) appears to run a background app at star
 killall xcape
 ```
 
-### Linux Mint Application Menu (Cinnamon/Xfce/MATE)
+### Linux Mint Application Menu (Cinnamon/Xfce/MATE) and the Meta/Super/Win/Cmd key
 
 On Linux Mint they use a custom menu widget/applet that is set up to activate with the Meta/Super/Win/Cmd key. The shortcut for this is not exposed in the usual keyboard shortcuts control panels. Right-click on the menu applet icon and go to "Configure" or "Preferences" (make sure you're not opening the preferences for the entire panel, just the menu applet).  
 
@@ -186,7 +187,7 @@ KDE Plasma desktops tend to have the Meta/Super/Win/Cmd key bound to open the ap
 
 Open the file `~/.config/kwinrc`, or create it if it doesn't exist. Append this information at the end of the file: 
 
-```
+```ini
 [ModifierOnlyShortcuts]
 Meta=
 ```
