@@ -207,6 +207,7 @@ def backup_toshy_config():
         cnfg.backup_succeeded = True
     else:
         print(f'No existing Toshy folder to backup...')
+        cnfg.backup_succeeded = True
 
 
 def install_toshy_files():
