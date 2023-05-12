@@ -72,7 +72,8 @@ class InstallerSettings:
 
 
 def get_environment():
-    """get back the distro, session and desktop info from `env.py` module"""
+    """get back the distro, distro version, session type and 
+        desktop environment from `env.py` module"""
     cnfg.env_info_dct: Dict[str, str]   = env.get_env_info()
     cnfg.DISTRO_NAME    = cnfg.env_info_dct.get('DISTRO_NAME',  ''  ).casefold()
     cnfg.DISTRO_VER     = cnfg.env_info_dct.get('DISTRO_VER',   ''  ).casefold()
@@ -87,7 +88,7 @@ def get_environment():
 
 def install_udev_rules():
     """set up udev rules file to give user/keyszer access to uinput"""
-    print(f'\nInstalling "udev" rules file for keymapper...\n{cnfg.separator}')
+    print(f'\n\nInstalling "udev" rules file for keymapper...\n{cnfg.separator}')
     if not os.path.exists('/etc/udev/rules.d/90-keymapper-input.rules'):
         rule_content = 'SUBSYSTEM=="input", GROUP="input"\nKERNEL=="uinput", SUBSYSTEM=="misc", GROUP="input"\n'
         command = 'sudo tee /etc/udev/rules.d/90-keymapper-input.rules'
@@ -106,6 +107,7 @@ def install_udev_rules():
 
 def verify_user_groups():
     """Check if the `input` group exists and user is in group"""
+    print(f'\n\nChecking if user is in "input" group...\n{cnfg.separator}')
     try:
         grp.getgrnam(cnfg.input_group_name)
     except KeyError:
@@ -123,7 +125,7 @@ def verify_user_groups():
     # Check if the user is already in the `input` group
     group_info = grp.getgrnam(cnfg.input_group_name)
     if cnfg.user_name in group_info.gr_mem:
-        print(f'\nUser "{cnfg.user_name}" is a member of '
+        print(f'User "{cnfg.user_name}" is a member of '
                 f'group "{cnfg.input_group_name}", continuing...\n')
     else:
         # Add the user to the input group
@@ -152,7 +154,7 @@ def load_package_list():
 
 def install_distro_pkgs():
     """install needed packages from list for distro type"""
-    print(f'\nInstalling native packages...\n{cnfg.separator}')
+    print(f'\n\nInstalling native packages...\n{cnfg.separator}')
 
     if True is False: pass  # dummy first line just because
     
@@ -178,7 +180,7 @@ def install_distro_pkgs():
 
 def clone_keyszer_branch():
     """clone the latest `keyszer` from GitHub"""
-    print(f'\nCloning keyszer branch...\n{cnfg.separator}')
+    print(f'\n\nCloning keyszer branch...\n{cnfg.separator}')
     if os.path.exists(cnfg.keyszer_tmp_path):
         # force a fresh copy of keyszer every time script is run
         shutil.rmtree(cnfg.keyszer_tmp_path, ignore_errors=True)
@@ -187,7 +189,7 @@ def clone_keyszer_branch():
 
 def backup_toshy_config():
     """backup existing Toshy config folder"""
-    print(f'\nBacking up existing Toshy config folder...\n{cnfg.separator}')
+    print(f'\n\nBacking up existing Toshy config folder...\n{cnfg.separator}')
     timestamp = datetime.datetime.now().strftime('_%Y%m%d_%H%M%S')
     toshy_backup_dir_path = os.path.abspath(cnfg.toshy_dir_path + timestamp)
     if os.path.exists(os.path.join(os.path.expanduser('~'), '.config', 'toshy')):
@@ -212,7 +214,7 @@ def backup_toshy_config():
 
 def install_toshy_files():
     """install Toshy files"""
-    print(f'\nInstalling Toshy files...\n{cnfg.separator}')
+    print(f'\n\nInstalling Toshy files...\n{cnfg.separator}')
     if not cnfg.backup_succeeded:
         print(f'Backup of Toshy config folder failed? Bailing out...')
         exit(1)
@@ -250,7 +252,7 @@ def copy_desktop_app_icon():
 
 def setup_virtual_env():
     """setup a virtual environment to install Python packages"""
-    print(f'\nSetting up virtual environment...\n{cnfg.separator}')
+    print(f'\n\nSetting up virtual environment...\n{cnfg.separator}')
 
     # Create the virtual environment if it doesn't exist
     if not os.path.exists(cnfg.venv_path):
@@ -261,7 +263,7 @@ def setup_virtual_env():
 
 def install_pip_pkgs():
     """install `pip` packages for Python"""
-    print(f'\nInstalling/upgrading Python packages...\n{cnfg.separator}')
+    print(f'\n\nInstalling/upgrading Python packages...\n{cnfg.separator}')
     python_cmd = os.path.join(cnfg.venv_path, 'bin', 'python')
     pip_cmd = os.path.join(cnfg.venv_path, 'bin', 'pip')
     # Upgrade pip first using python -m pip install --upgrade pip
@@ -280,14 +282,14 @@ def install_pip_pkgs():
 
 def install_bin_commands():
     """install the convenient scripts to manage Toshy"""
-    print(f'\nInstalling Toshy script commands...\n{cnfg.separator}')
+    print(f'\n\nInstalling Toshy script commands...\n{cnfg.separator}')
     script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'toshy-bincommands-setup.sh')
     subprocess.run([script_path])
 
 
 def install_desktop_apps():
     """install the convenient scripts to manage Toshy"""
-    print(f'\nInstalling Toshy desktop apps...\n{cnfg.separator}')
+    print(f'\n\nInstalling Toshy desktop apps...\n{cnfg.separator}')
     script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'toshy-desktopapps-setup.sh')
     subprocess.run([script_path])
 
@@ -312,14 +314,14 @@ def install_desktop_apps():
 
 def setup_toshy_services():
     """invoke the setup script to install the systemd service units"""
-    print(f'\nSetting up the Toshy systemd services...\n{cnfg.separator}')
+    print(f'\n\nSetting up the Toshy systemd services...\n{cnfg.separator}')
     script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'bin', 'toshy-systemd-setup.sh')
     subprocess.run([script_path])
 
 
 def autostart_tray_icon():
     """set the tray icon to autostart at login"""
-    print(f'\nSetting tray icon to load automatically at login...\n{cnfg.separator}')
+    print(f'\n\nSetting tray icon to load automatically at login...\n{cnfg.separator}')
     user_path           = os.path.expanduser('~')
     desktop_files_path  = os.path.join(user_path, '.local', 'share', 'applications')
     tray_desktop_file   = os.path.join(desktop_files_path, 'Toshy_Tray.desktop')
@@ -341,7 +343,7 @@ def apply_desktop_tweaks():
     TODO: These tweaks should probably be done at startup of the config
             instead of here in the installer. 
     """
-    print(f'\nApplying any necessary desktop tweaks...\n{cnfg.separator}')
+    print(f'\n\nApplying any necessary desktop tweaks...\n{cnfg.separator}')
     
     if cnfg.DESKTOP_ENV == 'xfce':
         print(f'Nothing to be done for Xfce yet...')
@@ -371,7 +373,8 @@ def apply_desktop_tweaks():
     # then run command: 
     # qdbus org.kde.KWin /KWin reconfigure
     if cnfg.DESKTOP_ENV == 'kde':
-        subprocess.run(['qdbus', 'org.kde.KWin', '/KWin', 'reconfigure'])
+        # subprocess.run(['qdbus', 'org.kde.KWin', '/KWin', 'reconfigure'])
+        pass
     
     # if KDE, install `ibus` or `fcitx` and choose as input manager (ask for confirmation)
 
