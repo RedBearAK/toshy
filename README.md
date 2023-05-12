@@ -156,7 +156,9 @@ On Linux Mint they use a custom menu widget/applet that is set up to activate wi
 
 You will see a couple of things that vaguely look like buttons. You can click on the first one and set the shortcut to something `Ctrl+Esc`. Click on the other and hit `Backspace` and it will show "unassigned". This will disable the activation of the menu with the Meta/Super/Win/Cmd key.  
 
-If Cinnamon is detected by the Toshy config, `Cmd+Space` will be remapped onto `Ctrl+Esc`, so you should now be able to open the application menu with `Cmd+Space` if you assigned the suggested shortcut to it.  
+You may need to temporarily DISABLE Toshy (from the tray icon menu, or the GUI preferences app) if it is active, in order to successfully set the shortcut to `Ctrl+Esc`. Then re-enable Toshy. Or, press the equivalent on your keyboard of `Cmd+Space` when setting the shortcut, and what should appear as the new shortcut is `Ctrl+Esc`.  
+
+If Cinnamon is detected by the Toshy config, `Cmd+Space` will already be getting remapped onto `Ctrl+Esc`, so you should now be able to open the application menu with `Cmd+Space` if you assigned the suggested shortcut to it.  
 
 **_TODO: Make sure this also works correctly in Xfce and MATE variants of Linux Mint._**  
 
