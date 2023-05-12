@@ -8,6 +8,12 @@
         "tk",
         "sv_ttk",
         "psutil",
+        "inotify-simple",
+        "evdev",
+        "appdirs",
+        "ordered-set",
+        "python-xlib",
+        "six",
         "watchdog"
     ],
     "kde": [
