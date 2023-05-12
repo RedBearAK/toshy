@@ -189,11 +189,13 @@ def backup_toshy_config():
     print(f'\nBacking up existing Toshy config folder...\n{cnfg.separator}')
     timestamp = datetime.datetime.now().strftime('_%Y%m%d_%H%M%S')
     toshy_backup_dir_path = os.path.abspath(cnfg.toshy_dir_path + timestamp)
-
     if os.path.exists(os.path.join(os.path.expanduser('~'), '.config', 'toshy')):
         try:
+            # Define the ignore function
+            def ignore_venv(dirname, filenames):
+                return ['.venv'] if '.venv' in filenames else []
             # Copy files recursively from source to destination
-            shutil.copytree(cnfg.toshy_dir_path, toshy_backup_dir_path)
+            shutil.copytree(cnfg.toshy_dir_path, toshy_backup_dir_path, ignore=ignore_venv)
         except shutil.Error as e:
             print(f"Failed to copy directory: {e}")
         except OSError as e:
