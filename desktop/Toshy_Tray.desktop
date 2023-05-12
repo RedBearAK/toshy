@@ -7,8 +7,7 @@ GenericName=Toshy Tray Icon
 # Exec line to launch Python file directly (doesn't activate venv)
 # Exec=/usr/bin/sh -c 'exec env TERM=xterm /home/$USER/.config/toshy/toshy_tray.py'
 # Exec line that activates the venv with a shell script first
-# Exec=/usr/bin/sh -c 'exec env TERM=xterm $HOME/.local/bin/toshy-tray'
-Exec=/usr/bin/sh -c "exec env TERM=xterm $HOME/.local/bin/toshy-tray"
+Exec=/usr/bin/sh -c 'exec env TERM=xterm $HOME/.local/bin/toshy-tray'
 Terminal=false
 NoDisplay=false
 Icon=/home/kris/.config/toshy/assets/toshy_app_icon_rainbow.svg
