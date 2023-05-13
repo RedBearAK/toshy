@@ -620,6 +620,9 @@ menu.show_all()
 
 
 def main():
+    # help out the config file user service
+    subprocess.run(["systemctl", "--user", "import-environment", "XDG_SESSION_TYPE", "XDG_SESSION_DESKTOP", "XDG_CURRENT_DESKTOP"])    
+
     global loop
     # Start a separate thread to watch the status of Toshy systemd services (or script?)
     monitor_toshy_services_thread = threading.Thread(target=fn_monitor_toshy_services)

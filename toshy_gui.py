@@ -896,6 +896,9 @@ root.bind("<Control-w>", lambda event: root.destroy())
 
 if __name__ == "__main__":
 
+    # help out the config file user service
+    subprocess.run(["systemctl", "--user", "import-environment", "XDG_SESSION_TYPE", "XDG_SESSION_DESKTOP", "XDG_CURRENT_DESKTOP"])    
+
     handle_existing_process()
     write_pid_to_lockfile()
 
