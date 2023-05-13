@@ -3473,7 +3473,7 @@ keymap("GenGUI overrides: KDE", {
     C("RC-Shift-Key_5"):        C("Print"),                     # Take a screenshot interactively (kde)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'kde' )
 keymap("GenGUI overrides: MATE", {
-    C("RC-Space"):              C("C-Esc"),                     # Right click, configure Mint menu shortcut to Ctrl+Esc
+    C("RC-Space"):              C("Alt-Space"),                     # Right click, configure Mint menu shortcut to Ctrl+Esc
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'mate' )
 keymap("GenGUI overrides: Xfce4", {
     C("RC-Grave"):             [bind,C("Super-Tab")],           # xfce4 Switch within app group
