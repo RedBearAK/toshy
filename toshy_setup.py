@@ -75,10 +75,10 @@ def get_environment():
     """get back the distro, distro version, session type and 
         desktop environment from `env.py` module"""
     cnfg.env_info_dct: Dict[str, str]   = env.get_env_info()
-    cnfg.DISTRO_NAME    = cnfg.env_info_dct.get('DISTRO_NAME',  ''  ).casefold()
-    cnfg.DISTRO_VER     = cnfg.env_info_dct.get('DISTRO_VER',   ''  ).casefold()
-    cnfg.SESSION_TYPE   = cnfg.env_info_dct.get('SESSION_TYPE', ''  ).casefold()
-    cnfg.DESKTOP_ENV    = cnfg.env_info_dct.get('DESKTOP_ENV',  ''  ).casefold()
+    cnfg.DISTRO_NAME    = cnfg.env_info_dct.get('DISTRO_NAME',  'undef'  ).casefold()
+    cnfg.DISTRO_VER     = cnfg.env_info_dct.get('DISTRO_VER',   'undef'  ).casefold()
+    cnfg.SESSION_TYPE   = cnfg.env_info_dct.get('SESSION_TYPE', 'undef'  ).casefold()
+    cnfg.DESKTOP_ENV    = cnfg.env_info_dct.get('DESKTOP_ENV',  'undef'  ).casefold()
     print(  f'Toshy installer sees this environment:'
             f'\n\t{cnfg.DISTRO_NAME     = }'
             f'\n\t{cnfg.DISTRO_VER      = }'
@@ -175,7 +175,7 @@ def install_distro_pkgs():
     
     else:
         print(f"Sorry, no package list available for distro: {cnfg.DISTRO_NAME}")
-        sys.exit(0)
+        sys.exit(1)
 
 
 def clone_keyszer_branch():

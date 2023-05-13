@@ -90,5 +90,16 @@
         "python-dbus",
         "systemd",
         "tk"
+    ],
+    "manjaro": [
+        "cairo",
+        "evtest",
+        "git",
+        "gobject-introspection",
+        "libappindicator-gtk3",
+        "python",
+        "python-dbus",
+        "systemd",
+        "tk"
     ]
 }
