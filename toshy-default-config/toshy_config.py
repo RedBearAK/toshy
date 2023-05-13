@@ -3418,6 +3418,9 @@ keymap("GenGUI overrides: Fedora", {
     C("Super-Right"):          [bind,C("Super-Page_Up")],       # SL - Change workspace (ubuntu/fedora)
     C("Super-Left"):           [bind,C("Super-Page_Down")],     # SL - Change workspace (ubuntu/fedora)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'fedora' )
+keymap("GenGUI overrides: Manjaro Xfce", {
+    C("RC-Space"):              C("Alt-F1"),                    # Xfce on Manjaro
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'manjaro' and DESKTOP_ENV == 'xfce' )
 keymap("GenGUI overrides: Manjaro", {
     C("RC-LC-f"):               C("Super-PAGE_UP"),             # SL- Maximize app manjaro
     C("RC-LC-f"):               C("Super-PAGE_DOWN"),           # SL - Minimize app manjaro
