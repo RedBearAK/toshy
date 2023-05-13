@@ -161,6 +161,8 @@ You may need to temporarily DISABLE Toshy (from the tray icon menu, or the GUI p
 
 If Cinnamon is detected by the Toshy config, `Cmd+Space` will already be getting remapped onto `Ctrl+Esc`, so you should now be able to open the application menu with `Cmd+Space` if you assigned the suggested shortcut to it.  
 
+In MATE, the remap is set to `Alt+Space`. To set this as the shortcut for the menu applet in MATE, Toshy must be disabled while setting the shortcut, then re-enabled afterward.  
+
 **_TODO: Make sure this also works correctly in Xfce and MATE variants of Linux Mint._**  
 
 ### GNOME and the Meta/Super/Win/Cmd key (`overlay-key`)
