@@ -3478,7 +3478,7 @@ keymap("GenGUI overrides: MATE", {
 keymap("GenGUI overrides: Xfce4", {
     C("RC-Grave"):             [bind,C("Super-Tab")],           # xfce4 Switch within app group
     C("Shift-RC-Grave"):       [bind,C("Super-Shift-Tab")],     # xfce4 Switch within app group
-    C("RC-Space"):              C("LC-Esc"),                    # SL- Launch Application Menu xfce4
+    C("RC-Space"):              C("Super-Space"),               # Launch Application Menu xfce4
     C("RC-F3"):                 C("C-Alt-d"),                   # SL- Show Desktop xfce4
     C("RC-H"):                  C("Alt-F9"),                    # SL - Minimize app xfce4
     # Screenshot shortcuts for Xfce desktops (xfce4-screenshooter app)
