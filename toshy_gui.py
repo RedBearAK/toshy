@@ -195,6 +195,21 @@ def get_settings_list(settings_obj):
 # Monitor from a separate thread.
 last_settings_list = get_settings_list(cnfg)
 
+
+def check_notify_send():
+    try:
+        # Run the notify-send command with the -p flag
+        subprocess.run(['notify-send', '-p'], check=True, capture_output=True)
+    except subprocess.CalledProcessError as e:
+        # Check if the error message contains "Unknown option" for -p flag
+        error_output: bytes = e.stderr  # type hint to validate decode()
+        if 'Unknown option' in error_output.decode('utf-8'):
+            return False
+    return True
+
+
+is_p_option_supported = check_notify_send()
+
 ntfy_cmd        = '/usr/bin/notify-send'
 ntfy_prio       = '--urgency=critical'
 ntfy_icon       = f'--icon=\"{icon_file_active}\"'
@@ -321,11 +336,15 @@ def fn_restart_toshy_services():
     time.sleep(0.2)
     _ntfy_icon = f'--icon={icon_file_active}'
     _ntfy_msg = 'Toshy systemd services (re)started.\nTap any modifier key before trying shortcuts.'
-    global ntfy_id_last, ntfy_id_new
-    ntfy_id_new = subprocess.run(
-        [ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg, '-p','-r',ntfy_id_last], 
-        stdout=subprocess.PIPE).stdout.decode().strip()
-    ntfy_id_last = ntfy_id_new
+
+    if is_p_option_supported:
+        global ntfy_id_last, ntfy_id_new
+        ntfy_id_new = subprocess.run(
+            [ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg, '-p','-r',ntfy_id_last], 
+            stdout=subprocess.PIPE).stdout.decode().strip()
+        ntfy_id_last = ntfy_id_new
+    else:
+        subprocess.run([ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg])
 
 
 def fn_stop_toshy_services():
@@ -336,11 +355,15 @@ def fn_stop_toshy_services():
     time.sleep(0.2)
     _ntfy_icon = f'--icon={icon_file_inverse}'
     _ntfy_msg = 'Toshy systemd services stopped.'
-    global ntfy_id_last, ntfy_id_new
-    ntfy_id_new = subprocess.run(
-        [ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg, '-p','-r',ntfy_id_last], 
-        stdout=subprocess.PIPE).stdout.decode().strip()
-    ntfy_id_last = ntfy_id_new
+
+    if is_p_option_supported:
+        global ntfy_id_last, ntfy_id_new
+        ntfy_id_new = subprocess.run(
+            [ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg, '-p','-r',ntfy_id_last], 
+            stdout=subprocess.PIPE).stdout.decode().strip()
+        ntfy_id_last = ntfy_id_new
+    else:
+        subprocess.run([ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg])
 
 
 ####################################################
