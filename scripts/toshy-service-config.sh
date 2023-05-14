@@ -18,7 +18,7 @@ else
     # Check if a marker file exists
     if [ ! -f "${MARKER_FILE}" ]; then
         # If it does not exist, wait for a certain time period
-        sleep 8
+        sleep 3
         # Create the marker file to signify that the service has started once
         touch "${MARKER_FILE}"
     fi
@@ -48,7 +48,7 @@ if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
         fi
     done
 elif [[ -z "$XDG_SESSION_TYPE" ]]; then
-    sleep 3
+    sleep 2
     echo "Toshy Config Service: XDG_SESSION_TYPE not set. Restarting service." >&2
     exit 1
 fi
