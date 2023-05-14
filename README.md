@@ -206,7 +206,7 @@ Then, run this command in the terminal:
 qdbus org.kde.KWin /KWin reconfigure
 ```
 
-To undo, remove or comment out the same text in the file, and run the same command. The `Meta` key binding should be back.  
+To undo this, remove or comment out the same text in the file, and run the same command. The `Meta` key binding should be back.  
 
 ### Manjaro GNOME Cmd+Q (Close Window) shortcut
 
