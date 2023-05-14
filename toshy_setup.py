@@ -370,6 +370,7 @@ def autostart_tray_icon():
     subprocess.run(['ln', '-sf', tray_desktop_file, dest_link_file])
     # Try to start the tray icon immediately
     subprocess.run(['gtk-launch', 'Toshy_Tray'])
+    print(f'Tray icon should appear in system tray at login.')
 
 
 def apply_desktop_tweaks():
