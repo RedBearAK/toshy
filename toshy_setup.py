@@ -168,13 +168,21 @@ def install_distro_pkgs():
         subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro)
     
     elif cnfg.DISTRO_NAME in ['arch', 'manjaro']:
-        # print('It is essential to have an Arch-based system completely updated.')
-        # response = input('Have you run "sudo pacman -Syyu" recently? [y/N]')
-        # if response in ['y', 'Y']:
-        subprocess.run(['sudo', 'pacman', '-S', '--noconfirm'] + cnfg.pkgs_for_distro)
-        # else:
-        #     print('Get your Arch system up to date first, then run the installer again. Exiting.')
-        #     sys.exit(0)
+        print('It is essential to have an Arch-based system completely updated.')
+        response = input('Have you run "sudo pacman -Syu" recently? [y/N]')
+        if response in ['y', 'Y']:
+            def is_package_installed(package):
+                result = subprocess.run(['pacman', '-Q', package], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                return result.returncode == 0
+
+            pkgs_to_install = [pkg for pkg in cnfg.pkgs_for_distro if not is_package_installed(pkg)]
+
+            if pkgs_to_install:
+                subprocess.run(['sudo', 'pacman', '-S', '--noconfirm'] + pkgs_to_install)
+        else:
+            print('Installer will probably fail if you have not updated recently.')
+            print('Update your system and try the installer again. Exiting.')
+            sys.exit(1)
     
     else:
         print(f"Sorry, no package list available for distro: {cnfg.DISTRO_NAME}")
