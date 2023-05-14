@@ -9,5 +9,5 @@ Terminal=false
 NoDisplay=false
 # Icon must be copied to ~/.local/share/icons
 Icon=toshy_app_icon_rainbow.svg
-Comment=Tray Icon Menu for Toshy. Make Linux work like a 'Tosh!
+Comment=Environment importer for Toshy services
 Categories=Utility;
