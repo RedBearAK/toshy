@@ -11,4 +11,6 @@ Restart=always
 RestartSec=5
 
 [Install]
+# We can't use graphical-session.target here because some distros fail to
+# activate it during the user's desktop session (Manjaro Xfce, Xubuntu, etc.)
 WantedBy=default.target
