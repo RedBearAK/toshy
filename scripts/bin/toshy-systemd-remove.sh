@@ -33,6 +33,7 @@ sleep $DELAY
 
 rm -f "$HOME/.config/systemd/user/toshy-config.service"
 rm -f "$HOME/.config/systemd/user/toshy-session-monitor.service"
+rm -f "$HOME/.config/autostart/Toshy_Import_Vars.desktop"
 
 sleep $DELAY
 
