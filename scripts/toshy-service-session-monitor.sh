@@ -50,7 +50,7 @@ sleep 2
 while true
     do
 
-        sleep 3
+        sleep 2
 
         # get the current session ID (number)
         SESSION_ID="$(/usr/bin/loginctl session-status | head -n1 | cut -d' ' -f1)"
