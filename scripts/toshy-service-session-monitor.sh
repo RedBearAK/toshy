@@ -33,7 +33,7 @@ else
     # Check if a marker file exists
     if [ ! -f "${MARKER_FILE}" ]; then
         # If it does not exist, wait for a certain time period
-        sleep 8
+        sleep 3
         # Create the marker file to signify that the service has started once
         touch "${MARKER_FILE}"
     fi
