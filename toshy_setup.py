@@ -169,7 +169,7 @@ def install_distro_pkgs():
     
     elif cnfg.DISTRO_NAME in ['arch', 'manjaro']:
         print('It is essential to have an Arch-based system completely updated.')
-        response = input('Have you run "sudo pacman -Syu" recently? [y/N]')
+        response = input('Have you run "sudo pacman -Syu" recently? [y/N]: ')
         if response in ['y', 'Y']:
             def is_package_installed(package):
                 result = subprocess.run(['pacman', '-Q', package], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
