@@ -183,6 +183,12 @@ Enable/Re-enable:
 gsettings reset org.gnome.mutter overlay-key
 ```
 
+### GNOME Switch Windows vs Switch Applications (Cmd+Tab task switching)
+
+GNOME desktops have the ability to either do task switching like Windows (switch between all open windows individually) or like macOS (switch between "applications" as groups of windows). Except where an extension is interfering with this ability, like the COSMIC desktop extension on Pop!_OS. Depending on the Linux distro, `Alt+Tab` may be assigned to "Switch windows" or to "Switch applications". If you want to task switch more like macOS, set the "Switch applications" shortcut in the GNOME Keyboard settings control panel to be the one assigned `Alt+Tab`, and set the "Switch windows of an application" to be `Alt+Grave` (the "`" backtick/Grave character, above the Tab key).  
+
+Note that this will also change the appearance and function of the task switcher dialog that appears when you use the corresponding shortcut. The "Switch applications" shortcut is like the macOS task switcher, it shows one large application icon for each group of windows belonging to the same "application". The "Switch windows" shortcut will show a task switcher that has a preview icon for every **_window_** open on the current workspace, similar to Windows and Linux desktop environments like KDE Plasma. The "large icons" task switcher tends to have far fewer items and be easier to navigate visually. Just like on macOS, the equivalent of `Cmd+Grave` can be used to switch windows of the same application. Which style works for you is down to personal prefernce, and how well you like the macOS style of task switching with `Cmd+Tab`.  
+
 ### KDE Plasma and the Meta/Super/Win/Cmd key
 
 KDE Plasma desktops tend to have the Meta/Super/Win/Cmd key bound to open the application menu. Like the other desktop environments that bind the `Meta` key to do something by itself, this appears to be an alien concept as far as the regular keyboard shortcut control panel is concerned. You won't find it there. To disable this secret modifier-only binding, you have to put something in a hidden dotfile and refresh `KWin`.  
