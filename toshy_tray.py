@@ -248,6 +248,7 @@ tray_indicator = AppIndicator3.Indicator.new(
     category=AppIndicator3.IndicatorCategory.APPLICATION_STATUS)
 tray_indicator.set_status(AppIndicator3.IndicatorStatus.ACTIVE)
 tray_indicator.set_menu(menu)
+tray_indicator.set_title("Toshy Status Indicator") # try to set what might show in tooltip
 
 
 def fn_monitor_toshy_services():
