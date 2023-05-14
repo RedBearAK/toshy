@@ -98,6 +98,7 @@ def install_udev_rules():
         try:
             subprocess.run(command, input=rule_content.encode(), shell=True, check=True)
             print(f'"udev" rules file successfully installed.')
+            cnfg.should_reboot = True
         except subprocess.CalledProcessError as e:
             print(f'\nERROR: Problem when trying to install "udev" rules file for keymapper...\n')
             error_output: bytes = e.output  # Type hinting the error_output variable
