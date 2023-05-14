@@ -19,15 +19,25 @@ DELAY=0.5
 
 echo -e "\nRemoving Toshy systemd services...\n"
 
-# systemctl "disable" automatically deletes all symlinks??? why?
+# systemctl "disable" automatically deletes all symlinks (might be bug)
 
-/usr/bin/systemctl --user stop toshy-session-monitor.service
-/usr/bin/systemctl --user disable toshy-session-monitor.service
+if systemctl --user --quiet is-active toshy-session-monitor.service; then
+    /usr/bin/systemctl --user stop toshy-session-monitor.service
+fi
+
+if systemctl --user --quiet is-enabled toshy-session-monitor.service; then
+    /usr/bin/systemctl --user disable toshy-session-monitor.service
+fi
 
 sleep $DELAY
 
-/usr/bin/systemctl --user stop toshy-config.service
-/usr/bin/systemctl --user disable toshy-config.service
+if systemctl --user --quiet is-active toshy-config.service; then
+    /usr/bin/systemctl --user stop toshy-config.service
+fi
+
+if systemctl --user --quiet is-enabled toshy-config.service; then
+    /usr/bin/systemctl --user disable toshy-config.service
+fi
 
 sleep $DELAY
 
