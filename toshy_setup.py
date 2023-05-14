@@ -272,22 +272,48 @@ def setup_virtual_env():
     print(f'Virtual environment setup complete.')
 
 
+# def install_pip_pkgs():
+#     """install `pip` packages for Python"""
+#     print(f'\n\nInstalling/upgrading Python packages...\n{cnfg.separator}')
+#     python_cmd = os.path.join(cnfg.venv_path, 'bin', 'python')
+#     pip_cmd = os.path.join(cnfg.venv_path, 'bin', 'pip')
+#     # Upgrade pip first using python -m pip install --upgrade pip
+#     subprocess.run([python_cmd, '-m', 'pip', 'install', '--upgrade', 'pip'])
+#     # Avoid deprecation errors by making sure wheel is installed early
+#     subprocess.run([pip_cmd, 'install', '--upgrade', 'wheel'])
+#     subprocess.run([pip_cmd, 'install', '--upgrade', 'setuptools'])
+#     subprocess.run([pip_cmd, 'install', '--upgrade'] + cnfg.pip_pkgs)
+
+#     if os.path.exists('./keyszer-temp'):
+#         subprocess.run([pip_cmd, 'install', '--upgrade', './keyszer-temp'])
+#     else:
+#         print(f'"keyszer-temp" folder missing... Unable to install "keyszer"...')
+#         sys.exit(1)
+
+
 def install_pip_pkgs():
     """install `pip` packages for Python"""
     print(f'\n\nInstalling/upgrading Python packages...\n{cnfg.separator}')
-    python_cmd = os.path.join(cnfg.venv_path, 'bin', 'python')
-    pip_cmd = os.path.join(cnfg.venv_path, 'bin', 'pip')
-    # Upgrade pip first using python -m pip install --upgrade pip
-    subprocess.run([python_cmd, '-m', 'pip', 'install', '--upgrade', 'pip'])
-    # Avoid deprecation errors by making sure wheel is installed early
-    subprocess.run([pip_cmd, 'install', '--upgrade', 'wheel'])
-    subprocess.run([pip_cmd, 'install', '--upgrade', 'setuptools'])
-    subprocess.run([pip_cmd, 'install', '--upgrade'] + cnfg.pip_pkgs)
-
+    venv_python_cmd = os.path.join(cnfg.venv_path, 'bin', 'python')
+    venv_pip_cmd    = os.path.join(cnfg.venv_path, 'bin', 'pip')
+    commands        = [
+        [venv_python_cmd, '-m', 'pip', 'install', '--upgrade', 'pip'],
+        [venv_pip_cmd, 'install', '--upgrade', 'wheel'],
+        [venv_pip_cmd, 'install', '--upgrade', 'setuptools'],
+        [venv_pip_cmd, 'install', '--upgrade'] + cnfg.pip_pkgs
+    ]
+    for command in commands:
+        result = subprocess.run(command)
+        if result.returncode != 0:
+            print(f'Error installing/upgrading Python packages. Installer exiting...')
+            sys.exit(1)
     if os.path.exists('./keyszer-temp'):
-        subprocess.run([pip_cmd, 'install', '--upgrade', './keyszer-temp'])
+        result = subprocess.run([venv_pip_cmd, 'install', '--upgrade', './keyszer-temp'])
+        if result.returncode != 0:
+            print(f'Error installing/upgrading "keyszer".')
+            sys.exit(1)
     else:
-        print(f'"keyszer-temp" folder missing... Unable to install "keyszer"...')
+        print(f'"keyszer-temp" folder missing... Unable to install "keyszer".')
         sys.exit(1)
 
 
