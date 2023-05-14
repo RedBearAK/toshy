@@ -5,7 +5,7 @@ After=default.target
 # PartOf=graphical-session.target
 
 [Service]
-ExecStartPre=/bin/sh -c 'for i in {1..20}; do if systemctl --quiet is-active graphical-session.target; then break; fi; sleep 0.5; done'
+ExecStartPre=/bin/sh -c 'for i in {1..20}; do if systemctl --quiet is-active graphical-session.target || [ -f "${XDG_RUNTIME_DIR}/toshy-service-config.start" ]; then break; fi; sleep 0.5; done'
 ExecStart=/usr/bin/bash -c 'env TERM=xterm $HOME/.config/toshy/scripts/toshy-service-config.sh'
 Restart=always
 RestartSec=5
