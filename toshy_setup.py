@@ -398,11 +398,11 @@ def apply_desktop_tweaks():
             return extension_uuid in extensions
 
         if is_extension_enabled("appindicatorsupport@rgcjonas.gmail.com"):
-            # print("AppIndicator extension is enabled")
-            pass
+            print("AppIndicator extension is enabled. Tray icon should work.")
+            # pass
         else:
             print(f"RECOMMENDATION: Install AppIndicator GNOME extension\n"
-                    "Easiest way: flatpak install extensionmanager")
+                "Easiest method: 'flatpak install extensionmanager', search for 'appindicator'")
 
     # if KDE Plasma, disable Meta key opening app menu
     # append this to ~/.config/kwinrc:
