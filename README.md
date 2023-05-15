@@ -106,6 +106,47 @@ Currently working distros:
 
 This section will list some common questions, issues and fixes/tweaks that may be necessary for different distros, desktops or devices. 
 
+
+### Touchpads/Trackpads and `keyszer` Suspend Timer
+
+The `keyszer` (fork of `xkeysnail`) keymapper is pretty good, but there is an issue with [modifier key] + [tap or click] when using a touchpad versus a mouse. The keymapper uses a technique that "suspends" modifier key presses briefly (default is 1 second) to try and keep certain applications from seeing those modifier presses and performing some unwanted action. Notable apps that have issues with doing the wrong thing just from seeing a modifier key press are Visual Studio Code (and it's more Open Source variants VSCodium and Code - OSS) and the Firefox web browser. They will frequently focus or open items on the menu bar then they see the `Option/Alt` key in any way.  
+
+The suspend timer scheme works well for mouse usage, letting you do things like `Alt+click`, `Ctrl+click/Cmd+click` and `Shift+click`, but with a touchpad, you may need to reduce the one-second timer to zero or 0.1 seconds in order for those operations to work as you would expect.  
+
+If you do need to disable or reduce the suspend timer, it will become more important to implement the fixes below for VSCode and Firefox, to keep them from focusing the menu bar every time you hit `Option/Alt`.  
+
+### VSCode(s) and Firefox menu stealing focus when hitting `Option/Alt`
+
+For Firefox, the fix is relatively simple: Get to the advanced config settings by hitting `Cmd+comma` (if Toshy or Kinto is enabled), or by entering "about:config" into the URL/address bar. Accept the warning, and search for:  
+
+```ini
+ui.key.menuAccessKeyFocuses
+```
+
+Double-click the item to change it from "true" to "false", and the `Option/Alt` key will stop focusing the menu bar.  
+
+For VSCode/VSCodium/Code-OSS, use `Cmd+Shift+P` to open the command palette, enter "open user settings json" to open the settings JSON file where you need to place these lines:  
+
+```json
+    "window.titleBarStyle": "custom",
+    "window.enableMenuBarMnemonics": false,
+    "window.customMenuBarAltFocus": false,
+```
+
+If there is nothing else in your user settings JSON file, it would need to have enclosing curly braces, like this:  
+
+```json
+{
+    "window.titleBarStyle": "custom",
+    "window.enableMenuBarMnemonics": false,
+    "window.customMenuBarAltFocus": false
+}
+```
+
+And the last line in every section of a JSON formatted file can't have a commma at the end, or there will be an error.  
+
+You may be prompted to restart the app after saving this particular set of lines, and it will change how the window looks, with a combined menu/titlebar. The `Option/Alt` key will no longer focus the menu bar.  
+
 ### Option-key Special Character Entry (or Macros) Acting Weird
 
 Sometimes, especially in virtual machines (but also on some bare metal installs) there is a problem in Linux with the "timing" of modifier key presses, leading to failures of some shortcut combos.  
