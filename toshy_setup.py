@@ -292,7 +292,7 @@ def setup_virtual_env():
 #         sys.exit(1)
 
 
-def install_pip_pkgs():
+def install_pip_packages():
     """install `pip` packages for Python"""
     print(f'\n\nInstalling/upgrading Python packages...\n{cnfg.separator}')
     venv_python_cmd = os.path.join(cnfg.venv_path, 'bin', 'python')
@@ -379,10 +379,10 @@ def apply_desktop_tweaks():
     and fix the Unicode sequences in KDE Plasma
     
     TODO: These tweaks should probably be done at startup of the config
-            instead of here in the installer. 
+            instead of (or in addition to) here in the installer. 
     """
     print(f'\n\nApplying any necessary desktop tweaks...\n{cnfg.separator}')
-    
+
     if cnfg.DESKTOP_ENV == 'xfce':
         print(f'Nothing to be done for Xfce yet...')
 
@@ -437,20 +437,24 @@ if __name__ == '__main__':
     cnfg = InstallerSettings()
 
     get_environment_info()
+
     install_udev_rules()
     verify_user_groups()
+
     load_package_list()
     install_distro_pkgs()
     clone_keyszer_branch()
     backup_toshy_config()
     install_toshy_files()
     setup_virtual_env()
-    install_pip_pkgs()
+    install_pip_packages()
     install_bin_commands()
     install_desktop_apps()
+
     setup_toshy_services()
-    apply_desktop_tweaks()
     autostart_tray_icon()
+
+    apply_desktop_tweaks()
 
     if cnfg.should_reboot:
         print(f'\n\n{cnfg.separator}'
