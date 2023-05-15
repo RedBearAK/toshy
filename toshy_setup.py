@@ -160,17 +160,16 @@ def install_distro_pkgs():
     """install needed packages from list for distro type"""
     print(f'\n\nInstalling native packages...\n{cnfg.separator}')
 
-    if True is False: pass  # dummy first line just because
-    
-    elif cnfg.DISTRO_NAME in ['ubuntu', 'linux mint', 'debian']:
+    if cnfg.DISTRO_NAME in ['ubuntu', 'linux mint', 'debian']:
         subprocess.run(['sudo', 'apt', 'install', '-y'] + cnfg.pkgs_for_distro)
-    
+
     elif cnfg.DISTRO_NAME in ['fedora', 'fedoralinux']:
         subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro)
-    
+
     elif cnfg.DISTRO_NAME in ['arch', 'manjaro']:
-        print('It is essential to have an Arch-based system completely updated.')
+        print('NOTICE: It is ESSENTIAL to have an Arch-based system completely updated.')
         response = input('Have you run "sudo pacman -Syu" recently? [y/N]: ')
+
         if response in ['y', 'Y']:
             def is_package_installed(package):
                 result = subprocess.run(['pacman', '-Q', package], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -180,13 +179,14 @@ def install_distro_pkgs():
 
             if pkgs_to_install:
                 subprocess.run(['sudo', 'pacman', '-S', '--noconfirm'] + pkgs_to_install)
+
         else:
-            print('Installer will probably fail if you have not updated recently.')
-            print('Update your system and try the installer again. Exiting.')
+            print('Installer will fail with version mismatches if you have not updated recently.')
+            print('Update your Arch-based system and try the Toshy installer again. Exiting.')
             sys.exit(1)
-    
+
     else:
-        print(f"Sorry, no package list available for distro: {cnfg.DISTRO_NAME}")
+        print(f"Sorry, no package list available yet for distro: {cnfg.DISTRO_NAME}")
         sys.exit(1)
 
 
