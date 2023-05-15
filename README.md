@@ -106,11 +106,11 @@ Currently working distros:
 
 Toshy does its best to set itself up automatically on any Linux system that uses `systemd` and that is a "known" Linux distro type that the installer knows how to deal with (i.e., has a list of the correct packages to install and knows how to use the package manager).  
 
-If the install was successful, there should be a number of different terminal commands available to check the status of the Toshy `systemd` user services (the services are not system-wide, in an attempt to support multi-user setups and be ready to support Wayland more easily). Toshy actually consists of two separate services meant to work together, with one monitoring the other, so the shell commands are meant to make working with the services together much easier.  
+If the install was successful, there should be a number of different terminal commands available to check the status of the Toshy `systemd` user services (the services are not system-wide, in an attempt to support multi-user setups and be ready to support Wayland more easily) and stop/start/restart the services. Toshy actually consists of two separate services meant to work together, with one monitoring the other, so the shell commands are meant to make working with the services together much easier.  
+
+These commands are copied into `~/.local/bin`, and you will be prompted to add that location to your shell's `PATH` if it is not present. Depends on the distro whether that location is already set up as part of the path or not.  
 
 ```
-CLI commands (copied into ~/.local/bin, and you will be prompted to add to your shell path)
-
 toshy-services-log      (shows journalctl output for Toshy services)
 toshy-services-restart
 toshy-services-start
