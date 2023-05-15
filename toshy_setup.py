@@ -71,7 +71,7 @@ class InstallerSettings:
         self.should_reboot      = None
 
 
-def get_environment():
+def get_environment_info():
     """get back the distro, distro version, session type and 
         desktop environment from `env.py` module"""
     cnfg.env_info_dct: Dict[str, str]   = env.get_env_info()
@@ -253,13 +253,13 @@ def install_toshy_files():
     print(f'Toshy files installed in {cnfg.toshy_dir_path}...')
 
 
-def copy_desktop_app_icon():
-    """copy the icon asset image file for desktop apps"""
-    home_icons_path = os.path.join(cnfg.home_dir_path, '.local', 'share', 'icons')
-    os.makedirs(home_icons_path, exist_ok=True)
-    toshy_app_icon = os.path.join(
-        cnfg.home_dir_path, '.config', 'toshy', 'assets', 'toshy_app_icon_rainbow.svg')
-    shutil.copy(toshy_app_icon, home_icons_path)
+# def copy_desktop_app_icon():
+#     """copy the icon asset image file for desktop apps"""
+#     home_icons_path = os.path.join(cnfg.home_dir_path, '.local', 'share', 'icons')
+#     os.makedirs(home_icons_path, exist_ok=True)
+#     toshy_app_icon = os.path.join(
+#         cnfg.home_dir_path, '.config', 'toshy', 'assets', 'toshy_app_icon_rainbow.svg')
+#     shutil.copy(toshy_app_icon, home_icons_path)
 
 
 def setup_virtual_env():
@@ -436,7 +436,7 @@ if __name__ == '__main__':
 
     cnfg = InstallerSettings()
 
-    get_environment()
+    get_environment_info()
     install_udev_rules()
     verify_user_groups()
     load_package_list()
@@ -444,7 +444,6 @@ if __name__ == '__main__':
     clone_keyszer_branch()
     backup_toshy_config()
     install_toshy_files()
-    copy_desktop_app_icon()
     setup_virtual_env()
     install_pip_pkgs()
     install_bin_commands()
