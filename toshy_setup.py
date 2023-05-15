@@ -370,19 +370,6 @@ def autostart_tray_icon():
     os.makedirs(autostart_dir_path, exist_ok=True)
     subprocess.run(['ln', '-sf', tray_desktop_file, dest_link_file])
 
-    if not cnfg.should_reboot:
-        # Try to start the tray icon immediately, if reboot is not indicated
-        tray_command        = ['gtk-launch', 'Toshy_Tray']
-        # Try to launch the tray icon in a separate process not linked to current shell
-        # Also, suppress output that might confuse the user
-        subprocess.Popen(
-            tray_command,
-            shell=True,
-            close_fds=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        )
-
     print(f'Tray icon should appear in system tray at each login.')
 
 
@@ -465,9 +452,21 @@ if __name__ == '__main__':
     setup_toshy_services()
     apply_desktop_tweaks()
     autostart_tray_icon()
-    
+
     if cnfg.should_reboot:
         print(f'\n\n{cnfg.separator}'
                 '\nALERT: Permissions changed. You MUST reboot for Toshy to work...')
 
-    print(f'\n')
+    if not cnfg.should_reboot:
+        # Try to start the tray icon immediately, if reboot is not indicated
+        # tray_command        = ['gtk-launch', 'Toshy_Tray']
+        tray_command = [os.path.join(cnfg.home_dir_path, '.local', 'bin', 'toshy-tray')]
+        # Try to launch the tray icon in a separate process not linked to current shell
+        # Also, suppress output that might confuse the user
+        subprocess.Popen(
+            tray_command,
+            shell=True,
+            close_fds=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
