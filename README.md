@@ -102,10 +102,50 @@ Currently working distros:
 - Linux Mint
 - Fedora
 
+## Usage
+
+Toshy does its best to set itself up automatically on any Linux system that uses `systemd` and that is a "known" Linux distro type that the installer knows how to deal with (i.e., has a list of the correct packages to install and knows how to use the package manager).  
+
+If the install was successful, there should be a number of different terminal commands available to check the status of the Toshy `systemd` user services (the services are not system-wide, in an attempt to support multi-user setups and be ready to support Wayland more easily). Toshy actually consists of two separate services meant to work together, with one monitoring the other, so the shell commands are meant to make working with the services together much easier.  
+
+```
+CLI commands (copied into ~/.local/bin, and you will be prompted to add to your shell path)
+
+toshy-services-log      (shows journalctl output for Toshy services)
+toshy-services-restart
+toshy-services-start
+toshy-services-status   (shows the current state of the services)
+toshy-services-stop
+
+toshy-systemd-remove    (stops and removes the systemd service units)
+toshy-systemd-setup     (installs and starts the systemd service units)
+```
+
+The following commands are also available, and meant to allow manually running the Toshy config file. These will automatically stop the `systemd` services so there is no conflict, for instance if you need to run the `verbose` version of the command to debug a shortcut that is not working as expected. Restarting the Toshy services, either with one of the above commands or from the GUI preferences app or tray icon menu, will stop the manual process and return to running the Toshy config as a `systemd` service. All the commands are designed to work together as conveniently as possible.  
+
+```
+toshy-config-restart
+toshy-config-start
+toshy-config-start-verbose  (show debugging output in the terminal)
+toshy-config-stop
+```
+
+There are also some "applications" that will be found in most Linux app launchers (like "Albert" or "Ulauncher") or menus in Linux desktop environments:  
+
+- Toshy Preferences
+- Toshy Tray Icon
+
+Both of these "apps" will show the current status of the `systemd` services, and allow the immediate changing of the exposed optional features, as well as stopping or restarting the Toshy services. The tray icon menu also allows opening the Preferences app, and opening the `~/.config/toshy` folder if you need to edit the config file.  
+
 ## FAQ (Frequently Asked Questions)
 
-This section will list some common questions, issues and fixes/tweaks that may be necessary for different distros, desktops or devices. 
+This section will list some common questions, issues and fixes/tweaks that may be necessary for different distros, desktops or devices (and are not yet handled by the installer or config file). 
 
+### CLI/Shell commands missing/unavailable
+
+If you don't have `~/.local/bin` in your shell path, or did not answer `y` when prompted during install to add it to the path, you will have to add it to the path yourself, or re-run the installer. Alternately, if you're trying to see the commands immediately after running the installer, you may need to run the command `hash -r` or `source ~/.bashrc` (which RC file you need to `source` depends on your shell). You may also see the command `. ~/.bashrc` online, where the dot at the beginning is equivalent to the `source` command.  
+
+In the case that the path was already added to the RC file, another way of getting a new environment where you can see the `toshy-*` commands is to just close your terminal window (or tab) and open a new one.  
 
 ### Touchpads/Trackpads and `keyszer` Suspend Timer
 
