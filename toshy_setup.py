@@ -457,8 +457,11 @@ if __name__ == '__main__':
     apply_desktop_tweaks()
 
     if cnfg.should_reboot:
-        print(f'\n\n{cnfg.separator}'
-                '\nALERT: Permissions changed. You MUST reboot for Toshy to work...')
+        print(  f'\n\n'
+                f'{cnfg.separator}\n'
+                'ALERT: Permissions changed. You MUST reboot for Toshy to work...\n'
+                f'{cnfg.separator}\n'
+        )
 
     if not cnfg.should_reboot:
         # Try to start the tray icon immediately, if reboot is not indicated
