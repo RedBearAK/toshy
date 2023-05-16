@@ -296,12 +296,6 @@ qdbus org.kde.KWin /KWin reconfigure
 
 To undo this, remove or comment out the same text in the file, and run the same command. The `Meta` key binding should be back.  
 
-### Manjaro GNOME Cmd+Q (Close Window) shortcut
-
-The GNOME variant of Manjaro has the "Close Window" shortcut set to Super+Q instead of the typical `Alt+F4`. This will make it impossible to close windows with `Cmd+Q` and will disable part of the fix for the `Cmd+W` problem, which for some windows remaps to `Alt+F4` to close the window. The recommended solution at this time is to change the shortcut for "Close Window" in the Manjaro GNOME Keyboard settings control panel back to `Alt+F4`.  
-
-It would be possible to support the default shortcut, but would be more complicated to implement a fix for the windows that need `Cmd+W` to remap to `Alt+F4`. But perhaps this should be done at some point...  
-
 ### More Will Follow...
 
 I'll add to this as more testing happens and more reports come in.  
