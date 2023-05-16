@@ -72,7 +72,7 @@ class InstallerSettings:
 
 
 def get_environment_info():
-    """get back the distro, distro version, session type and 
+    """get back the distro name, distro version, session type and 
         desktop environment from `env.py` module"""
     cnfg.env_info_dct   = env.get_env_info()
     # Avoid casefold() errors by converting all to strings
