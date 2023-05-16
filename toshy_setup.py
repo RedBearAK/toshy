@@ -440,11 +440,6 @@ def handle_arguments():
     
     # Add arguments
     parser.add_argument(
-        '--help',
-        action='store_true',
-        help='Show this help message'
-    )
-    parser.add_argument(
         '--uninstall',
         action='store_true',
         help='Uninstall Toshy'
