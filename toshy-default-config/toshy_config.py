@@ -3200,14 +3200,15 @@ keymap("Cmd+W dialog fix - send Escape", {
 }, when = matchProps(lst=dialogs_Esc_lod))
 
 
-keymap("Cmd+W dialog fix - send CloseWin Sup+Q", {
+keymap("Cmd+W dialog fix - Super+Q Manjaro GNOME", {
     C("RC-W"):                  C("Super-Q"),
-}, when = lambda ctx:   matchProps(lst=dialogs_CloseWin_lod)(ctx) and
-                        ( DISTRO_NAME == 'manjaro' and DESKTOP_ENV == 'gnome' ) )
-keymap("Cmd+W dialog fix - send CloseWin Alt+F4", {
+}, when = lambda ctx:
+    matchProps(lst=dialogs_CloseWin_lod)(ctx) and
+    ( DISTRO_NAME == 'manjaro' and DESKTOP_ENV == 'gnome' ) )
+keymap("Cmd+W dialog fix - Alt+F4", {
     C("RC-W"):                  C("Alt-F4"),
-}, when = lambda ctx:   matchProps(lst=dialogs_CloseWin_lod)(ctx) and 
-                        not ( DISTRO_NAME == 'manjaro' and DESKTOP_ENV == 'gnome' ) )
+}, when = lambda ctx:
+    matchProps(lst=dialogs_CloseWin_lod)(ctx) )
 
 
 
