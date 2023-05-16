@@ -1,5 +1,6 @@
 import re
 import os
+import subprocess
 
 # not in standard library
 try: import psutil
@@ -109,10 +110,38 @@ def get_env_info():
     SESSION_TYPE = os.environ.get("XDG_SESSION_TYPE") or None
     if not SESSION_TYPE:  # Why isn't XDG_SESSION_TYPE set? This shouldn't happen.
         error(f'ENV: XDG_SESSION_TYPE should really be set. Are you in a graphical environment?')
-        SESSION_TYPE = os.environ.get("WAYLAND_DISPLAY")
+
+        # Deal with archaic distros like antiX that fail to set XDG_SESSION_TYPE
+        xorg_check_p1 = subprocess.Popen(['ps', 'ax'], stdout=subprocess.PIPE)
+        xorg_check_p2 = subprocess.Popen(
+                                    ['grep', '-i', '-c', 'xorg'], 
+                                    stdin=xorg_check_p1.stdout, 
+                                    stdout=subprocess.PIPE)
+        xorg_check_p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
+        xorg_check_output = xorg_check_p2.communicate()[0]
+        xorg_count = int(xorg_check_output.decode())
+
+        if xorg_count:
+            SESSION_TYPE = 'x11'
+
+        wayland_check_p1 = subprocess.Popen(['ps', 'ax'], stdout=subprocess.PIPE)
+        wayland_check_p2 = subprocess.Popen(
+                                        ['grep', '-i', '-c', 'wayland'], 
+                                        stdin=wayland_check_p1.stdout, 
+                                        stdout=subprocess.PIPE)
+        wayland_check_p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
+        wayland_check_output = wayland_check_p2.communicate()[0]
+        wayland_count = int(wayland_check_output.decode())
+
+        if wayland_count:
+            SESSION_TYPE = 'wayland'
+
+    if not SESSION_TYPE:
+        SESSION_TYPE = os.environ.get("WAYLAND_DISPLAY") or None
         if not SESSION_TYPE:
             raise EnvironmentError(
-                f'\n\nENV: Detecting session type from XDG_SESSION_TYPE or WAYLAND_DISPLAY failed.\n')
+                f'\n\nENV: Detecting session type failed.\n')
+
     if SESSION_TYPE.casefold() not in ['x11', 'xorg', 'wayland']:
         raise EnvironmentError(f'\n\nENV: Unknown session type: {SESSION_TYPE}.\n')
 
@@ -166,17 +195,17 @@ def get_env_info():
         for proc in psutil.process_iter(['name']):
             if proc.info['name'] in ['plasmashell', 'kwin_ft', 'kwin_x11']:
                 if DESKTOP_ENV != 'kde':
-                    error(f'Desktop may have been misidentified: {DESKTOP_ENV = }. KWin detected.')
+                    error(f'Desktop may be misidentified: {DESKTOP_ENV = }. KWin detected.')
                     DESKTOP_ENV = 'kde'
                     break
             if proc.info['name'] == 'gnome-shell':
                 if DESKTOP_ENV != 'gnome':
-                    error(f'Desktop may have been misidentified: {DESKTOP_ENV = }. GNOME Shell detected.')
+                    error(f'Desktop may be misidentified: {DESKTOP_ENV = }. GNOME Shell detected.')
                     DESKTOP_ENV = 'gnome'
                     break
             if proc.info['name'] == 'sway':
                 if DESKTOP_ENV != 'sway':
-                    error(f'Desktop may have been misidentified: {DESKTOP_ENV = }. SwayWM detected.')
+                    error(f'Desktop may be misidentified: {DESKTOP_ENV = }. SwayWM detected.')
                     DESKTOP_ENV = 'sway'
                     break
     else:
