@@ -99,7 +99,10 @@ def get_env_info():
                     DISTRO_VER = line.split('=')[1].strip().strip('"')
                     break
 
-    env_info['DISTRO_VER'] = DISTRO_VER
+    if not DISTRO_VER:
+        env_info['DISTRO_VER'] = 'notfound'
+    else:
+        env_info['DISTRO_VER'] = DISTRO_VER
 
     ########################################################################
     ##  Get session type

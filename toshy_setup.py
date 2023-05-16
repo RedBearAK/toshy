@@ -74,14 +74,12 @@ class InstallerSettings:
 def get_environment_info():
     """get back the distro, distro version, session type and 
         desktop environment from `env.py` module"""
-    cnfg.env_info_dct: Dict[str, str]   = env.get_env_info()
-    cnfg.DISTRO_NAME    = cnfg.env_info_dct.get('DISTRO_NAME',  ''  ).casefold()
-    if cnfg.env_info_dct.get('DISTRO_VER'):
-        cnfg.DISTRO_VER     = cnfg.env_info_dct.get('DISTRO_VER',   ''  ).casefold()
-    else:
-        cnfg.DISTRO_VER     = 'undefined'
-    cnfg.SESSION_TYPE   = cnfg.env_info_dct.get('SESSION_TYPE', ''  ).casefold()
-    cnfg.DESKTOP_ENV    = cnfg.env_info_dct.get('DESKTOP_ENV',  ''  ).casefold()
+    cnfg.env_info_dct   = env.get_env_info()
+    # Avoid casefold() errors by converting all to strings
+    cnfg.DISTRO_NAME    = str(cnfg.env_info_dct.get('DISTRO_NAME',  'keymissing').casefold())
+    cnfg.DISTRO_VER     = str(cnfg.env_info_dct.get('DISTRO_VER',   'keymissing').casefold())
+    cnfg.SESSION_TYPE   = str(cnfg.env_info_dct.get('SESSION_TYPE', 'keymissing').casefold())
+    cnfg.DESKTOP_ENV    = str(cnfg.env_info_dct.get('DESKTOP_ENV',  'keymissing').casefold())
     print(  f'Toshy installer sees this environment:'
             f'\n\t{cnfg.DISTRO_NAME     = }'
             f'\n\t{cnfg.DISTRO_VER      = }'
