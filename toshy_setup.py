@@ -458,9 +458,7 @@ def handle_arguments():
     args: Namespace = parser.parse_args()
 
     # Check the values of arguments and perform actions accordingly
-    if args.help:
-        parser.print_help()
-    elif args.uninstall:
+    if args.uninstall:
         uninstall_toshy()
     elif args.apply_tweaks:
         apply_tweaks()
