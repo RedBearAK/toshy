@@ -119,7 +119,7 @@ def get_env_info():
                                     stdout=subprocess.PIPE)
         xorg_check_p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
         xorg_check_output = xorg_check_p2.communicate()[0]
-        xorg_count = int(xorg_check_output.decode())
+        xorg_count = int(xorg_check_output.decode()) - 1
 
         if xorg_count:
             SESSION_TYPE = 'x11'
@@ -131,7 +131,7 @@ def get_env_info():
                                         stdout=subprocess.PIPE)
         wayland_check_p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
         wayland_check_output = wayland_check_p2.communicate()[0]
-        wayland_count = int(wayland_check_output.decode())
+        wayland_count = int(wayland_check_output.decode()) - 1
 
         if wayland_count:
             SESSION_TYPE = 'wayland'
