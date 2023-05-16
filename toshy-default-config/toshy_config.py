@@ -53,7 +53,7 @@ from lib.settings_class import Settings
 # Toshy config file
 TOSHY_PART      = 'config'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Config file'
-APP_VERSION     = '2023.0403'
+APP_VERSION     = '2023.0516'
 
 # Settings object used to tweak preferences "live" between gui, tray and config.
 cnfg = Settings(config_dir_path)
@@ -589,7 +589,7 @@ remotes_lod = [
 terminals.extend(remotes)
 termStr_ext = toRgxStr(terminals)
 
-terminals_and_remotes = [
+terminals_and_remotes_lod = [
     {lst:terminals_lod                  },
     {lst:remotes_lod                    },
 ]
@@ -597,7 +597,7 @@ terminals_and_remotes = [
 vscodes.extend(remotes)
 vscodeStr_ext = toRgxStr(vscodes)
 
-vscodes_and_remotes = [
+vscodes_and_remotes_lod = [
     {lst:vscodes_lod                    },
     {lst:remotes_lod                    },
 ]
@@ -659,8 +659,8 @@ dialogs_Esc_lod = [
     {clas:"^org.gnome.Shell.Extensions$"},
 ]
 
-### dialogs_AltF4_lod = send these windows Alt+F4 combo for Cmd+W
-dialogs_AltF4_lod = [
+### dialogs_CloseWin_lod = send these windows the "Close window" combo for Cmd+W
+dialogs_CloseWin_lod = [
     {clas:"^Gnome-control-center$",      not_name:"^Settings$"},
     {clas:"^gnome-terminal$",            name:"^Preferences.*$"},
     {clas:"^pcloud$"                     },
@@ -697,6 +697,7 @@ kbtype_lists = {
     'Apple': keyboards_Apple
 }
 
+# List of all known keyboard devices from all lists
 all_keyboards = [kb for kbtype in kbtype_lists.values() for kb in kbtype]
 all_kbs_rgx = re.compile(toRgxStr(all_keyboards), re.I)
 
@@ -724,7 +725,9 @@ modmap("Cond modmap - Media Arrows Fix",{
     Key.PREVIOUSSONG:           Key.HOME,
     Key.NEXTSONG:               Key.END,
 # }, when = lambda _: media_arrows_fix is True)
-}, when = lambda _: cnfg.media_arrows_fix is True )
+}, when = lambda ctx:
+    matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
+    cnfg.media_arrows_fix is True )
 
 
 modmap("Cond modmap - Forced Numpad feature",{
@@ -742,7 +745,9 @@ modmap("Cond modmap - Forced Numpad feature",{
     Key.KPDOT:                  Key.DOT,  
     Key.KPENTER:                Key.ENTER,
 # }, when = lambda _: forced_numpad is True)
-}, when = lambda _: cnfg.forced_numpad is True )
+}, when = lambda ctx: 
+    matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
+    cnfg.forced_numpad is True )
 
 
 modmap("Cond modmap - GTK3 numpad nav keys fix",{
@@ -764,7 +769,10 @@ modmap("Cond modmap - GTK3 numpad nav keys fix",{
     Key.KPENTER:                Key.ENTER,
 # }, when = lambda ctx: ctx.numlock_on is False and forced_numpad is False)
 # }, when = lambda ctx: ctx.numlock_on is False and cnfg.forced_numpad is False )
-}, when = lambda ctx: matchProps(numlk=False)(ctx) and cnfg.forced_numpad is False )
+}, when = lambda ctx:
+    matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
+    matchProps(numlk=False)(ctx) and 
+    cnfg.forced_numpad is False )
 
 
 # multipurpose_modmap("Optional Tweaks",
@@ -783,15 +791,23 @@ modmap("Cond modmap - GTK3 numpad nav keys fix",{
 
 multipurpose_modmap("Enter2Cmd", {
     Key.ENTER:                  [Key.ENTER, Key.RIGHT_CTRL]     # Enter2Cmd
-}, when = lambda _: cnfg.Enter2Ent_Cmd is True )
+}, when = lambda ctx:
+    matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
+    cnfg.Enter2Ent_Cmd is True )
 
 multipurpose_modmap("Caps2Esc - not Chromebook kbd", {
     Key.CAPSLOCK:               [Key.ESC, Key.RIGHT_CTRL]       # Caps2Esc - not Chromebook
-}, when = lambda ctx: cnfg.Caps2Esc_Cmd is True and not isKBtype('Chromebook')(ctx) )
+}, when = lambda ctx:
+    matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
+    not isKBtype('Chromebook')(ctx) and 
+    cnfg.Caps2Esc_Cmd is True )
 
 multipurpose_modmap("Caps2Esc - Chromebook kbd", {
     Key.LEFT_META:               [Key.ESC, Key.RIGHT_CTRL]       # Caps2Esc - Chromebook
-}, when = lambda ctx: cnfg.Caps2Esc_Cmd is True and isKBtype('Chromebook')(ctx) )
+}, when = lambda ctx:
+    matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
+    isKBtype('Chromebook')(ctx) and 
+    cnfg.Caps2Esc_Cmd is True )
 
 
 
@@ -816,25 +832,25 @@ multipurpose_modmap("Caps2Esc - Chromebook kbd", {
 modmap("Cond modmap - GUI - Caps2Cmd - not Cbk kdb", {
     Key.CAPSLOCK:               Key.RIGHT_CTRL,                 # Caps2Cmd
 }, when = lambda ctx:
-    (   matchProps(not_lst=terminals_and_remotes)(ctx) and 
-        cnfg.Caps2Cmd and 
-        not isKBtype('Chromebook')(ctx)   )
+    matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
+    not isKBtype('Chromebook')(ctx) and 
+    cnfg.Caps2Cmd
 )
 modmap("Cond modmap - GUI - Caps2Cmd - Cbk kdb", {
     Key.LEFT_META:              Key.RIGHT_CTRL,                 # Caps2Cmd - Chromebook
 }, when = lambda ctx:
-    (   matchProps(not_lst=terminals_and_remotes)(ctx) and 
-        cnfg.Caps2Cmd and 
-        isKBtype('Chromebook')(ctx)   )
+    matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
+    isKBtype('Chromebook')(ctx) and 
+    cnfg.Caps2Cmd
 )
 modmap("Cond modmap - GUI - IBM kbd - multi_lang OFF", {
     # - IBM
     Key.RIGHT_ALT:              Key.RIGHT_CTRL,                 # IBM - Multi-language (Remove)
     Key.RIGHT_CTRL:             Key.RIGHT_ALT,                  # IBM - Multi-language (Remove)
 }, when = lambda ctx:
-    (   matchProps(not_lst=terminals_and_remotes)(ctx) and 
-        isKBtype('IBM', map='mmap GUI IBM ML-OFF')(ctx) and 
-        cnfg.multi_lang is False    )
+    matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
+    isKBtype('IBM', map='mmap GUI IBM ML-OFF')(ctx) and 
+    cnfg.multi_lang is False
 )
 modmap("Cond modmap - GUI - IBM kbd", {
     # - IBM
@@ -842,25 +858,25 @@ modmap("Cond modmap - GUI - IBM kbd", {
     Key.LEFT_CTRL:              Key.LEFT_ALT,                   # IBM
     Key.LEFT_ALT:               Key.RIGHT_CTRL,                 # IBM
 }, when = lambda ctx:
-    (   matchProps(not_lst=terminals_and_remotes)(ctx) and 
-        isKBtype('IBM', map='mmap GUI IBM')(ctx)    )
+    matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
+    isKBtype('IBM', map='mmap GUI IBM')(ctx)
 )
 modmap("Cond modmap - GUI - Cbk kbd - multi_lang OFF", {
     # - Chromebook
     Key.RIGHT_ALT:              Key.RIGHT_CTRL,                 # Chromebook - Multi-language (Remove)
     Key.RIGHT_CTRL:             Key.RIGHT_ALT,                  # Chromebook - Multi-language (Remove)
 }, when = lambda ctx:
-    (   matchProps(not_lst=terminals_and_remotes)(ctx) and 
-        isKBtype('Chromebook', map='mmap GUI Cbk ML-OFF')(ctx) and 
-        cnfg.multi_lang is False    )
+    matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
+    isKBtype('Chromebook', map='mmap GUI Cbk ML-OFF')(ctx) and 
+    cnfg.multi_lang is False
 )
 modmap("Cond modmap - GUI - Cbk kbd", {
     # - Chromebook
     Key.LEFT_CTRL:              Key.LEFT_ALT,                   # Chromebook
     Key.LEFT_ALT:               Key.RIGHT_CTRL,                 # Chromebook
 }, when = lambda ctx:
-    (   matchProps(not_lst=terminals_and_remotes)(ctx) and 
-        isKBtype('Chromebook', map='mmap GUI Cbk')(ctx)     )
+    matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
+    isKBtype('Chromebook', map='mmap GUI Cbk')(ctx)
 )
 modmap("Cond modmap - GUI - Win kbd - multi_lang OFF", {
     # - Default Mac/Win
@@ -869,9 +885,9 @@ modmap("Cond modmap - GUI - Win kbd - multi_lang OFF", {
     Key.RIGHT_META:             Key.RIGHT_ALT,                  # WinMac - Multi-language (Remove)
     Key.RIGHT_CTRL:             Key.RIGHT_META,                 # WinMac - Multi-language (Remove)
 }, when = lambda ctx:
-    (   matchProps(not_lst=terminals_and_remotes)(ctx) and 
-        isKBtype('Windows', map='mmap GUI Win ML-OFF')(ctx) and 
-        cnfg.multi_lang is False    )
+    matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
+    isKBtype('Windows', map='mmap GUI Win ML-OFF')(ctx) and 
+    cnfg.multi_lang is False
 )
 modmap("Cond modmap - GUI - Win kbd", {
     # - Default Mac/Win
@@ -880,25 +896,25 @@ modmap("Cond modmap - GUI - Win kbd", {
     Key.LEFT_META:              Key.LEFT_ALT,                   # WinMac
     Key.LEFT_ALT:               Key.RIGHT_CTRL,                 # WinMac
 }, when = lambda ctx:
-    (   matchProps(not_lst=terminals_and_remotes)(ctx) and 
-        isKBtype('Windows', map='mmap GUI Win')(ctx)    )
+    matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
+    isKBtype('Windows', map='mmap GUI Win')(ctx)
 )
 modmap("Cond modmap - GUI - Mac kbd - multi_lang OFF", {
     # - Mac Only
     Key.RIGHT_META:             Key.RIGHT_CTRL,                 # Mac - Multi-language (Remove)
     Key.RIGHT_CTRL:             Key.RIGHT_META,                 # Mac - Multi-language (Remove)
 }, when = lambda ctx:
-    (   matchProps(not_lst=terminals_and_remotes)(ctx) and 
-        isKBtype('Apple', map='mmap GUI Apple ML-OFF')(ctx) and 
-        cnfg.multi_lang is False    )
+    matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
+    isKBtype('Apple', map='mmap GUI Apple ML-OFF')(ctx) and 
+    cnfg.multi_lang is False
 )
 modmap("Cond modmap - GUI - Mac kbd", {
     # - Mac Only
     Key.LEFT_CTRL:              Key.LEFT_META,                  # Mac
     Key.LEFT_META:              Key.RIGHT_CTRL,                 # Mac
 }, when = lambda ctx:
-    (   matchProps(not_lst=terminals_and_remotes)(ctx) and 
-        isKBtype('Apple', map='mmap GUI Apple')(ctx)    )
+    matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
+    isKBtype('Apple', map='mmap GUI Apple')(ctx)
 )
 
 
@@ -907,9 +923,9 @@ modmap("Cond modmap - Terms - IBM kbd - multi_lang OFF", {
     # - IBM - Multi-language
     Key.RIGHT_ALT:              Key.RIGHT_CTRL,                 # IBM - Multi-language (Remove)
 }, when = lambda ctx:
-    (   matchProps(lst=terminals_lod)(ctx) and 
-        isKBtype('IBM', map='mmap terms IBM ML-OFF')(ctx) and 
-        cnfg.multi_lang is False    )
+    matchProps(lst=terminals_lod)(ctx) and 
+    isKBtype('IBM', map='mmap terms IBM ML-OFF')(ctx) and 
+    cnfg.multi_lang is False
 )
 modmap("Cond modmap - Terms - IBM kbd", {
     # - IBM
@@ -919,16 +935,16 @@ modmap("Cond modmap - Terms - IBM kbd", {
     # Right Meta does not exist on IBM keyboards
     Key.RIGHT_CTRL:             Key.RIGHT_ALT,                  # IBM
 }, when = lambda ctx:
-    (   matchProps(lst=terminals_lod)(ctx) and 
-        isKBtype('IBM', map='mmap terms IBM')(ctx)  )
+    matchProps(lst=terminals_lod)(ctx) and 
+    isKBtype('IBM', map='mmap terms IBM')(ctx)
 )
 modmap("Cond modmap - Terms - Cbk kbd - multi_lang OFF", {
     # - Chromebook
     Key.RIGHT_ALT:              Key.RIGHT_CTRL,                 # Chromebook - Multi-language (Remove)
 }, when = lambda ctx:
-    (   matchProps(lst=terminals_lod)(ctx) and 
-        isKBtype('Chromebook', map='mmap terms Cbk ML-OFF')(ctx) and 
-        cnfg.multi_lang is False    )
+    matchProps(lst=terminals_lod)(ctx) and 
+    isKBtype('Chromebook', map='mmap terms Cbk ML-OFF')(ctx) and 
+    cnfg.multi_lang is False
 )
 modmap("Cond modmap - Terms - Cbk kbd", {
     # - Chromebook
@@ -938,8 +954,8 @@ modmap("Cond modmap - Terms - Cbk kbd", {
     # Right Meta does not exist on chromebooks
     Key.RIGHT_CTRL:             Key.RIGHT_ALT,                  # Chromebook
 }, when = lambda ctx:
-    (   matchProps(lst=terminals_lod)(ctx) and 
-        isKBtype('Chromebook', map='mmap terms Cbk')(ctx)   )
+    matchProps(lst=terminals_lod)(ctx) and 
+    isKBtype('Chromebook', map='mmap terms Cbk')(ctx)
 )
 modmap("Cond modmap - Terms - Win kbd - multi_lang OFF", {
     # - Default Mac/Win
@@ -948,9 +964,9 @@ modmap("Cond modmap - Terms - Win kbd - multi_lang OFF", {
     Key.RIGHT_META:             Key.RIGHT_ALT,                  # WinMac - Multi-language (Remove)
     Key.RIGHT_CTRL:             Key.LEFT_CTRL,                  # WinMac - Multi-language (Remove)
 }, when = lambda ctx:
-    (   matchProps(lst=terminals_lod)(ctx) and 
-        isKBtype('Windows', map='mmap terms Win ML-OFF')(ctx) and 
-        cnfg.multi_lang is False   )
+    matchProps(lst=terminals_lod)(ctx) and 
+    isKBtype('Windows', map='mmap terms Win ML-OFF')(ctx) and 
+    cnfg.multi_lang is False
 )
 modmap("Cond modmap - Terms - Win kbd", {
     # - Default Mac/Win
@@ -959,8 +975,8 @@ modmap("Cond modmap - Terms - Win kbd", {
     Key.LEFT_META:              Key.LEFT_ALT,                   # WinMac
     Key.LEFT_ALT:               Key.RIGHT_CTRL,                 # WinMac
 }, when = lambda ctx:
-    (   matchProps(lst=terminals_lod)(ctx) and 
-        isKBtype('Windows', map='mmap terms Win')(ctx)  )
+    matchProps(lst=terminals_lod)(ctx) and 
+    isKBtype('Windows', map='mmap terms Win')(ctx)
 )
 modmap("Cond modmap - Terms - Mac kbd - multi_lang OFF", {
     # - Mac Only
@@ -968,9 +984,9 @@ modmap("Cond modmap - Terms - Mac kbd - multi_lang OFF", {
     Key.RIGHT_META:             Key.RIGHT_CTRL,                 # Mac - Multi-language (Remove)
     Key.RIGHT_CTRL:             Key.LEFT_CTRL,                  # Mac - Multi-language (Remove)
 }, when = lambda ctx:
-    (   matchProps(lst=terminals_lod)(ctx) and 
-        isKBtype('Apple', map='mmap terms Apple ML-OFF')(ctx) and 
-        cnfg.multi_lang is False    )
+    matchProps(lst=terminals_lod)(ctx) and 
+    isKBtype('Apple', map='mmap terms Apple ML-OFF')(ctx) and 
+    cnfg.multi_lang is False
 )
 modmap("Cond modmap - Terms - Mac kbd", {
     # - Mac Only
@@ -980,8 +996,8 @@ modmap("Cond modmap - Terms - Mac kbd", {
     Key.LEFT_META:              Key.RIGHT_CTRL,                 # Mac
     Key.RIGHT_ALT:              Key.RIGHT_ALT,                  # Mac (self-modmap)
 }, when = lambda ctx:
-    (   matchProps(lst=terminals_lod)(ctx) and 
-        isKBtype('Apple', map='mmap terms Apple')(ctx)  )
+    matchProps(lst=terminals_lod)(ctx) and 
+    isKBtype('Apple', map='mmap terms Apple')(ctx)
 )
 
 
@@ -2378,7 +2394,7 @@ keymap("OptSpecialChars - ABC", {
     C("Shift-Alt-Slash"):       UC(0x00BF),                     # ¿ Inverted Question mark
 
 # }, when = lambda ctx: ctx.wm_class.casefold() not in terminals and cnfg.optspec_layout == 'ABC')
-}, when = lambda ctx: matchProps(not_lst=terminals_and_remotes)(ctx) and cnfg.optspec_layout == 'ABC')
+}, when = lambda ctx: matchProps(not_lst=terminals_and_remotes_lod)(ctx) and cnfg.optspec_layout == 'ABC')
 
 
 
@@ -2526,7 +2542,7 @@ keymap("OptSpecialChars - US", {
     C("Shift-Alt-Slash"):       UC(0x00BF),                     # ¿ Inverted Question mark
 
 # }, when = lambda ctx: ctx.wm_class.casefold() not in terminals and cnfg.optspec_layout == 'US')
-}, when = lambda ctx: matchProps(not_lst=terminals_and_remotes)(ctx) and cnfg.optspec_layout == 'US')
+}, when = lambda ctx: matchProps(not_lst=terminals_and_remotes_lod)(ctx) and cnfg.optspec_layout == 'US')
 
 
 
@@ -3168,23 +3184,29 @@ keymap("Sublime Text", {
 ### Fixes for the problem of modal dialogs and other "child" 
 ### windows failing to close with Cmd+W.
 ### Many dialogs respond to the Escape key, others may 
-### require Alt+F4 to close.
+### require the "Close window" shortcut (normally Alt+F4 but not always) to close.
 ### 
-### Cmd+W can't just be always mapped to Alt+F4 for all apps because 
-### some apps will "quit" rather than just closing a tab.
+### Cmd+W can't just be always mapped to the "Close window" shortcut for all apps 
+### because some apps will "quit" rather than just closing a tab.
 ### 
 ### To add window conditions to the list, search for the list names in 
 ### the "LISTS" section near the top of this config file. 
 ### dialogs_Esc_lod = send these windows the Escape key for Cmd+W
-### dialogs_AltF4_lod = send these windows Alt+F4 for Cmd+W
+### dialogs_CloseWin_lod = send these windows the "Close window" shortcut for Cmd+W
 
 keymap("Cmd+W dialog fix - send Escape", {
     C("RC-W"):                  C("Esc"),
 }, when = matchProps(lst=dialogs_Esc_lod))
 
-keymap("Cmd+W dialog fix - send Alt+F4", {
+
+keymap("Cmd+W dialog fix - send CloseWin Sup+Q", {
+    C("RC-W"):                  C("Super-Q"),
+}, when = lambda ctx:   matchProps(lst=dialogs_CloseWin_lod)(ctx) and
+                        ( DISTRO_NAME == 'manjaro' and DESKTOP_ENV == 'gnome' ) )
+keymap("Cmd+W dialog fix - send CloseWin Alt+F4", {
     C("RC-W"):                  C("Alt-F4"),
-}, when = matchProps(lst=dialogs_AltF4_lod))
+}, when = lambda ctx:   matchProps(lst=dialogs_CloseWin_lod)(ctx) and 
+                        not ( DISTRO_NAME == 'manjaro' and DESKTOP_ENV == 'gnome' ) )
 
 
 
@@ -3418,8 +3440,11 @@ keymap("GenGUI overrides: Fedora", {
     C("Super-Right"):          [bind,C("Super-Page_Up")],       # SL - Change workspace (ubuntu/fedora)
     C("Super-Left"):           [bind,C("Super-Page_Down")],     # SL - Change workspace (ubuntu/fedora)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'fedora' )
+keymap("GenGUI overrides: Manjaro GNOME", {
+    C("RC-Q"):              C("Super-Q"),                       # Close window
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'manjaro' and DESKTOP_ENV == 'gnome' )
 keymap("GenGUI overrides: Manjaro Xfce", {
-    C("RC-Space"):              C("Alt-F1"),                    # Xfce on Manjaro
+    C("RC-Space"):              C("Alt-F1"),                    # Open Whisker Menu with Cmd+Space
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'manjaro' and DESKTOP_ENV == 'xfce' )
 keymap("GenGUI overrides: Manjaro", {
     C("RC-LC-f"):               C("Super-PAGE_UP"),             # SL- Maximize app manjaro
@@ -3456,7 +3481,7 @@ keymap("GenGUI overrides: Deepin", {
     C("Alt-RC-Space"):          C("Super-e"),                   # Open Finder - (deepin)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'deepin' )
 keymap("GenGUI overrides: GNOME", {
-    # C("RC-Space"):              C("Alt-F1"),                    # Default SL - Launch Application Menu (gnome/kde)
+    # C("RC-Space"):              C("Alt-F1"),                    # Custom remap for alternate launcher
     C("RC-Space"):              C("Super-s"),                   # Show GNOME overview/app launcher
     C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,eos)
     C("RC-Super-f"):            C("Alt-F10"),                   # Default SL - Maximize app (gnome/kde)
