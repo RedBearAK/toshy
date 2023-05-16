@@ -64,7 +64,9 @@ class InstallerSettings:
         self.venv_path          = os.path.join(self.toshy_dir_path, '.venv')
 
         self.keyszer_tmp_path   = os.path.join('.', 'keyszer-temp')
-        self.keyszer_clone_cmd  = 'git clone -b adapt_to_capslock https://github.com/RedBearAK/keyszer.git'
+        self.keyszer_clone_cmd  = (
+            'git clone -b adapt_to_capslock https://github.com/RedBearAK/keyszer.git'
+            )
 
         self.input_group_name   = 'input'
         self.user_name          = pwd.getpwuid(os.getuid()).pw_name
@@ -101,7 +103,7 @@ def install_udev_rules():
             print(f'"udev" rules file successfully installed.')
             cnfg.should_reboot = True
         except subprocess.CalledProcessError as e:
-            print(f'\nERROR: Problem when trying to install "udev" rules file for keymapper...\n')
+            print(f'\nERROR: Problem while installing "udev" rules file for keymapper...\n')
             err_output: bytes = e.output  # Type hinting the error_output variable
             print(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
             print(f'\nERROR: Install failed.')
@@ -180,8 +182,11 @@ def install_distro_pkgs():
                             )
                 return result.returncode == 0
 
-            pkgs_to_install = [pkg for pkg in cnfg.pkgs_for_distro if not is_package_installed(pkg)]
-
+            pkgs_to_install = [
+                pkg
+                for pkg in cnfg.pkgs_for_distro
+                if not is_package_installed(pkg)
+            ]
             if pkgs_to_install:
                 subprocess.run(['sudo', 'pacman', '-S', '--noconfirm'] + pkgs_to_install)
 
@@ -417,6 +422,8 @@ if __name__ == '__main__':
     cnfg = InstallerSettings()
 
     get_environment_info()
+
+
 
     install_udev_rules()
     verify_user_groups()
