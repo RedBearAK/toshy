@@ -36,6 +36,7 @@ if [ -f "$HOME/.config/systemd/user/toshy-config.service" ]; then
     sleep $DELAY
 
     rm -f "$HOME/.config/systemd/user/toshy-config.service"
+    /usr/bin/systemctl --user daemon-reload
 
 fi
 
@@ -56,6 +57,7 @@ if [ -f "$HOME/.config/systemd/user/toshy-session-monitor.service" ]; then
     sleep $DELAY
 
     rm -f "$HOME/.config/systemd/user/toshy-session-monitor.service"
+    /usr/bin/systemctl --user daemon-reload
 
 fi
 
