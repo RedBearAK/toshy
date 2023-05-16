@@ -22,27 +22,41 @@ echo -e "\nRemoving Toshy systemd services...\n"
 # systemctl "disable" automatically deletes all symlinks (might be bug)
 
 if [ -f "$HOME/.config/systemd/user/toshy-config.service" ]; then
+
     if systemctl --user --quiet is-active toshy-session-monitor.service; then
         /usr/bin/systemctl --user stop toshy-session-monitor.service
     fi
 
+    sleep $DELAY
+
     if systemctl --user --quiet is-enabled toshy-session-monitor.service; then
         /usr/bin/systemctl --user disable toshy-session-monitor.service
     fi
+
+    sleep $DELAY
+
     rm -f "$HOME/.config/systemd/user/toshy-config.service"
+
 fi
 
 sleep $DELAY
 
 if [ -f "$HOME/.config/systemd/user/toshy-session-monitor.service" ]; then
+
     if systemctl --user --quiet is-active toshy-config.service; then
         /usr/bin/systemctl --user stop toshy-config.service
     fi
 
+    sleep $DELAY
+
     if systemctl --user --quiet is-enabled toshy-config.service; then
         /usr/bin/systemctl --user disable toshy-config.service
     fi
+
+    sleep $DELAY
+
     rm -f "$HOME/.config/systemd/user/toshy-session-monitor.service"
+
 fi
 
 sleep $DELAY
