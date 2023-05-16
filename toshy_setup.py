@@ -419,27 +419,32 @@ def remove_desktop_tweaks():
 
 
 def handle_arguments():
-    parser = argparse.ArgumentParser(description='Installer Script')
+    parser = argparse.ArgumentParser(
+        description='Toshy Installer Script',
+        epilog='Default action: Install Toshy'
+    )
 
+    parser.set_defaults(func=main)
+    
     # Add arguments
     parser.add_argument(
-        '--help', 
-        action='store_true', 
+        '--help',
+        action='store_true',
         help='Show this help message'
     )
     parser.add_argument(
-        '--uninstall', 
-        action='store_true', 
+        '--uninstall',
+        action='store_true',
         help='Uninstall Toshy'
     )
     parser.add_argument(
-        '--apply_tweaks', 
-        action='store_true', 
+        '--apply_tweaks',
+        action='store_true',
         help='Apply desktop environment tweaks'
     )
     parser.add_argument(
-        '--remove_tweaks', 
-        action='store_true', 
+        '--remove_tweaks',
+        action='store_true',
         help='Remove desktop environment tweaks'
     )
 
@@ -468,17 +473,12 @@ def remove_tweaks():
     print("Removing tweaks...")
 
 
-if __name__ == '__main__':
-
-    handle_arguments()
-
-    cnfg = InstallerSettings()
+def main(cnfg):
+    """Main installer function"""
 
     get_environment_info()
-
     install_udev_rules()
     verify_user_groups()
-
     load_package_list()
     install_distro_pkgs()
     clone_keyszer_branch()
@@ -488,10 +488,8 @@ if __name__ == '__main__':
     install_pip_packages()
     install_bin_commands()
     install_desktop_apps()
-
     setup_toshy_services()
     autostart_tray_icon()
-
     apply_desktop_tweaks()
 
     if cnfg.should_reboot:
@@ -514,3 +512,12 @@ if __name__ == '__main__':
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
         )
+
+
+if __name__ == '__main__':
+
+    cnfg = InstallerSettings()
+
+    handle_arguments()
+
+    main(cnfg)
