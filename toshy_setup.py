@@ -513,4 +513,4 @@ if __name__ == '__main__':
 
     handle_arguments()
 
-    main(cnfg)
+    # main(cnfg)
