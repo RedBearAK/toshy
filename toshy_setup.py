@@ -91,7 +91,10 @@ def install_udev_rules():
     """set up udev rules file to give user/keyszer access to uinput"""
     print(f'\n\nInstalling "udev" rules file for keymapper...\n{cnfg.separator}')
     if not os.path.exists('/etc/udev/rules.d/90-keymapper-input.rules'):
-        rule_content = 'SUBSYSTEM=="input", GROUP="input"\nKERNEL=="uinput", SUBSYSTEM=="misc", GROUP="input"\n'
+        rule_content = (
+            'SUBSYSTEM=="input", GROUP="input"\n'
+            'KERNEL=="uinput", SUBSYSTEM=="misc", GROUP="input"\n'
+        )
         command = 'sudo tee /etc/udev/rules.d/90-keymapper-input.rules'
         try:
             subprocess.run(command, input=rule_content.encode(), shell=True, check=True)
@@ -99,8 +102,8 @@ def install_udev_rules():
             cnfg.should_reboot = True
         except subprocess.CalledProcessError as e:
             print(f'\nERROR: Problem when trying to install "udev" rules file for keymapper...\n')
-            error_output: bytes = e.output  # Type hinting the error_output variable
-            print(f'Command output:\n{error_output.decode() if error_output else "No error output"}')  # Decode bytes to string
+            err_output: bytes = e.output  # Type hinting the error_output variable
+            print(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
             print(f'\nERROR: Install failed.')
             sys.exit(1)
     else:
@@ -119,8 +122,8 @@ def verify_user_groups():
             subprocess.run(['sudo', 'groupadd', cnfg.input_group_name], check=True)
         except subprocess.CalledProcessError as e:
             print(f'\nERROR: Problem when trying to create "input" group...\n')
-            error_output: bytes = e.output  # Type hinting the error_output variable
-            print(f'Command output:\n{error_output.decode() if error_output else "No error output"}')  # Decode bytes to string
+            err_output: bytes = e.output  # Type hinting the error_output variable
+            print(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
             print(f'\nERROR: Install failed.')
             sys.exit(1)
 
@@ -137,8 +140,8 @@ def verify_user_groups():
         except subprocess.CalledProcessError as e:
             print(f'\nERROR: Problem when trying to add user "{cnfg.user_name}" to '
                     f'group "{cnfg.input_group_name}"...\n')
-            error_output: bytes = e.output  # Type hinting the error_output variable
-            print(f'Command output:\n{error_output.decode() if error_output else "No error output"}')  # Decode bytes to string
+            err_output: bytes = e.output  # Type hinting the error_output variable
+            print(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
             print(f'\nERROR: Install failed.')
             sys.exit(1)
 
@@ -170,7 +173,11 @@ def install_distro_pkgs():
 
         if response in ['y', 'Y']:
             def is_package_installed(package):
-                result = subprocess.run(['pacman', '-Q', package], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                result = subprocess.run(
+                                ['pacman', '-Q', package],
+                                stdout=subprocess.DEVNULL,
+                                stderr=subprocess.DEVNULL
+                            )
                 return result.returncode == 0
 
             pkgs_to_install = [pkg for pkg in cnfg.pkgs_for_distro if not is_package_installed(pkg)]
@@ -251,15 +258,6 @@ def install_toshy_files():
     print(f'Toshy files installed in {cnfg.toshy_dir_path}...')
 
 
-# def copy_desktop_app_icon():
-#     """copy the icon asset image file for desktop apps"""
-#     home_icons_path = os.path.join(cnfg.home_dir_path, '.local', 'share', 'icons')
-#     os.makedirs(home_icons_path, exist_ok=True)
-#     toshy_app_icon = os.path.join(
-#         cnfg.home_dir_path, '.config', 'toshy', 'assets', 'toshy_app_icon_rainbow.svg')
-#     shutil.copy(toshy_app_icon, home_icons_path)
-
-
 def setup_virtual_env():
     """setup a virtual environment to install Python packages"""
     print(f'\n\nSetting up virtual environment...\n{cnfg.separator}')
@@ -269,25 +267,6 @@ def setup_virtual_env():
         subprocess.run([sys.executable, '-m', 'venv', cnfg.venv_path])
     # We do not need to "activate" the venv right now, just create it
     print(f'Virtual environment setup complete.')
-
-
-# def install_pip_pkgs():
-#     """install `pip` packages for Python"""
-#     print(f'\n\nInstalling/upgrading Python packages...\n{cnfg.separator}')
-#     python_cmd = os.path.join(cnfg.venv_path, 'bin', 'python')
-#     pip_cmd = os.path.join(cnfg.venv_path, 'bin', 'pip')
-#     # Upgrade pip first using python -m pip install --upgrade pip
-#     subprocess.run([python_cmd, '-m', 'pip', 'install', '--upgrade', 'pip'])
-#     # Avoid deprecation errors by making sure wheel is installed early
-#     subprocess.run([pip_cmd, 'install', '--upgrade', 'wheel'])
-#     subprocess.run([pip_cmd, 'install', '--upgrade', 'setuptools'])
-#     subprocess.run([pip_cmd, 'install', '--upgrade'] + cnfg.pip_pkgs)
-
-#     if os.path.exists('./keyszer-temp'):
-#         subprocess.run([pip_cmd, 'install', '--upgrade', './keyszer-temp'])
-#     else:
-#         print(f'"keyszer-temp" folder missing... Unable to install "keyszer"...')
-#         sys.exit(1)
 
 
 def install_pip_packages():
@@ -391,7 +370,8 @@ def apply_desktop_tweaks():
         print(f'Disabling Super/Meta/Win/Cmd key opening the GNOME overview...')
 
         def is_extension_enabled(extension_uuid):
-            output = subprocess.check_output(['gsettings', 'get', 'org.gnome.shell', 'enabled-extensions'])
+            output = subprocess.check_output(
+                        ['gsettings', 'get', 'org.gnome.shell', 'enabled-extensions'])
             extensions = output.decode().strip().replace("'", "").split(",")
             return extension_uuid in extensions
 
@@ -423,7 +403,9 @@ def remove_desktop_tweaks():
     if cnfg.DESKTOP_ENV == 'gnome':
         subprocess.run(['gsettings', 'reset', 'org.gnome.mutter', 'overlay-key'])
 
-    # if KDE Plasma, remove tweak from ~/.config/kwinrc
+    # if KDE Plasma, remove tweak from ~/.config/kwinrc:
+    # [ModifierOnlyShortcuts]
+    # Meta=
     # then run command: 
     # qdbus org.kde.KWin /KWin reconfigure
     if cnfg.DESKTOP_ENV == 'kde':
