@@ -13,7 +13,8 @@ import datetime
 import platform
 import subprocess
 
-from typing import Dict
+from argparse import Namespace
+from typing import Any
 # local import
 import lib.env as env
 from lib.logger import debug, error
@@ -417,13 +418,63 @@ def remove_desktop_tweaks():
         subprocess.run(['qdbus', 'org.kde.KWin', '/KWin', 'reconfigure'])
 
 
+def handle_arguments():
+    parser = argparse.ArgumentParser(description='Installer Script')
+
+    # Add arguments
+    parser.add_argument(
+        '--help', 
+        action='store_true', 
+        help='Show this help message'
+    )
+    parser.add_argument(
+        '--uninstall', 
+        action='store_true', 
+        help='Uninstall Toshy'
+    )
+    parser.add_argument(
+        '--apply_tweaks', 
+        action='store_true', 
+        help='Apply desktop environment tweaks'
+    )
+    parser.add_argument(
+        '--remove_tweaks', 
+        action='store_true', 
+        help='Remove desktop environment tweaks'
+    )
+
+    args: Namespace = parser.parse_args()
+
+    # Check the values of arguments and perform actions accordingly
+    if args.help:
+        parser.print_help()
+    elif args.uninstall:
+        uninstall_toshy()
+    elif args.apply_tweaks:
+        apply_tweaks()
+    elif args.remove_tweaks:
+        remove_tweaks()
+
+
+def uninstall_toshy():
+    print("Uninstalling Toshy...")
+
+
+def apply_tweaks():
+    print("Applying tweaks...")
+
+
+def remove_tweaks():
+    print("Removing tweaks...")
+
+
 if __name__ == '__main__':
+
+    handle_arguments()
 
     cnfg = InstallerSettings()
 
     get_environment_info()
-
-
 
     install_udev_rules()
     verify_user_groups()
