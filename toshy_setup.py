@@ -418,6 +418,18 @@ def remove_desktop_tweaks():
         subprocess.run(['qdbus', 'org.kde.KWin', '/KWin', 'reconfigure'])
 
 
+def uninstall_toshy():
+    print("Uninstalling Toshy...")
+
+
+def apply_tweaks():
+    print("Applying tweaks...")
+
+
+def remove_tweaks():
+    print("Removing tweaks...")
+
+
 def handle_arguments():
     parser = argparse.ArgumentParser(
         description='Toshy Installer Script',
@@ -459,18 +471,6 @@ def handle_arguments():
         apply_tweaks()
     elif args.remove_tweaks:
         remove_tweaks()
-
-
-def uninstall_toshy():
-    print("Uninstalling Toshy...")
-
-
-def apply_tweaks():
-    print("Applying tweaks...")
-
-
-def remove_tweaks():
-    print("Removing tweaks...")
 
 
 def main(cnfg):
