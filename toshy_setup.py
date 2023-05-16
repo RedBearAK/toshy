@@ -464,6 +464,8 @@ def handle_arguments():
         apply_tweaks()
     elif args.remove_tweaks:
         remove_tweaks()
+    else:
+        main(cnfg)
 
 
 def main(cnfg):
