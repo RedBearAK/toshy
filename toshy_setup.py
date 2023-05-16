@@ -148,7 +148,7 @@ def verify_user_groups():
             print(f'\nERROR: Install failed.')
             sys.exit(1)
 
-        print(f'\nUser "{cnfg.user_name}" added to group "{cnfg.input_group_name}"...')
+        print(f'User "{cnfg.user_name}" added to group "{cnfg.input_group_name}"...')
         cnfg.should_reboot = True
 
 
