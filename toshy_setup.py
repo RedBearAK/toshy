@@ -442,17 +442,17 @@ def handle_arguments():
     parser.add_argument(
         '--uninstall',
         action='store_true',
-        help='Uninstall Toshy (not implemented yet)'
+        help='Uninstall Toshy (NOT IMPLEMENTED YET)'
     )
     parser.add_argument(
         '--apply_tweaks',
         action='store_true',
-        help='Apply desktop environment tweaks (not implemented yet)'
+        help='Apply desktop environment tweaks (NOT IMPLEMENTED YET)'
     )
     parser.add_argument(
         '--remove_tweaks',
         action='store_true',
-        help='Remove desktop environment tweaks (not implemented yet)'
+        help='Remove desktop environment tweaks (NOT IMPLEMENTED YET)'
     )
 
     args: Namespace = parser.parse_args()
