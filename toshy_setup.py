@@ -100,7 +100,7 @@ def install_udev_rules():
         except subprocess.CalledProcessError as e:
             print(f'\nERROR: Problem when trying to install "udev" rules file for keymapper...\n')
             error_output: bytes = e.output  # Type hinting the error_output variable
-            print(f'Command output:\n{error_output.decode()}')  # Decode bytes to string
+            print(f'Command output:\n{error_output.decode() if error_output else "No error output"}')  # Decode bytes to string
             print(f'\nERROR: Install failed.')
             sys.exit(1)
     else:
@@ -120,7 +120,7 @@ def verify_user_groups():
         except subprocess.CalledProcessError as e:
             print(f'\nERROR: Problem when trying to create "input" group...\n')
             error_output: bytes = e.output  # Type hinting the error_output variable
-            print(f'Command output:\n{error_output.decode()}')  # Decode bytes to string
+            print(f'Command output:\n{error_output.decode() if error_output else "No error output"}')  # Decode bytes to string
             print(f'\nERROR: Install failed.')
             sys.exit(1)
 
@@ -138,7 +138,7 @@ def verify_user_groups():
             print(f'\nERROR: Problem when trying to add user "{cnfg.user_name}" to '
                     f'group "{cnfg.input_group_name}"...\n')
             error_output: bytes = e.output  # Type hinting the error_output variable
-            print(f'Command output:\n{error_output.decode()}')  # Decode bytes to string
+            print(f'Command output:\n{error_output.decode() if error_output else "No error output"}')  # Decode bytes to string
             print(f'\nERROR: Install failed.')
             sys.exit(1)
 
