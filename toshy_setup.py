@@ -134,7 +134,7 @@ def verify_user_groups():
     group_info = grp.getgrnam(cnfg.input_group_name)
     if cnfg.user_name in group_info.gr_mem:
         print(f'User "{cnfg.user_name}" is a member of '
-                f'group "{cnfg.input_group_name}", continuing...\n')
+                f'group "{cnfg.input_group_name}", continuing...')
     else:
         # Add the user to the input group
         try:
