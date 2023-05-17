@@ -96,6 +96,7 @@
     "manjaro": [
         "cairo",
         "dbus",
+        "libdbus-1-dev",
         "evtest",
         "git",
         "gobject-introspection",
