@@ -77,7 +77,7 @@
         "python3-venv",
         "python3-tk",
         "libgirepository1.0-dev",
-        "libsystemd-dev:i386",
+        "libsystemd-dev",
         "gir1.2-ayatanaappindicator3-0.1"
     ],
     "arch": [
