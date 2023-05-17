@@ -103,6 +103,7 @@ Currently working distros:
 - Kubuntu
 - antiX
     - Preliminary support. Use `toshy-config-start` or `toshy-config-start-verbose` for manual start.
+- Debian in general might work, since antiX is based on Debian 11 Bullseye
 
 ## Usage
 
