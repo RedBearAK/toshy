@@ -2,7 +2,7 @@ import os
 import sqlite3
 import inspect
 
-from typing import List, Dict, Tuple
+from typing import List, Dict, Optional, Tuple, Union
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
 
@@ -45,7 +45,7 @@ class Settings:
         self.observer.schedule(self.event_handler, path=self.config_dir_path, recursive=False)
         self.observer.start()
 
-    def on_database_modified(self, event: FileSystemEvent|None):
+    def on_database_modified(self, event: Optional[FileSystemEvent]):
         if event.src_path == self.db_file_path:
             self.load_settings()
 
