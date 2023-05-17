@@ -518,7 +518,7 @@ def apply_desktop_tweaks():
     # if KDE, install `ibus` or `fcitx` and choose as input manager (ask for confirmation)
     
     if not tweak_applied:
-        print(f'If nothing printed, no tweaks available for {cnfg.DESKTOP_ENV} yet.')
+        print(f"If nothing printed, no tweaks available for '{cnfg.DESKTOP_ENV}' yet.")
 
 
 def remove_desktop_tweaks():
