@@ -213,6 +213,13 @@ def install_distro_pkgs():
 def clone_keyszer_branch():
     """clone the latest `keyszer` from GitHub"""
     print(f'\n\nCloning keyszer branch...\n{cnfg.separator}')
+    
+    # Check if `git` command exists. If not, exit script with error.
+    has_git = shutil.which('git')
+    if not has_git:
+        print(f'ERROR: "git" is not installed, for some reason. Cannot continue.')
+        sys.exit(1)
+
     if os.path.exists(cnfg.keyszer_tmp_path):
         # force a fresh copy of keyszer every time script is run
         shutil.rmtree(cnfg.keyszer_tmp_path, ignore_errors=True)
