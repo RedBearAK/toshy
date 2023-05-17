@@ -16,8 +16,18 @@ fi
 #     exit 1
 # fi
 
+# Get out of here if systemctl is not available
+if command -v systemctl >/dev/null 2>&1; then
+    # systemd is installed, proceed
+    :
+else
+    # no systemd found, exit silently
+    exit 0
+fi
+
 
 echo -e "\nStopping Toshy systemd services..."
+
 /usr/bin/systemctl --user stop toshy-session-monitor.service
 sleep 0.5
 /usr/bin/systemctl --user stop toshy-config.service

@@ -15,6 +15,18 @@ if [[ -z $USER ]] || [[ -z $HOME ]]; then
     exit 1
 fi
 
+# Get out of here if systemctl is not available
+if command -v systemctl >/dev/null 2>&1; then
+    # systemd is installed, proceed
+    :
+else
+    # no systemd found, exit (but with message for this script)
+    echo "There is no 'systemctl' on this system. Nothing to do."
+    exit 0
+fi
+
+
+
 DELAY=0.5
 
 echo -e "\nRemoving Toshy systemd services...\n"

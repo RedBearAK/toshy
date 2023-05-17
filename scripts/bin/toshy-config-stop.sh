@@ -16,7 +16,7 @@ if [[ -z $USER ]] || [[ -z $HOME ]]; then
     exit 1
 fi
 
-echo -e "\nStopping Toshy services/script...\n"
+echo -e "Stopping Toshy services/script...\n"
 
 toshy-services-stop
 
