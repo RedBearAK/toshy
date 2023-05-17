@@ -3489,6 +3489,9 @@ keymap("GenGUI overrides: GNOME", {
     C("RC-Shift-Key_4"):        C("Alt-Print"),                 # Take a screenshot of a window (gnome)
     C("RC-Shift-Key_5"):        C("Print"),                     # Take a screenshot interactively (gnome)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'gnome' )
+keymap("GenGUI overrides: IceWM", {
+    C("RC-Space"):              Key.LEFT_META,                  # IceWM: Win95Keys=1 (Meta shows menu)
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'kde' )
 keymap("GenGUI overrides: KDE", {
     C("RC-Space"):              C("Alt-F1"),                    # Default SL - Launch Application Menu (gnome/kde)
     C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,eos)
