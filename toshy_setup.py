@@ -635,6 +635,8 @@ def main(cnfg: InstallerSettings):
 
 if __name__ == '__main__':
 
+    print('')   # blank line in terminal to start things off
+
     # Check if 'sudo' command is available
     if not shutil.which('sudo'):
         print("Error: 'sudo' not found. Script will fail without it. Exiting.")
