@@ -54,6 +54,16 @@ class InstallerSettings:
         self.DISTRO_VER         = None
         self.SESSION_TYPE       = None
         self.DESKTOP_ENV        = None
+        
+        self.systemctl_present  = shutil.which('systemctl')
+        self.init_system        = None
+
+        with open('/proc/1/comm', 'r') as f:
+            self.init_system = f.read().strip()
+        if self.init_system == 'systemd':
+            print("Systemd is the active init system")
+        if self.init_system == 'init':
+            print("SysVinit is the active init system")
 
         self.pkgs_json_dct      = None
         self.pkgs_for_distro    = None
@@ -90,22 +100,65 @@ def get_environment_info():
             f'\n\t{cnfg.DESKTOP_ENV     = }')
 
 
+def load_uinput_module():
+    """Check to see if `uinput` kernel module is loaded"""
+    try:
+        subprocess.check_output("lsmod | grep uinput", shell=True)
+        print("uinput module is already loaded")
+    except subprocess.CalledProcessError:
+        print("uinput module is not loaded, loading now...")
+        subprocess.run("sudo modprobe uinput", shell=True, check=True)
+
+    # Check if /etc/modules-load.d/ directory exists
+    if os.path.isdir("/etc/modules-load.d/"):
+        # Check if /etc/modules-load.d/uinput.conf exists
+        if not os.path.exists("/etc/modules-load.d/uinput.conf"):
+            # If not, create it and add "uinput"
+            try:
+                command = "echo 'uinput' | sudo tee /etc/modules-load.d/uinput.conf"
+                subprocess.run(command, shell=True, check=True)
+            except subprocess.CalledProcessError as e:
+                print(f"Failed to create /etc/modules-load.d/uinput.conf: {e}")
+    else:
+        # Check if /etc/modules file exists
+        if os.path.isfile("/etc/modules"):
+            # If it exists, check if "uinput" is already listed in it
+            with open("/etc/modules", "r") as f:
+                if "uinput" not in f.read():
+                    # If "uinput" is not listed, append it
+                    try:
+                        command = "echo 'uinput' | sudo tee -a /etc/modules"
+                        subprocess.run(command, shell=True, check=True)
+                    except subprocess.CalledProcessError as e:
+                        print(f"ERROR: Failed to append 'uinput' to /etc/modules: {e}")
+
+
+def reload_udev_rules():
+    try:
+        subprocess.run(
+            "sudo udevadm control --reload-rules && sudo udevadm trigger",
+            shell=True, check=True)
+        print('"udev" rules reloaded successfully.')
+    except subprocess.CalledProcessError as e:
+        print(f'Failed to reload "udev" rules: {e}')
+        cnfg.should_reboot = True
+
+
 def install_udev_rules():
     """set up udev rules file to give user/keyszer access to uinput"""
     print(f'\n\nInstalling "udev" rules file for keymapper...\n{cnfg.separator}')
-    if not os.path.exists('/etc/udev/rules.d/90-keymapper-input.rules'):
+    rules_file_path = '/etc/udev/rules.d/90-toshy-keymapper-input.rules'
+    # Changed condition to always overwrite rules file
+    if True: # not os.path.exists(rules_file_path):
         rule_content = (
             'SUBSYSTEM=="input", GROUP="input"\n'
             'KERNEL=="uinput", SUBSYSTEM=="misc", GROUP="input", MODE="0660"\n'
         )
-        command = 'sudo tee /etc/udev/rules.d/90-keymapper-input.rules'
+        command = f'sudo tee {rules_file_path}'
         try:
             subprocess.run(command, input=rule_content.encode(), shell=True, check=True)
             print(f'"udev" rules file successfully installed.')
-            
-            # sudo udevadm control --reload-rules && sudo udevadm trigger
-            
-            cnfg.should_reboot = True
+            reload_udev_rules()
         except subprocess.CalledProcessError as e:
             print(f'\nERROR: Problem while installing "udev" rules file for keymapper...\n')
             err_output: bytes = e.output  # Type hinting the error_output variable
@@ -152,6 +205,8 @@ def verify_user_groups():
             sys.exit(1)
 
         print(f'User "{cnfg.user_name}" added to group "{cnfg.input_group_name}"...')
+        # Make group addition effective immediately (only affects current process)
+        os.setgid(grp.getgrnam("input").gr_gid)
         cnfg.should_reboot = True
 
 
@@ -362,11 +417,14 @@ def install_desktop_apps():
     replace_home_in_file(gui_desktop_file)
 
 
-def setup_toshy_services():
+def setup_systemd_services():
     """invoke the setup script to install the systemd service units"""
     print(f'\n\nSetting up the Toshy systemd services...\n{cnfg.separator}')
-    script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'bin', 'toshy-systemd-setup.sh')
-    subprocess.run([script_path])
+    if cnfg.systemctl_present:
+        script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'bin', 'toshy-systemd-setup.sh')
+        subprocess.run([script_path])
+    else:
+        print(f'System does not seem to be using "systemd"')
 
 
 def autostart_tray_icon():
@@ -497,12 +555,15 @@ def handle_arguments():
         main(cnfg)
 
 
-def main(cnfg):
+def main(cnfg: InstallerSettings):
     """Main installer function"""
 
     get_environment_info()
+    
+    load_uinput_module()
     install_udev_rules()
     verify_user_groups()
+    
     load_package_list()
     install_distro_pkgs()
     clone_keyszer_branch()
@@ -512,12 +573,13 @@ def main(cnfg):
     install_pip_packages()
     install_bin_commands()
     install_desktop_apps()
-    setup_toshy_services()
+    setup_systemd_services()
     autostart_tray_icon()
     apply_desktop_tweaks()
 
     if cnfg.should_reboot:
         print(  f'\n\n'
+                f'{cnfg.separator}\n'
                 f'{cnfg.separator}\n'
                 'ALERT: Permissions changed. You MUST reboot for Toshy to work...\n'
                 f'{cnfg.separator}\n'
