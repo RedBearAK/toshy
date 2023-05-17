@@ -462,13 +462,11 @@ def fn_stop_toshy_services(widget):
 
 def fn_restart_toshy_script(widget):
     """Start the manual run config script"""
-    os.system(f'toshy-config-restart &')
-    pass
+    subprocess.Popen(['toshy-config-restart']) #, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 def fn_stop_toshy_script(widget):
     """Stop the manual run config script"""
-    os.system(f'toshy-config-stop &')
-    pass
+    subprocess.Popen(['toshy-config-stop']) #, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 def fn_open_preferences(widget):
     subprocess.Popen(['toshy-gui'])
