@@ -164,6 +164,15 @@ def install_distro_pkgs():
     """install needed packages from list for distro type"""
     print(f'\n\nInstalling native packages...\n{cnfg.separator}')
 
+    # Check for systemd
+    has_systemd = shutil.which("systemd") is not None
+
+    # Filter out systemd packages if not present
+    cnfg.pkgs_for_distro = [
+        pkg for pkg in cnfg.pkgs_for_distro 
+        if has_systemd or 'systemd' not in pkg
+    ]
+
     if cnfg.DISTRO_NAME in ['ubuntu', 'linux mint', 'debian']:
         subprocess.run(['sudo', 'apt', 'install', '-y'] + cnfg.pkgs_for_distro)
 
@@ -280,6 +289,16 @@ def install_pip_packages():
     print(f'\n\nInstalling/upgrading Python packages...\n{cnfg.separator}')
     venv_python_cmd = os.path.join(cnfg.venv_path, 'bin', 'python')
     venv_pip_cmd    = os.path.join(cnfg.venv_path, 'bin', 'pip')
+    
+    # Check for systemd
+    has_systemd = shutil.which("systemd") is not None
+
+    # Filter out systemd packages if not present
+    cnfg.pip_pkgs = [
+        pkg for pkg in cnfg.pip_pkgs 
+        if has_systemd or 'systemd' not in pkg
+    ]
+
     commands        = [
         [venv_python_cmd, '-m', 'pip', 'install', '--upgrade', 'pip'],
         [venv_pip_cmd, 'install', '--upgrade', 'wheel'],
