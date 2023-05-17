@@ -14,6 +14,7 @@ import time
 import dbus
 import fcntl
 import psutil
+import shutil
 import signal
 import select
 import threading
@@ -629,14 +630,16 @@ menu.show_all()
 
 
 def main():
-    # help out the config file user service
-    subprocess.run(["systemctl", "--user", "import-environment", "XDG_SESSION_TYPE", "XDG_SESSION_DESKTOP", "XDG_CURRENT_DESKTOP"])    
 
     global loop
-    # Start a separate thread to watch the status of Toshy systemd services (or script?)
-    monitor_toshy_services_thread = threading.Thread(target=fn_monitor_toshy_services)
-    monitor_toshy_services_thread.daemon = True
-    monitor_toshy_services_thread.start()
+
+    if shutil.which('systemctl'):
+        # help out the config file user service
+        subprocess.run(["systemctl", "--user", "import-environment", "XDG_SESSION_TYPE", "XDG_SESSION_DESKTOP", "XDG_CURRENT_DESKTOP"])    
+        # Start a separate thread to watch the status of Toshy systemd services (or script?)
+        monitor_toshy_services_thread = threading.Thread(target=fn_monitor_toshy_services)
+        monitor_toshy_services_thread.daemon = True
+        monitor_toshy_services_thread.start()
 
     # load the settings for the preferences submenu toggle items
     load_prefs_submenu_settings()
