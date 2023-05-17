@@ -78,27 +78,28 @@ if ! echo "$PATH" | grep -q -E "(^|:)$HOME/.local/bin(:|$)"; then
             echo 'set -U fish_user_paths $HOME/.local/bin $fish_user_paths'
             ;;
         *)
-            echo "Shell not recognized. Please add the appropriate line to your shell's RC file manually."
+            echo "ALERT: Shell not recognized."
+            echo "Please add the appropriate line to your shell's RC file yourself."
             shell_rc=""
             ;;
     esac
 
     if [[ -n "$shell_rc" ]]; then
-        read -r -p "Do you want to append the line to your $shell_rc file now? [y/N] " yn
+        read -r -p "Do you want to append the line to your $shell_rc file now? [Y/n] " yn
 
         # shellcheck disable=SC2016
         case $yn in
-            [Yy]* )
+            [Nn]* )
+                echo -e "Skipping. Please add the line to your shell RC file manually."
+                ;;
+            * )
                 echo -e "\nAppending the line to $shell_rc..."
                 if [[ "$SHELL" == */fish ]]; then
                     echo 'set -U fish_user_paths $HOME/.local/bin $fish_user_paths' >> "$shell_rc"
                 else
                     echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$shell_rc"
                 fi
-                echo -e "Done. Please restart your shell or run 'source $shell_rc' to apply the changes."
-                ;;
-            * )
-                echo -e "Skipping. Please add the line to your shell RC file manually."
+                echo -e "Done. Restart your shell or run 'source $shell_rc' to apply the changes."
                 ;;
         esac
     fi
