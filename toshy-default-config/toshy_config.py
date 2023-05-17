@@ -7,7 +7,7 @@ import time
 import inspect
 import subprocess
 
-from typing import Any, Callable, List, Dict
+from typing import Any, Callable, List, Dict, Union
 from keyszer.lib.logger import debug, error
 from keyszer.lib.key_context import KeyContext
 from keyszer.config_api import *
