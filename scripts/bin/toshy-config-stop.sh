@@ -21,5 +21,4 @@ echo -e "\nStopping Toshy services/script...\n"
 toshy-services-stop
 
 /usr/bin/pkill -f "bin/keyszer"
-/usr/bin/pkill -f "toshy-config-restart"
 /usr/bin/pkill -f "toshy-config-start"
