@@ -103,6 +103,9 @@ def get_environment_info():
 
 def load_uinput_module():
     """Check to see if `uinput` kernel module is loaded"""
+
+    print(f"\n§\n  Checking status of 'uinput' kernel module...\n{cnfg.separator}")
+
     try:
         subprocess.check_output("lsmod | grep uinput", shell=True)
         print("uinput module is already loaded")
