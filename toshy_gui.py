@@ -197,6 +197,17 @@ def get_settings_list(settings_obj):
 last_settings_list = get_settings_list(cnfg)
 
 
+def fn_monitor_internal_settings():
+    global last_settings_list
+    while True:
+        time.sleep(1)
+        if last_settings_list != get_settings_list(cnfg):
+            # debug(f'Updating GUI preferences switch settings...')
+            load_radio_btn_settings(cnfg, optspec_var, "optspec_layout")
+            load_switch_settings(cnfg)
+            last_settings_list = get_settings_list(cnfg)
+
+
 def check_notify_send():
     try:
         # Run the notify-send command with the -p flag
@@ -232,16 +243,15 @@ svc_status_glyph_inactive   = 'Inactive'              # ❌ ⏸ 🛑 #
 svc_status_glyph_unknown    = 'Unknown '              # ❔  #
 
 
-def monitor_toshy_services():
+def fn_monitor_toshy_services():
     # debug('')
     # debug(f'Entering GUI monitoring function...')
-    global last_settings_list
     global svc_status_config, svc_status_sessmon
     toshy_svc_config_unit_state     = None
     toshy_svc_config_unit_path      = None
     toshy_svc_sessmon_unit_state    = None
     toshy_svc_sessmon_unit_path     = None
-    last_svcs_state_tup = (None, None)
+    last_svcs_state_tup             = (None, None)
     _first_run = True
 
     session_bus    = dbus.SessionBus()
@@ -319,12 +329,6 @@ def monitor_toshy_services():
             except NameError: pass  # Let it pass if menu item not ready yet
 
         last_svcs_state_tup = curr_svcs_state_tup
-
-        if last_settings_list != get_settings_list(cnfg):
-            # debug(f'Updating GUI preferences switch settings...')
-            load_radio_btn_settings(cnfg, optspec_var, "optspec_layout")
-            load_switch_settings(cnfg)
-            last_settings_list = get_settings_list(cnfg)
 
         time.sleep(1)     # pause before next loop cycle
 
@@ -903,9 +907,14 @@ if __name__ == "__main__":
     if shutil.which('systemctl'):
         # help out the config file user service
         subprocess.run(["systemctl", "--user", "import-environment", "XDG_SESSION_TYPE", "XDG_SESSION_DESKTOP", "XDG_CURRENT_DESKTOP"])    
-        monitor_toshy_settings_thread = threading.Thread(target=monitor_toshy_services)
+        monitor_toshy_settings_thread = threading.Thread(target=fn_monitor_toshy_services)
         monitor_toshy_settings_thread.daemon = True
         monitor_toshy_settings_thread.start()
+
+    # Start separate thread to watch the internal state of settings
+    monitor_internal_settings_thread = threading.Thread(target=fn_monitor_internal_settings)
+    monitor_internal_settings_thread.daemon = True
+    monitor_internal_settings_thread.start()
 
     # Force the window to process pending tasks and calculate its dimensions
     root.update_idletasks()
