@@ -615,7 +615,7 @@ def main(cnfg: InstallerSettings):
                 f'{cnfg.separator}\n'
                 f'{cnfg.separator}\n'
                 'ALERT: Permissions changed. You MUST reboot for Toshy to work...\n'
-                f'{cnfg.separator}\n'
+                f'{cnfg.separator}'
         )
 
     if not cnfg.should_reboot:
@@ -631,6 +631,8 @@ def main(cnfg: InstallerSettings):
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
         )
+    
+    print('')   # new line after everything is done, don't crowd the prompt
 
 
 if __name__ == '__main__':
