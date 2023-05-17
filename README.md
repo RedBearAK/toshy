@@ -96,11 +96,13 @@ Download the latest zip from the big green button. Unzip it, and open a terminal
 
 Currently working distros:
 
+- Fedora
+- Linux Mint
 - Ubuntu
 - Xubuntu
 - Kubuntu
-- Linux Mint
-- Fedora
+- antiX
+    - Preliminary support. Use `toshy-config-start` or `toshy-config-start-verbose` for manual start.
 
 ## Usage
 
