@@ -96,12 +96,15 @@ def install_udev_rules():
     if not os.path.exists('/etc/udev/rules.d/90-keymapper-input.rules'):
         rule_content = (
             'SUBSYSTEM=="input", GROUP="input"\n'
-            'KERNEL=="uinput", SUBSYSTEM=="misc", GROUP="input"\n'
+            'KERNEL=="uinput", SUBSYSTEM=="misc", GROUP="input", MODE="0660"\n'
         )
         command = 'sudo tee /etc/udev/rules.d/90-keymapper-input.rules'
         try:
             subprocess.run(command, input=rule_content.encode(), shell=True, check=True)
             print(f'"udev" rules file successfully installed.')
+            
+            # sudo udevadm control --reload-rules && sudo udevadm trigger
+            
             cnfg.should_reboot = True
         except subprocess.CalledProcessError as e:
             print(f'\nERROR: Problem while installing "udev" rules file for keymapper...\n')
