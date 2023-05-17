@@ -77,8 +77,8 @@
         "python3-venv",
         "python3-tk",
         "libgirepository1.0-dev",
-        "libsystemd-dev",
-        "gir1.2-appindicator3-0.1"
+        "libsystemd-dev:i386",
+        "gir1.2-ayatanaappindicator3-0.1"
     ],
     "arch": [
         "cairo",
