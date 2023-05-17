@@ -478,6 +478,7 @@ terminals = [
     "lxterminal",
     "mate-terminal",
     "org.gnome.Console",
+    "roxterm",
     "qterminal",
     "st",
     "sakura",
@@ -496,35 +497,36 @@ terminals = [x.casefold() for x in terminals]
 termStr = toRgxStr(terminals)
 
 terminals_lod = [
-    {clas:"^alacritty$"                  },
-    {clas:"^cutefish-terminal$"          },
-    {clas:"^deepin-terminal$"            },
-    {clas:"^eterm$"                      },
-    {clas:"^gnome-terminal$"             },
-    {clas:"^gnome-terminal-server$"      },
-    {clas:"^guake$"                      },
-    {clas:"^hyper$"                      },
-    {clas:"^io.elementary.terminal$"     },
-    {clas:"^kinto-gui.py$"               },
-    {clas:"^kitty$"                      },
-    {clas:"^Kgx$"                        },
-    {clas:"^konsole$"                    },
-    {clas:"^lxterminal$"                 },
-    {clas:"^mate-terminal$"              },
-    {clas:"^org.gnome.Console$"          },
-    {clas:"^qterminal$"                  },
-    {clas:"^st$"                         },
-    {clas:"^sakura$"                     },
-    {clas:"^station$"                    },
-    {clas:"^tabby$"                      },
-    {clas:"^terminator$"                 },
-    {clas:"^termite$"                    },
-    {clas:"^tilda$"                      },
-    {clas:"^tilix$"                      },
-    {clas:"^urxvt$"                      },
-    {clas:"^xfce4-terminal$"             },
-    {clas:"^xterm$"                      },
-    {clas:"^yakuake$"                    },
+    {clas:"^alacritty$"                 },
+    {clas:"^cutefish-terminal$"         },
+    {clas:"^deepin-terminal$"           },
+    {clas:"^eterm$"                     },
+    {clas:"^gnome-terminal$"            },
+    {clas:"^gnome-terminal-server$"     },
+    {clas:"^guake$"                     },
+    {clas:"^hyper$"                     },
+    {clas:"^io.elementary.terminal$"    },
+    {clas:"^kinto-gui.py$"              },
+    {clas:"^kitty$"                     },
+    {clas:"^Kgx$"                       },
+    {clas:"^konsole$"                   },
+    {clas:"^lxterminal$"                },
+    {clas:"^mate-terminal$"             },
+    {clas:"^org.gnome.Console$"         },
+    {clas:"^roxterm$"                   },
+    {clas:"^qterminal$"                 },
+    {clas:"^st$"                        },
+    {clas:"^sakura$"                    },
+    {clas:"^station$"                   },
+    {clas:"^tabby$"                     },
+    {clas:"^terminator$"                },
+    {clas:"^termite$"                   },
+    {clas:"^tilda$"                     },
+    {clas:"^tilix$"                     },
+    {clas:"^urxvt$"                     },
+    {clas:"^xfce4-terminal$"            },
+    {clas:"^xterm$"                     },
+    {clas:"^yakuake$"                   },
 ]
 
 vscodes = [
@@ -783,12 +785,6 @@ modmap("Cond modmap - GTK3 numpad nav keys fix",{
 #     {                                                             # Placeholder
 # })
 
-# multipurpose_modmap("Block Mod when alone", {
-#     Key.LEFT_META:              [Key.RESERVED, Key.LEFT_META],
-#     Key.RIGHT_META:             [Key.RESERVED, Key.RIGHT_META],
-#     # Key.LEFT_ALT:               [Key.RESERVED, Key.LEFT_ALT],
-#     # Key.RIGHT_ALT:              [Key.RESERVED, Key.RIGHT_ALT],
-# })
 
 multipurpose_modmap("Enter2Cmd", {
     Key.ENTER:                  [Key.ENTER, Key.RIGHT_CTRL]     # Enter2Cmd
