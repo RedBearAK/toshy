@@ -60,10 +60,10 @@ echo ""
 
 
 # Check if ~/.local/bin is in the user's PATH
+# shellcheck disable=SC2016
 if ! echo "$PATH" | grep -q -E "(^|:)$HOME/.local/bin(:|$)"; then
     echo -e "\nIt looks like ~/.local/bin is not in your PATH. To add it permanently, append the following line to your shell RC file:"
 
-    # shellcheck disable=SC2016
     case "$SHELL" in
         */bash)
             shell_rc="$HOME/.bashrc"
@@ -84,24 +84,31 @@ if ! echo "$PATH" | grep -q -E "(^|:)$HOME/.local/bin(:|$)"; then
             ;;
     esac
 
-    if [[ -n "$shell_rc" ]]; then
-        read -r -p "Do you want to append the line to your $shell_rc file now? [Y/n] " yn
+    if [[ -n "${shell_rc}" ]]; then
+        if [[ "${SHELL}" == */fish ]]; then
+            path_line='set -U fish_user_paths $HOME/.local/bin $fish_user_paths'
+        else
+            path_line='export PATH="$HOME/.local/bin:$PATH"'
+        fi
 
-        # shellcheck disable=SC2016
-        case $yn in
-            [Nn]* )
-                echo -e "Skipping. Please add the line to your shell RC file manually."
-                ;;
-            * )
-                echo -e "\nAppending the line to $shell_rc..."
-                if [[ "$SHELL" == */fish ]]; then
-                    echo 'set -U fish_user_paths $HOME/.local/bin $fish_user_paths' >> "$shell_rc"
-                else
-                    echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$shell_rc"
-                fi
-                echo -e "Done. Restart your shell or run 'source $shell_rc' to apply the changes."
-                ;;
-        esac
+        # Check if the line already exists in the RC file
+        if grep -Fxq "$path_line" "${shell_rc}"
+        then
+            echo "The line is already in your $shell_rc file."
+        else
+            read -r -p "Do you want to append the line to your $shell_rc file now? [Y/n] " yn
+
+            case $yn in
+                [Nn]* )
+                    echo -e "Skipping. Please add the line to your shell RC file manually."
+                    ;;
+                * )
+                    echo -e "\nAppending the line to $shell_rc..."
+                    echo "$path_line" >> "${shell_rc}"
+                    echo -e "Done. Restart your shell or run 'source $shell_rc' to apply the changes."
+                    ;;
+            esac
+        fi
     fi
 
 fi
