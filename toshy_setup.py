@@ -87,7 +87,7 @@ class InstallerSettings:
 def get_environment_info():
     """get back the distro name, distro version, session type and 
         desktop environment from `env.py` module"""
-    print(f'\n§\n  Getting environment information...\n{cnfg.separator}')
+    print(f'\n\n§  Getting environment information...\n{cnfg.separator}')
     cnfg.env_info_dct   = env.get_env_info()
     # Avoid casefold() errors by converting all to strings
     cnfg.DISTRO_NAME    = str(cnfg.env_info_dct.get('DISTRO_NAME',  'keymissing').casefold())
@@ -104,7 +104,7 @@ def get_environment_info():
 def load_uinput_module():
     """Check to see if `uinput` kernel module is loaded"""
 
-    print(f"\n§\n  Checking status of 'uinput' kernel module...\n{cnfg.separator}")
+    print(f"\n\n§  Checking status of 'uinput' kernel module...\n{cnfg.separator}")
 
     try:
         subprocess.check_output("lsmod | grep uinput", shell=True)
@@ -175,7 +175,7 @@ def reload_udev_rules():
 
 def install_udev_rules():
     """set up udev rules file to give user/keyszer access to uinput"""
-    print(f'\n§\n  Installing "udev" rules file for keymapper...\n{cnfg.separator}')
+    print(f'\n\n§  Installing "udev" rules file for keymapper...\n{cnfg.separator}')
     rules_file_path = '/etc/udev/rules.d/90-toshy-keymapper-input.rules'
     rule_content = (
         'SUBSYSTEM=="input", GROUP="input"\n'
@@ -201,7 +201,7 @@ def install_udev_rules():
 
 def verify_user_groups():
     """Check if the `input` group exists and user is in group"""
-    print(f'\n§\n  Checking if user is in "input" group...\n{cnfg.separator}')
+    print(f'\n\n§  Checking if user is in "input" group...\n{cnfg.separator}')
     try:
         grp.getgrnam(cnfg.input_group_name)
     except KeyError:
@@ -250,7 +250,7 @@ def load_package_list():
 
 def install_distro_pkgs():
     """install needed packages from list for distro type"""
-    print(f'\n§\n  Installing native packages...\n{cnfg.separator}')
+    print(f'\n\n§  Installing native packages...\n{cnfg.separator}')
 
     # Check for systemd
     has_systemd = shutil.which("systemd") is not None
@@ -300,7 +300,7 @@ def install_distro_pkgs():
 
 def clone_keyszer_branch():
     """clone the latest `keyszer` from GitHub"""
-    print(f'\n§\n  Cloning keyszer branch...\n{cnfg.separator}')
+    print(f'\n\n§  Cloning keyszer branch...\n{cnfg.separator}')
     
     # Check if `git` command exists. If not, exit script with error.
     has_git = shutil.which('git')
@@ -316,7 +316,7 @@ def clone_keyszer_branch():
 
 def backup_toshy_config():
     """backup existing Toshy config folder"""
-    print(f'\n§\n  Backing up existing Toshy config folder...\n{cnfg.separator}')
+    print(f'\n\n§  Backing up existing Toshy config folder...\n{cnfg.separator}')
     timestamp = datetime.datetime.now().strftime('_%Y%m%d_%H%M%S')
     toshy_backup_dir_path = os.path.abspath(cnfg.toshy_dir_path + timestamp)
     if os.path.exists(os.path.join(os.path.expanduser('~'), '.config', 'toshy')):
@@ -341,7 +341,7 @@ def backup_toshy_config():
 
 def install_toshy_files():
     """install Toshy files"""
-    print(f'\n§\n  Installing Toshy files...\n{cnfg.separator}')
+    print(f'\n\n§  Installing Toshy files...\n{cnfg.separator}')
     if not cnfg.backup_succeeded:
         print(f'Backup of Toshy config folder failed? Bailing out...')
         exit(1)
@@ -370,7 +370,7 @@ def install_toshy_files():
 
 def setup_virtual_env():
     """setup a virtual environment to install Python packages"""
-    print(f'\n§\n  Setting up virtual environment...\n{cnfg.separator}')
+    print(f'\n\n§  Setting up virtual environment...\n{cnfg.separator}')
 
     # Create the virtual environment if it doesn't exist
     if not os.path.exists(cnfg.venv_path):
@@ -381,7 +381,7 @@ def setup_virtual_env():
 
 def install_pip_packages():
     """install `pip` packages for Python"""
-    print(f'\n§\n  Installing/upgrading Python packages...\n{cnfg.separator}')
+    print(f'\n\n§  Installing/upgrading Python packages...\n{cnfg.separator}')
     venv_python_cmd = os.path.join(cnfg.venv_path, 'bin', 'python')
     venv_pip_cmd    = os.path.join(cnfg.venv_path, 'bin', 'pip')
     
@@ -417,14 +417,14 @@ def install_pip_packages():
 
 def install_bin_commands():
     """install the convenient scripts to manage Toshy"""
-    print(f'\n§\n  Installing Toshy script commands...\n{cnfg.separator}')
+    print(f'\n\n§  Installing Toshy script commands...\n{cnfg.separator}')
     script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'toshy-bincommands-setup.sh')
     subprocess.run([script_path])
 
 
 def install_desktop_apps():
     """install the convenient scripts to manage Toshy"""
-    print(f'\n§\n  Installing Toshy desktop apps...\n{cnfg.separator}')
+    print(f'\n\n§  Installing Toshy desktop apps...\n{cnfg.separator}')
     script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'toshy-desktopapps-setup.sh')
     subprocess.run([script_path])
 
@@ -449,7 +449,7 @@ def install_desktop_apps():
 
 def setup_systemd_services():
     """invoke the setup script to install the systemd service units"""
-    print(f'\n§\n  Setting up the Toshy systemd services...\n{cnfg.separator}')
+    print(f'\n\n§  Setting up the Toshy systemd services...\n{cnfg.separator}')
     if cnfg.systemctl_present:
         script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'bin', 'toshy-systemd-setup.sh')
         subprocess.run([script_path])
@@ -459,7 +459,7 @@ def setup_systemd_services():
 
 def autostart_tray_icon():
     """set the tray icon to autostart at login"""
-    print(f'\n§\n  Setting tray icon to load automatically at login...\n{cnfg.separator}')
+    print(f'\n\n§  Setting tray icon to load automatically at login...\n{cnfg.separator}')
     user_path           = os.path.expanduser('~')
     desktop_files_path  = os.path.join(user_path, '.local', 'share', 'applications')
     tray_desktop_file   = os.path.join(desktop_files_path, 'Toshy_Tray.desktop')
@@ -483,7 +483,7 @@ def apply_desktop_tweaks():
     """
 
     tweak_applied = None
-    print(f'\n§\n  Applying any necessary desktop tweaks...\n{cnfg.separator}')
+    print(f'\n\n§  Applying any necessary desktop tweaks...\n{cnfg.separator}')
 
     # if GNOME, disable `overlay-key`
     # gsettings set org.gnome.mutter overlay-key ''
