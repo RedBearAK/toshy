@@ -277,9 +277,9 @@ def matchProps(*,
     # bool parameters
     numlk: bool = None, capslk: bool = None, case: bool = None,
     # list of dicts of parameters (positive)
-    lst: List[Dict[str, str|bool]] = None,
+    lst: List[Dict[str, Union[str, bool]]] = None,
     # list of dicts of parameters (negative)
-    not_lst: List[Dict[str, str|bool]] = None,
+    not_lst: List[Dict[str, Union[str, bool]]] = None,
     dbg: str = None,    # debugging info (such as: which modmap/keymap?)
 ) -> Callable[[KeyContext], bool]:
     """
