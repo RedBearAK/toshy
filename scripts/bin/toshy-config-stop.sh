@@ -16,7 +16,10 @@ if [[ -z $USER ]] || [[ -z $HOME ]]; then
     exit 1
 fi
 
-echo -e "\nStopping Toshy...\n"
+echo -e "\nStopping Toshy services/script...\n"
 
 toshy-services-stop
+
 /usr/bin/pkill -f "bin/keyszer"
+/usr/bin/pkill -f "toshy-config-restart"
+/usr/bin/pkill -f "toshy-config-start"

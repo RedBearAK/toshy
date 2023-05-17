@@ -460,6 +460,16 @@ def fn_stop_toshy_services(widget):
     else:
         subprocess.run([ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg])
 
+def fn_restart_toshy_script(widget):
+    """Start the manual run config script"""
+    os.system(f'toshy-config-restart &')
+    pass
+
+def fn_stop_toshy_script(widget):
+    """Stop the manual run config script"""
+    os.system(f'toshy-config-stop &')    
+    pass
+
 def fn_open_preferences(widget):
     subprocess.Popen(['toshy-gui'])
 
@@ -480,23 +490,34 @@ def fn_remove_tray_icon(widget):
 
 # -------- MENU ITEMS --------------------------------------------------
 
-services_status_item = Gtk.MenuItem(label="Preparing status...")
+services_status_item = Gtk.MenuItem(label="No Systemd")
 services_status_item.set_sensitive(False)
 menu.append(services_status_item)
 
 separator_above_svcs_item = Gtk.SeparatorMenuItem()
 menu.append(separator_above_svcs_item)  #-------------------------------------#
 
-restart_toshy_item = Gtk.MenuItem(label="Re/Start Toshy Services")
-restart_toshy_item.connect("activate", fn_restart_toshy_services)
-menu.append(restart_toshy_item)
+restart_toshy_svcs_item = Gtk.MenuItem(label="Re/Start Toshy Services")
+restart_toshy_svcs_item.connect("activate", fn_restart_toshy_services)
+menu.append(restart_toshy_svcs_item)
 
-quit_toshy_item = Gtk.MenuItem(label="Stop Toshy Services")
-quit_toshy_item.connect("activate", fn_stop_toshy_services)
-menu.append(quit_toshy_item)
+quit_toshy_svcs_item = Gtk.MenuItem(label="Stop Toshy Services")
+quit_toshy_svcs_item.connect("activate", fn_stop_toshy_services)
+menu.append(quit_toshy_svcs_item)
 
 separator_below_svcs_item = Gtk.SeparatorMenuItem()
 menu.append(separator_below_svcs_item)  #-------------------------------------#
+
+restart_toshy_script_item = Gtk.MenuItem(label="Re/Start Toshy Script")
+restart_toshy_script_item.connect("activate", fn_restart_toshy_script)
+menu.append(restart_toshy_script_item)
+
+stop_toshy_script_item = Gtk.MenuItem(label="Stop Toshy Script")
+stop_toshy_script_item.connect("activate", fn_stop_toshy_script)
+menu.append(stop_toshy_script_item)
+
+separator_below_script_item = Gtk.SeparatorMenuItem()
+menu.append(separator_below_script_item)  #-------------------------------------#
 
 def load_prefs_submenu_settings():
     cnfg.load_settings()
