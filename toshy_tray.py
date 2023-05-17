@@ -457,7 +457,7 @@ def fn_stop_toshy_services(widget):
         subprocess.run([ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg])
 
 def fn_open_preferences(widget):
-    subprocess.Popen(['python3', f'{current_folder_path}/toshy_gui.py'])
+    subprocess.Popen(['toshy-gui'])
 
 def fn_open_config_folder(widget):
     try:
