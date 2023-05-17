@@ -119,7 +119,7 @@ def load_uinput_module():
         if not os.path.exists("/etc/modules-load.d/uinput.conf"):
             # If not, create it and add "uinput"
             try:
-                command = "echo 'uinput' | sudo tee /etc/modules-load.d/uinput.conf"
+                command = "echo 'uinput' | sudo tee /etc/modules-load.d/uinput.conf >/dev/null"
                 subprocess.run(command, shell=True, check=True)
             except subprocess.CalledProcessError as e:
                 print(f"Failed to create /etc/modules-load.d/uinput.conf: {e}")
@@ -131,7 +131,7 @@ def load_uinput_module():
                 if "uinput" not in f.read():
                     # If "uinput" is not listed, append it
                     try:
-                        command = "echo 'uinput' | sudo tee -a /etc/modules"
+                        command = "echo 'uinput' | sudo tee -a /etc/modules >/dev/null"
                         subprocess.run(command, shell=True, check=True)
                     except subprocess.CalledProcessError as e:
                         print(f"ERROR: Failed to append 'uinput' to /etc/modules: {e}")
