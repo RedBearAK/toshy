@@ -104,7 +104,7 @@ def get_environment_info():
 def load_uinput_module():
     """Check to see if `uinput` kernel module is loaded"""
 
-    print(f"\n\n§  Checking status of 'uinput' kernel module...\n{cnfg.separator}")
+    print(f'\n\n§  Checking status of "uinput" kernel module...\n{cnfg.separator}')
 
     try:
         subprocess.check_output("lsmod | grep uinput", shell=True)
@@ -518,7 +518,7 @@ def apply_desktop_tweaks():
     # if KDE, install `ibus` or `fcitx` and choose as input manager (ask for confirmation)
     
     if not tweak_applied:
-        print(f"If nothing printed, no tweaks available for '{cnfg.DESKTOP_ENV}' yet.")
+        print(f'If nothing printed, no tweaks available for "{cnfg.DESKTOP_ENV}" yet.')
 
 
 def remove_desktop_tweaks():
