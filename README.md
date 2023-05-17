@@ -101,6 +101,8 @@ Currently working distros:
 - Ubuntu
 - Xubuntu
 - Kubuntu
+- Manjaro
+- Arch in general (needs more testing)
 - antiX
     - Preliminary support. Use `toshy-config-start` or `toshy-config-start-verbose` for manual start.
 - Debian in general might work, since antiX is based on Debian 11 Bullseye
