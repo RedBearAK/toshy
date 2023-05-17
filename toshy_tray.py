@@ -467,7 +467,7 @@ def fn_restart_toshy_script(widget):
 
 def fn_stop_toshy_script(widget):
     """Stop the manual run config script"""
-    os.system(f'toshy-config-stop &')    
+    os.system(f'toshy-config-stop &')
     pass
 
 def fn_open_preferences(widget):
