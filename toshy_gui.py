@@ -14,6 +14,7 @@ import time
 import dbus
 import fcntl
 import psutil
+import shutil
 import signal
 import threading
 import subprocess
@@ -896,15 +897,15 @@ root.bind("<Control-w>", lambda event: root.destroy())
 
 if __name__ == "__main__":
 
-    # help out the config file user service
-    subprocess.run(["systemctl", "--user", "import-environment", "XDG_SESSION_TYPE", "XDG_SESSION_DESKTOP", "XDG_CURRENT_DESKTOP"])    
-
     handle_existing_process()
     write_pid_to_lockfile()
 
-    monitor_toshy_settings_thread = threading.Thread(target=monitor_toshy_services)
-    monitor_toshy_settings_thread.daemon = True
-    monitor_toshy_settings_thread.start()
+    if shutil.which('systemctl'):
+        # help out the config file user service
+        subprocess.run(["systemctl", "--user", "import-environment", "XDG_SESSION_TYPE", "XDG_SESSION_DESKTOP", "XDG_CURRENT_DESKTOP"])    
+        monitor_toshy_settings_thread = threading.Thread(target=monitor_toshy_services)
+        monitor_toshy_settings_thread.daemon = True
+        monitor_toshy_settings_thread.start()
 
     # Force the window to process pending tasks and calculate its dimensions
     root.update_idletasks()
