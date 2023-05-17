@@ -232,8 +232,8 @@ ntfy_id_last    = '0' # initiate with integer string to avoid error
 user_sysctl     = '/usr/bin/systemctl --user'
 sysctl_cmd      = '/usr/bin/systemctl'
 
-toshy_svc_session_monitor   = 'toshy-session-monitor.service'
-toshy_svc_config            = 'toshy-config.service'
+toshy_svc_sessmon   = 'toshy-session-monitor.service'
+toshy_svc_config    = 'toshy-config.service'
 
 svc_status_sessmon          = 'Unknown '              # 'Undefined'
 svc_status_config           = 'Unknown '              # 'Undefined'
@@ -269,7 +269,7 @@ def fn_monitor_toshy_services():
     while not toshy_svc_sessmon_unit_path and not toshy_svc_config_unit_path:
         try:
             toshy_svc_config_unit_path = systemd1_mgr_iface.GetUnit(toshy_svc_config)
-            toshy_svc_sessmon_unit_path = systemd1_mgr_iface.GetUnit(toshy_svc_session_monitor)
+            toshy_svc_sessmon_unit_path = systemd1_mgr_iface.GetUnit(toshy_svc_sessmon)
         except dbus.exceptions.DBusException as e:
             debug("DBusException: {}".format(str(e)))
 
@@ -337,7 +337,7 @@ def fn_restart_toshy_services():
     """(Re)Start config service first, then session monitor"""
     os.system(f'{sysctl_cmd} --user restart {toshy_svc_config}')
     time.sleep(0.2)
-    os.system(f'{sysctl_cmd} --user restart {toshy_svc_session_monitor}')
+    os.system(f'{sysctl_cmd} --user restart {toshy_svc_sessmon}')
     time.sleep(0.2)
     _ntfy_icon = f'--icon={icon_file_active}'
     _ntfy_msg = 'Toshy systemd services (re)started.\nTap any modifier key before trying shortcuts.'
@@ -354,7 +354,7 @@ def fn_restart_toshy_services():
 
 def fn_stop_toshy_services():
     """Stop session monitor, then config service"""
-    os.system(f'{sysctl_cmd} --user stop {toshy_svc_session_monitor}')
+    os.system(f'{sysctl_cmd} --user stop {toshy_svc_sessmon}')
     time.sleep(0.2)
     os.system(f'{sysctl_cmd} --user stop {toshy_svc_config}')
     time.sleep(0.2)
