@@ -205,8 +205,6 @@ def verify_user_groups():
             sys.exit(1)
 
         print(f'User "{cnfg.user_name}" added to group "{cnfg.input_group_name}"...')
-        # Make group addition effective immediately (only affects current process)
-        os.setgid(grp.getgrnam("input").gr_gid)
         cnfg.should_reboot = True
 
 
