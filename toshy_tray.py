@@ -168,8 +168,16 @@ def handle_existing_process():
 # What we need for the indicator tray icon and menu
 import gi.repository
 gi.require_version('Gtk', '3.0')
-gi.require_version('AppIndicator3', '0.1')
-from gi.repository import Gtk, AppIndicator3, GLib
+
+try:
+    gi.require_version('AyatanaAppIndicator3', '0.1')
+    from gi.repository import AyatanaAppIndicator3 as AppIndicator3
+except (ValueError, ImportError) as e:
+    # debug(f'ImportError: Falling back on AppIndicator3 instead of AyatanaAppIndicator3.')
+    gi.require_version('AppIndicator3', '0.1')
+    from gi.repository import AppIndicator3
+
+from gi.repository import Gtk, GLib
 
 
 # Define some globals for the commands run by menu items
