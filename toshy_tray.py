@@ -211,6 +211,17 @@ def get_settings_list(settings_obj):
 last_settings_list = get_settings_list(cnfg)
 
 
+def fn_monitor_internal_settings():
+    global last_settings_list
+    while True:
+        time.sleep(1)
+        if last_settings_list != get_settings_list(cnfg):
+            # debug(f'settings list changed...')
+            last_settings_list = get_settings_list(cnfg)
+            load_optspec_layout_submenu_settings()
+            load_prefs_submenu_settings()
+
+
 def check_notify_send():
     try:
         # Run the notify-send command with the -p flag
@@ -261,7 +272,6 @@ tray_indicator.set_title("Toshy Status Indicator") # try to set what might show 
 
 
 def fn_monitor_toshy_services():
-    global last_settings_list
     global svc_status_config, svc_status_sessmon
     toshy_svc_config_unit_state = None
     toshy_svc_sessmon_unit_state = None
@@ -379,12 +389,6 @@ def fn_monitor_toshy_services():
             tray_indicator.set_icon_full(icon_file_grayscale, "Toshy Tray Icon Undefined")
 
         last_svcs_state_tup = curr_svcs_state_tup
-
-        if last_settings_list != get_settings_list(cnfg):
-            # debug(f'settings list changed...')
-            last_settings_list = get_settings_list(cnfg)
-            load_optspec_layout_submenu_settings()
-            load_prefs_submenu_settings()
 
         time.sleep(2)
 
@@ -635,11 +639,23 @@ def main():
 
     if shutil.which('systemctl'):
         # help out the config file user service
-        subprocess.run(["systemctl", "--user", "import-environment", "XDG_SESSION_TYPE", "XDG_SESSION_DESKTOP", "XDG_CURRENT_DESKTOP"])    
+        subprocess.run([
+            "systemctl", 
+            "--user", 
+            "import-environment", 
+            "XDG_SESSION_TYPE", 
+            "XDG_SESSION_DESKTOP", 
+            "XDG_CURRENT_DESKTOP"
+        ])    
         # Start a separate thread to watch the status of Toshy systemd services (or script?)
         monitor_toshy_services_thread = threading.Thread(target=fn_monitor_toshy_services)
         monitor_toshy_services_thread.daemon = True
         monitor_toshy_services_thread.start()
+
+    # Start separate thread to watch the internal state of settings
+    monitor_internal_settings_thread = threading.Thread(target=fn_monitor_internal_settings)
+    monitor_internal_settings_thread.daemon = True
+    monitor_internal_settings_thread.start()
 
     # load the settings for the preferences submenu toggle items
     load_prefs_submenu_settings()
