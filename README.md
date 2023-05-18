@@ -271,6 +271,12 @@ I'm still looking for a more general/flexible solution to this issue.
 
 Also, closely related, the Option-key special character schemes that have been implemented are based only on two US keyboard layouts in macOS, the standard US layout and the "ABC Extended" layout (which is still a US layout, but with enhancements to the available special characters and diacritic "dead keys"). So the special character arrangement will have differences from what an international user of macOS might be used to. This, also, is not going to be a simple problem to solve completely.  
 
+### Meta vs Super vs Win(dows) vs Command/Cmd keys
+
+These are all different names for the same key code. The Linux kernal appears to primarily refer to the key as `Meta`, while some Linux desktops (notably GNOME) like to refer to the same key as the `Super` key. Meanwhile, it is the same key as the `Windows` key on PC keyboards (which may have an image of "Tux" the Linux penguin on custom Linux keyboards/laptops). And, to top everything off, the Apple keyboard `Command` key uses the same key code.  
+
+So, as far as the keymapper is concerned, using any of "Win", "Super", "Meta", or "Cmd" in the config file will result in the same key code. I will typically try to refer to it as "Meta" to match the Linux kernel documentation, but it depends on the circumstances. When referring to how it is used in GNOME I'll say "Super", for instance.  
+
 ### Xubuntu and the Meta/Super/Win/Cmd key
 
 Xubuntu (using Xfce desktop environment) appears to run a background app at startup called `xcape` that binds the `Super/Meta/Win/Cmd` key (all different names for the same key) to activate the Whisker Menu by itself. To deactivate this, open the "Session and Startup" control panel app, go to the "Application Autostart" tab, and uncheck the "Bind Super Key" item. That will stop the `xcape` command from running at startup. Until you log out or restart, there will still be the background `xcape` process binding the key, but that can be stopped with:  
