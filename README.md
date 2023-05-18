@@ -96,16 +96,20 @@ Download the latest zip from the big green button. Unzip it, and open a terminal
 
 Currently working distros:
 
-- Fedora
+- Fedora (standard GNOME variant tested)
+    - Maybe RHEL/Rocky Linux/AlmaLinux? Untested.
 - Linux Mint
 - Ubuntu
 - Xubuntu
 - Kubuntu
 - Lubuntu
-- Manjaro
-- Arch in general (needs more testing)
+- Manjaro (GNOME and Xfce tested so far)
+    - Arch in general? (maybe, needs more testing)
 - antiX
-    - Preliminary support. Use `toshy-config-start` or `toshy-config-start-verbose` for manual start.
+    - Preliminary support.
+    - Starting only the "config script" from the tray icon menu should work now.
+    - Use `toshy-config-start` or `toshy-config-start-verbose` for manual start.
+    - Only "rox-icewm" desktop verified/tested.
 - Debian in general might work, since antiX is based on Debian 11 Bullseye
 
 ## Usage
@@ -120,14 +124,16 @@ These commands are copied into `~/.local/bin`, and you will be prompted to add t
 toshy-services-log      (shows journalctl output for Toshy services)
 toshy-services-restart
 toshy-services-start
-toshy-services-status   (shows the current state of the services)
+toshy-services-status   (shows the current state of Toshy services)
 toshy-services-stop
 
 toshy-systemd-remove    (stops and removes the systemd service units)
 toshy-systemd-setup     (installs and starts the systemd service units)
 ```
 
-The following commands are also available, and meant to allow manually running the Toshy config file. These will automatically stop the `systemd` services so there is no conflict, for instance if you need to run the `verbose` version of the command to debug a shortcut that is not working as expected. Restarting the Toshy services, either with one of the above commands or from the GUI preferences app or tray icon menu, will stop the manual process and return to running the Toshy config as a `systemd` service. All the commands are designed to work together as conveniently as possible.  
+The following commands are also available, and meant to allow manually running just the Toshy config file, without reliance on `systemd`. These will automatically stop the `systemd` services so there is no conflict, for instance if you need to run the `verbose` version of the command to debug a shortcut that is not working as expected, or find out how you broke the config file.  
+
+Restarting the Toshy services, either with one of the above commands or from the GUI preferences app or tray icon menu, will stop the manual process and return to running the Toshy config as a `systemd` service. All the commands are designed to work together as conveniently as possible.  
 
 ```
 toshy-config-restart
@@ -146,6 +152,22 @@ Both of these "apps" will show the current status of the `systemd` services, and
 ## FAQ (Frequently Asked Questions)
 
 This section will list some common questions, issues and fixes/tweaks that may be necessary for different distros, desktops or devices (and are not yet handled by the installer or config file). 
+
+### What happened to my customizations of the config?!
+
+Because the config file is continually evolving, and the config file itself is really a "program" written in Python, that is literally executed as Python code by the keymapper (`keyszer`) at runtime, it's a bit difficult to retain the changes you've made and be sure that the new version of the config file will load without some sort of error.  
+
+So the best solution I've come up with so far is to have the installer make a backup of your whole `~/.config/toshy` folder to a dated folder in `~/.config`. You'll find it/them in that "hidden" folder alongside the new `toshy` folder, and the backup will contain your previous `toshy_config.py` file. PLEASE NOTE: If you run the Toshy installer multiple times you may find that the most recent dated "backup" is just a backup of a fresh Toshy config folder, as it will make a new backup whenever a `toshy` folder is found in `~/.config`. In this case, the folder with your custom changes may be in an older backup folder.  
+
+The backup folders are typically less than 1 MB in size, as the Python virtual environment folder inside is not copied. So they should never take up too much space even if you run the installer many times on the same system.  
+
+Using some software like Visual Studio Code, it is possible to compare two config files in a "diff" sort of view and quickly see the differences between the old and new config files. This can make it very easy to merge your custom changes back into the new config file with a few clicks. Then all you need to do is save the new config and restart the Toshy services or config script.  
+
+If you keep your modifications within the `keyszer` API functions at the very beginning of the script, and the "User Apps" marked section around the middle of the config file, it should be pretty easy to merge your customizations back whenever you update Toshy or install on a new machine. The "User Apps" section is designed to be a good place in the config to put some customizations like making the brightness and volume keys on a laptop function row work correctly for your specific machine.  
+
+I will be trying to work on doing a more automatic copying/merging of existing user settings into a new config file.  
+
+There is an `include()` function in `keyszer` that theoretically allows separate files to be part of the config, but due to the dynamic nature of the config file and how it gets loaded by the keymapper I had a lot of issues trying to use that method to solve this problem.  
 
 ### CLI/Shell commands missing/unavailable
 
