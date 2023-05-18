@@ -101,6 +101,7 @@ Currently working distros:
 - Ubuntu
 - Xubuntu
 - Kubuntu
+- Lubuntu
 - Manjaro
 - Arch in general (needs more testing)
 - antiX
@@ -243,6 +244,10 @@ Xubuntu (using Xfce desktop environment) appears to run a background app at star
 ```sh
 killall xcape
 ```
+
+### Lubuntu Application Menu and Meta/Super/Win/Cmd key
+
+In Lubuntu, right-click on the hummingbird(?) menu icon on the toolbar at the bottom of the screen, and select `Configure "Application Menu"` to change the keybinding from `Super_L` (left Meta key) to `Alt+F1` (by using the physical equivalent of `Cmd+Space`, or `Option+F1`, either will work). The shortcut apparently needs to be set very quickly after clicking the button to change the shortcut. If it doesn't work the first time, just try again.  
 
 ### Linux Mint Application Menu (Cinnamon/Xfce/MATE) and the Meta/Super/Win/Cmd key
 
