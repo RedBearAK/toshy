@@ -36,6 +36,7 @@
         "dbus-devel",
         "python3-dbus",
         "python3-devel",
+        "python3-pip",
         "python3-tkinter",
         "gobject-introspection-devel",
         "libappindicator-gtk3",
