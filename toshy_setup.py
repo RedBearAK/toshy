@@ -105,7 +105,8 @@ def call_attention_to_password_prompt():
     try:
         subprocess.run( ['sudo', '-n', 'true'],
                         stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL)
+                        stderr=subprocess.DEVNULL,
+                        check=True)
     except subprocess.CalledProcessError:
         # sudo requires a password
         print('')
