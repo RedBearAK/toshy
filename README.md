@@ -259,6 +259,18 @@ Otherwise, without a compatible input manager that responds to the `Shift+Ctrl+U
 
 For some reason, even when I am in GNOME, the Unicode character entry shortcut of `Shift+Ctrl+U` does not work in Sublime Text 3, so none of the Option-key special characters will work in that app. No idea why. Someone said that they couldn't replicate the problem in a build of Sublime Text 4, and that's all I know about it. No known workaround. (Other than moving to ST4.)  
 
+### International/Non-US keyboard layouts
+
+As of right now the keymapper has a key definition file (a mapping of key symbols to key codes) that is only designed for standard US/English keyboard layouts/languages. And, the keymapper has no knowledge of the current keyboard layout/language, which is remarkably difficult to obtain even on X11/Xorg, and Wayland is worse. Due to these limitations there will be shortcut combos that will act like you are using a US QWERTY keyboard layout, even though you are using, for instance, French AZERTY or something else. If you attempt to use `Cmd+A` on such a layout, the result will be `Cmd+Q` as the keymapper still thinks the `A` key is a `Q`. So instead of "Select All" you'd perform "Close Window".  
+
+There is a solution to this, which is to find and modify the `key.py` file in the `keyszer` package folder (which in the case of Toshy will now be somewhere in `~/.config/toshy/.venv/`). But that would need to be done for every possible keyboard layout that is different from a US QWERTY layout.  
+
+Some international users choose to use a US layout simply because it is a bit easier to use for coding, so they will not run into this problem.  
+
+I'm still looking for a more general/flexible solution to this issue.  
+
+Also, closely related, the Option-key special character schemes that have been implemented are based only on two US keyboard layouts in macOS, the standard US layout and the "ABC Extended" layout (which is still a US layout, but with enhancements to the available special characters and diacritic "dead keys"). So the special character arrangement will have differences from what an international user of macOS might be used to. This, also, is not going to be a simple problem to solve completely.  
+
 ### Xubuntu and the Meta/Super/Win/Cmd key
 
 Xubuntu (using Xfce desktop environment) appears to run a background app at startup called `xcape` that binds the `Super/Meta/Win/Cmd` key (all different names for the same key) to activate the Whisker Menu by itself. To deactivate this, open the "Session and Startup" control panel app, go to the "Application Autostart" tab, and uncheck the "Bind Super Key" item. That will stop the `xcape` command from running at startup. Until you log out or restart, there will still be the background `xcape` process binding the key, but that can be stopped with:  
