@@ -101,6 +101,18 @@ def get_environment_info():
             f'\n\t{cnfg.DESKTOP_ENV     = }')
 
 
+def call_attention_to_password_prompt():
+    try:
+        subprocess.run( ['sudo', '-n', 'true'],
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL)
+    except subprocess.CalledProcessError:
+        # sudo requires a password
+        print('')
+        print('-- PASSWORD REQUIRED --')
+        print('')
+
+
 def load_uinput_module():
     """Check to see if `uinput` kernel module is loaded"""
 
@@ -111,7 +123,8 @@ def load_uinput_module():
         print("uinput module is already loaded")
     except subprocess.CalledProcessError:
         print("uinput module is not loaded, loading now...")
-        subprocess.run("sudo modprobe uinput", shell=True, check=True)
+        call_attention_to_password_prompt()
+        subprocess.run(f'sudo modprobe uinput', shell=True, check=True)
 
     # Check if /etc/modules-load.d/ directory exists
     if os.path.isdir("/etc/modules-load.d/"):
@@ -119,6 +132,7 @@ def load_uinput_module():
         if not os.path.exists("/etc/modules-load.d/uinput.conf"):
             # If not, create it and add "uinput"
             try:
+                call_attention_to_password_prompt()
                 command = "echo 'uinput' | sudo tee /etc/modules-load.d/uinput.conf >/dev/null"
                 subprocess.run(command, shell=True, check=True)
             except subprocess.CalledProcessError as e:
@@ -131,6 +145,7 @@ def load_uinput_module():
                 if "uinput" not in f.read():
                     # If "uinput" is not listed, append it
                     try:
+                        call_attention_to_password_prompt()
                         command = "echo 'uinput' | sudo tee -a /etc/modules >/dev/null"
                         subprocess.run(command, shell=True, check=True)
                     except subprocess.CalledProcessError as e:
@@ -139,6 +154,7 @@ def load_uinput_module():
 
 def reload_udev_rules():
     try:
+        call_attention_to_password_prompt()
         subprocess.run(
             "sudo udevadm control --reload-rules && sudo udevadm trigger",
             shell=True, check=True)
@@ -185,6 +201,7 @@ def install_udev_rules():
     if not os.path.exists(rules_file_path) or open(rules_file_path).read() != rule_content:
         command = f'sudo tee {rules_file_path}'
         try:
+            call_attention_to_password_prompt()
             subprocess.run(command, input=rule_content.encode(), shell=True, check=True)
             print(f'"udev" rules file successfully installed.')
             reload_udev_rules()
@@ -208,6 +225,7 @@ def verify_user_groups():
         # The group doesn't exist, so create it
         print(f'Creating "input" group...')
         try:
+            call_attention_to_password_prompt()
             subprocess.run(['sudo', 'groupadd', cnfg.input_group_name], check=True)
         except subprocess.CalledProcessError as e:
             print(f'\nERROR: Problem when trying to create "input" group...\n')
@@ -225,6 +243,7 @@ def verify_user_groups():
     else:
         # Add the user to the input group
         try:
+            call_attention_to_password_prompt()
             subprocess.run(
                 ['sudo', 'usermod', '-aG', cnfg.input_group_name, cnfg.user_name], check=True)
         except subprocess.CalledProcessError as e:
@@ -262,9 +281,11 @@ def install_distro_pkgs():
     ]
 
     if cnfg.DISTRO_NAME in ['ubuntu', 'linux mint', 'debian']:
+        call_attention_to_password_prompt()
         subprocess.run(['sudo', 'apt', 'install', '-y'] + cnfg.pkgs_for_distro)
 
     elif cnfg.DISTRO_NAME in ['fedora', 'fedoralinux']:
+        call_attention_to_password_prompt()
         subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro)
 
     elif cnfg.DISTRO_NAME in ['arch', 'manjaro']:
@@ -286,6 +307,7 @@ def install_distro_pkgs():
                 if not is_package_installed(pkg)
             ]
             if pkgs_to_install:
+                call_attention_to_password_prompt()
                 subprocess.run(['sudo', 'pacman', '-S', '--noconfirm'] + pkgs_to_install)
 
         else:
