@@ -3165,6 +3165,9 @@ keymap("Sublime Text", {
     # C(""):                    C(""),                          #
 }, when = matchProps(clas=sublimeStr))
 
+keymap("Linux Mint xed text editor", {
+    C("RC-T"):                  C("C-N"),                       # Open new tab (new file)
+}, when = matchProps(clas="^xed$") )
 
 
 ###########################  DIALOG FIXES  ###########################
@@ -3222,15 +3225,16 @@ keymap("Cmd+W dialog fix - Alt+F4", {
 ### Various fixes for supporting tab navigation shortcuts like Shift+Cmd+Braces
 
 tab_UI_fix_CtrlShiftTab = [
+    {clas:"^org.gnome.Console$|^Console$"},
     {clas:"^deepin-terminal$"},
     {clas:"^.*jDownloader.*$"},
-    {clas:"^Kgx$"},
     {clas:"^kitty$"},
-    {clas:"^org.gnome.Console$|^Console$"},
+    {clas:"^Kgx$"},
 ]
 
 tab_UI_fix_CtrlAltPgUp = [
     {clas:"^gedit$"},
+    {clas:"^xed$"},
 ]
 
 # Tab navigation overrides for tabbed UI apps that use Ctrl+Shift+Tab/Ctrl+Tab instead of Ctrl+PgUp/PgDn
