@@ -276,7 +276,12 @@ def load_package_list():
     with open('packages.json') as f:
         cnfg.pkgs_json_dct = json.load(f)
     cnfg.pip_pkgs = cnfg.pkgs_json_dct['pip']
-    cnfg.pkgs_for_distro = cnfg.pkgs_json_dct[cnfg.DISTRO_NAME]
+    try:
+        cnfg.pkgs_for_distro = cnfg.pkgs_json_dct[cnfg.DISTRO_NAME]
+    except KeyError:
+        print(f"\nERROR: No list of packages found for this distro: '{cnfg.DISTRO_NAME}'")
+        print(f'Installation cannot proceed without a list of packages. Sorry.\n')
+        sys.exit(1)
 
 
 def install_distro_pkgs():
