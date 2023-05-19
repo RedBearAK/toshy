@@ -292,7 +292,7 @@ def install_distro_pkgs():
         if has_systemd or 'systemd' not in pkg
     ]
 
-    if cnfg.DISTRO_NAME in ['ubuntu', 'linux mint', 'debian']:
+    if cnfg.DISTRO_NAME in ['ubuntu', 'mint', 'debian']:
         call_attention_to_password_prompt()
         subprocess.run(['sudo', 'apt', 'install', '-y'] + cnfg.pkgs_for_distro)
 

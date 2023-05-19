@@ -58,7 +58,7 @@
         "libsystemd-dev",
         "gir1.2-appindicator3-0.1"
     ],
-    "linux mint": [
+    "mint": [
         "git",
         "input-utils",
         "libcairo2-dev",
