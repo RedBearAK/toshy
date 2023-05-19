@@ -75,8 +75,11 @@ class InstallerSettings:
         self.venv_path          = os.path.join(self.toshy_dir_path, '.venv')
 
         self.keyszer_tmp_path   = os.path.join('.', 'keyszer-temp')
+        # self.keyszer_clone_cmd  = (
+        #     'git clone -b adapt_to_capslock https://github.com/RedBearAK/keyszer.git'
+        #     )
         self.keyszer_clone_cmd  = (
-            'git clone -b adapt_to_capslock https://github.com/RedBearAK/keyszer.git'
+            'git clone -b wayland_gnome_dbus https://github.com/RedBearAK/keyszer.git'
             )
 
         self.input_group_name   = 'input'
