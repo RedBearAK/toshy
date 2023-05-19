@@ -333,7 +333,7 @@ def install_distro_pkgs():
             sys.exit(1)
 
     else:
-        print(f"Sorry, no package list available yet for distro: {cnfg.DISTRO_NAME}")
+        print(f"\nERROR: Installer does not know how to handle distro: {cnfg.DISTRO_NAME}\n")
         sys.exit(1)
 
 
