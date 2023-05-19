@@ -62,14 +62,15 @@ def get_env_info():
     elif os.path.isfile('/etc/arch-release'):
         _distro_name = 'arch'
 
-    distro_names = {                # simplify distro names
-        'Debian.*':                 'debian',
-        'elementary':               'eos',
-        'Fedora':                   'fedora',
-        'Manjaro':                  'manjaro',
-        'KDE Neon':                 'neon',
-        'Pop!_OS':                  'popos',
-        'Ubuntu':                   'ubuntu',
+    distro_names = {            # simplify distro names
+        'Debian.*':             'debian',
+        'elementary':           'eos',
+        'Fedora':               'fedora',
+        'Manjaro':              'manjaro',
+        'KDE Neon':             'neon',
+        'Linux Mint':           'mint',
+        'Pop!_OS':              'popos',
+        'Ubuntu':               'ubuntu',
     }
 
     for k, v in distro_names.items():
