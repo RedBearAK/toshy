@@ -11,6 +11,7 @@ import shutil
 import argparse
 import datetime
 import platform
+import textwrap
 import subprocess
 
 from argparse import Namespace
@@ -84,8 +85,15 @@ class InstallerSettings:
 
         self.input_group_name   = 'input'
         self.user_name          = pwd.getpwuid(os.getuid()).pw_name
-        self.should_reboot      = None
 
+        self.should_reboot      = None
+        self.reboot_ascii_art   = textwrap.dedent("""
+                ██████      ███████     ██████       ██████       ██████      ████████     ██ 
+                ██   ██     ██          ██   ██     ██    ██     ██    ██        ██        ██ 
+                ██████      █████       ██████      ██    ██     ██    ██        ██        ██ 
+                ██   ██     ██          ██   ██     ██    ██     ██    ██        ██           
+                ██   ██     ███████     ██████       ██████       ██████         ██        ██ 
+                """)
 
 def get_environment_info():
     """get back the distro name, distro version, session type and 
@@ -644,6 +652,7 @@ def main(cnfg: InstallerSettings):
     if cnfg.should_reboot:
         print(  f'\n\n'
                 f'{cnfg.separator}\n'
+                f'{cnfg.reboot_ascii_art}'
                 f'{cnfg.separator}\n'
                 'ALERT: Permissions changed. You MUST reboot for Toshy to work...\n'
                 f'{cnfg.separator}'
