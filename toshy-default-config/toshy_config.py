@@ -140,7 +140,7 @@ not_name = 'not_name'   # key label for matchProps() arg to NEGATIVE match: wm_n
 not_devn = 'not_devn'   # key label for matchProps() arg to NEGATIVE match: device_name
 numlk = 'numlk'         # key label for matchProps() arg to match: numlock_on
 capslk = 'capslk'       # key label for matchProps() arg to match: capslock_on
-case = 'case'           # key label for matchProps() arg to enable: case sensitivity
+cse = 'cse'             # key label for matchProps() arg to enable: case sensitivity
 lst = 'lst'             # key label for matchProps() arg to pass in a [list] of {dicts}
 dbg = 'dbg'             # key label for matchProps() arg to set debugging info string
 
@@ -275,7 +275,7 @@ def matchProps(*,
     # string parameters (negative matching)
     not_clas: str = None, not_name: str = None, not_devn: str = None,
     # bool parameters
-    numlk: bool = None, capslk: bool = None, case: bool = None,
+    numlk: bool = None, capslk: bool = None, cse: bool = None,
     # list of dicts of parameters (positive)
     lst: List[Dict[str, Union[str, bool]]] = None,
     # list of dicts of parameters (negative)
@@ -304,7 +304,7 @@ def matchProps(*,
     `not_devn` = `devn` but inverted, matches when "not"            \n
     `numlk`    = Num Lock LED state         (bool)                  \n
     `capslk`   = Caps Lock LED state        (bool)                  \n
-    `case`     = Case Sensitive matching    (bool)                  \n
+    `cse`      = Case Sensitive matching    (bool)                  \n
     `lst`      = List of dicts of the above arguments               \n
     `not_lst`  = `lst` but inverted, matches when "not"             \n
     `dbg`      = Debugging info             (string)                \n
@@ -333,15 +333,15 @@ def matchProps(*,
 
     logging_enabled = False
     allowed_params  = (clas, name, devn, not_clas, not_name, not_devn, 
-                        numlk, capslk, case, lst, not_lst, dbg)
+                        numlk, capslk, cse, lst, not_lst, dbg)
     lst_dct_params  = (clas, name, devn, not_clas, not_name, not_devn, 
-                        numlk, capslk, case)
+                        numlk, capslk, cse)
     string_params   = (clas, name, devn, not_clas, not_name, not_devn, dbg)
     dct_param_strs  = list(inspect.signature(matchProps).parameters.keys())
 
     if all([x is None for x in allowed_params]): 
         raise ValueError(f"\n\n(EE) matchProps(): Received no valid argument\n")
-    if any([x not in (True, False, None) for x in (numlk, capslk, case)]): 
+    if any([x not in (True, False, None) for x in (numlk, capslk, cse)]): 
         raise TypeError(f"\n\n(EE) matchProps(): Params 'nlk|clk|cse' are bools\n")
     if any([x is not None and not isinstance(x, str) for x in string_params]):
         raise TypeError(    f"\n\n(EE) matchProps(): These parameters must be strings:"
@@ -388,9 +388,9 @@ def matchProps(*,
         return _matchProps_Lst      # outer function returning inner function
 
     # compile case insentitive regex object for given params, unless cse=True
-    if _clas is not None: clas_rgx = re.compile(_clas) if case else re.compile(_clas, re.I)
-    if _name is not None: name_rgx = re.compile(_name) if case else re.compile(_name, re.I)
-    if _devn is not None: devn_rgx = re.compile(_devn) if case else re.compile(_devn, re.I)
+    if _clas is not None: clas_rgx = re.compile(_clas) if cse else re.compile(_clas, re.I)
+    if _name is not None: name_rgx = re.compile(_name) if cse else re.compile(_name, re.I)
+    if _devn is not None: devn_rgx = re.compile(_devn) if cse else re.compile(_devn, re.I)
 
     def _matchProps(ctx: KeyContext):
         cond_list = []
