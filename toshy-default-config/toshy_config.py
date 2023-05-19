@@ -3448,6 +3448,9 @@ keymap("GenGUI overrides: Manjaro", {
     C("RC-LC-f"):               C("Super-PAGE_UP"),             # SL- Maximize app manjaro
     C("RC-LC-f"):               C("Super-PAGE_DOWN"),           # SL - Minimize app manjaro
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'manjaro' )
+keymap("GenGUI overrides: Mint Xfce4", {
+    C("RC-Space"):              C("Super-Space"),               # Launch Application Menu xfce4 (Linux Mint)
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'mint' and DESKTOP_ENV == 'xfce' )
 keymap("GenGUI overrides: KDE Neon", {
     C("RC-Super-f"):            C("Super-Page_Up"),             # SL - Toggle maximized window state (kde_neon)
     C("RC-H"):                  C("Super-Page_Down"),           # SL - Minimize app (kde_neon)
@@ -3479,7 +3482,6 @@ keymap("GenGUI overrides: Deepin", {
     C("Alt-RC-Space"):          C("Super-e"),                   # Open Finder - (deepin)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'deepin' )
 keymap("GenGUI overrides: GNOME", {
-    # C("RC-Space"):              C("Alt-F1"),                    # Custom remap for alternate launcher
     C("RC-Space"):              C("Super-s"),                   # Show GNOME overview/app launcher
     C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,eos)
     C("RC-Super-f"):            C("Alt-F10"),                   # Default SL - Maximize app (gnome/kde)
@@ -3507,13 +3509,13 @@ keymap("GenGUI overrides: MATE", {
 keymap("GenGUI overrides: Xfce4", {
     C("RC-Grave"):             [bind,C("Super-Tab")],           # xfce4 Switch within app group
     C("Shift-RC-Grave"):       [bind,C("Super-Shift-Tab")],     # xfce4 Switch within app group
-    C("RC-Space"):              C("Super-Space"),               # Launch Application Menu xfce4
+    C("RC-Space"):              C("C-Esc"),                     # Launch Application Menu xfce4 (Xubuntu)
     C("RC-F3"):                 C("C-Alt-d"),                   # SL- Show Desktop xfce4
     C("RC-H"):                  C("Alt-F9"),                    # SL - Minimize app xfce4
     # Screenshot shortcuts for Xfce desktops (xfce4-screenshooter app)
-    C("RC-Shift-Key_3"):        C("Print"),                     # Take a screenshot immediately (kde)
-    C("RC-Shift-Key_4"):        C("Alt-Print"),               # Take a screenshot of a window (kde)
-    C("RC-Shift-Key_5"):        C("Shift-Print"),                 # Take a screenshot interactively (kde)
+    C("RC-Shift-Key_3"):        C("Print"),                     # Take a screenshot immediately (xfce4)
+    C("RC-Shift-Key_4"):        C("Alt-Print"),                 # Take a screenshot of a window (xfce4)
+    C("RC-Shift-Key_5"):        C("Shift-Print"),               # Take a screenshot interactively (xfce4)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'xfce' )
 
 
