@@ -20,9 +20,10 @@ timeouts(
     multipurpose    = 1,        # default: 1 sec
     suspend         = 1,        # default: 1 sec, try 0.1 sec for touchpads
 )
+# Delays often needed for Wayland (at least in GNOME using shell extensions)
 throttle_delays(
-    key_pre_delay_ms  = 0,      # default: 0 ms, range: 0-150 ms, suggested: 1-50 ms
-    key_post_delay_ms = 0,      # default: 0 ms, range: 0-150 ms, suggested: 1-100 ms
+    key_pre_delay_ms  = 10,      # default: 0 ms, range: 0-150 ms, suggested: 1-50 ms
+    key_post_delay_ms = 15,      # default: 0 ms, range: 0-150 ms, suggested: 1-100 ms
 )
 
 
