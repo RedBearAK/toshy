@@ -100,6 +100,13 @@ debug(  f'Toshy config sees this environment:'
         f'\n\t{SESSION_TYPE     = }'
         f'\n\t{DESKTOP_ENV      = }\n', ctx="CG")
 
+try:
+    environ_api(session_type = SESSION_TYPE, wl_desktop_env = DESKTOP_ENV)
+except NameError:
+    debug(f"The API function 'environ_api' is not defined yet.")
+    pass
+
+
 # future API to inject environment info into `keyszer`
 # environ_context(
 #     session_type = SESSION_TYPE,
