@@ -79,9 +79,11 @@ class InstallerSettings:
         # self.keyszer_clone_cmd  = (
         #     'git clone -b adapt_to_capslock https://github.com/RedBearAK/keyszer.git'
         #     )
+        # environ_and_adapt_to_capslock
+        # wayland_gnome_dbus
         self.keyszer_clone_cmd  = (
-            'git clone -b wayland_gnome_dbus https://github.com/RedBearAK/keyszer.git'
-            )
+            'git clone -b environ_and_adapt_to_capslock https://github.com/RedBearAK/keyszer.git'
+        )
 
         self.input_group_name   = 'input'
         self.user_name          = pwd.getpwuid(os.getuid()).pw_name
@@ -306,7 +308,7 @@ def install_distro_pkgs():
         subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro)
 
     elif cnfg.DISTRO_NAME in ['arch', 'manjaro']:
-        print('NOTICE: It is ESSENTIAL to have an Arch-based system completely updated.')
+        print(f'\nNOTICE: It is ESSENTIAL to have an Arch-based system completely updated.\n')
         response = input('Have you run "sudo pacman -Syu" recently? [y/N]: ')
 
         if response in ['y', 'Y']:
