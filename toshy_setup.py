@@ -79,10 +79,10 @@ class InstallerSettings:
         # self.keyszer_clone_cmd  = (
         #     'git clone -b adapt_to_capslock https://github.com/RedBearAK/keyszer.git'
         #     )
-        # environ_and_adapt_to_capslock
+        # environ_and_adapt_to_capslock (broken)
         # wayland_gnome_dbus
         self.keyszer_clone_cmd  = (
-            'git clone -b environ_and_adapt_to_capslock https://github.com/RedBearAK/keyszer.git'
+            'git clone -b env_and_adapt_to_capslock https://github.com/RedBearAK/keyszer.git'
         )
 
         self.input_group_name   = 'input'
