@@ -1,10 +1,20 @@
+# Current status: Early Beta
+
+- May have issues installing on distros not on the "tested" list below.  
+
+- May seem to run but not do any remapping, needing `toshy-config-start-verbose` in the terminal to troubleshoot.  
+
+- May cause the keyboard in some odd circumstances after install to have no output (default emergency bail out key is F16). If you don't have F16 on your keyboard, you may need to stop the Toshy services from the tray icon menu, or by opening the "Preferences" app from a menu with the mouse and stop the services.  
+
 # Toshy README
 
-## Make your Linux keyboard act like a 'Tosh!
+## Make your Linux keyboard act like a 'Tosh! (or, What the Heck is This?!?)
 
 Toshy is a config file for the `keyszer` Python-based keymapper for Linux (which was forked from `xkeysnail`). The Toshy config is not strictly a fork of Kinto, but was based in the beginning entirely on the config file for Kinto.sh by Ben Reaves (https://github.com/rbreaves/kinto or https://kinto.sh). Without Kinto, Toshy would not exist.  Using Toshy will feel basically the same as using Kinto, just with some new features and some problems solved.  
 
 The purpose of Toshy is to match, as closely as possible, the behavior of keyboard shortcuts in macOS when working on similar applications in Linux. General system-wide shortcuts such as Cmd+Q/W/A/Z/X/C/V and so on are relatively easy to mimic by just moving the modifier key locations, with `modmaps`. A lot of shortcuts in Linux just use `Ctrl` in the place of where macOS would use `Cmd`. But many other shortcut combos from macOS applications have to be remapped onto entirely different shortcut combos in the Linux equivalent application. This is done using application-specific `keymaps`, that only become active when you are using the specified application or window.  
+
+All of this basic functionality is inherited from Kinto. Toshy just tries to be a bit fancier in implementing it.  
 
 ## Toshifying an Application
 
@@ -48,6 +58,8 @@ There's no simple way around this, since the keymapper is only designed to send 
 
  1. Multi-user support: I believe some changes I've made will facilitate proper multi-user support on the same system. Even in the case of the user invoking a "Switch User" feature in their desktop environment, where the first user's desktop is still running in the background while another user is logged into their own desktop and using the screen (and physical keyboard). This is a very convenient feature even if you aren't actually sharing your computer with another person. There are many reasons why you might want to log into a different user's desktop to test something. Currently this absolutely requires `systemd` and `loginctl`.  
 
+ 1. A start on Wayland support. More on that further down.  
+
  1. The Option-key special characters, as described above. Two different layouts are available.  
 
  1. Automatic categorizing of the keyboard type of the current keyboard device. No more switching of keyboard types from the tray icon menu, or re-running the installer, or being asked to press a certain key on the keyboard during install. Some keyboard devices will need to be added to a Python list in the config to be recognized as the correct type. This will evolve over time from user feedback.  
@@ -58,9 +70,9 @@ There's no simple way around this, since the keymapper is only designed to send 
 
  1. Fix for "media" functions on arrow keys. Some laptop keyboards don't have the usual PgUp/PgDn/Home/End navigation functions on the arrow keys, when you hold the `Fn` key. Instead, they have PlayPause/Stop/Back/Forward. A `modmap` in the Toshy config will optionally fix this, making the arrow keys work more like a standard MacBook keyboard. This feature can be enabled from the tray icon or GUI preferences app.  
 
- 1. This one is starting to become less relevant, with most common GTK apps already moving to GTK 4. But apps that use GTK 3 had a bug where they wouldn't recognize the "navigation" functions on the keypad keys (when NumLock is off) if you tried to use them with a modifier key (i.e., as part of a shortcut). Those keys would just get ignored. So if you didn't have the "real" navigation keys on your keyboard, there was no way to use shortcuts involving things like PgUp/PgDn/Home/End (on the numeric keypad). A `modmap` in the Toshy config will automatically fix this, if NumLock is off and the "Forced Numpad" feature (below) is disabled.  
+ 1. This one is starting to become less relevant, with most common GTK apps already moving to GTK 4. But apps that use GTK 3 had a really annoying bug where they wouldn't recognize the "navigation" functions on the keypad keys (what the keypad keys do when NumLock is off) if you tried to use them with a modifier key (i.e., as part of a shortcut). Those keys would just get ignored. So if you didn't have the equivalent "real" navigation keys anywhere on your keyboard, there was no way to use shortcuts involving things like PgUp/PgDn/Home/End (on the numeric keypad). A `modmap` in the Toshy config will automatically fix this, if NumLock is off and the "Forced Numpad" feature (below) is disabled.  
 
- 1. "Forced Numpad" feature: On PCs, if the keyboard has a numeric keypad, NumLock is typically off, so the keypad doesn't automatically act as a Numpad, but provides navigation functions until you turn NumLock on. But if you've used macOS for any length of time, you might have noticed that the numeric keypad is always a numeric keypad, and the "Clear" key sends `Escape` to clear calculator apps. You have to use `Fn+Clear` to disable NumLock and get to the navigation functions. A `modmap` in the Toshy config is enabled by default and makes the numeric keypad always a numeric keypad and turns the NumLock key into a "Clear" key. This can be disabled in the tray icon menu or GUI preferences app, or termporarily disabled with `Fn+Clear` (on Apple keyboards) or the equivalent of `Option+NumLock` on PC keyboards (usually this is physical `Win+NumLock`).  
+ 1. "Forced Numpad" feature: On PCs, if the keyboard has a numeric keypad, NumLock is typically off, so the keypad doesn't automatically act as a Numpad, instead providing navigation functions until you turn NumLock on. But if you've used macOS for any length of time, you might have noticed that the numeric keypad is always a numeric keypad, and the "Clear" key sends `Escape` to clear calculator apps. You have to use `Fn+Clear` to disable NumLock and get to the navigation functions. A `modmap` in the Toshy config is enabled by default and makes the numeric keypad always a numeric keypad, and turns the NumLock key into a "Clear" key. This can be disabled in the tray icon menu or GUI preferences app, or termporarily disabled with `Fn+Clear` (on Apple keyboards) or the equivalent of `Option+NumLock` on PC keyboards (usually this is physical `Win+NumLock`).  
 
  1. Sections of the config file are labeled with ASCII art designed to be readable on a "minimap" or "overview" sidebar view found in many text editors and code editors, to make finding certain parts of the config file a little easier. There's also a "tag" on each section that can be located easily with a `Find` search in any text editor.  
 
@@ -70,53 +82,113 @@ There's no simple way around this, since the keymapper is only designed to send 
 
  1. Fix for shortcut behavior in file save/open dialogs in apps like Firefox, now that WM_NAME is available. This is an addition to the "Finder Mods" that I contributed to Kinto, which are intended to mimic Finder keyboard behavior in most common Linux file manager apps.  
 
- 1. A collection of tab navigation fixes for various apps with a tabbed UI that don't use the mostly standard Ctrl+PgUp/PgDn shortcuts. The goal is to allow `Shift+Cmd+Braces` (the left/right square bracket keys) to perform tab navigation in as many Linux applications (with tabbed UIs) as possible, as it does in most Mac applications with a tabbed UI. Let me know if you use a Linux app where `Shift+Cmd+Braces` shortcuts are not working for tab navigation while Toshy is enabled. Use `xprop WM_CLASS _NET_WM_NAME` to obtain the window attributes for matching (if you use X11/Xorg).  
+ 1. A collection of tab navigation fixes for various apps with a tabbed UI that don't use the mostly standard Ctrl+PgUp/PgDn shortcuts. The goal is to allow `Shift+Cmd+Braces` (the left/right square bracket keys) to perform tab navigation in as many Linux applications (with tabbed UIs) as possible, as it does in most Mac applications with a tabbed UI (Finder, web browsers, and so on). Let me know if you use a Linux app where `Shift+Cmd+Braces` shortcuts are not working for tab navigation while Toshy is enabled. Use `xprop WM_CLASS _NET_WM_NAME` to obtain the window attributes for matching (if you use X11/Xorg).  
 
  1. Another growing collection of enhancements to various Linux apps to enable shortcuts like Cmd+comma (preferences) and Cmd+I (get info/properties) to work in more apps.  
 
- 1. A function (`matchProps()`) that enables very powerful and complex (or simple) matching on multiple properties at the same time. Application class, window name/title, device name, NumLock and CapsLock LED state.  
+ 1. A function (`matchProps`) that enables very powerful and complex (or simple) matching on multiple properties at the same time. Application class, window name/title, device name, NumLock and CapsLock LED state can all be combined in any way, and lists can be made of specific combinations of one or more of those properties to match on.  
 
  1. More that I will add later when I remember...  
 
 ## Requirements
 
 - Linux (no Windows support planned, use Kinto for Windows)
+
 - `keyszer` (keymapper for Linux, forked from `xkeysnail`)
-- X11 (Wayland support in `keyszer` is possible in the future)
-- systemd (but you can just run the config from terminal or shell script)
-- dbus-python (for the tray indicator and GUI app)
 
-## Installation
+- X11 or Wayland+GNOME
 
-Download the latest zip from the big green button. Unzip it, and open a terminal in the resulting folder. Run the `toshy_setup.py` script.  
+    - Wayland+GNOME requires one of these GNOME Shell extensions:
+
+        - Window Calls Extended
+
+        - https://extensions.gnome.org/extension/4974/window-calls-extended/
+
+        - Xremap
+
+        - https://extensions.gnome.org/extension/5060/xremap/
+
+- Wayland+KDE (Plasma) should be possible at some point
+
+- `systemd` (but you can just run the config from terminal or shell script, or tray indicator menu)
+
+- D-Bus, and `dbus-python` (for the tray indicator and GUI app)
+
+It's very easy to search for and install GNOME Shell extensions now, if you install the "Extension Manager" Flatpak application from Flathub. No need to mess around with downloading a zip file from `extensions.gnome.org` and manually installing/enabling in the terminal.  
+
+```sh
+flatpak install com.mattjakeman.ExtensionManager
+```
+
+You can just use the "Browse" tab in this application to search for the extensions by name and quickly install them.  
+
+There will be no issue when installing both of the compatible extensions, which might be advisable to have less risk of not having a working extension for a while the next time you upgrade your system in-place and wind up with a newer version of GNOME. I expect at least one of the extensions will always be updated to support the latest GNOME. The branch of `keyszer` installed by Toshy will seamlessly jump to using the other extension in case one fails or is disabled for any reason.  
+
+## How to Install
+
+1. Download the latest zip from the big green `<> Code ˇ` button near the top of the page.  
+1. Unzip the archive, and open a terminal in the resulting folder.  
+1. Run the `toshy_setup.py` script in the terminal.  
 
 ```sh
 ./toshy_setup.py
 ```
 
-Currently working distros:
+## Currently working Linux distros:
 
-- Fedora (standard GNOME variant tested)
+- Fedora 36/38 (standard GNOME variant tested)
+
     - Maybe RHEL/Rocky Linux/AlmaLinux? Untested.
-- Linux Mint
-- Ubuntu
-- Xubuntu
-- Kubuntu
-- Lubuntu
-- Manjaro (GNOME and Xfce tested so far)
+
+- Linux Mint 21.1
+
+- Ubuntu variants:
+
+    - Ubuntu 22.04/23.04
+
+    - Xubuntu 23.04
+
+    - Kubuntu 23.04
+
+    - Lubuntu 23.04
+
+- KDE Neon (should work, but Neon is flaky in VMs, so untested)
+
+- Manjaro (GNOME and Xfce tested)
+
     - Arch in general? (maybe, needs more testing)
+
 - antiX
-    - Preliminary support.
+
+    - Preliminary support, no SysVinit services.
+
     - Starting only the "config script" from the tray icon menu should work now.
+
     - Use `toshy-config-start` or `toshy-config-start-verbose` for manual start.
+
     - Only "rox-icewm" desktop verified/tested.
+
 - Debian in general might work, since antiX is based on Debian 11 Bullseye
+
+## Currently working desktop environments / window managers
+
+If you are on X11/Xorg, the desktop environment or window manager doesn't really matter. The keymapper gets the window class/name/title information directly from the X server.  
+
+On the other hand, if you are in a Wayland session, it is only possible to obtain the per-application or per-window information for specific shortcut keymaps by using solutions that are custom to a limited set of desktop environments (or window managers).  
+
+As of now, this means only the combination of Wayland+GNOME is fully usable for app-specific shortcut remapping, and this requires at least one of two compatible GNOME Shell extensions to be installed. See above in "Requirements".  
+
+At some point it should be possible to have Wayland+KDE_Plasma working, and possibly Wayland+sway and Wayland+hyprland. The methods to do this already exist in the `xremap` keymapper, but that project is written in Rust and `keyszer` is written in Python.  
+
+There are specific remaps or overrrides of default remaps for several common desktop environments (or distros which have shortcut peculiarities in their default desktop setups). They become active if the desktop environment is detected correctly by the `env.py` module used by the config file, or the information about the desktop can be placed in some `OVERRIDE` variables in the config file.  
 
 ## Usage
 
-Toshy does its best to set itself up automatically on any Linux system that uses `systemd` and that is a "known" Linux distro type that the installer knows how to deal with (i.e., has a list of the correct packages to install and knows how to use the package manager).  
+Toshy does its best to set itself up automatically on any Linux system that uses `systemd` and that is a "known" Linux distro type that the installer knows how to deal with (i.e., has a list of the correct packages to install, and knows how to use the package manager). Generally this means distros that use `apt`, `dnf` or `pacman` so far.  
 
-If the install was successful, there should be a number of different terminal commands available to check the status of the Toshy `systemd` user services (the services are not system-wide, in an attempt to support multi-user setups and be ready to support Wayland more easily) and stop/start/restart the services. Toshy actually consists of two separate services meant to work together, with one monitoring the other, so the shell commands are meant to make working with the services together much easier.  
+If the install was successful, there should be a number of different terminal commands available to check the status of the Toshy `systemd` user services (the services are not system-wide, in an attempt to support multi-user setups and be ready to support Wayland more easily) and stop/start/restart the services.  
+
+Toshy actually consists of two separate `systemd` services meant to work together, with one monitoring the other, so the shell commands are meant to make working with the paired services much easier.  
 
 These commands are copied into `~/.local/bin`, and you will be prompted to add that location to your shell's `PATH` if it is not present. Depends on the distro whether that location is already set up as part of the path or not.  
 
@@ -131,7 +203,7 @@ toshy-systemd-remove    (stops and removes the systemd service units)
 toshy-systemd-setup     (installs and starts the systemd service units)
 ```
 
-The following commands are also available, and meant to allow manually running just the Toshy config file, without reliance on `systemd`. These will automatically stop the `systemd` services so there is no conflict, for instance if you need to run the `verbose` version of the command to debug a shortcut that is not working as expected, or find out how you broke the config file.  
+The following commands are also available, and meant to allow manually running just the Toshy config file, without any reliance on `systemd`. These will automatically stop the `systemd` services so there is no conflict, for instance if you need to run the `verbose` version of the command to debug a shortcut that is not working as expected, or find out how you broke the config file.  
 
 Restarting the Toshy services, either with one of the above commands or from the GUI preferences app or tray icon menu, will stop the manual process and return to running the Toshy config as a `systemd` service. All the commands are designed to work together as conveniently as possible.  
 
@@ -142,7 +214,7 @@ toshy-config-start-verbose  (show debugging output in the terminal)
 toshy-config-stop
 ```
 
-There are also some "applications" that will be found in most Linux app launchers (like "Albert" or "Ulauncher") or menus in Linux desktop environments:  
+There are also some desktop "applications" that will be found in most Linux app launchers (like "Albert" or "Ulauncher") or application menus in Linux desktop environments:  
 
 - Toshy Preferences
 - Toshy Tray Icon
@@ -168,6 +240,27 @@ If you keep your modifications within the `keyszer` API functions at the very be
 I will be trying to work on doing a more automatic copying/merging of existing user settings into a new config file.  
 
 There is an `include()` function in `keyszer` that theoretically allows separate files to be part of the config, but due to the dynamic nature of the config file and how it gets loaded by the keymapper I had a lot of issues trying to use that method to solve this problem.  
+
+### My keyboard is not recognized as the correct type
+
+If you run the verbose output script you'll be able to see the device name that `keyszer` is seeing when you use your keyboard. Run this in a terminal, and then use a remapped shortcut like `Shift+Cmd+Left_Brace` or `Shift+Cmd+Right_Brace` (the square bracket keys). Or just `Cmd+Tab` away from the terminal and back.  
+
+```sh
+toshy-config-start-verbose
+```
+
+Using the device name, you can look for the correct keyboard Python "list" in the config file and add the device name to the list. The list names are:   
+
+```py
+keyboards_IBM
+keyboards_Chromebook
+keyboards_Windows
+keyboards_Apple
+```
+
+Add your device name as an item in the relevant list, and restart Toshy. The keyboard device should now be treated as the correct type, with the modifiers in the right places.  
+
+If you have this problem, please submit an issue report about it, so the device name can be added to the default Toshy config.  
 
 ### CLI/Shell commands missing/unavailable
 
@@ -220,7 +313,7 @@ If there is nothing else in your user settings JSON file, it would need to have 
 
 And the last line in every section of a JSON formatted file can't have a commma at the end, or there will be an error.  
 
-You may be prompted to restart the app after saving this particular set of lines, and it will change how the window looks, with a combined menu/titlebar. The `Option/Alt` key will no longer focus the menu bar.  
+You may be prompted to restart the app after saving this particular set of lines, and it will change how the VSCode window looks, with a combined menu/titlebar. The `Option/Alt` key will no longer focus the menu bar.  
 
 ### Option-key Special Character Entry (or Macros) Acting Weird
 
@@ -230,7 +323,9 @@ The Option-key special characters in particular rely on a shortcut combo (`Shift
 
 This will also usually affect "macros" where you attempt to get the keymapper to type out multiple characters or strings or perform multiple shortcut combos when you use a shortcut. They may fail somewhere in the middle, or a shifted character will come out as a non-shifted character.  
 
-A solution to this has been implemented in `keyszer`, and the API function is already in the Toshy config file. Injecting a short delay before and after the "normal" key press (to make sure that the modifier press and release are seen as happening with the correct timing) will usually solve the issue. Look for this code early in the Toshy config file:  
+A solution to this has been implemented in `keyszer`, and the API function is already in the Toshy config file. Injecting a short delay before and after the "normal" key press (to make sure that the modifier press and release are seen as happening with the correct timing) will usually solve the issue.  
+
+Look for this code early in the Toshy config file:  
 
 ```py
 throttle_delays(
@@ -241,13 +336,19 @@ throttle_delays(
 
 For a bare metal install, a few milliseconds is usually sufficient to make infrequent glitches go away. Sometimes even as little as 1 ms, but often 2-4 ms for both delays is a good value to start with. For operating inside a virtual machine it may be necessary to use higher values like 50 ms (pre) and 70 ms (post) to get completely reliable behavior. With the right value the reliablity can be so close to 100% that it becomes impractical to find the failure in testing.  
 
+```
+Update for Wayland+GNOME:  
+
+I've decided to have values of 10/15 in the config by default, since even on bare metal installs there are often strange problems if there isn't a small delay. This is especially true on Wayland+GNOME, where the keymapper must rely on talking to a GNOME Shell extension to get the window info. I don't think this is quite as fast as using `Xlib` in X11/Xorg sessions, so many shortcuts are quite flaky without a bit of throttle delay.  
+```
+
 NB: A lengthy delay will of course cause macros to come out quite a bit more slowly as the delay gets longer. So really long macros will be potentially impractical inside a virtual machine, for instance. This is why the values are clamped to a maximum of 150 ms each. The keyboard will be unresponsive while a long macro is coming out. Currently there is no way to interrupt the macro in progress. Not a big deal when the delay is 1 ms per character, but a problem if the total delay between characters is 150 ms or more.  
 
 ### Macros Acting Weird/Failing/Unreliable
 
-See above for the fix.  
+See above for the fix using `throttle_delays()`.  
 
-### KDE Plasma and Option-Key Special Characters
+### KDE Plasma and the Option-Key Special Characters
 
 KDE Plasma desktops don't generally use `ibus` (like GNOME desktops usually do by default), or `fcitx` as an input manager. So you may find that the Option-key special character Unicode shortcut of `Shift+Ctrl+U` will not do anything, and the Unicode address of the special character will appear on screen instead of the desired character. This is unfortunately apparently not a shortcut that is built into the Linux kernel input system in general.  
 
@@ -287,25 +388,27 @@ killall xcape
 
 ### Lubuntu Application Menu and Meta/Super/Win/Cmd key
 
-In Lubuntu, right-click on the hummingbird(?) menu icon on the toolbar at the bottom of the screen, and select `Configure "Application Menu"` to change the keybinding from `Super_L` (left Meta key) to `Alt+F1` (by using the physical equivalent of `Cmd+Space`, or `Option+F1`, either will work). The shortcut apparently needs to be set very quickly after clicking the button to change the shortcut. If it doesn't work the first time, just try again.  
+In Lubuntu, right-click on the hummingbird(?) menu icon on the toolbar at the bottom of the screen, and select `Configure "Application Menu"` to change the keybinding from `Super_L` (left Meta key) to `Alt+F1`. If Toshy is enabled, using either the physical equivalent of `Cmd+Space` or `Option+F1` should work. if Toshy is disabled, just use the physical `Alt+F1` keys. NB: The shortcut apparently needs to be set very quickly after clicking the button to change the shortcut. If it doesn't work the first time, just try again, until it says `Alt+F1`.  
 
 ### Linux Mint Application Menu (Cinnamon/Xfce/MATE) and the Meta/Super/Win/Cmd key
 
 On Linux Mint (Cinnamon and MATE variants) they use a custom menu widget/applet that is set up to activate with the Meta/Super/Win/Cmd key. The shortcut for this is not exposed in the usual keyboard shortcuts control panels. Right-click on the menu applet icon and go to "Configure" or "Preferences" (make sure you're not opening the preferences for the entire panel, just the menu applet).  
 
-You will see a couple of things that vaguely look like buttons. You can click on the first one and set the shortcut to something like `Ctrl+Esc`. Click on the other button and hit `Backspace` and it will show "unassigned". This will disable the activation of the menu with the Meta/Super/Win/Cmd key. Alternately, you could set the secondary shortcut to `Alt+Space` (use the keys corresponding to `Option+Space` if Toshy is enabled), but you will have to track down the same shortcut in the regular keyboard shortcuts control panel (something like "Window menu"?) and disable it. If you do this, it will be possible to open the application menu with the same physical keys whether Toshy is enabled or disabled.  
+You will see a couple of things that vaguely look like buttons. You can click on the first one and set the shortcut to something like `Ctrl+Esc`. Click on the other button and hit `Backspace` and it will show "unassigned". This will disable the activation of the menu with the Meta/Super/Win/Cmd key.  
 
-You may need to temporarily DISABLE Toshy (from the tray icon menu, or the GUI preferences app) if it is active, in order to successfully set the shortcut to `Ctrl+Esc`. Then re-enable Toshy. Or, press the equivalent on your keyboard of `Cmd+Space` when setting the shortcut, and what should appear as the new shortcut is `Ctrl+Esc`.  
+Alternately, instead of disabling the secondary shortcut, you could set the secondary shortcut to `Alt+Space` (use the keys corresponding to the physical position of `Option+Space` on an Apple keyboard if Toshy is enabled), but you will have to track down the same shortcut in the regular keyboard shortcuts control panel (something like "Window menu"?) and disable it. If you do this, it will be possible to open the application menu with the same physical keys whether Toshy is enabled or disabled.  
 
-If Cinnamon is detected by the Toshy config, `Cmd+Space` will already be getting remapped onto `Ctrl+Esc`, so you should now be able to open the application menu with `Cmd+Space` if you assigned the suggested shortcut to it.  
+You may need to temporarily DISABLE Toshy (from the tray icon menu, or the GUI preferences app) if it is active, in order to successfully set the main shortcut to `Ctrl+Esc`. Then re-enable Toshy. Or, press the equivalent on your keyboard of `Cmd+Space` when setting the shortcut, and what should appear as the new shortcut is `Ctrl+Esc`.  
 
-In MATE, the remap is set to `Alt+Space`. To set this as the shortcut for the menu applet in MATE, Toshy must be disabled while setting the shortcut, then re-enabled afterward.  
+If Cinnamon is detected by the Toshy config, `Cmd+Space` will already be getting remapped onto `Ctrl+Esc`, so you should now be able to open the application menu with `Cmd+Space`, if you assigned the suggested shortcut to it.  
+
+In MATE, the remap is set to `Alt+Space`, which is a shortcut that doesn't seem to intefere with any existing shortcut. To set this as the shortcut for the menu applet in MATE, Toshy must be disabled while setting the shortcut, then re-enabled afterward.  
 
 In the Xfce variant of Mint, they use the Whisker Menu applet, and the shortcut (Super_L) is exposed in **_Keyboard >> Application Shortcuts_**. The remap for Xfce is set to `Super+Space`, to avoid conflicts with other Xfce functions. So if you set the shortcut for the Whisker Menu to `Super+Space`, it should start working when you use `Cmd+Space`. It shouldn't be necessary to disable Toshy, but the physical keys to set the shortcut to `Super+Space` with Toshy enabled will be physical `Ctrl+Space`.  
 
 ### GNOME and the Meta/Super/Win/Cmd key (`overlay-key`)
 
-By default GNOME desktops seem to want to use the Meta/Super/Win/Cmd key to open the "overview". This is not a shortcut that is exposed in the usual _Settings >> Keyboard_ control panel. The Toshy installer will disable the binding if GNOME is detected, since it's weird/unexpected in macOS for a modifier key to perform an action by itself.  
+By default GNOME desktops seem to want to use the Meta/Super/Win/Cmd key to open the "overview". This is not a shortcut that is exposed in the usual `Settings >> Keyboard` control panel. The Toshy installer will disable the binding if GNOME is detected, since it's weird/unexpected in macOS for a modifier key to perform an action by itself.  
 
 Here are the commands to disable and re-enable the `overlay-key` binding:  
 
@@ -321,11 +424,15 @@ Enable/Re-enable:
 gsettings reset org.gnome.mutter overlay-key
 ```
 
-### GNOME Switch Windows vs Switch Applications (Cmd+Tab task switching)
+### GNOME "Switch Windows" vs "Switch Applications" (Cmd+Tab task switching)
 
-GNOME desktops have the ability to either do task switching like Windows (switch between all open windows individually) or like macOS (switch between "applications" as groups of windows). Except where an extension is interfering with this ability, like the COSMIC desktop extension on Pop!_OS. Depending on the Linux distro, `Alt+Tab` may be assigned to "Switch windows" or to "Switch applications". If you want to task switch more like macOS, set the "Switch applications" shortcut in the GNOME Keyboard settings control panel to be the one assigned `Alt+Tab`, and set the "Switch windows of an application" to be `Alt+Grave` (the "`" backtick/Grave character, above the Tab key).  
+GNOME desktops have the ability to either do task switching like Windows (switch between all open windows individually) or like macOS (switch between "applications" as groups of windows). Except where an extension is interfering with this ability, like the COSMIC desktop extension on Pop!_OS. Depending on the Linux distro, `Alt+Tab` may be assigned to "Switch windows" or to "Switch applications".  
 
-Note that this will also change the appearance and function of the task switcher dialog that appears when you use the corresponding shortcut. The "Switch applications" shortcut is like the macOS task switcher, it shows one large application icon for each group of windows belonging to the same "application". The "Switch windows" shortcut will show a task switcher that has a preview icon for every **_window_** open on the current workspace, similar to Windows and Linux desktop environments like KDE Plasma. The "large icons" task switcher tends to have far fewer items and be easier to navigate visually. Just like on macOS, the equivalent of `Cmd+Grave` can be used to switch windows of the same application. Which style works for you is down to personal prefernce, and how well you like the macOS style of task switching with `Cmd+Tab`.  
+If you want to task switch more like macOS, set the "Switch applications" shortcut in the GNOME Keyboard settings control panel to be the one assigned `Alt+Tab`, and set the "Switch windows of an application" to be `Alt+Grave` (the "`" backtick/Grave character, above the Tab key).  
+
+Note that this will also change the appearance and function of the task switcher dialog that appears when you use the corresponding shortcut. The "Switch applications" shortcut is like the macOS task switcher, it shows one large application icon for each group of windows belonging to the same "application". The "Switch windows" shortcut will show a task switcher that has a preview icon for every **_window_** open on the current workspace, similar to Windows and Linux desktop environments like KDE Plasma. The "large icons" task switcher tends to have far fewer items and be easier to navigate visually. Just like on macOS, the equivalent of `Cmd+Grave` can be used to switch windows of the same application.  
+
+Which task switching style works for you is down to personal preference, and how well you like the macOS style of task switching with `Cmd+Tab`.  
 
 ### KDE Plasma and the Meta/Super/Win/Cmd key
 
