@@ -175,31 +175,6 @@ def reload_udev_rules():
         cnfg.should_reboot = True
 
 
-# def install_udev_rules():
-#     """set up udev rules file to give user/keyszer access to uinput"""
-#     print(f'\n\nInstalling "udev" rules file for keymapper...\n{cnfg.separator}')
-#     rules_file_path = '/etc/udev/rules.d/90-toshy-keymapper-input.rules'
-#     # Changed condition to always overwrite rules file
-#     if True: # not os.path.exists(rules_file_path):
-#         rule_content = (
-#             'SUBSYSTEM=="input", GROUP="input"\n'
-#             'KERNEL=="uinput", SUBSYSTEM=="misc", GROUP="input", MODE="0660"\n'
-#         )
-#         command = f'sudo tee {rules_file_path}'
-#         try:
-#             subprocess.run(command, input=rule_content.encode(), shell=True, check=True)
-#             print(f'"udev" rules file successfully installed.')
-#             reload_udev_rules()
-#         except subprocess.CalledProcessError as e:
-#             print(f'\nERROR: Problem while installing "udev" rules file for keymapper...\n')
-#             err_output: bytes = e.output  # Type hinting the error_output variable
-#             print(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
-#             print(f'\nERROR: Install failed.')
-#             sys.exit(1)
-#     else:
-#         print(f'"udev" rules file already in place.')
-
-
 def install_udev_rules():
     """set up udev rules file to give user/keyszer access to uinput"""
     print(f'\n\n§  Installing "udev" rules file for keymapper...\n{cnfg.separator}')
@@ -599,7 +574,8 @@ def handle_arguments():
         epilog='Default action: Install Toshy'
     )
 
-    parser.set_defaults(func=main)
+    # This would require a 'lambda' to be able to pass 'cnfg' object to 'main()':
+    # parser.set_defaults(func=main)
     
     # Add arguments
     parser.add_argument(
@@ -698,5 +674,6 @@ if __name__ == '__main__':
 
     handle_arguments()
 
-    # This gets called in handle_arguments() as default action
+    # This gets called in handle_arguments() as 'else' action
+    # when there are no arguments passed:
     # main(cnfg)
