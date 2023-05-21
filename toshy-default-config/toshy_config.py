@@ -102,18 +102,11 @@ debug(  f'Toshy config sees this environment:'
         f'\n\t{DESKTOP_ENV      = }\n', ctx="CG")
 
 try:
-    environ_api(session_type = SESSION_TYPE, wl_desktop_env = DESKTOP_ENV)
+    # Pylance will complain if function undefined, without 'ignore' comment
+    environ_api(session_type = SESSION_TYPE, wl_desktop_env = DESKTOP_ENV) # type: ignore
 except NameError:
     debug(f"The API function 'environ_api' is not defined yet.")
     pass
-
-
-# future API to inject environment info into `keyszer`
-# environ_context(
-#     session_type = SESSION_TYPE,
-#     distro_name = DISTRO_NAME,
-#     desktop_env = DESKTOP_ENV
-# )
 
 
 
@@ -2852,7 +2845,7 @@ keymap("General File Managers - Finder Mods", {
 
 # Open preferences in Firefox browsers
 keymap("Firefox Browsers Overrides", {
-    C("C-comma"):              [C("C-t"),sleep(0.05),ST("about:preferences"),C("Enter")],
+    C("C-comma"):              [C("C-t"),sleep(0.05),ST("about:preferences"),sleep(0.05),C("Enter")],
     C("Shift-RC-N"):            C("Shift-RC-P"),                      # Open private window with Cmd+Shift+N like other browsers
     C("RC-Backspace"):         [C("Shift-Home"), C("Backspace")],     # Delete Entire Line Left of Cursor
     C("RC-Delete"):            [C("Shift-End"), C("Delete")],         # Delete Entire Line Right of Cursor
