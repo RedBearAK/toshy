@@ -35,6 +35,7 @@ ln -sf "$HOME/.config/toshy/scripts/bin/toshy-config-stop.sh" "$HOME/.local/bin/
 
 ln -sf "$HOME/.config/toshy/scripts/bin/toshy-tray.sh" "$HOME/.local/bin/toshy-tray"
 ln -sf "$HOME/.config/toshy/scripts/bin/toshy-gui.sh" "$HOME/.local/bin/toshy-gui"
+ln -sf "$HOME/.config/toshy/scripts/bin/toshy-env.sh" "$HOME/.local/bin/toshy-env"
 
 
 echo ""
@@ -53,6 +54,7 @@ echo "- toshy-config-restart"
 echo "- toshy-config-stop"
 echo "- toshy-tray"
 echo "- toshy-gui"
+echo "- toshy-env"
 echo ""
 echo "The commands will not be available until you close the current terminal, or "
 echo "run 'hash -r', or source your shell RC file to refresh executable hash table."
