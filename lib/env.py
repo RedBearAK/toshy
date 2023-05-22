@@ -1,15 +1,45 @@
+#!/usr/bin/env python3
 import re
 import os
 import subprocess
+
+from pprint import pformat as ppf
+from pprint import pprint
 
 # not in standard library
 try: import psutil
 except ModuleNotFoundError: psutil = None
 
-# To quiet down linting errors in editors like VSCode
-from lib.logger import debug, error
-
 # ENV module version: 2023-05-22
+
+VERBOSE = True
+FLUSH = True
+
+def debug(*args, ctx="DD"):
+    if not VERBOSE:
+        return
+
+    # allow blank lines without context
+    if len(args) == 0 or (len(args) == 1 and args[0] == ""):
+        print("", flush=FLUSH)
+        return
+    print(f"({ctx})", *args, flush=FLUSH)
+
+
+def warn(*args, ctx="WW"):
+    print(f"({ctx})", *args, flush=FLUSH)
+
+
+def error(*args, ctx="EE"):
+    print(f"({ctx})", *args, flush=FLUSH)
+
+
+def log(*args, ctx="--"):
+    print(f"({ctx})", *args, flush=FLUSH)
+
+
+def info(*args, ctx="--"):
+    log(*args, ctx=ctx)
 
 
 
@@ -28,14 +58,14 @@ from lib.logger import debug, error
 
 
 def get_env_info():
-    DISTRO_NAME = None
-    DISTRO_VER = None
-    SESSION_TYPE = None
-    DESKTOP_ENV = None
+    DISTRO_NAME     = None
+    DISTRO_VER      = None
+    SESSION_TYPE    = None
+    DESKTOP_ENV     = None
 
-    env_info = {}
-    _distro_name = ""
-    _desktop_env = ""
+    env_info        = {}
+    _distro_name    = ""
+    _desktop_env    = ""
 
     ########################################################################
     ##  Get distro name
@@ -114,6 +144,7 @@ def get_env_info():
     else:
         env_info['DISTRO_VER'] = DISTRO_VER
 
+
     ########################################################################
     ##  Get session type
     SESSION_TYPE = os.environ.get("XDG_SESSION_TYPE") or None
@@ -151,7 +182,10 @@ def get_env_info():
             raise EnvironmentError(
                 f'\n\nENV: Detecting session type failed.\n')
 
-    if SESSION_TYPE.casefold() not in ['x11', 'xorg', 'wayland']:
+    if isinstance(SESSION_TYPE, str):
+        SESSION_TYPE = SESSION_TYPE.casefold()
+
+    if SESSION_TYPE not in ['x11', 'wayland']:
         raise EnvironmentError(f'\n\nENV: Unknown session type: {SESSION_TYPE}.\n')
 
     env_info['SESSION_TYPE'] = SESSION_TYPE
@@ -223,3 +257,14 @@ def get_env_info():
     env_info['DESKTOP_ENV'] = DESKTOP_ENV
     
     return env_info
+
+
+if __name__ == '__main__':
+
+    _env_info = get_env_info()
+    print('')
+    debug(  f'Toshy env module sees this environment:'
+            f'\n\t DISTRO_NAME     = {_env_info["DISTRO_NAME"]}'
+            f'\n\t DISTRO_VER      = {_env_info["DISTRO_VER"]}'
+            f'\n\t SESSION_TYPE    = {_env_info["SESSION_TYPE"]}'
+            f'\n\t DESKTOP_ENV     = {_env_info["DESKTOP_ENV"]}\n', ctx="EV")
