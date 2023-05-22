@@ -70,6 +70,8 @@ def get_env_info():
         'KDE Neon':             'neon',
         'Linux Mint':           'mint',
         'Pop!_OS':              'popos',
+        'Red Hat.*':            'rhel',
+        'Rocky.*':              'rocky',
         'Ubuntu':               'ubuntu',
     }
 
