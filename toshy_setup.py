@@ -271,16 +271,52 @@ def install_distro_pkgs():
         if has_systemd or 'systemd' not in pkg
     ]
 
-    if cnfg.DISTRO_NAME in ['ubuntu', 'mint', 'debian']:
+    apt_distros = [
+        'ubuntu',
+        'mint',
+        'debian',
+    ]
+
+    dnf_distros_Fedora = [
+        'fedora',
+        'fedoralinux'
+    ]
+    dnf_distros_RHEL = [
+        'almalinux',
+        'rocky',
+        'rockylinux',
+    ]
+
+    pacman_distros = [
+        'arch',
+        'manjaro',
+    ]
+
+    if cnfg.DISTRO_NAME in apt_distros:
         call_attention_to_password_prompt()
         subprocess.run(['sudo', 'apt', 'install', '-y'] + cnfg.pkgs_for_distro)
 
-    elif cnfg.DISTRO_NAME in ['fedora', 'fedoralinux']:
+    elif cnfg.DISTRO_NAME in dnf_distros_Fedora:
         call_attention_to_password_prompt()
         subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro)
 
-    elif cnfg.DISTRO_NAME in ['arch', 'manjaro']:
-        print(f'\nNOTICE: It is ESSENTIAL to have an Arch-based system completely updated.\n')
+    elif cnfg.DISTRO_NAME in dnf_distros_RHEL:
+        call_attention_to_password_prompt()
+        # for libappindicator-gtk3:
+        # sudo dnf install epel-release
+        subprocess.run('sudo dnf install epel-release', shell=True)
+        # for gobject-introspection-devel:
+        # sudo dnf config-manager --set-enabled crb
+        subprocess.run('sudo dnf config-manager --set-enabled crb', shell=True)
+        subprocess.run('sudo dnf update -y', shell=True)
+        # to enable journal for user services (reboot)
+        # loginctl enable-linger $USER
+        subprocess.run('loginctl enable-linger $USER', shell=True)
+        cnfg.should_reboot = True
+        subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro)
+
+    elif cnfg.DISTRO_NAME in pacman_distros:
+        print(f'\n\nNOTICE: It is ESSENTIAL to have an Arch-based system completely updated.')
         response = input('Have you run "sudo pacman -Syu" recently? [y/N]: ')
 
         if response in ['y', 'Y']:
