@@ -50,7 +50,8 @@ sleep 2
 # check that loginctl is actually going to work right now
 retry=0
 while true; do
-    loginctl session-status
+    # suppress all output of command, then check exit status
+    loginctl session-status >/dev/null 2>&1
     status=$?
     if [[ $status -eq 0 ]]; then
         # The command succeeded, so break out of the loop
