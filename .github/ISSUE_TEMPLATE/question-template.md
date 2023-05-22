@@ -1,5 +1,5 @@
 ---
-name: Question template
+name: Question
 about: 'A template for general questions '
 title: "(Question) "
 labels: question
