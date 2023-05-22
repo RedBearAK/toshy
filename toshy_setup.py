@@ -284,7 +284,7 @@ def install_distro_pkgs():
     dnf_distros_RHEL = [
         'almalinux',
         'rocky',
-        'rockylinux',
+        'rhel',
     ]
 
     pacman_distros = [

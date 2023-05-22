@@ -28,6 +28,21 @@
         "ibus-qt",
         "ibus-gtk"
     ],
+    "fedora": [
+        "git",
+        "evtest",
+        "cairo-devel",
+        "cairo-gobject-devel",
+        "dbus-devel",
+        "python3-dbus",
+        "python3-devel",
+        "python3-pip",
+        "python3-tkinter",
+        "gobject-introspection-devel",
+        "libappindicator-gtk3",
+        "systemd-devel",
+        "xset"
+    ],
     "almalinux": [
         "gcc",
         "git",
@@ -43,9 +58,24 @@
         "systemd-devel",
         "xset"
     ],
-    "fedora": [
+    "rhel": [
+        "gcc",
         "git",
-        "evtest",
+        "cairo-devel",
+        "cairo-gobject-devel",
+        "dbus-devel",
+        "python3-dbus",
+        "python3-devel",
+        "python3-pip",
+        "python3-tkinter",
+        "gobject-introspection-devel",
+        "libappindicator-gtk3",
+        "systemd-devel",
+        "xset"
+    ],
+    "rocky": [
+        "gcc",
+        "git",
         "cairo-devel",
         "cairo-gobject-devel",
         "dbus-devel",
