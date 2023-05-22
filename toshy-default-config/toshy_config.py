@@ -656,7 +656,7 @@ filemanagerStr = "|".join(str('^'+x+'$') for x in filemanagers)
 ### dialogs_Esc_lod = send these windows the Escape key for Cmd+W
 dialogs_Esc_lod = [
     {clas:"^.*nautilus$",                name:"^.*Properties$|^Preferences$|^Create Archive$"},
-    {clas:"^Transmission-gtk$",          not_name:"^Transmission$"},
+    {clas:"^Transmission-gtk$|^com.transmissionbt.Transmission.*$",          not_name:"^Transmission$"},
     {clas:"^org.gnome.Software$",        not_name:"^Software$"},
     {clas:"^gnome-text-editor|org.gnome.TextEditor$", name:"^Preferences$"},
     {clas:"^org.gnome.Shell.Extensions$"},
@@ -2592,7 +2592,7 @@ keymap("Angry IP Scanner", {
 keymap("Transmission bittorrent client", {
     C("RC-i"):                  C("Alt-Enter"),                 # Open properties (Get Info) dialog
     C("RC-comma"):             [C("Alt-e"),C("p")],             # Open preferences (settings) dialog
-}, when = matchProps(clas="^transmission-gtk$"))
+}, when = matchProps(clas="^transmission-gtk$|^com.transmissionbt.Transmission.*$"))
 
 JDownloader_lod = [
     {clas: "^.*jdownloader.*$"},
@@ -3302,6 +3302,9 @@ keymap("GenTerms overrides: elementary OS", {
     C("LC-Right"):              [bind,C("Super-Right")],        # SL - Change workspace (eos)
     C("LC-Left"):               [bind,C("Super-Left")],         # SL - Change workspace (eos)
 }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DISTRO_NAME == 'eos')
+keymap("GenTerms overrides: Fedora", {
+    C("RC-H"):                  C("Super-h"),                   # Hide Window/Minimize app (gnome/fedora)
+}, when = lambda ctx: matchProps(clas=termStr)(ctx) and DISTRO_NAME in ['fedora', 'almalinux'] )
 keymap("GenTerms overrides: Pop!_OS", {
     C("LC-Right"):              [bind,C("Super-C-Up")],         # SL - Change workspace (popos)
     C("LC-Left"):               [bind,C("Super-C-Down")],       # SL - Change workspace (popos)
@@ -3309,7 +3312,7 @@ keymap("GenTerms overrides: Pop!_OS", {
 keymap("GenTerms overrides: Ubuntu/Fedora", {
     C("LC-Right"):              [bind,C("Super-Page_Up")],      # SL - Change workspace (ubuntu/fedora)
     C("LC-Left"):               [bind,C("Super-Page_Down")],    # SL - Change workspace (ubuntu/fedora)
-}, when = lambda ctx: matchProps(clas=termStr)(ctx) and ( DISTRO_NAME == 'ubuntu' or DISTRO_NAME == 'fedora' ) )
+}, when = lambda ctx: matchProps(clas=termStr)(ctx) and DISTRO_NAME in ['ubuntu', 'fedora'] )
 
 
 # Overrides to General Terminals shortcuts for specific desktop environments
@@ -3442,7 +3445,7 @@ keymap("GenGUI overrides: Fedora", {
     C("RC-H"):                  C("Super-h"),                   # Default SL - Minimize app (gnome/budgie/popos/fedora) not-deepin
     C("Super-Right"):          [bind,C("Super-Page_Up")],       # SL - Change workspace (ubuntu/fedora)
     C("Super-Left"):           [bind,C("Super-Page_Down")],     # SL - Change workspace (ubuntu/fedora)
-}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'fedora' )
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME in ['fedora', 'almalinux'] )
 keymap("GenGUI overrides: Manjaro GNOME", {
     C("RC-Q"):              C("Super-Q"),                       # Close window
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'manjaro' and DESKTOP_ENV == 'gnome' )
