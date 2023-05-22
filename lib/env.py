@@ -65,7 +65,7 @@ def get_env_info():
     distro_names = {            # simplify distro names
         'Debian.*':             'debian',
         'elementary':           'eos',
-        'Fedora':               'fedora',
+        'Fedora.*':             'fedora',
         'Manjaro':              'manjaro',
         'KDE Neon':             'neon',
         'Linux Mint':           'mint',
@@ -73,6 +73,8 @@ def get_env_info():
         'Ubuntu':               'ubuntu',
     }
 
+    # if the regex string from dict key is in the distro name name retrieved, 
+    # replace with corresponding simplified dict value for simpler matching
     for k, v in distro_names.items():
         # debug(f'{k = :<10} {v = :<10}')
         if re.search(k, _distro_name, re.I):
@@ -82,6 +84,10 @@ def get_env_info():
     # If distro name not found in list, just show original name
     if not DISTRO_NAME:
         DISTRO_NAME = _distro_name
+
+    # filter distro name to lower case if not `None`
+    if isinstance(DISTRO_NAME, str):
+        DISTRO_NAME = DISTRO_NAME.casefold()
 
     env_info['DISTRO_NAME'] = DISTRO_NAME
 
