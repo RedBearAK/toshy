@@ -9,7 +9,7 @@ except ModuleNotFoundError: psutil = None
 # To quiet down linting errors in editors like VSCode
 from lib.logger import debug, error
 
-# ENV module version: 2023-03-29
+# ENV module version: 2023-05-22
 
 
 
