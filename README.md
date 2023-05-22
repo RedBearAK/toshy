@@ -138,17 +138,23 @@ There will be no issue when installing both of the compatible extensions, which 
 
 - Fedora 36/38 (standard GNOME variant tested)
 
-    - Maybe RHEL/Rocky Linux/AlmaLinux? Untested.
+- AlmaLinux 9.2
+
+    - Tested with "Workstation" installer choice
+
+    - Some non-default (but official) repos will be enabled
+
+- Other RHEL clones should be supportable (need distro name)
 
 - Linux Mint 21.1
 
-- Ubuntu variants:
+- Ubuntu variants tested:
 
     - Ubuntu 22.04/23.04
 
     - Xubuntu 23.04
 
-    - Kubuntu 23.04
+    - Kubuntu 22.04/23.04
 
     - Lubuntu 23.04
 
