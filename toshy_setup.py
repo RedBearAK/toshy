@@ -309,10 +309,6 @@ def install_distro_pkgs():
         # sudo dnf config-manager --set-enabled crb
         subprocess.run('sudo dnf config-manager --set-enabled crb', shell=True)
         subprocess.run('sudo dnf update -y', shell=True)
-        # to enable journal for user services (reboot)
-        # loginctl enable-linger $USER
-        subprocess.run('loginctl enable-linger $USER', shell=True)
-        cnfg.should_reboot = True
         subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro)
 
     elif cnfg.DISTRO_NAME in pacman_distros:
