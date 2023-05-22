@@ -47,6 +47,26 @@ STOPPED_BY_ME="false"
 # give the session info and config service a bit of time to stabilize
 sleep 2
 
+# check that loginctl is actually going to work right now
+retry=0
+while true; do
+    loginctl session-status
+    status=$?
+    if [[ $status -eq 0 ]]; then
+        # The command succeeded, so break out of the loop
+        break
+    else
+        # The command failed, so wait for a bit and then try again
+        sleep 2
+        ((retry++))
+        if [[ $retry -gt 10 ]]; then
+            echo "Attempt to use loginctl failed after 10 attempts. Exiting."
+            exit 1
+        fi
+    fi
+done
+
+
 while true
     do
 
