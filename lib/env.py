@@ -265,7 +265,8 @@ if __name__ == '__main__':
     _env_info = get_env_info()
     print('')
     debug(  f'Toshy env module sees this environment:'
-            f'\n\t DISTRO_NAME     = {_env_info["DISTRO_NAME"]}'
-            f'\n\t DISTRO_VER      = {_env_info["DISTRO_VER"]}'
-            f'\n\t SESSION_TYPE    = {_env_info["SESSION_TYPE"]}'
-            f'\n\t DESKTOP_ENV     = {_env_info["DESKTOP_ENV"]}\n', ctx="EV")
+            f'\n\t DISTRO_NAME     = \'{_env_info["DISTRO_NAME"]}\''
+            f'\n\t DISTRO_VER      = \'{_env_info["DISTRO_VER"]}\''
+            f'\n\t SESSION_TYPE    = \'{_env_info["SESSION_TYPE"]}\''
+            f'\n\t DESKTOP_ENV     = \'{_env_info["DESKTOP_ENV"]}\''
+            f'\n', ctx="EV")
