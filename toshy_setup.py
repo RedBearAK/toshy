@@ -77,7 +77,8 @@ class InstallerSettings:
 
         self.keyszer_tmp_path   = os.path.join('.', 'keyszer-temp')
 
-        keyszer_branch          = 'env_and_adapt_to_capslock'
+        # keyszer_branch          = 'env_and_adapt_to_capslock'
+        keyszer_branch          = 'environ_api'
         keyszer_url             = 'https://github.com/RedBearAK/keyszer.git'
         self.keyszer_clone_cmd  = f'git clone -b {keyszer_branch} {keyszer_url}'
 
