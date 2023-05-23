@@ -77,11 +77,13 @@ debug(cnfg, ctx="CG")
 ##########################################################################
 # Set up some useful environment variables
 
+# MANUALLY set any environment information if the auto-identification isn't working:
 OVERRIDE_DISTRO_NAME     = None
 OVERRIDE_DISTRO_VER      = None
 OVERRIDE_SESSION_TYPE    = None
 OVERRIDE_DESKTOP_ENV     = None
 
+# leave all of this alone!
 DISTRO_NAME     = None
 DISTRO_VER      = None
 SESSION_TYPE    = None
@@ -730,7 +732,8 @@ modmap("Cond modmap - Media Arrows Fix",{
     Key.NEXTSONG:               Key.END,
 # }, when = lambda _: media_arrows_fix is True)
 }, when = lambda ctx:
-    matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
+    # matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
+    matchProps(not_lst=remotes_lod)(ctx) and 
     cnfg.media_arrows_fix is True )
 
 
@@ -750,7 +753,8 @@ modmap("Cond modmap - Forced Numpad feature",{
     Key.KPENTER:                Key.ENTER,
 # }, when = lambda _: forced_numpad is True)
 }, when = lambda ctx: 
-    matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
+    # matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
+    matchProps(not_lst=remotes_lod)(ctx) and 
     cnfg.forced_numpad is True )
 
 
@@ -774,7 +778,8 @@ modmap("Cond modmap - GTK3 numpad nav keys fix",{
 # }, when = lambda ctx: ctx.numlock_on is False and forced_numpad is False)
 # }, when = lambda ctx: ctx.numlock_on is False and cnfg.forced_numpad is False )
 }, when = lambda ctx:
-    matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
+    # matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
+    matchProps(not_lst=remotes_lod)(ctx) and 
     matchProps(numlk=False)(ctx) and 
     cnfg.forced_numpad is False )
 
@@ -790,20 +795,23 @@ modmap("Cond modmap - GTK3 numpad nav keys fix",{
 multipurpose_modmap("Enter2Cmd", {
     Key.ENTER:                  [Key.ENTER, Key.RIGHT_CTRL]     # Enter2Cmd
 }, when = lambda ctx:
-    matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
+    # matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
+    matchProps(not_lst=remotes_lod)(ctx) and 
     cnfg.Enter2Ent_Cmd is True )
 
 multipurpose_modmap("Caps2Esc - not Chromebook kbd", {
     Key.CAPSLOCK:               [Key.ESC, Key.RIGHT_CTRL]       # Caps2Esc - not Chromebook
 }, when = lambda ctx:
-    matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
+    # matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
+    matchProps(not_lst=remotes_lod)(ctx) and 
     not isKBtype('Chromebook')(ctx) and 
     cnfg.Caps2Esc_Cmd is True )
 
 multipurpose_modmap("Caps2Esc - Chromebook kbd", {
     Key.LEFT_META:               [Key.ESC, Key.RIGHT_CTRL]       # Caps2Esc - Chromebook
 }, when = lambda ctx:
-    matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
+    # matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
+    matchProps(not_lst=remotes_lod)(ctx) and 
     isKBtype('Chromebook')(ctx) and 
     cnfg.Caps2Esc_Cmd is True )
 
@@ -824,6 +832,7 @@ multipurpose_modmap("Caps2Esc - Chromebook kbd", {
 # modmap("Synergy fix", {}, when = lambda ctx: ctx.wm_class == '' and ctx.wm_name == 'SYNERGY_WM_NAME')
 # Or: 
 # modmap("Synergy fix", {}, when = lambda ctx: ctx.wm_class == '' and not ctx.wm_name == 'gnome-shell')
+# PROBLEM: When GNOME desktop has focus, it sets no window info at all (no class, no name/title)
 
 
 # [Global GUI conditional modmaps] Change modifier keys as in xmodmap
