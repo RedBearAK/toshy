@@ -117,6 +117,21 @@
         "libsystemd-dev",
         "gir1.2-appindicator3-0.1"
     ],
+    "neon": [
+        "git",
+        "input-utils",
+        "libcairo2-dev",
+        "libnotify-bin",
+        "python3-dbus",
+        "python3-dev",
+        "python3-pip",
+        "python3-venv",
+        "python3-tk",
+        "libdbus-1-dev",
+        "libgirepository1.0-dev",
+        "libsystemd-dev",
+        "gir1.2-appindicator3-0.1"
+    ],
     "debian": [
         "git",
         "input-utils",

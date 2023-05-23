@@ -275,6 +275,7 @@ def install_distro_pkgs():
     apt_distros = [
         'ubuntu',
         'mint',
+        'neon',
         'debian',
     ]
 
