@@ -275,6 +275,7 @@ def install_distro_pkgs():
     apt_distros = [
         'ubuntu',
         'mint',
+        'eos',
         'neon',
         'debian',
     ]
@@ -535,7 +536,7 @@ def apply_desktop_tweaks():
     """
 
     tweak_applied = None
-    print(f'\n\n§  Applying any necessary desktop tweaks...\n{cnfg.separator}')
+    print(f'\n\n§  Applying any known desktop environment tweaks...\n{cnfg.separator}')
 
     # if GNOME, disable `overlay-key`
     # gsettings set org.gnome.mutter overlay-key ''
@@ -557,10 +558,15 @@ def apply_desktop_tweaks():
             print(f"RECOMMENDATION: Install AppIndicator GNOME extension\n"
                 "Easiest method: 'flatpak install extensionmanager', search for 'appindicator'")
 
-    # if KDE Plasma, disable Meta key opening app menu
-    # append this to ~/.config/kwinrc:
-    # [ModifierOnlyShortcuts]
-    # Meta=
+    # TODO:
+    # if KDE Plasma, disable Meta key opening app menu by
+    # appending this to ~/.config/kwinrc:
+
+    kde_meta_key = textwrap.dedent("""
+                                [ModifierOnlyShortcuts]
+                                Meta=
+                                """)
+
     # then run command: 
     # qdbus org.kde.KWin /KWin reconfigure
     if cnfg.DESKTOP_ENV == 'kde':
@@ -576,14 +582,22 @@ def apply_desktop_tweaks():
 def remove_desktop_tweaks():
     """undo the relevant desktop tweaks"""
 
+    print(f'\n\n§  Removing any applied desktop environment tweaks...\n{cnfg.separator}')
+
     # if GNOME, re-enable `overlay-key`
     # gsettings reset org.gnome.mutter overlay-key
     if cnfg.DESKTOP_ENV == 'gnome':
         subprocess.run(['gsettings', 'reset', 'org.gnome.mutter', 'overlay-key'])
 
-    # if KDE Plasma, remove tweak from ~/.config/kwinrc:
-    # [ModifierOnlyShortcuts]
-    # Meta=
+    # TODO:
+    # if KDE Plasma, remove this text, or comment out the
+    # 'Meta=' line from ~/.config/kwinrc:
+
+    kde_meta_key = textwrap.dedent("""
+                                [ModifierOnlyShortcuts]
+                                Meta=
+                                """)
+
     # then run command: 
     # qdbus org.kde.KWin /KWin reconfigure
     if cnfg.DESKTOP_ENV == 'kde':
@@ -592,14 +606,8 @@ def remove_desktop_tweaks():
 
 def uninstall_toshy():
     print("Uninstalling Toshy...")
-
-
-def apply_tweaks():
-    print("Applying tweaks...")
-
-
-def remove_tweaks():
-    print("Removing tweaks...")
+    remove_desktop_tweaks()
+    
 
 
 def handle_arguments():
@@ -618,12 +626,12 @@ def handle_arguments():
         help='Uninstall Toshy (NOT IMPLEMENTED YET)'
     )
     parser.add_argument(
-        '--apply_tweaks',
+        '--apply-tweaks',
         action='store_true',
         help='Apply desktop environment tweaks (NOT IMPLEMENTED YET)'
     )
     parser.add_argument(
-        '--remove_tweaks',
+        '--remove-tweaks',
         action='store_true',
         help='Remove desktop environment tweaks (NOT IMPLEMENTED YET)'
     )
@@ -634,9 +642,9 @@ def handle_arguments():
     if args.uninstall:
         uninstall_toshy()
     elif args.apply_tweaks:
-        apply_tweaks()
+        apply_desktop_tweaks()
     elif args.remove_tweaks:
-        remove_tweaks()
+        remove_desktop_tweaks()
     else:
         main(cnfg)
 
@@ -645,14 +653,15 @@ def main(cnfg: InstallerSettings):
     """Main installer function"""
 
     get_environment_info()
-    
+
     load_uinput_module()
     install_udev_rules()
     verify_user_groups()
-    
+
     load_package_list()
     install_distro_pkgs()
     clone_keyszer_branch()
+
     backup_toshy_config()
     install_toshy_files()
     setup_virtual_env()
@@ -660,6 +669,7 @@ def main(cnfg: InstallerSettings):
     install_bin_commands()
     install_desktop_apps()
     setup_systemd_services()
+
     autostart_tray_icon()
     apply_desktop_tweaks()
 
@@ -668,26 +678,28 @@ def main(cnfg: InstallerSettings):
                 f'{cnfg.separator}\n'
                 f'{cnfg.reboot_ascii_art}'
                 f'{cnfg.separator}\n'
-                'ALERT: Permissions changed. You MUST reboot for Toshy to work...\n'
+                'Toshy install complete. Report issues on the GitHub repo.\n'
+                '>>> ALERT: Permissions changed. You MUST reboot for Toshy to work...'
                 f'{cnfg.separator}'
         )
 
     if not cnfg.should_reboot:
         # Try to start the tray icon immediately, if reboot is not indicated
         # tray_command        = ['gtk-launch', 'Toshy_Tray']
-        tray_command = [os.path.join(cnfg.home_dir_path, '.local', 'bin', 'toshy-tray')]
+        tray_icon_cmd = [os.path.join(cnfg.home_dir_path, '.local', 'bin', 'toshy-tray')]
         # Try to launch the tray icon in a separate process not linked to current shell
         # Also, suppress output that might confuse the user
         subprocess.Popen(
-            tray_command,
+            tray_icon_cmd,
             shell=True,
             close_fds=True,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
         )
-    
-    print('')   # new line after everything is done, don't crowd the prompt
+        print(  f'Toshy install complete. Report issues on the GitHub repo.\n'
+                f'Rebooting should not be necessary.')
 
+    print('')   # blank line to avoid crowding the prompt after install is done
 
 if __name__ == '__main__':
 
@@ -695,10 +707,10 @@ if __name__ == '__main__':
 
     # Check if 'sudo' command is available
     if not shutil.which('sudo'):
-        print("Error: 'sudo' not found. Script will fail without it. Exiting.")
+        print("Error: 'sudo' not found. Installer will fail without it. Exiting.")
         sys.exit(1)
 
-    # Invalidate `sudo` ticket that might be hanging around
+    # Invalidate any `sudo` ticket that might be hanging around
     try:
         subprocess.run("sudo -k", shell=True, check=True)
     except subprocess.CalledProcessError:
