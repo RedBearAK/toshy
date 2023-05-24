@@ -696,7 +696,8 @@ def main(cnfg: InstallerSettings):
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
         )
-        print(  f'Toshy install complete. Report issues on the GitHub repo.\n'
+        print(  f'\n\n{cnfg.separator}'
+                f'Toshy install complete. Report issues on the GitHub repo.\n'
                 f'Rebooting should not be necessary.')
 
     print('')   # blank line to avoid crowding the prompt after install is done
