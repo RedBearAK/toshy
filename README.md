@@ -136,45 +136,46 @@ There will be no issue when installing both of the compatible extensions, which 
 
 ## Currently working Linux distros:
 
-- Fedora 36/38 (standard GNOME variant tested)
+- Fedora 36/[37*]/38 (standard GNOME variant tested)
 
-- AlmaLinux 9.2
+    - Fedora 37 not directly tested, but should work
 
-    - Tested with "Workstation" installer choice
+- AlmaLinux 9.2 and/or Rocky Linux
 
+    - Tested with "Workstation" installer choice, not "Server with GUI"
     - Some non-default (but official) repos will be enabled
+    - NB: There is no journal output for "user" services, for some reason
 
-- Other RHEL clones should be supportable (need distro name)
+- Other RHEL clones should be supportable (but will need distro name added to installer)
+
+    - EuroLinux? Probably.
+    - Red Hat Enterprise Linux itself? Probably.
 
 - Linux Mint 21.1
 
 - Ubuntu variants tested:
 
     - Ubuntu 22.04/23.04
-
     - Xubuntu 23.04
-
     - Kubuntu 22.04/23.04
-
     - Lubuntu 23.04
 
-- KDE Neon (should work, but Neon is flaky in VMs, so untested)
+- KDE Neon should work (X11/Xorg session), but Neon is flaky in VMs, so untested as of now. Neon is based on Ubuntu LTS releases.
+
+- elementary OS 7 (Ubuntu derived)
 
 - Manjaro (GNOME and Xfce tested)
 
     - Arch in general? (maybe, needs more testing)
 
-- antiX
+- antiX (Debian-based, related to MX Linux)
 
     - Preliminary support, no SysVinit services.
-
     - Starting only the "config script" from the tray icon menu should work now.
-
     - Use `toshy-config-start` or `toshy-config-start-verbose` for manual start.
-
     - Only "rox-icewm" desktop verified/tested.
 
-- Debian in general might work, since antiX is based on Debian 11 Bullseye
+Debian in general might work, since antiX is based on Debian 11 Bullseye and is identified as `debian`.  
 
 ## Currently working desktop environments / window managers
 
