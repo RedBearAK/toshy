@@ -679,7 +679,7 @@ def main(cnfg: InstallerSettings):
                 f'{cnfg.separator}\n'
                 f'{cnfg.reboot_ascii_art}'
                 f'{cnfg.separator}\n'
-                'Toshy install complete. Report issues on the GitHub repo.\n'
+                f'\nToshy install complete. Report issues on the GitHub repo.\n'
                 '>>> ALERT: Permissions changed. You MUST reboot for Toshy to work...'
                 f'{cnfg.separator}'
         )
@@ -698,7 +698,7 @@ def main(cnfg: InstallerSettings):
             stderr=subprocess.DEVNULL
         )
         print(  f'\n\n{cnfg.separator}\n'
-                f'Toshy install complete. Report issues on the GitHub repo.\n'
+                f'\nToshy install complete. Report issues on the GitHub repo.\n'
                 f'Rebooting should not be necessary.')
 
     print('')   # blank line to avoid crowding the prompt after install is done
