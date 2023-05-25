@@ -79,9 +79,9 @@ class InstallerSettings:
 
         # keyszer_branch          = 'env_and_adapt_to_capslock'
         # keyszer_branch          = 'environ_api'
-        keyszer_branch          = 'environ_api_kde'
-        keyszer_url             = 'https://github.com/RedBearAK/keyszer.git'
-        self.keyszer_clone_cmd  = f'git clone -b {keyszer_branch} {keyszer_url}'
+        self.keyszer_branch     = 'environ_api_kde'
+        self.keyszer_url        = 'https://github.com/RedBearAK/keyszer.git'
+        self.keyszer_clone_cmd  = f'git clone -b {self.keyszer_branch} {self.keyszer_url}'
 
         self.input_group_name   = 'input'
         self.user_name          = pwd.getpwuid(os.getuid()).pw_name
@@ -349,7 +349,7 @@ def install_distro_pkgs():
 
 def clone_keyszer_branch():
     """clone the latest `keyszer` from GitHub"""
-    print(f'\n\n§  Cloning keyszer branch...\n{cnfg.separator}')
+    print(f'\n\n§  Cloning keyszer branch ({cnfg.keyszer_branch})...\n{cnfg.separator}')
     
     # Check if `git` command exists. If not, exit script with error.
     has_git = shutil.which('git')
@@ -697,7 +697,7 @@ def main(cnfg: InstallerSettings):
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
         )
-        print(  f'\n\n{cnfg.separator}'
+        print(  f'\n\n{cnfg.separator}\n'
                 f'Toshy install complete. Report issues on the GitHub repo.\n'
                 f'Rebooting should not be necessary.')
 
