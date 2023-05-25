@@ -680,7 +680,7 @@ def main(cnfg: InstallerSettings):
                 f'{cnfg.reboot_ascii_art}'
                 f'{cnfg.separator}\n'
                 f'\nToshy install complete. Report issues on the GitHub repo.\n'
-                '>>> ALERT: Permissions changed. You MUST reboot for Toshy to work...'
+                '>>> ALERT: Permissions changed. You MUST reboot for Toshy to work...\n'
                 f'{cnfg.separator}'
         )
 
@@ -702,6 +702,7 @@ def main(cnfg: InstallerSettings):
                 f'Rebooting should not be necessary.')
 
     print('')   # blank line to avoid crowding the prompt after install is done
+
 
 if __name__ == '__main__':
 
