@@ -646,7 +646,7 @@ def show_environment():
 
 def handle_arguments():
     parser = argparse.ArgumentParser(
-        description='Toshy Installer Script',
+        description='Toshy Installer - options are mutually exclusive',
         epilog='Default action: Install Toshy'
     )
 
@@ -684,7 +684,7 @@ def handle_arguments():
         help='Remove desktop environment tweaks (NOT IMPLEMENTED YET)'
     )
 
-    args: Namespace = parser.parse_args()
+    args = parser.parse_args()
 
     # Check the values of arguments and perform actions accordingly
     if args.override_distro:
@@ -702,6 +702,7 @@ def handle_arguments():
         raise NotImplementedError
         uninstall_toshy()
     else:
+        # proceed with normal install only if no CLI args given
         main(cnfg)
 
 
