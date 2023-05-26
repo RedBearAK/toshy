@@ -102,10 +102,10 @@ def get_environment_info():
     print(f'\n\n§  Getting environment information...\n{cnfg.separator}')
     cnfg.env_info_dct   = env.get_env_info()
     # Avoid casefold() errors by converting all to strings
-    cnfg.DISTRO_NAME    = str(cnfg.env_info_dct.get('DISTRO_NAME',  'keymissing').casefold())
-    cnfg.DISTRO_VER     = str(cnfg.env_info_dct.get('DISTRO_VER',   'keymissing').casefold())
-    cnfg.SESSION_TYPE   = str(cnfg.env_info_dct.get('SESSION_TYPE', 'keymissing').casefold())
-    cnfg.DESKTOP_ENV    = str(cnfg.env_info_dct.get('DESKTOP_ENV',  'keymissing').casefold())
+    cnfg.DISTRO_NAME    = str(cnfg.env_info_dct.get('DISTRO_NAME',  'keymissing')).casefold()
+    cnfg.DISTRO_VER     = str(cnfg.env_info_dct.get('DISTRO_VER',   'keymissing')).casefold()
+    cnfg.SESSION_TYPE   = str(cnfg.env_info_dct.get('SESSION_TYPE', 'keymissing')).casefold()
+    cnfg.DESKTOP_ENV    = str(cnfg.env_info_dct.get('DESKTOP_ENV',  'keymissing')).casefold()
     print(  f'Toshy installer sees this environment:'
             f'\n\t{cnfg.DISTRO_NAME     = }'
             f'\n\t{cnfg.DISTRO_VER      = }'
@@ -678,10 +678,10 @@ def main(cnfg: InstallerSettings):
         print(  f'\n\n'
                 f'{cnfg.separator}\n'
                 f'{cnfg.reboot_ascii_art}'
-                f'{cnfg.separator}\n'
-                f'\nToshy install complete. Report issues on the GitHub repo.\n'
+                f'{cnfg.separator}\n\n'
+                f'Toshy install complete. Report issues on the GitHub repo.\n'
                 '>>> ALERT: Permissions changed. You MUST reboot for Toshy to work...\n'
-                f'{cnfg.separator}'
+                f'{cnfg.separator}\n'
         )
 
     if not cnfg.should_reboot:
@@ -697,9 +697,11 @@ def main(cnfg: InstallerSettings):
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
         )
-        print(  f'\n\n{cnfg.separator}\n'
-                f'\nToshy install complete. Report issues on the GitHub repo.\n'
-                f'Rebooting should not be necessary.')
+        print(  f'\n\n{cnfg.separator}\n\n'
+                f'Toshy install complete. Report issues on the GitHub repo.\n'
+                f'Rebooting should not be necessary.\n'
+                f'{cnfg.separator}\n'
+        )
 
     print('')   # blank line to avoid crowding the prompt after install is done
 
