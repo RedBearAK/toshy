@@ -94,21 +94,29 @@ def get_environment_info():
         desktop environment from `env.py` module"""
     print(f'\n§  Getting environment information...\n{cnfg.separator}')
 
-    known_init_systems = ['systemd', 'init', 'upstart', 'openrc', 'runit', 'initng']
+    known_init_systems = {
+        'systemd': 'Systemd',
+        'init': 'SysVinit',
+        'upstart': 'Upstart',
+        'openrc': 'OpenRC',
+        'runit': 'Runit',
+        'initng': 'Initng'
+    }
 
     try:
         with open('/proc/1/comm', 'r') as f:
             cnfg.init_system = f.read().strip()
     except (PermissionError, FileNotFoundError, OSError) as init_check_err:
-        print(f'Problem when checking init system:\n\t{init_check_err}')
+        error(f'ERROR: Problem when checking init system:\n\t{init_check_err}')
 
     if cnfg.init_system:
         if cnfg.init_system in known_init_systems:
-            print(f"The active init system is: '{cnfg.init_system}'")
+            init_sys_full_name = known_init_systems[cnfg.init_system]
+            print(f"The active init system is: '{cnfg.init_system}' ({init_sys_full_name})")
         else:
-            print(f"Init system unknown: '{cnfg.init_system}'")
+            print(f"Init system process unknown: '{cnfg.init_system}'")
     else:
-        print(f"Init system could not be determined.")
+        error("ERROR: Init system (process 1) could not be determined. (See above error.)")
 
     print('')   # blank line after init system message
 
