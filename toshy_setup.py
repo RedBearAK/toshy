@@ -609,7 +609,11 @@ def remove_desktop_tweaks():
 def uninstall_toshy():
     print("Uninstalling Toshy...")
     remove_desktop_tweaks()
-    
+    # TODO: do more uninstaller stuff...
+
+
+def show_environment():
+    pass
 
 
 def handle_arguments():
@@ -628,25 +632,36 @@ def handle_arguments():
         help='Uninstall Toshy (NOT IMPLEMENTED YET)'
     )
     parser.add_argument(
+        '--show-env',
+        action='store_true',
+        dest='show_env',
+        help='Show the environment the installer detects, and exit'
+    )
+    parser.add_argument(
         '--apply-tweaks',
         action='store_true',
+        dest='apply_tweaks',
         help='Apply desktop environment tweaks (NOT IMPLEMENTED YET)'
     )
     parser.add_argument(
         '--remove-tweaks',
         action='store_true',
+        dest='remove_tweaks',
         help='Remove desktop environment tweaks (NOT IMPLEMENTED YET)'
     )
 
     args: Namespace = parser.parse_args()
 
     # Check the values of arguments and perform actions accordingly
-    if args.uninstall:
-        uninstall_toshy()
+    if args.show_env:
+        get_environment_info()
+        sys.exit(0)
     elif args.apply_tweaks:
         apply_desktop_tweaks()
     elif args.remove_tweaks:
         remove_desktop_tweaks()
+    elif args.uninstall:
+        uninstall_toshy()
     else:
         main(cnfg)
 
