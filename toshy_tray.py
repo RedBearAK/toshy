@@ -656,11 +656,23 @@ menu.append(remove_tray_icon_item)
 menu.show_all()
 
 
+def is_init_systemd():
+    try:
+        with open("/proc/1/comm", "r") as f:
+            return f.read().strip() == 'systemd'
+    except FileNotFoundError:
+        print("Toshy_GUI: The /proc/1/comm file does not exist.")
+        return False
+    except PermissionError:
+        print("Toshy_GUI: Permission denied when trying to read the /proc/1/comm file.")
+        return False
+
+
 def main():
 
     global loop
 
-    if shutil.which('systemctl'):
+    if shutil.which('systemctl') and is_init_systemd():
         # help out the config file user service
         subprocess.run([
             "systemctl", 

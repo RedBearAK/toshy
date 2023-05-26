@@ -898,13 +898,24 @@ root.resizable(False, False)
 root.bind("<Control-w>", lambda event: root.destroy())
 
 
+def is_init_systemd():
+    try:
+        with open("/proc/1/comm", "r") as f:
+            return f.read().strip() == 'systemd'
+    except FileNotFoundError:
+        print("Toshy_GUI: The /proc/1/comm file does not exist.")
+        return False
+    except PermissionError:
+        print("Toshy_GUI: Permission denied when trying to read the /proc/1/comm file.")
+        return False
+
 
 if __name__ == "__main__":
 
     handle_existing_process()
     write_pid_to_lockfile()
 
-    if shutil.which('systemctl'):
+    if shutil.which('systemctl') and is_init_systemd():
         # help out the config file user service
         subprocess.run(["systemctl", "--user", "import-environment", "XDG_SESSION_TYPE", "XDG_SESSION_DESKTOP", "XDG_CURRENT_DESKTOP"])    
         monitor_toshy_settings_thread = threading.Thread(target=fn_monitor_toshy_services)
