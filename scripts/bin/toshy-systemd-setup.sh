@@ -25,21 +25,28 @@ else
     exit 0
 fi
 
+LOCAL_BIN_PATH="$HOME/.local/bin"
+USER_SYSD_PATH="$HOME/.config/systemd/user"
+TOSHY_CFG_PATH="$HOME/.config/toshy"
+SYSD_UNIT_PATH="$TOSHY_CFG_PATH/systemd-user-service-units"
 
 DELAY=0.5
 
-echo -e "\nSetting up Toshy service unit files in $HOME/.config/systemd/user..."
+export PATH="$LOCAL_BIN_PATH:$PATH"
 
-mkdir -p "$HOME/.config/systemd/user"
+echo -e "\nSetting up Toshy service unit files in $USER_SYSD_PATH..."
+
+mkdir -p "$USER_SYSD_PATH"
 mkdir -p "$HOME/.config/autostart"
 
 # Stop, disable, and remove existing unit files
-eval "$(which toshy-systemd-remove)"
+# eval "$(which toshy-systemd-remove)"
+eval "$LOCAL_BIN_PATH/toshy-systemd-remove"
 
-cp -f "$HOME/.config/toshy/systemd-user-service-units/toshy-config.service" "$HOME/.config/systemd/user/"
-cp -f "$HOME/.config/toshy/systemd-user-service-units/toshy-session-monitor.service" "$HOME/.config/systemd/user/"
+cp -f "$SYSD_UNIT_PATH/toshy-config.service" "$USER_SYSD_PATH/"
+cp -f "$SYSD_UNIT_PATH/toshy-session-monitor.service" "$USER_SYSD_PATH/"
 
-cp -f "$HOME/.config/toshy/desktop/Toshy_Import_Vars.desktop" "$HOME/.config/autostart/"
+cp -f "$TOSHY_CFG_PATH/desktop/Toshy_Import_Vars.desktop" "$HOME/.config/autostart/"
 
 
 sleep $DELAY

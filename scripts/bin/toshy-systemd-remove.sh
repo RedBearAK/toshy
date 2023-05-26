@@ -27,7 +27,14 @@ fi
 
 
 
+LOCAL_BIN_PATH="$HOME/.local/bin"
+USER_SYSD_PATH="$HOME/.config/systemd/user"
+# TOSHY_CFG_PATH="$HOME/.config/toshy"
+# SYSD_UNIT_PATH="$TOSHY_CFG_PATH/systemd-user-service-units"
+
 DELAY=0.5
+
+export PATH="$LOCAL_BIN_PATH:$PATH"
 
 echo -e "\nRemoving Toshy systemd services...\n"
 
@@ -41,7 +48,7 @@ if [ -f "$HOME/.config/systemd/user/toshy-session-monitor.service" ]; then
         /usr/bin/systemctl --user disable toshy-session-monitor.service
     fi
     sleep $DELAY
-    rm -f "$HOME/.config/systemd/user/toshy-session-monitor.service"
+    rm -f "$USER_SYSD_PATH/toshy-session-monitor.service"
 fi
 
 if [ -f "$HOME/.config/systemd/user/toshy-config.service" ]; then
@@ -52,7 +59,7 @@ if [ -f "$HOME/.config/systemd/user/toshy-config.service" ]; then
         /usr/bin/systemctl --user disable toshy-config.service
     fi
     sleep $DELAY
-    rm -f "$HOME/.config/systemd/user/toshy-config.service"
+    rm -f "$USER_SYSD_PATH/toshy-config.service"
 fi
 
 if [ -f "$HOME/.config/autostart/Toshy_Import_Vars.desktop" ]; then
