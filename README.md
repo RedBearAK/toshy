@@ -94,30 +94,41 @@ There's no simple way around this, since the keymapper is only designed to send 
 
 - Linux (no Windows support planned, use Kinto for Windows)
 
+    - List of working/tested distros below
+
 - `keyszer` (keymapper for Linux, forked from `xkeysnail`)
+
+    - Automatically installed by Toshy installer
 
 - X11 or Wayland+GNOME
 
-    - Wayland+GNOME requires one of these GNOME Shell extensions:
+    - Wayland+GNOME requires one of these GNOME Shell extensions‡ (see note):
+
+        - Focused Window D-Bus
+        - https://extensions.gnome.org/extension/5592/focused-window-d-bus/
 
         - Window Calls Extended
-
         - https://extensions.gnome.org/extension/4974/window-calls-extended/
 
-        - Xremap
-
+        - Xremap (try this if you have an older GNOME version)
         - https://extensions.gnome.org/extension/5060/xremap/
 
-- Wayland+KDE (Plasma) should be possible at some point
+- Wayland+KDE (Plasma) should be possible at some point (in development)
 
-- `systemd` (but you can just run the config from terminal or shell script, or tray indicator menu)
+- `systemd` (but you can just manually run the config from terminal, or shell script, or tray indicator menu)
 
 - D-Bus, and `dbus-python` (for the tray indicator and GUI app)
 
-It's very easy to search for and install GNOME Shell extensions now, if you install the "Extension Manager" Flatpak application from Flathub. No need to mess around with downloading a zip file from `extensions.gnome.org` and manually installing/enabling in the terminal.  
+‡ Note: It's very easy to search for and install GNOME Shell extensions now, if you install the "Extension Manager" Flatpak application from Flathub. No need to mess around with downloading a zip file from `extensions.gnome.org` and manually installing/enabling in the terminal. Many distros with GNOME need the `AppIndicator & KStatusNotifier` extension to make the tray icon appear in the top bar, and if you want to use Wayland you'll need one of the extensions from the list above.  
 
 ```sh
 flatpak install com.mattjakeman.ExtensionManager
+```
+
+... or:
+
+```sh
+flatpak install extensionmanager
 ```
 
 You can just use the "Browse" tab in this application to search for the extensions by name and quickly install them.  
@@ -126,7 +137,7 @@ There will be no issue when installing both of the compatible extensions, which 
 
 ## How to Install
 
-1. Download the latest zip from the big green `<> Code ˇ` button near the top of the page.  
+1. Download the latest zip from the big green `Code ˇ` button near the top of the page.  
 1. Unzip the archive, and open a terminal in the resulting folder.  
 1. Run the `toshy_setup.py` script in the terminal.  
 
@@ -136,54 +147,82 @@ There will be no issue when installing both of the compatible extensions, which 
 
 ## Currently working Linux distros:
 
-- Fedora 36/[37*]/38 (standard GNOME variant tested)
+- Fedora 36/[37*]/38 (from Red Hat)
 
+    - Standard GNOME variant tested
+    - KDE variant tested (X11/Xorg session only, Wayland+KDE in development)
     - Fedora 37 not directly tested, but should work
 
-- AlmaLinux 9.2 and/or Rocky Linux
+- AlmaLinux 9.2 and/or Rocky Linux 9.2 (RHEL clones)
 
     - Tested with "Workstation" installer choice, not "Server with GUI"
     - Some non-default (but official) repos will be enabled
     - NB: There is no journal output for "user" services, for some reason
 
-- Other RHEL clones should be supportable (but will need distro name added to installer)
+- Other RHEL clones should be supportable **_(just need distro name added to installer)_**
 
     - EuroLinux? Probably.
     - Red Hat Enterprise Linux itself? Probably.
 
-- Linux Mint 21.1
+- Linux Mint 21.1 (Ubuntu-based)
 
-- Ubuntu variants tested:
+    - Cinnamon desktop
+    - Xfce desktop
+    - MATE desktop
+    - All desktops can be installed on the same Mint system:
+
+```sh
+sudo apt install mint-meta-mate mint-meta-xfce mint-meta-cinnamon
+```
+
+- Ubuntu official variants tested:
 
     - Ubuntu 22.04/23.04
     - Xubuntu 23.04
-    - Kubuntu 22.04/23.04
+    - Kubuntu 22.04/23.04 (X11/Xorg only, Wayland+KDE in dev.)
     - Lubuntu 23.04
 
-- KDE Neon should work (X11/Xorg session), but Neon is flaky in VMs, so untested as of now. Neon is based on Ubuntu LTS releases.
+- KDE Neon (based on Ubuntu LTS releases)
 
-- elementary OS 7 (Ubuntu derived)
+    - X11/Xorg session only (Wayland+KDE in development)
 
-- Manjaro (GNOME and Xfce tested)
+- elementary OS 7.0 (Ubuntu-based)
 
-    - Arch in general? (maybe, needs more testing)
+- Manjaro (Arch-based)
+
+    - GNOME and Xfce desktop variants tested
+
+- EndeavourOS (Arch-based)
+
+    - Most desktops should work in X11/Xorg
+    - GNOME desktop should work in Wayland also (requires extension)
+
+- Arch in general? (maybe, needs more testing)
+
+    - Installer will try to work on any distro that identifies as `Arch`
 
 - antiX (Debian-based, related to MX Linux)
 
-    - Preliminary support, no SysVinit services.
-    - Starting only the "config script" from the tray icon menu should work now.
+    - Preliminary support, no SysVinit services yet, so no auto-start.
     - Use `toshy-config-start` or `toshy-config-start-verbose` for manual start.
+    - Starting only the "config script" from the tray icon menu should work now.
     - Only "rox-icewm" desktop verified/tested.
 
-Debian in general might work, since antiX is based on Debian 11 Bullseye and is identified as `debian`.  
+- Debian in general might work
+
+    - antiX is based on Debian 11 Bullseye and is identified as `debian`.  
 
 ## Currently working desktop environments / window managers
 
-If you are on X11/Xorg, the desktop environment or window manager doesn't really matter. The keymapper gets the window class/name/title information directly from the X server.  
+- X11/Xorg (all desktops)
+- Wayland+GNOME
+- Wayland+KDE_Plasma (in development)
 
-On the other hand, if you are in a Wayland session, it is only possible to obtain the per-application or per-window information for specific shortcut keymaps by using solutions that are custom to a limited set of desktop environments (or window managers).  
+If you are in an X11/Xorg login session, the desktop environment or window manager doesn't really matter. The keymapper gets the window class/name/title information directly from the X server with `Xlib`.  
 
-As of now, this means only the combination of Wayland+GNOME is fully usable for app-specific shortcut remapping, and this requires at least one of two compatible GNOME Shell extensions to be installed. See above in "Requirements".  
+On the other hand, if you are in a Wayland session, it is only possible to obtain the per-application or per-window information (for specific shortcut keymaps) by using solutions that are custom to a limited set of desktop environments (or window managers).  
+
+As of now, this means only the combination of Wayland+GNOME is fully usable for app-specific shortcut remapping, and this requires at least one of three known compatible GNOME Shell extensions to be installed. See above in "Requirements".  
 
 At some point it should be possible to have Wayland+KDE_Plasma working, and possibly Wayland+sway and Wayland+hyprland. The methods to do this already exist in the `xremap` keymapper, but that project is written in Rust and `keyszer` is written in Python.  
 
@@ -221,6 +260,12 @@ toshy-config-start-verbose  (show debugging output in the terminal)
 toshy-config-stop
 ```
 
+And a command that will show what Toshy sees as the environment when you launch the config. This may be helpful when troubleshooting or making reports:  
+
+```
+toshy-env
+```
+
 There are also some desktop "applications" that will be found in most Linux app launchers (like "Albert" or "Ulauncher") or application menus in Linux desktop environments:  
 
 - Toshy Preferences
@@ -228,25 +273,34 @@ There are also some desktop "applications" that will be found in most Linux app 
 
 Both of these "apps" will show the current status of the `systemd` services, and allow the immediate changing of the exposed optional features, as well as stopping or restarting the Toshy services. The tray icon menu also allows opening the Preferences app, and opening the `~/.config/toshy` folder if you need to edit the config file.  
 
+If the desktop apps aren't working for some reason, it may be useful to try to launch them from a terminal and see if they have any error output:  
+
+```
+toshy-gui
+toshy-tray
+```
+
 ## FAQ (Frequently Asked Questions)
 
-This section will list some common questions, issues and fixes/tweaks that may be necessary for different distros, desktops or devices (and are not yet handled by the installer or config file). 
+This section will list some common questions, issues and fixes/tweaks that may be necessary for different distros, desktops or devices (and are not yet handled by the Toshy installer or config file). 
 
 ### What happened to my customizations of the config?!
 
-Because the config file is continually evolving, and the config file itself is really a "program" written in Python, that is literally executed as Python code by the keymapper (`keyszer`) at runtime, it's a bit difficult to retain the changes you've made and be sure that the new version of the config file will load without some sort of error.  
+Because the config file is continually evolving, and the config file itself is really a "program" written in Python that is literally executed as Python code by the keymapper (`keyszer`) at runtime, it's a bit difficult to retain the changes you've made and be sure that the new version of the config file will load without some sort of error.  
 
-So the best solution I've come up with so far is to have the installer make a backup of your whole `~/.config/toshy` folder to a dated folder in `~/.config`. You'll find it/them in that "hidden" folder alongside the new `toshy` folder, and the backup will contain your previous `toshy_config.py` file. PLEASE NOTE: If you run the Toshy installer multiple times you may find that the most recent dated "backup" is just a backup of a fresh Toshy config folder, as it will make a new backup whenever a `toshy` folder is found in `~/.config`. In this case, the folder with your custom changes may be in an older backup folder.  
+So the best solution I've come up with so far is to have the installer make a backup of your whole `~/.config/toshy` folder to a dated folder in `~/.config`. You'll find it/them in that "hidden" folder alongside the new `toshy` folder, and the backup will contain your previous `toshy_config.py` file.  
 
-The backup folders are typically less than 1 MB in size, as the Python virtual environment folder inside is not copied. So they should never take up too much space even if you run the installer many times on the same system.  
+> PLEASE NOTE: If you run the Toshy installer multiple times you may find that the most recent dated "backup" is just a backup of a fresh Toshy config folder, as it will make a new backup whenever a `toshy` folder is found in `~/.config`. In this case, the folder with your custom changes may be in an older backup folder.  
 
-Using some software like Visual Studio Code, it is possible to compare two config files in a "diff" sort of view and quickly see the differences between the old and new config files. This can make it very easy to merge your custom changes back into the new config file with a few clicks. Then all you need to do is save the new config and restart the Toshy services or config script.  
+The backup folders are typically less than 1 MB in size, as the Python virtual environment folder inside (20-30 MB) is not copied. So they should never take up too much space even if you run the installer multiple times on the same system.  
+
+Using some software like Visual Studio Code, it is possible to compare the old and new config files in a "diff" sort of view and quickly see the differences. This can make it very easy to merge your custom changes back into the new config file with a few clicks. Then all you need to do is save the new config and restart the Toshy services or config script.  
 
 If you keep your modifications within the `keyszer` API functions at the very beginning of the script, and the "User Apps" marked section around the middle of the config file, it should be pretty easy to merge your customizations back whenever you update Toshy or install on a new machine. The "User Apps" section is designed to be a good place in the config to put some customizations like making the brightness and volume keys on a laptop function row work correctly for your specific machine.  
 
 I will be trying to work on doing a more automatic copying/merging of existing user settings into a new config file.  
 
-There is an `include()` function in `keyszer` that theoretically allows separate files to be part of the config, but due to the dynamic nature of the config file and how it gets loaded by the keymapper I had a lot of issues trying to use that method to solve this problem.  
+There is an `include()` function in `keyszer` that theoretically allows separate files to be part of the config, but due to the dynamic nature of the config file, and how it gets loaded by the keymapper, I had a lot of issues trying to use that method to solve this problem.  
 
 ### My keyboard is not recognized as the correct type
 
@@ -267,11 +321,31 @@ keyboards_Apple
 
 Add your device name as an item in the relevant list, and restart Toshy. The keyboard device should now be treated as the correct type, with the modifiers in the right places.  
 
-If you have this problem, please submit an issue report about it, so the device name can be added to the default Toshy config.  
+> **_NOTE! If you have this problem, please submit an issue report about it, so the device name can be added to the default Toshy config!_**  
 
 ### CLI/Shell commands missing/unavailable
 
-If you don't have `~/.local/bin` in your shell path, or did not answer `y` when prompted during install to add it to the path, you will have to add it to the path yourself, or re-run the installer. Alternately, if you're trying to see the commands immediately after running the installer, you may need to run the command `hash -r` or `source ~/.bashrc` (which RC file you need to `source` depends on your shell). You may also see the command `. ~/.bashrc` online, where the dot at the beginning is equivalent to the `source` command.  
+If you don't have `~/.local/bin` in your shell path, or you answered `n` when prompted during install to add it to the path, you will have to add it to the path yourself, or re-run the installer. Alternately, if you're trying to see the commands immediately after running the installer, you may need to run one of the following commands:  
+
+```sh
+hash -r
+```
+
+or...
+
+```sh
+source ~/.bashrc
+```
+
+or...
+
+```sh
+. ~/.bashrc
+```
+
+(The dot at the beginning is the equivalent of `source`.)  
+
+Which RC file you need to `source` depends on your shell.  
 
 In the case that the path was already added to the RC file, another way of getting a new environment where you can see the `toshy-*` commands is to just close your terminal window (or tab) and open a new one.  
 
