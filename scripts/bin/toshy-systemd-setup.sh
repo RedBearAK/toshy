@@ -53,8 +53,9 @@ sleep $DELAY
 
 # Give systemd user services access to environment variables like:
 # XDG_SESSION_TYPE XDG_SESSION_DESKTOP XDG_CURRENT_DESKTOP
-# Do this BEFORE daemon-reload!
-/usr/bin/systemctl --user import-environment XDG_SESSION_TYPE XDG_SESSION_DESKTOP XDG_CURRENT_DESKTOP
+# Do this BEFORE daemon-reload? Maybe not necessary. 
+# But silence errors (e.g., "XDG_SESSION_DESKTOP not set, ignoring")
+/usr/bin/systemctl --user import-environment XDG_SESSION_TYPE XDG_SESSION_DESKTOP XDG_CURRENT_DESKTOP >/dev/null 2>&1
 
 echo -e "\nIssuing systemctl daemon-reload..."
 
