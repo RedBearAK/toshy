@@ -462,7 +462,7 @@ def fn_stop_toshy_services(widget):
 
 def fn_restart_toshy_script(widget):
     """Start the manual run config script"""
-    subprocess.Popen(   ['/bin/sh', '-c', 'env toshy-config-start'],
+    subprocess.Popen(   ['/bin/sh', '-c', 'env toshy-config-restart'],
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE)
 
