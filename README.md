@@ -208,9 +208,15 @@ sudo apt install mint-meta-mate mint-meta-xfce mint-meta-cinnamon
     - Starting only the "config script" from the tray icon menu should work now.
     - Only "rox-icewm" desktop verified/tested.
 
-- Debian in general might work
+- Debian in general might work, because
 
-    - antiX is based on Debian 11 Bullseye and is identified as `debian`.  
+    - antiX is based on Debian 11 Bullseye and is identified as `debian`.
+
+- openSUSE Leap 15.4 - PYTHON VERY OLD! Good luck.  
+
+    - Python 3.10/3.11 is in general use now, Leap has Python 3.6.x
+
+- openSUSE Tumbleweed (rolling release) - in testing
 
 ## Currently working desktop environments / window managers
 
@@ -284,9 +290,55 @@ toshy-tray
 
 This section will list some common questions, issues and fixes/tweaks that may be necessary for different distros, desktops or devices (and are not yet handled by the Toshy installer or config file). 
 
+### How do I know Toshy is working correctly?
+
+There are two levels to what the Toshy config does (just like Kinto, from which the base config file was taken). Level one is the shifting of some of the modifier keys. In most cases, even on an unsupported Wayland environment, the shifting of the modifier keys will work and some basic "global" shortcuts like cut/copy/paste will appear to work, and you'll be able to open new tabs and close them in a browser with the expected `Cmd` key shortcuts. This can create a false impression that the whole thing is "working" when it actually isn't.  
+
+The second level of remapping is the group/class-specific (such as "in terminals") modmaps and keymaps, and then the true app-specific keymaps. These will either be working or not working.  
+
+One simple check will be whether you can increase **_AND_** decrease the font size in a terminal window with the `Cmd+Equal` keys and `Cmd+Minus` keys, respectively. Ordinarily, increasing the font size in a terminal requires `Shift+Ctrl+Plus`, while decreasing the font size works without the `Shift` key with `Ctrl+Minus`. If the simpler shortcut works, you know two things: Your terminal's application class is recognized and found in the list of "terminals" in the config, and of course you also know that the app-specific matching on the window attributes (class and name/title) should be working in general throughout all applications.  
+
+Another simple test, if you have Firefox installed, is if using the `Cmd+comma` shortcut (opens preferences in many macOS applications) opens a new tab and rapidly types the string "about:preferences" and then opens the Firefox preferences. If this works, it's a clear indication that the app-specific keymaps are working.  
+
+If the Firefox test works, but the terminal test didn't do what was expected, then your terminal's class may not be in the list of "known" terminals in the config file. Try to identify it, and let us know what the attributes are.  
+
+In X11/Xorg environments, run this in a terminal, then click with the "cross" mouse cursor on the window you're trying to identify: 
+
+```sh
+xprop WM_CLASS _NET_WM_NAME
+```
+
+In a Wayland environment where you know the app-specific remapping is otherwise working (Wayland+GNOME with extensions is about it right now), run the Toshy manual config start "verbose" command and then use a shortcut that will be remapped (like `Shift+Cmd+Left_Brace`), while the keyboard focus is on the window that is not being recognized:  
+
+```sh
+toshy-config-start-verbose
+```
+
+You should see some kind of output like this, which will display the class and name according to the Wayland window context provider, and which keymap has been triggered:  
+
+```sh
+(DD) WM_CLASS: 'Xfce4-terminal' | WM_NAME: 'Terminal - testuser@mx: ~'
+(DD) DEVICE: 'AT Translated Set 2 keyboard' | CAPS_LOCK: 'False' | NUM_LOCK: 'False'
+(DD) ACTIVE KEYMAPS:
+     'User hardware keys', 'Wordwise - not vscode', 'GenTerms overrides: Xfce4',
+     'General Terminals', 'GenGUI overrides: not Chromebook', 'GenGUI overrides:
+      … Xfce4', 'General GUI'
+(DD) COMBO: RCtrl-MINUS => Ctrl-MINUS in KMAP: 'General Terminals'
+```
+
+In this example the Xfce4-terminal application is being correctly recognized as a terminal, and the equivalent of `Cmd+Minus` is remapped onto `Ctrl+Minus`.  
+
+To get back to using the background Toshy services, just use the `(Re)Start Toshy Services` option from the Toshy tray icon menu, or in the Toshy Preferences GUI app, or just run this command in the terminal to restart the `systemd` services:  
+
+```sh
+toshy-services-restart
+```
+
 ### What happened to my customizations of the config?!
 
-Because the config file is continually evolving, and the config file itself is really a "program" written in Python that is literally executed as Python code by the keymapper (`keyszer`) at runtime, it's a bit difficult to retain the changes you've made and be sure that the new version of the config file will load without some sort of error.  
+**Short version**: Don't worry, it's in a backup folder, and you can easily merge your changes back into the new config.  
+
+**Long version**: Because the config file is continually evolving, and the config file itself is really a "program" written in Python that is literally executed as Python code by the keymapper (`keyszer`) at runtime, it's a bit difficult to retain the changes you've made and be sure that the new version of the config file will load without some sort of error.  
 
 So the best solution I've come up with so far is to have the installer make a backup of your whole `~/.config/toshy` folder to a dated folder in `~/.config`. You'll find it/them in that "hidden" folder alongside the new `toshy` folder, and the backup will contain your previous `toshy_config.py` file.  
 
@@ -503,15 +555,15 @@ Enable/Re-enable:
 gsettings reset org.gnome.mutter overlay-key
 ```
 
-### GNOME "Switch Windows" vs "Switch Applications" (Cmd+Tab task switching)
+### GNOME "Switch Windows" vs "Switch Applications" (Cmd+Tab task-switching)
 
-GNOME desktops have the ability to either do task switching like Windows (switch between all open windows individually) or like macOS (switch between "applications" as groups of windows). Except where an extension is interfering with this ability, like the COSMIC desktop extension on Pop!_OS. Depending on the Linux distro, `Alt+Tab` may be assigned to "Switch windows" or to "Switch applications".  
+GNOME desktops have the ability to either do task-switching like Windows (switch between all open windows individually) or like macOS (switch between "applications" as groups of windows). Except where an extension is interfering with this ability, like the COSMIC desktop extension on Pop!_OS. Depending on the Linux distro, `Alt+Tab` may be assigned to "Switch windows" or to "Switch applications".  
 
-If you want to task switch more like macOS, set the "Switch applications" shortcut in the GNOME Keyboard settings control panel to be the one assigned `Alt+Tab`, and set the "Switch windows of an application" to be `Alt+Grave` (the "`" backtick/Grave character, above the Tab key).  
+If you want to task-switch more like macOS, set the "Switch applications" shortcut in the GNOME Keyboard settings control panel to be the one assigned `Alt+Tab`, and set the "Switch windows of an application" to be `Alt+Grave` (the "`" backtick/Grave character, above the Tab key).  
 
-Note that this will also change the appearance and function of the task switcher dialog that appears when you use the corresponding shortcut. The "Switch applications" shortcut is like the macOS task switcher, it shows one large application icon for each group of windows belonging to the same "application". The "Switch windows" shortcut will show a task switcher that has a preview icon for every **_window_** open on the current workspace, similar to Windows and Linux desktop environments like KDE Plasma. The "large icons" task switcher tends to have far fewer items and be easier to navigate visually. Just like on macOS, the equivalent of `Cmd+Grave` can be used to switch windows of the same application.  
+Note that this will also change the appearance and function of the task-switcher dialog that appears when you use the corresponding shortcut. The "Switch applications" shortcut is like the macOS task-switcher, it shows one large application icon for each group of windows belonging to the same "application". The "Switch windows" shortcut will show a task-switcher dialog that has a preview icon for every **_window_** open on the current workspace, similar to Windows and Linux desktop environments like KDE Plasma. The "large icons" task-switcher tends to have far fewer items and be easier to navigate visually. Just like on macOS, the equivalent of `Cmd+Grave` can be used to switch windows of the same application.  
 
-Which task switching style works for you is down to personal preference, and how well you like the macOS style of task switching with `Cmd+Tab`.  
+Which task-switching style works for you is down to personal preference, and how well you like the macOS style of task-switching with `Cmd+Tab`.  
 
 ### KDE Plasma and the Meta/Super/Win/Cmd key
 
