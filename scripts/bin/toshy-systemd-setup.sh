@@ -51,14 +51,14 @@ cp -f "$TOSHY_CFG_PATH/desktop/Toshy_Import_Vars.desktop" "$HOME/.config/autosta
 
 sleep $DELAY
 
+# Give systemd user services access to environment variables like:
+# XDG_SESSION_TYPE XDG_SESSION_DESKTOP XDG_CURRENT_DESKTOP
+# Do this BEFORE daemon-reload!
+/usr/bin/systemctl --user import-environment XDG_SESSION_TYPE XDG_SESSION_DESKTOP XDG_CURRENT_DESKTOP
+
 echo -e "\nIssuing systemctl daemon-reload..."
 
 /usr/bin/systemctl --user daemon-reload
-
-# Give systemd user services access to environment variables like:
-# XDG_SESSION_TYPE XDG_SESSION_DESKTOP XDG_CURRENT_DESKTOP
-/usr/bin/systemctl --user import-environment XDG_SESSION_TYPE XDG_SESSION_DESKTOP XDG_CURRENT_DESKTOP
-
 
 sleep $DELAY
 
