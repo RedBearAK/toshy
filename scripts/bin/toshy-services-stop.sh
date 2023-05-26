@@ -16,12 +16,24 @@ fi
 #     exit 1
 # fi
 
-# Get out of here if systemctl is not available
-if command -v systemctl >/dev/null 2>&1; then
-    # systemd is installed, proceed
+
+# Check if systemd is actually the init system
+if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
+    # systemd is the init system, proceed
     :
 else
-    # no systemd found, exit silently
+    # systemd is NOT the init system, exit with message
+    echo "Init system is not 'systemd'..."
+    exit 0
+fi
+
+
+# Get out of here if systemctl is not available
+if command -v systemctl >/dev/null 2>&1; then
+    # systemctl is installed, proceed
+    :
+else
+    # no systemctl found, exit silently
     exit 0
 fi
 

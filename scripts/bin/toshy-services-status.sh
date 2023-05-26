@@ -15,6 +15,28 @@ fi
 #     exit 1
 # fi
 
+
+# Check if systemd is actually the init system
+if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
+    # systemd is the init system, proceed
+    :
+else
+    # systemd is NOT the init system, exit with message
+    echo "Init system is not 'systemd'..."
+    exit 0
+fi
+
+
+# Get out of here if systemctl is not available
+if command -v systemctl >/dev/null 2>&1; then
+    # systemctl is installed, proceed
+    :
+else
+    # no systemctl found, exit silently
+    exit 0
+fi
+
+
 export SYSTEMD_PAGER=""
 
 echo -e "\nCurrent status of Toshy systemd services..."
