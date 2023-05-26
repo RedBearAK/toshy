@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-# Restart the Toshy manual scripts
+# Restart the Toshy manual script
 
 # Check if the script is being run as root
 if [[ $EUID -eq 0 ]]; then
@@ -16,6 +16,8 @@ if [[ -z $USER ]] || [[ -z $HOME ]]; then
 fi
 
 
-toshy-config-stop
+"$HOME/.local/bin/toshy-config-stop"
+
 sleep 0.5
-toshy-config-start
+
+nohup "$HOME/.local/bin/toshy-config-start" &

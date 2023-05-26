@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
 
-# Stop the Toshy manual scripts. First stop session monitor script so that it 
-# doesn't try to restart the config script. Then stop config script. 
+# Stop the Toshy manual script
 
 # Check if the script is being run as root
 if [[ $EUID -eq 0 ]]; then
@@ -16,9 +15,7 @@ if [[ -z $USER ]] || [[ -z $HOME ]]; then
     exit 1
 fi
 
-echo -e "Stopping Toshy services/script...\n"
+echo -e "Stopping Toshy manual config script...\n"
 
-toshy-services-stop
-
-/usr/bin/pkill -f "bin/keyszer"
-/usr/bin/pkill -f "toshy-config-start"
+pkill -f "/bin/keyszer"
+pkill -f "toshy-config-start"

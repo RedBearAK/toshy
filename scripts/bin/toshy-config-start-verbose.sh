@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-# Start the Toshy manual scripts
+# Start the Toshy manual script, with verbose output
 
 # Check if the script is being run as root
 if [[ $EUID -eq 0 ]]; then
@@ -15,7 +15,8 @@ if [[ -z $USER ]] || [[ -z $HOME ]]; then
     exit 1
 fi
 
-toshy-services-stop
+"$HOME/.local/bin/toshy-services-stop"
+
 pkill -f "bin/keyszer"
 # systemctl stop xkeysnail.service
 pkill -f "bin/xkeysnail"
@@ -23,5 +24,5 @@ pkill -f "bin/xkeysnail"
 # shellcheck disable=SC1091
 source "$HOME/.config/toshy/.venv/bin/activate"
 
-# Start keyszer with verbose flag [-v]
-keyszer -w -v -c "$HOME/.config/toshy/toshy_config.py"
+# Start keyszer with verbose flag [-v] and anti-buffering flag [--flush]
+$(which keyszer) --flush -w -v -c "$HOME/.config/toshy/toshy_config.py"
