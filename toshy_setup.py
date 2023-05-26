@@ -689,6 +689,8 @@ def handle_arguments():
     # Check the values of arguments and perform actions accordingly
     if args.override_distro:
         cnfg.override_distro = args.override_distro
+        # proceed with normal install sequence
+        main(cnfg)
     elif args.show_env:
         get_environment_info()
         sys.exit(0)
@@ -702,7 +704,7 @@ def handle_arguments():
         raise NotImplementedError
         uninstall_toshy()
     else:
-        # proceed with normal install only if no CLI args given
+        # proceed with normal install sequence if no CLI args given
         main(cnfg)
 
 
