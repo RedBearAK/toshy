@@ -92,7 +92,7 @@ class InstallerSettings:
 def get_environment_info():
     """get back the distro name, distro version, session type and 
         desktop environment from `env.py` module"""
-    print(f'\n\n§  Getting environment information...\n{cnfg.separator}')
+    print(f'\n§  Getting environment information...\n{cnfg.separator}')
 
     try:
         with open('/proc/1/comm', 'r') as f:
