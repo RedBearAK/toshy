@@ -59,13 +59,6 @@ class InstallerSettings:
         self.systemctl_present  = shutil.which('systemctl')
         self.init_system        = None
 
-        with open('/proc/1/comm', 'r') as f:
-            self.init_system = f.read().strip()
-        if self.init_system == 'systemd':
-            print("Systemd is the active init system")
-        if self.init_system == 'init':
-            print("SysVinit is the active init system")
-
         self.pkgs_json_dct      = None
         self.pkgs_for_distro    = None
         self.pip_pkgs           = None
@@ -100,6 +93,21 @@ def get_environment_info():
     """get back the distro name, distro version, session type and 
         desktop environment from `env.py` module"""
     print(f'\n\n§  Getting environment information...\n{cnfg.separator}')
+
+    try:
+        with open('/proc/1/comm', 'r') as f:
+            cnfg.init_system = f.read().strip()
+
+        if cnfg.init_system == 'systemd':
+            print("The active init system is 'systemd'...")
+        elif cnfg.init_system == 'init':
+            print("The active init system is 'SysVinit'...")
+        else:
+            print(f'Init system unidentified: {cnfg.init_system}')
+            sys.exit(1)
+    except (FileNotFoundError, OSError) as init_check_err:
+        print(f'Problem when checking init system:\n\t{init_check_err}')
+
     cnfg.env_info_dct   = env.get_env_info()
     # Avoid casefold() errors by converting all to strings
     cnfg.DISTRO_NAME    = str(cnfg.env_info_dct.get('DISTRO_NAME',  'keymissing')).casefold()
@@ -110,7 +118,8 @@ def get_environment_info():
             f'\n\t{cnfg.DISTRO_NAME     = }'
             f'\n\t{cnfg.DISTRO_VER      = }'
             f'\n\t{cnfg.SESSION_TYPE    = }'
-            f'\n\t{cnfg.DESKTOP_ENV     = }')
+            f'\n\t{cnfg.DESKTOP_ENV     = }'
+            f'\n')
 
 
 def call_attention_to_password_prompt():
@@ -376,11 +385,11 @@ def backup_toshy_config():
                 return ['.venv'] if '.venv' in filenames else []
             # Copy files recursively from source to destination
             shutil.copytree(cnfg.toshy_dir_path, toshy_backup_dir_path, ignore=ignore_venv)
-        except shutil.Error as e:
-            print(f"Failed to copy directory: {e}")
+        except shutil.Error as copy_error:
+            print(f"Failed to copy directory: {copy_error}")
             exit(1)
-        except OSError as e:
-            print(f"Failed to create backup directory: {e}")
+        except OSError as os_error:
+            print(f"Failed to create backup directory: {os_error}")
             exit(1)
         print(f'Backup completed to {toshy_backup_dir_path}')
         cnfg.backup_succeeded = True
@@ -413,10 +422,10 @@ def install_toshy_files():
                 'README.md'
             )
         )
-    except shutil.Error as e:
-        print(f"Failed to copy directory: {e}")
-    except OSError as e:
-        print(f"Failed to create backup directory: {e}")
+    except shutil.Error as copy_error:
+        print(f"Failed to copy directory: {copy_error}")
+    except OSError as os_error:
+        print(f"Failed to create backup directory: {os_error}")
     toshy_default_cfg = os.path.join(
         cnfg.toshy_dir_path, 'toshy-default-config', 'toshy_config.py')
     shutil.copy(toshy_default_cfg, cnfg.toshy_dir_path)
