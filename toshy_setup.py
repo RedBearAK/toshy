@@ -161,9 +161,9 @@ def load_uinput_module():
 
     try:
         subprocess.check_output("lsmod | grep uinput", shell=True)
-        print("uinput module is already loaded")
+        print('"uinput" module is already loaded')
     except subprocess.CalledProcessError:
-        print("uinput module is not loaded, loading now...")
+        print('"uinput" module is not loaded, loading now...')
         call_attention_to_password_prompt()
         subprocess.run(f'sudo modprobe uinput', shell=True, check=True)
 
