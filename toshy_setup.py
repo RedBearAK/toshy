@@ -51,6 +51,7 @@ class InstallerSettings:
     def __init__(self) -> None:
         self.separator          = '============================================='
         self.env_info_dct       = None
+        self.override_distro    = None
         self.DISTRO_NAME        = None
         self.DISTRO_VER         = None
         self.SESSION_TYPE       = None
@@ -123,7 +124,11 @@ def get_environment_info():
     cnfg.env_info_dct   = env.get_env_info()
 
     # Avoid casefold() errors by converting all to strings
-    cnfg.DISTRO_NAME    = str(cnfg.env_info_dct.get('DISTRO_NAME',  'keymissing')).casefold()
+    if cnfg.override_distro:
+        cnfg.DISTRO_NAME    = str(cnfg.override_distro).casefold()
+    else:
+        cnfg.DISTRO_NAME    = str(cnfg.env_info_dct.get('DISTRO_NAME',  'keymissing')).casefold()
+
     cnfg.DISTRO_VER     = str(cnfg.env_info_dct.get('DISTRO_VER',   'keymissing')).casefold()
     cnfg.SESSION_TYPE   = str(cnfg.env_info_dct.get('SESSION_TYPE', 'keymissing')).casefold()
     cnfg.DESKTOP_ENV    = str(cnfg.env_info_dct.get('DESKTOP_ENV',  'keymissing')).casefold()
@@ -639,7 +644,7 @@ def show_environment():
     pass
 
 
-def handle_arguments(cnfg):
+def handle_arguments():
     parser = argparse.ArgumentParser(
         description='Toshy Installer Script',
         epilog='Default action: Install Toshy'
@@ -649,6 +654,12 @@ def handle_arguments(cnfg):
     # parser.set_defaults(func=main)
     
     # Add arguments
+    parser.add_argument(
+        '--override-distro',
+        type=str,
+        dest='override_distro',
+        help='Override auto-detection of distro name/type'
+    )
     parser.add_argument(
         '--uninstall',
         action='store_true',
@@ -676,7 +687,9 @@ def handle_arguments(cnfg):
     args: Namespace = parser.parse_args()
 
     # Check the values of arguments and perform actions accordingly
-    if args.show_env:
+    if args.override_distro:
+        cnfg.override_distro = args.override_distro
+    elif args.show_env:
         get_environment_info()
         sys.exit(0)
     elif args.apply_tweaks:
@@ -765,7 +778,7 @@ if __name__ == '__main__':
 
     cnfg = InstallerSettings()
 
-    handle_arguments(cnfg)
+    handle_arguments()
 
     # This gets called in handle_arguments() as 'else' action
     # when there are no arguments passed:
