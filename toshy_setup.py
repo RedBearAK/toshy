@@ -148,8 +148,8 @@ def load_uinput_module():
                 call_attention_to_password_prompt()
                 command = "echo 'uinput' | sudo tee /etc/modules-load.d/uinput.conf >/dev/null"
                 subprocess.run(command, shell=True, check=True)
-            except subprocess.CalledProcessError as e:
-                print(f"Failed to create /etc/modules-load.d/uinput.conf: {e}")
+            except subprocess.CalledProcessError as proc_error:
+                print(f"Failed to create /etc/modules-load.d/uinput.conf: {proc_error}")
     else:
         # Check if /etc/modules file exists
         if os.path.isfile("/etc/modules"):
@@ -161,8 +161,8 @@ def load_uinput_module():
                         call_attention_to_password_prompt()
                         command = "echo 'uinput' | sudo tee -a /etc/modules >/dev/null"
                         subprocess.run(command, shell=True, check=True)
-                    except subprocess.CalledProcessError as e:
-                        print(f"ERROR: Failed to append 'uinput' to /etc/modules: {e}")
+                    except subprocess.CalledProcessError as proc_error:
+                        print(f"ERROR: Failed to append 'uinput' to /etc/modules: {proc_error}")
 
 
 def reload_udev_rules():
@@ -172,8 +172,8 @@ def reload_udev_rules():
             "sudo udevadm control --reload-rules && sudo udevadm trigger",
             shell=True, check=True)
         print('"udev" rules reloaded successfully.')
-    except subprocess.CalledProcessError as e:
-        print(f'Failed to reload "udev" rules: {e}')
+    except subprocess.CalledProcessError as proc_error:
+        print(f'Failed to reload "udev" rules: {proc_error}')
         cnfg.should_reboot = True
 
 
@@ -193,9 +193,9 @@ def install_udev_rules():
             subprocess.run(command, input=rule_content.encode(), shell=True, check=True)
             print(f'"udev" rules file successfully installed.')
             reload_udev_rules()
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError as proc_error:
             print(f'\nERROR: Problem while installing "udev" rules file for keymapper...\n')
-            err_output: bytes = e.output  # Type hinting the error_output variable
+            err_output: bytes = proc_error.output  # Type hinting the error_output variable
             # Deal with possible 'NoneType' error output
             print(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
             print(f'\nERROR: Install failed.')
@@ -215,9 +215,9 @@ def verify_user_groups():
         try:
             call_attention_to_password_prompt()
             subprocess.run(['sudo', 'groupadd', cnfg.input_group_name], check=True)
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError as proc_error:
             print(f'\nERROR: Problem when trying to create "input" group...\n')
-            err_output: bytes = e.output  # Type hinting the error_output variable
+            err_output: bytes = proc_error.output  # Type hinting the error_output variable
             # Deal with possible 'NoneType' error output
             print(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
             print(f'\nERROR: Install failed.')
@@ -234,10 +234,10 @@ def verify_user_groups():
             call_attention_to_password_prompt()
             subprocess.run(
                 ['sudo', 'usermod', '-aG', cnfg.input_group_name, cnfg.user_name], check=True)
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError as proc_error:
             print(f'\nERROR: Problem when trying to add user "{cnfg.user_name}" to '
                     f'group "{cnfg.input_group_name}"...\n')
-            err_output: bytes = e.output  # Type hinting the error_output variable
+            err_output: bytes = proc_error.output  # Type hinting the error_output variable
             # Deal with possible 'NoneType' error output
             print(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
             print(f'\nERROR: Install failed.')
@@ -293,6 +293,7 @@ def install_distro_pkgs():
 
     pacman_distros = [
         'arch',
+        'endeavouros',
         'manjaro',
     ]
 
