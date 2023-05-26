@@ -99,14 +99,15 @@ def get_environment_info():
             cnfg.init_system = f.read().strip()
 
         if cnfg.init_system == 'systemd':
-            print("The active init system is 'systemd'...")
+            print(f"The active init system is 'systemd'")
         elif cnfg.init_system == 'init':
-            print("The active init system is 'SysVinit'...")
+            print(f"The active init system is 'SysVinit'")
         else:
             print(f'Init system unidentified: {cnfg.init_system}')
-            sys.exit(1)
     except (FileNotFoundError, OSError) as init_check_err:
         print(f'Problem when checking init system:\n\t{init_check_err}')
+
+    print('')   # blank line after init system message
 
     cnfg.env_info_dct   = env.get_env_info()
     # Avoid casefold() errors by converting all to strings
