@@ -94,22 +94,26 @@ def get_environment_info():
         desktop environment from `env.py` module"""
     print(f'\n§  Getting environment information...\n{cnfg.separator}')
 
+    known_init_systems = ['systemd', 'init', 'upstart', 'openrc', 'runit', 'initng']
+
     try:
         with open('/proc/1/comm', 'r') as f:
             cnfg.init_system = f.read().strip()
-
-        if cnfg.init_system == 'systemd':
-            print(f"The active init system is 'systemd'")
-        elif cnfg.init_system == 'init':
-            print(f"The active init system is 'SysVinit'")
-        else:
-            print(f'Init system unidentified: {cnfg.init_system}')
-    except (FileNotFoundError, OSError) as init_check_err:
+    except (PermissionError, FileNotFoundError, OSError) as init_check_err:
         print(f'Problem when checking init system:\n\t{init_check_err}')
+
+    if cnfg.init_system:
+        if cnfg.init_system in known_init_systems:
+            print(f"The active init system is: '{cnfg.init_system}'")
+        else:
+            print(f"Init system unknown: '{cnfg.init_system}'")
+    else:
+        print(f"Init system could not be determined.")
 
     print('')   # blank line after init system message
 
     cnfg.env_info_dct   = env.get_env_info()
+
     # Avoid casefold() errors by converting all to strings
     cnfg.DISTRO_NAME    = str(cnfg.env_info_dct.get('DISTRO_NAME',  'keymissing')).casefold()
     cnfg.DISTRO_VER     = str(cnfg.env_info_dct.get('DISTRO_VER',   'keymissing')).casefold()
