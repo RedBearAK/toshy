@@ -616,7 +616,7 @@ def show_environment():
     pass
 
 
-def handle_arguments():
+def handle_arguments(cnfg):
     parser = argparse.ArgumentParser(
         description='Toshy Installer Script',
         epilog='Default action: Install Toshy'
@@ -739,7 +739,7 @@ if __name__ == '__main__':
 
     cnfg = InstallerSettings()
 
-    handle_arguments()
+    handle_arguments(cnfg)
 
     # This gets called in handle_arguments() as 'else' action
     # when there are no arguments passed:
