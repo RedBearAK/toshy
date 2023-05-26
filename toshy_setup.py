@@ -325,6 +325,10 @@ def install_distro_pkgs():
         'manjaro',
     ]
 
+    zypper_distros = [
+        'opensuse',
+    ]
+
     if cnfg.DISTRO_NAME in apt_distros:
         call_attention_to_password_prompt()
         subprocess.run(['sudo', 'apt', 'install', '-y'] + cnfg.pkgs_for_distro)
@@ -370,6 +374,9 @@ def install_distro_pkgs():
             print('Installer will fail with version mismatches if you have not updated recently.')
             print('Update your Arch-based system and try the Toshy installer again. Exiting.')
             sys.exit(1)
+    elif cnfg.DISTRO_NAME in zypper_distros:
+        # TODO: make sure this actually works!
+        subprocess.run(['zypper', '--non-interactive', 'install'] + cnfg.pkgs_for_distro)
 
     else:
         print(f"\nERROR: Installer does not know how to handle distro: {cnfg.DISTRO_NAME}\n")
