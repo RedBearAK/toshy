@@ -666,10 +666,13 @@ def handle_arguments(cnfg):
         get_environment_info()
         sys.exit(0)
     elif args.apply_tweaks:
+        raise NotImplementedError
         apply_desktop_tweaks()
     elif args.remove_tweaks:
+        raise NotImplementedError
         remove_desktop_tweaks()
     elif args.uninstall:
+        raise NotImplementedError
         uninstall_toshy()
     else:
         main(cnfg)
