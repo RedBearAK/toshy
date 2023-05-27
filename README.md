@@ -218,9 +218,16 @@ sudo apt install mint-meta-mate mint-meta-xfce mint-meta-cinnamon
     - Starting only the "config script" from the tray icon menu should work now.
     - Only "rox-icewm" desktop verified/tested.
 
-- Debian in general might work, because
+- MX Linux (Debian-based, related to antiX)
 
-    - antiX is based on Debian 11 Bullseye and is identified as `debian`.
+    - Preliminary support, no SysVinit services yet, so no auto-start.
+    - Use `toshy-config-start` or `toshy-config-start-verbose` for manual start.
+    - Starting only the "config script" from the tray icon menu should work now.
+    - Choosing advanced options and booting with `systemd` will work fine.
+
+- Debian in general might work, because:
+
+    - antiX & MX Linux are based on Debian 11 Bullseye and identify as `debian`.
 
 - openSUSE Leap 15.4 - PYTHON VERY OLD! Good luck.  
 
