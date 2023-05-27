@@ -175,6 +175,8 @@ There will be no issue when installing both of the compatible extensions, which 
 sudo apt install mint-meta-mate mint-meta-xfce mint-meta-cinnamon
 ```
 
+- LMDE 5 (Linux Mint Debian Edition)
+
 - Ubuntu official variants tested:
 
     - Ubuntu 22.04/23.04
