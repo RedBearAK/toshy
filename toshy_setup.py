@@ -81,6 +81,7 @@ class InstallerSettings:
         self.user_name          = pwd.getpwuid(os.getuid()).pw_name
 
         self.should_reboot      = None
+        self.reboot_tmp_file    = "/tmp/toshy_installer_says_reboot"
         self.reboot_ascii_art   = textwrap.dedent("""
                 ██████      ███████     ██████       ██████       ██████      ████████     ██ 
                 ██   ██     ██          ██   ██     ██    ██     ██    ██        ██        ██ 
@@ -154,6 +155,12 @@ def call_attention_to_password_prompt():
         print('')
 
 
+def prompt_for_reboot():
+    cnfg.should_reboot = True
+    if not os.path.exists(cnfg.reboot_tmp_file):
+        os.mknod(cnfg.reboot_tmp_file)
+
+
 def load_uinput_module():
     """Check to see if `uinput` kernel module is loaded"""
 
@@ -202,7 +209,7 @@ def reload_udev_rules():
         print('"udev" rules reloaded successfully.')
     except subprocess.CalledProcessError as proc_error:
         print(f'Failed to reload "udev" rules: {proc_error}')
-        cnfg.should_reboot = True
+        prompt_for_reboot()
 
 
 def install_udev_rules():
@@ -272,7 +279,7 @@ def verify_user_groups():
             sys.exit(1)
 
         print(f'User "{cnfg.user_name}" added to group "{cnfg.input_group_name}"...')
-        cnfg.should_reboot = True
+        prompt_for_reboot()
 
 
 def load_package_list():
@@ -305,6 +312,7 @@ def install_distro_pkgs():
         'ubuntu',
         'mint',
         'lmde',
+        'popos',
         'eos',
         'neon',
         'zorin',
@@ -741,13 +749,11 @@ def main(cnfg: InstallerSettings):
     autostart_tray_icon()
     apply_desktop_tweaks()
 
-    # Define the path of the temporary file
-    reboot_tmp_file = "/tmp/toshy_installer_says_reboot"
-
-    if cnfg.should_reboot or os.path.exists(reboot_tmp_file):
+    if cnfg.should_reboot or os.path.exists(cnfg.reboot_tmp_file):
+        cnfg.should_reboot = True
         # create reboot reminder temp file, in case installer is run again
-        if not os.path.exists(reboot_tmp_file):
-            os.mknod(reboot_tmp_file)
+        if not os.path.exists(cnfg.reboot_tmp_file):
+            os.mknod(cnfg.reboot_tmp_file)
         print(  f'\n\n'
                 f'{cnfg.separator}\n'
                 f'{cnfg.reboot_ascii_art}'
