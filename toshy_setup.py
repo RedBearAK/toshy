@@ -306,6 +306,7 @@ def install_distro_pkgs():
         'mint',
         'eos',
         'neon',
+        'zorin',
         'debian',
     ]
 
