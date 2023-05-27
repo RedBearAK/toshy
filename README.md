@@ -186,6 +186,12 @@ sudo apt install mint-meta-mate mint-meta-xfce mint-meta-cinnamon
 
     - X11/Xorg session only (Wayland+KDE in development)
 
+- Zorin OS 16.2 (Ubuntu-based)
+
+    - X11/Xorg or Wayland+GNOME session
+    - Wayland+GNOME requires Xremap extension
+    - GNOME Shell is still 3.38.x, Xremap extension is the only compatible extension available for pre-GNOME 40.x
+
 - elementary OS 7.0 (Ubuntu-based)
 
 - Manjaro (Arch-based)
