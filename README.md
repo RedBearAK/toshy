@@ -182,6 +182,8 @@ sudo apt install mint-meta-mate mint-meta-xfce mint-meta-cinnamon
     - Kubuntu 22.04/23.04 (X11/Xorg only, Wayland+KDE in dev.)
     - Lubuntu 23.04
 
+- Pop!_OS 22.04 LTS (Ubuntu-based)
+
 - KDE Neon (based on Ubuntu LTS releases)
 
     - X11/Xorg session only (Wayland+KDE in development)
