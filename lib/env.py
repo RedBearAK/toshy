@@ -104,6 +104,7 @@ def get_env_info():
         'Red Hat.*':            'rhel',
         'Rocky.*':              'rocky',
         'Ubuntu':               'ubuntu',
+        'Zorin.*':              'zorin',
     }
 
     # if the regex string from dict key is in the distro name name retrieved, 
