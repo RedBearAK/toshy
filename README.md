@@ -4,7 +4,7 @@
 
 - May seem to run but not do any remapping, needing `toshy-config-start-verbose` in the terminal to troubleshoot.  
 
-- May cause the keyboard in some odd circumstances after install to have no output (default emergency bail out key is F16). If you don't have F16 on your keyboard, you may need to stop the Toshy services from the tray icon menu, or by opening the "Preferences" app from a menu with the mouse and stop the services.  
+- May cause the keyboard in some odd circumstances after install to have no output (default emergency bail out key is F16). If you don't have F16 on your keyboard, you may need to stop the Toshy services from the tray icon menu, or by opening the "Preferences" app from a menu with the mouse.  
 
 # Toshy README
 
