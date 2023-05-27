@@ -3476,6 +3476,7 @@ keymap("GenGUI overrides: KDE Neon", {
                                                                 # SL - Default SL - Change workspace (kde_neon)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'neon' )
 keymap("GenGUI overrides: Pop!_OS", {
+    C("RC-Space"):              C("Super-slash"),               # "Launch and switch applications" (popos)
     C("RC-H"):                  C("Super-h"),                   # Default SL - Minimize app (gnome/budgie/popos/fedora) not-deepin
     C("Super-Right"):          [bind,C("Super-C-Up")],          # SL - Change workspace (popos)
     C("Super-Left"):           [bind,C("Super-C-Down")],        # SL - Change workspace (popos)
