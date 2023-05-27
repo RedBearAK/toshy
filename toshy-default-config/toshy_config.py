@@ -2714,8 +2714,8 @@ keymap("Overrides for Nautilus Create Archive dialog - Finder Mods", {
 keymap("Overrides for Nautilus - Finder Mods", {
     # Optional "new window at home folder" in Nautilus
     # C("RC-N"):                  C("C-Alt-Space"),               # macOS Finder search window shortcut Cmd+Option+Space
-    # For the above shortcut to work, a custom shortcut must be set up in the Settings app in GNOME 
-    # to run command: "nautilus --new-window /home/USER" [ replace "USER" ]
+    # For the above shortcut to work, a custom shortcut bound to Ctrl+Alt+Space must be set up in the 
+    # Settings app in GNOME to run command: "nautilus --new-window /home/USER" [ replace "USER" ]
     C("RC-KEY_1"):              C("C-KEY_2"),                   # View as Icons
     C("RC-KEY_2"):              C("C-KEY_1"),                   # View as List (Detailed)
     C("RC-Super-o"):            C("Shift-Enter"),               # Open in new window (disable line below)
