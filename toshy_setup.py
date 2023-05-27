@@ -740,7 +740,13 @@ def main(cnfg: InstallerSettings):
     autostart_tray_icon()
     apply_desktop_tweaks()
 
-    if cnfg.should_reboot:
+    # Define the path of the temporary file
+    reboot_tmp_file = "/tmp/toshy_installer_says_reboot"
+
+    if cnfg.should_reboot or os.path.exists(reboot_tmp_file):
+        # create reboot reminder temp file, in case installer is run again
+        if not os.path.exists(reboot_tmp_file):
+            os.mknod(reboot_tmp_file)
         print(  f'\n\n'
                 f'{cnfg.separator}\n'
                 f'{cnfg.reboot_ascii_art}'
