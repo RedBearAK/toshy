@@ -97,6 +97,7 @@ def get_env_info():
         'Debian.*':             'debian',
         'elementary':           'eos',
         'Fedora.*':             'fedora',
+        'LMDE.*':               'lmde',
         'Manjaro':              'manjaro',
         'KDE Neon':             'neon',
         'Linux Mint':           'mint',
