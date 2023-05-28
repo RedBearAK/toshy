@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-
-from enum import auto
 import os
 import sys
 import pwd
@@ -18,7 +16,7 @@ import subprocess
 import configparser
 
 from argparse import Namespace
-from typing import Any
+from typing import Dict, Union
 # local import
 import lib.env as env
 from lib.logger import debug, error
@@ -809,9 +807,11 @@ def remove_desktop_tweaks():
     # gsettings reset org.gnome.mutter overlay-key
     if cnfg.DESKTOP_ENV == 'gnome':
         subprocess.run(['gsettings', 'reset', 'org.gnome.mutter', 'overlay-key'])
+        print(f'Removed tweak to disable GNOME "overlay-key" binding to Meta/Super.')
 
     if cnfg.DESKTOP_ENV == 'kde':
         remove_kde_tweak()
+        print(f'Removed tweak to disable Meta opening KDE application menu.')
 
 
 def uninstall_toshy():
@@ -820,11 +820,16 @@ def uninstall_toshy():
     # TODO: do more uninstaller stuff...
 
 
-def show_environment():
-    pass
+def get_json_distro_names():
+    """utility function to return list of available distro names from packages.json file"""
+    with open('packages.json') as f:
+        data: Dict[str:str] = json.load(f)
+    keys = ", ".join(data.keys())
+    return keys
 
 
 def handle_arguments():
+    """deal with CLI arguments given to installer script"""
     parser = argparse.ArgumentParser(
         description='Toshy Installer - options are mutually exclusive',
         epilog='Default action: Install Toshy'
@@ -838,7 +843,7 @@ def handle_arguments():
         '--override-distro',
         type=str,
         dest='override_distro',
-        help='Override auto-detection of distro name/type'
+        help=f'Override auto-detection of distro name/type. Options:\n\t\t{get_json_distro_names()}'
     )
     parser.add_argument(
         '--uninstall',
@@ -855,13 +860,13 @@ def handle_arguments():
         '--apply-tweaks',
         action='store_true',
         dest='apply_tweaks',
-        help='Apply desktop environment tweaks (NOT IMPLEMENTED YET)'
+        help='Apply desktop environment tweaks only, no install'
     )
     parser.add_argument(
         '--remove-tweaks',
         action='store_true',
         dest='remove_tweaks',
-        help='Remove desktop environment tweaks (NOT IMPLEMENTED YET)'
+        help='Remove desktop environment tweaks only, no install'
     )
 
     args = parser.parse_args()
@@ -875,11 +880,11 @@ def handle_arguments():
         get_environment_info()
         sys.exit(0)
     elif args.apply_tweaks:
-        raise NotImplementedError
         apply_desktop_tweaks()
+        sys.exit(0)
     elif args.remove_tweaks:
-        raise NotImplementedError
         remove_desktop_tweaks()
+        sys.exit(0)
     elif args.uninstall:
         raise NotImplementedError
         uninstall_toshy()
