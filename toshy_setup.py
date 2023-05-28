@@ -286,7 +286,27 @@ def load_package_list():
     """load package list from JSON file"""
     with open('packages.json') as f:
         cnfg.pkgs_json_dct = json.load(f)
-    cnfg.pip_pkgs = cnfg.pkgs_json_dct['pip']
+
+    # cnfg.pip_pkgs = cnfg.pkgs_json_dct['pip']
+
+    cnfg.pip_pkgs = [
+            "pillow",
+            "lockfile",
+            "dbus-python",
+            "systemd-python",
+            "pygobject",
+            "tk",
+            "sv_ttk",
+            "psutil",
+            "watchdog",
+            "inotify-simple",
+            "evdev",
+            "appdirs",
+            "ordered-set",
+            "python-xlib",
+            "six"
+    ]
+
     try:
         cnfg.pkgs_for_distro = cnfg.pkgs_json_dct[cnfg.DISTRO_NAME]
     except KeyError:
@@ -547,6 +567,19 @@ def install_desktop_apps():
     replace_home_in_file(gui_desktop_file)
 
 
+def setup_kde_dbus_service():
+    """install the D-Bus service initialization script to receive
+    window focus change notifications from the KWin script on KDE desktops"""
+    print(f'\n\n§  Setting up the Toshy KDE D-Bus service...\n{cnfg.separator}')
+    
+
+
+def setup_kwin_script():
+    """install the KWin script to notify D-Bus service about window focus changes"""
+    print(f'\n\n§  Setting up the Toshy KWin script...\n{cnfg.separator}')
+    
+
+
 def setup_systemd_services():
     """invoke the setup script to install the systemd service units"""
     print(f'\n\n§  Setting up the Toshy systemd services...\n{cnfg.separator}')
@@ -744,6 +777,10 @@ def main(cnfg: InstallerSettings):
     install_pip_packages()
     install_bin_commands()
     install_desktop_apps()
+    if cnfg.DESKTOP_ENV in ['kde', 'plasma']:
+        setup_kde_dbus_service()
+        setup_kwin_script()
+
     setup_systemd_services()
 
     autostart_tray_icon()

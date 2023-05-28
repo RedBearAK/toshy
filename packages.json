@@ -1,33 +1,4 @@
 {
-    "comments": [
-        "pip packages list includes pre-installing keyszer support packages",
-        "keyszer support packages are from inotify-simple down to end of list",
-        "pip, wheel, setuptools are installed separately in main installer ...",
-        "... script before the rest of the pip list is installed, to minimize ...",
-        "... the presentation of (new version available) warnings in the terminal"
-    ],
-    "pip": [
-        "pillow",
-        "lockfile",
-        "dbus-python",
-        "systemd-python",
-        "pygobject",
-        "tk",
-        "sv_ttk",
-        "psutil",
-        "watchdog",
-        "inotify-simple",
-        "evdev",
-        "appdirs",
-        "ordered-set",
-        "python-xlib",
-        "six"
-    ],
-    "kde": [
-        "ibus",
-        "ibus-qt",
-        "ibus-gtk"
-    ],
     "fedora": [
         "git",
         "evtest",
@@ -258,8 +229,5 @@
         "python-pip",
         "systemd",
         "tk"
-    ],
-    "nothing": [
-        "leave this section here at the end"
     ]
 }
