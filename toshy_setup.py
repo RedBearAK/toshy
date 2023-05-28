@@ -83,6 +83,7 @@ class InstallerSettings:
         self.input_group_name   = 'input'
         self.user_name          = pwd.getpwuid(os.getuid()).pw_name
 
+        self.tweak_applied      = None
         self.should_reboot      = None
         self.reboot_tmp_file    = "/tmp/toshy_installer_says_reboot"
         self.reboot_ascii_art   = textwrap.dedent("""
@@ -719,6 +720,8 @@ def apply_kde_tweak():
 
     # Run reconfigure command
     subprocess.run(['qdbus', 'org.kde.KWin', '/KWin', 'reconfigure'])
+    print(f'Disabled Meta key opening application menu.')
+
 
 
 def remove_kde_tweak():
@@ -752,6 +755,7 @@ def remove_kde_tweak():
 
     # Run reconfigure command
     subprocess.run(['qdbus', 'org.kde.KWin', '/KWin', 'reconfigure'])
+    print(f'Removed tweak to disable Meta key opening application menu.')
 ###################################################################################################
 
 
@@ -764,7 +768,6 @@ def apply_desktop_tweaks():
             instead of (or in addition to) here in the installer. 
     """
 
-    tweak_applied = None
     print(f'\n\n§  Applying any known desktop environment tweaks...\n{cnfg.separator}')
 
     # if GNOME, disable `overlay-key`
@@ -772,7 +775,7 @@ def apply_desktop_tweaks():
     if cnfg.DESKTOP_ENV == 'gnome':
         subprocess.run(['gsettings', 'set', 'org.gnome.mutter', 'overlay-key', ''])
         print(f'Disabling Super/Meta/Win/Cmd key opening the GNOME overview...')
-        tweak_applied = True
+        cnfg.tweak_applied = True
 
         def is_extension_enabled(extension_uuid):
             output = subprocess.check_output(
@@ -789,10 +792,11 @@ def apply_desktop_tweaks():
 
     if cnfg.DESKTOP_ENV == 'kde':
         apply_kde_tweak()
+        cnfg.tweak_applied = True
     
     # if KDE, install `ibus` or `fcitx` and choose as input manager (ask for confirmation)
     
-    if not tweak_applied:
+    if not cnfg.tweak_applied:
         print(f'If nothing printed, no tweaks available for "{cnfg.DESKTOP_ENV}" yet.')
 
 
