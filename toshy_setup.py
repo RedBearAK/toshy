@@ -691,6 +691,12 @@ def autostart_tray_icon():
 
 
 ###################################################################################################
+# fix the bad behavior of 'configparser' changing options to lower case (KDE no likey)
+class CaseSensitiveConfigParser(configparser.ConfigParser):
+    def optionxform(self, optionstr):
+        return optionstr
+
+
 def apply_kde_tweak():
     """Add a tweak to kwinrc file to disable Meta key opening app menu."""
 
@@ -702,7 +708,7 @@ def apply_kde_tweak():
         open(kwinrc_path, 'a').close()
 
     # Create a ConfigParser object and read kwinrc
-    config = configparser.ConfigParser()
+    config = CaseSensitiveConfigParser()
     config.read(kwinrc_path)
 
     # Check if 'ModifierOnlyShortcuts' section exists and create if it does not
@@ -717,7 +723,9 @@ def apply_kde_tweak():
         config.write(configfile)
 
     # Run reconfigure command
-    subprocess.run(['qdbus', 'org.kde.KWin', '/KWin', 'reconfigure'])
+    subprocess.run(['qdbus', 'org.kde.KWin', '/KWin', 'reconfigure'],
+                    stderr=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL)
     print(f'Disabled Meta key opening application menu.')
 
 
@@ -733,7 +741,7 @@ def remove_kde_tweak():
         return
 
     # Create a ConfigParser object and read kwinrc
-    config = configparser.ConfigParser()
+    config = CaseSensitiveConfigParser()
     config.read(kwinrc_path)
 
     # Check if 'ModifierOnlyShortcuts' section exists, if not there is nothing to do
