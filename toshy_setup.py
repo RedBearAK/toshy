@@ -58,7 +58,7 @@ class InstallerSettings:
         self.SESSION_TYPE       = None
         self.DESKTOP_ENV        = None
         
-        self.systemd_present    = shutil.which('systemd') is not None
+        self.systemctl_present  = shutil.which('systemctl') is not None
         self.init_system        = None
 
         self.pkgs_json_dct      = None
@@ -323,7 +323,7 @@ def install_distro_pkgs():
     # Filter out systemd packages if not present
     cnfg.pkgs_for_distro = [
         pkg for pkg in cnfg.pkgs_for_distro 
-        if cnfg.systemd_present or 'systemd' not in pkg
+        if cnfg.systemctl_present or 'systemd' not in pkg
     ]
 
     apt_distros = ['ubuntu', 'mint', 'lmde', 'popos', 'eos', 'neon', 'zorin', 'debian']
@@ -463,7 +463,7 @@ def install_toshy_files():
 
 def setup_virtual_env():
     """setup a virtual environment to install Python packages"""
-    print(f'\n\n§  Setting up virtual environment...\n{cnfg.separator}')
+    print(f'\n\n§  Setting up Python virtual environment...\n{cnfg.separator}')
 
     # Create the virtual environment if it doesn't exist
     if not os.path.exists(cnfg.venv_path):
@@ -481,7 +481,7 @@ def install_pip_packages():
     # Filter out systemd packages if not present
     cnfg.pip_pkgs = [
         pkg for pkg in cnfg.pip_pkgs 
-        if cnfg.systemd_present or 'systemd' not in pkg
+        if cnfg.systemctl_present or 'systemd' not in pkg
     ]
 
     commands        = [
@@ -589,7 +589,7 @@ def setup_kde_dbus_service():
 def setup_systemd_services():
     """invoke the systemd setup script to install the systemd service units"""
     print(f'\n\n§  Setting up the Toshy systemd services...\n{cnfg.separator}')
-    if cnfg.systemd_present:
+    if cnfg.systemctl_present:
         script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'bin', 'toshy-systemd-setup.sh')
         subprocess.run([script_path])
     else:
