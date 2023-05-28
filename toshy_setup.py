@@ -15,6 +15,7 @@ import datetime
 import platform
 import textwrap
 import subprocess
+import configparser
 
 from argparse import Namespace
 from typing import Any
@@ -540,6 +541,35 @@ def install_desktop_apps():
     replace_home_in_file(gui_desktop_file)
 
 
+def add_kwin_script_to_kwinrc():
+    """utility function to add Toshy KWin script to KWin RC file"""
+    # Define path to kwinrc
+    kwinrc_path = os.path.join(os.path.expanduser('~'), '.config', 'kwinrc')
+
+    # Check if kwinrc exists and create if it does not
+    if not os.path.exists(kwinrc_path):
+        open(kwinrc_path, 'a').close()
+
+    # Create a ConfigParser object and read kwinrc
+    config = configparser.ConfigParser()
+    config.read(kwinrc_path)
+
+    # Check if 'Plugins' section exists and create if it does not
+    if 'Plugins' not in config.sections():
+        config.add_section('Plugins')
+
+    # Check if 'toshy-dbus-notifyactivewindowEnabled' option exists in 'Plugins' section 
+    # and set to 'true' if it does not
+    if 'toshy-dbus-notifyactivewindowEnabled' not in config['Plugins']:
+        config.set('Plugins', 'toshy-dbus-notifyactivewindowEnabled', 'true')
+    elif config['Plugins'].getboolean('toshy-dbus-notifyactivewindowEnabled') is False:
+        config.set('Plugins', 'toshy-dbus-notifyactivewindowEnabled', 'true')
+
+    # Write changes back to kwinrc
+    with open(kwinrc_path, 'w') as configfile:
+        config.write(configfile)
+
+
 def setup_kwin_script():
     """install the KWin script to notify D-Bus service about window focus changes"""
     print(f'\n\n§  Setting up the Toshy KWin script...\n{cnfg.separator}')
@@ -563,6 +593,16 @@ def setup_kwin_script():
     subprocess.run(f"{base_qdbus_cmd}.unloadScript {kwin_script_name}",
                     capture_output=True, shell=True)
     
+    # Try to remove any installed KWin script entirely
+    result = subprocess.run(
+        ['plasmapkg2', '-t', 'kwinscript', '-r', temp_file_path], capture_output=True, text=True)
+    
+    if result.returncode != 0:
+        pass
+        # print(f"Error removing the KWin script. The error was:\n\t{result.stderr}")
+    else:
+        print("Successfully removed the KWin script.")
+
     # Install the script using plasmapkg2
     result = subprocess.run(
         ['plasmapkg2', '-t', 'kwinscript', '-u', temp_file_path], capture_output=True, text=True)
@@ -585,6 +625,11 @@ def setup_kwin_script():
     subprocess.run(f"{base_qdbus_cmd}.start {kwin_script_name}",
                     capture_output=True, shell=True)
     
+    # Make sure script is added as "enabled" in ~/.config/kwinrc
+    add_kwin_script_to_kwinrc()
+    # Try to get KWin to notice and activate the script on its own, now that it's in RC file
+    subprocess.run(['qdbus', 'org.kde.KWin', '/KWin', 'reconfigure'])
+
 
 
 def setup_kde_dbus_service():
@@ -646,6 +691,70 @@ def autostart_tray_icon():
     print(f'Tray icon should appear in system tray at each login.')
 
 
+###################################################################################################
+def apply_kde_tweak():
+    """Add a tweak to kwinrc file to disable Meta key opening app menu."""
+
+    # Define path to kwinrc
+    kwinrc_path = os.path.join(os.path.expanduser('~'), '.config', 'kwinrc')
+
+    # Check if kwinrc exists and create if it does not
+    if not os.path.exists(kwinrc_path):
+        open(kwinrc_path, 'a').close()
+
+    # Create a ConfigParser object and read kwinrc
+    config = configparser.ConfigParser()
+    config.read(kwinrc_path)
+
+    # Check if 'ModifierOnlyShortcuts' section exists and create if it does not
+    if 'ModifierOnlyShortcuts' not in config.sections():
+        config.add_section('ModifierOnlyShortcuts')
+
+    # Set 'Meta' option in 'ModifierOnlyShortcuts' section to empty
+    config.set('ModifierOnlyShortcuts', 'Meta', '')
+
+    # Write changes back to kwinrc
+    with open(kwinrc_path, 'w') as configfile:
+        config.write(configfile)
+
+    # Run reconfigure command
+    subprocess.run(['qdbus', 'org.kde.KWin', '/KWin', 'reconfigure'])
+
+
+def remove_kde_tweak():
+    """Remove the tweak to kwinrc file that disables Meta key opening app menu."""
+
+    # Define path to kwinrc
+    kwinrc_path = os.path.join(os.path.expanduser('~'), '.config', 'kwinrc')
+
+    # Check if kwinrc exists, if not there is nothing to do
+    if not os.path.exists(kwinrc_path):
+        return
+
+    # Create a ConfigParser object and read kwinrc
+    config = configparser.ConfigParser()
+    config.read(kwinrc_path)
+
+    # Check if 'ModifierOnlyShortcuts' section exists, if not there is nothing to do
+    if 'ModifierOnlyShortcuts' not in config.sections():
+        return
+
+    # Check if 'Meta' option exists in 'ModifierOnlyShortcuts' section, if not there is nothing to do
+    if 'Meta' not in config['ModifierOnlyShortcuts']:
+        return
+
+    # Remove 'Meta' option from 'ModifierOnlyShortcuts' section
+    config.remove_option('ModifierOnlyShortcuts', 'Meta')
+
+    # Write changes back to kwinrc
+    with open(kwinrc_path, 'w') as configfile:
+        config.write(configfile)
+
+    # Run reconfigure command
+    subprocess.run(['qdbus', 'org.kde.KWin', '/KWin', 'reconfigure'])
+###################################################################################################
+
+
 def apply_desktop_tweaks():
     """
     fix things like Meta key activating overview in GNOME or KDE Plasma
@@ -661,7 +770,7 @@ def apply_desktop_tweaks():
     # if GNOME, disable `overlay-key`
     # gsettings set org.gnome.mutter overlay-key ''
     if cnfg.DESKTOP_ENV == 'gnome':
-        subprocess.run(['gsettings', 'set', 'org.gnome.mutter', 'overlay-key', "''"])
+        subprocess.run(['gsettings', 'set', 'org.gnome.mutter', 'overlay-key', ''])
         print(f'Disabling Super/Meta/Win/Cmd key opening the GNOME overview...')
         tweak_applied = True
 
@@ -678,20 +787,8 @@ def apply_desktop_tweaks():
             print(f"RECOMMENDATION: Install AppIndicator GNOME extension\n"
                 "Easiest method: 'flatpak install extensionmanager', search for 'appindicator'")
 
-    # TODO:
-    # if KDE Plasma, disable Meta key opening app menu by
-    # appending this to ~/.config/kwinrc:
-
-    kde_meta_key = textwrap.dedent("""
-                                [ModifierOnlyShortcuts]
-                                Meta=
-                                """)
-
-    # then run command: 
-    # qdbus org.kde.KWin /KWin reconfigure
     if cnfg.DESKTOP_ENV == 'kde':
-        # subprocess.run(['qdbus', 'org.kde.KWin', '/KWin', 'reconfigure'])
-        pass
+        apply_kde_tweak()
     
     # if KDE, install `ibus` or `fcitx` and choose as input manager (ask for confirmation)
     
@@ -709,19 +806,8 @@ def remove_desktop_tweaks():
     if cnfg.DESKTOP_ENV == 'gnome':
         subprocess.run(['gsettings', 'reset', 'org.gnome.mutter', 'overlay-key'])
 
-    # TODO:
-    # if KDE Plasma, remove this text, or comment out the
-    # 'Meta=' line from ~/.config/kwinrc:
-
-    kde_meta_key = textwrap.dedent("""
-                                [ModifierOnlyShortcuts]
-                                Meta=
-                                """)
-
-    # then run command: 
-    # qdbus org.kde.KWin /KWin reconfigure
     if cnfg.DESKTOP_ENV == 'kde':
-        subprocess.run(['qdbus', 'org.kde.KWin', '/KWin', 'reconfigure'])
+        remove_kde_tweak()
 
 
 def uninstall_toshy():
