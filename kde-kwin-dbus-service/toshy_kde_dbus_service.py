@@ -60,12 +60,12 @@ class DBUS_Object(dbus.service.Object):
                 f"\n\t'{resource_name = }'"
         )
 
-    @dbus.service.method(TOSHY_KDE_DBUS_SVC_IFACE, out_signature='sss')
+    @dbus.service.method(TOSHY_KDE_DBUS_SVC_IFACE, out_signature='a{sv}')
     def GetActiveWindow(self):
         print(f'DBUS_SVC: GetActiveWindow() called...')
-        return (    self.caption,
-                    self.resource_class,
-                    self.resource_name )
+        return {    'caption':          self.caption,
+                    'resource_class':   self.resource_class,
+                    'resource_name':    self.resource_name }
 
 
 def main():
