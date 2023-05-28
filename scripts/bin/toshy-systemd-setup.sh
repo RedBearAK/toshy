@@ -43,10 +43,10 @@ mkdir -p "$HOME/.config/autostart"
 # eval "$(which toshy-systemd-remove)"
 eval "$LOCAL_BIN_PATH/toshy-systemd-remove"
 
-cp -f "$SYSD_UNIT_PATH/toshy-config.service" "$USER_SYSD_PATH/"
-cp -f "$SYSD_UNIT_PATH/toshy-session-monitor.service" "$USER_SYSD_PATH/"
+cp -f "$SYSD_UNIT_PATH/toshy-config.service"                "$USER_SYSD_PATH/"
+cp -f "$SYSD_UNIT_PATH/toshy-session-monitor.service"       "$USER_SYSD_PATH/"
 
-cp -f "$TOSHY_CFG_PATH/desktop/Toshy_Import_Vars.desktop" "$HOME/.config/autostart/"
+cp -f "$TOSHY_CFG_PATH/desktop/Toshy_Import_Vars.desktop"   "$HOME/.config/autostart/"
 
 
 sleep $DELAY
