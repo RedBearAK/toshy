@@ -650,6 +650,7 @@ filemanagers = [
     "nautilus",
     "nemo",
     "org.gnome.nautilus",
+    "org.kde.dolphin",
     "pcmanfm",
     "pcmanfm-qt",
     "spacefm",
@@ -2699,7 +2700,7 @@ keymap("Overrides for Dolphin - Finder Mods", {
     C("RC-Super-o"):            C("Shift-RC-o"),                # Open in new window (or new tab, user's choice, see above)
     C("Shift-RC-N"):            is_Enter_F2(C("F10"), False),   # Create new folder (F10), toggle Enter to be Enter
     C("RC-comma"):              C("Shift-RC-comma"),            # Open preferences dialog
-}, when = matchProps(clas="^dolphin$"))
+}, when = matchProps(clas="^dolphin|org.kde.dolphin$"))
 
 # Keybindings overrides for elementary OS Files (Pantheon)
 # (overrides some bindings from general file manager code block below)
