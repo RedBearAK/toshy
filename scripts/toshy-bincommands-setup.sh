@@ -15,27 +15,29 @@ if [[ -z $USER ]] || [[ -z $HOME ]]; then
     exit 1
 fi
 
+
+TOSHY_CFG="$HOME/.config/toshy"
+LOCAL_BIN="$HOME/.local/bin"
+
 echo -e "\nInstalling Toshy bin commands..."
 
 mkdir -p "$HOME/.local/bin"
 
-ln -sf "$HOME/.config/toshy/scripts/bin/toshy-systemd-setup.sh" "$HOME/.local/bin/toshy-systemd-setup"
-ln -sf "$HOME/.config/toshy/scripts/bin/toshy-systemd-remove.sh" "$HOME/.local/bin/toshy-systemd-remove"
-
-ln -sf "$HOME/.config/toshy/scripts/bin/toshy-services-status.sh" "$HOME/.local/bin/toshy-services-status"
-ln -sf "$HOME/.config/toshy/scripts/bin/toshy-services-restart.sh" "$HOME/.local/bin/toshy-services-restart"
-ln -sf "$HOME/.config/toshy/scripts/bin/toshy-services-start.sh" "$HOME/.local/bin/toshy-services-start"
-ln -sf "$HOME/.config/toshy/scripts/bin/toshy-services-stop.sh" "$HOME/.local/bin/toshy-services-stop"
-ln -sf "$HOME/.config/toshy/scripts/bin/toshy-services-log.sh" "$HOME/.local/bin/toshy-services-log"
-
-ln -sf "$HOME/.config/toshy/scripts/bin/toshy-config-start.sh" "$HOME/.local/bin/toshy-config-start"
-ln -sf "$HOME/.config/toshy/scripts/bin/toshy-config-start-verbose.sh" "$HOME/.local/bin/toshy-config-start-verbose"
-ln -sf "$HOME/.config/toshy/scripts/bin/toshy-config-restart.sh" "$HOME/.local/bin/toshy-config-restart"
-ln -sf "$HOME/.config/toshy/scripts/bin/toshy-config-stop.sh" "$HOME/.local/bin/toshy-config-stop"
-
-ln -sf "$HOME/.config/toshy/scripts/bin/toshy-tray.sh" "$HOME/.local/bin/toshy-tray"
-ln -sf "$HOME/.config/toshy/scripts/bin/toshy-gui.sh" "$HOME/.local/bin/toshy-gui"
-ln -sf "$HOME/.config/toshy/scripts/bin/toshy-env.sh" "$HOME/.local/bin/toshy-env"
+ln -sf "$TOSHY_CFG/toshy-systemd-setup.sh"         "$LOCAL_BIN/toshy-systemd-setup"
+ln -sf "$TOSHY_CFG/toshy-systemd-remove.sh"        "$LOCAL_BIN/toshy-systemd-remove"
+ln -sf "$TOSHY_CFG/toshy-services-status.sh"       "$LOCAL_BIN/toshy-services-status"
+ln -sf "$TOSHY_CFG/toshy-services-restart.sh"      "$LOCAL_BIN/toshy-services-restart"
+ln -sf "$TOSHY_CFG/toshy-services-start.sh"        "$LOCAL_BIN/toshy-services-start"
+ln -sf "$TOSHY_CFG/toshy-services-stop.sh"         "$LOCAL_BIN/toshy-services-stop"
+ln -sf "$TOSHY_CFG/toshy-services-log.sh"          "$LOCAL_BIN/toshy-services-log"
+ln -sf "$TOSHY_CFG/toshy-config-start.sh"          "$LOCAL_BIN/toshy-config-start"
+ln -sf "$TOSHY_CFG/toshy-config-start-verbose.sh"  "$LOCAL_BIN/toshy-config-start-verbose"
+ln -sf "$TOSHY_CFG/toshy-config-restart.sh"        "$LOCAL_BIN/toshy-config-restart"
+ln -sf "$TOSHY_CFG/toshy-config-stop.sh"           "$LOCAL_BIN/toshy-config-stop"
+ln -sf "$TOSHY_CFG/toshy-tray.sh"                  "$LOCAL_BIN/toshy-tray"
+ln -sf "$TOSHY_CFG/toshy-gui.sh"                   "$LOCAL_BIN/toshy-gui"
+ln -sf "$TOSHY_CFG/toshy-env.sh"                   "$LOCAL_BIN/toshy-env"
+ln -sf "$TOSHY_CFG/toshy-kde-dbus-service.sh"      "$LOCAL_BIN/toshy-kde-dbus-service"
 
 
 echo ""
@@ -55,6 +57,7 @@ echo "- toshy-config-stop"
 echo "- toshy-tray"
 echo "- toshy-gui"
 echo "- toshy-env"
+echo "- toshy-kde-dbus-service"
 echo ""
 echo "The commands will not be available until you close the current terminal, or "
 echo "run 'hash -r', or source your shell RC file to refresh executable hash table."
