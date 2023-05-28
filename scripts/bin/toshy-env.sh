@@ -20,5 +20,3 @@ fi
 source "$HOME/.config/toshy/.venv/bin/activate"
 
 $(which python3) "$HOME/.config/toshy/lib/env.py"
-
-deactivate
