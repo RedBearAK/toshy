@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 
-# Start Toshy KDE D-Bus service, after activating venv
+# Start Toshy KDE D-Bus service, after terminating existing
+# processes and activating Python virtual environment
 
 # Check if the script is being run as root
 if [[ $EUID -eq 0 ]]; then
@@ -15,8 +16,15 @@ if [[ -z $USER ]] || [[ -z $HOME ]]; then
     exit 1
 fi
 
+TOSHY_CFG="$HOME/.config/toshy"
+
+
+pkill -f "toshy_kde_dbus_service"
+
+sleep 1
 
 # shellcheck disable=SC1091
-source "$HOME/.config/toshy/.venv/bin/activate"
+source "$TOSHY_CFG/.venv/bin/activate"
 
-$(which python3) "$HOME/.config/toshy/kde-kwin-dbus-service/toshy_kde_dbus_service.py"
+# run the Python interpreter from within the virtual environment
+python3 "$TOSHY_CFG/kde-kwin-dbus-service/toshy_kde_dbus_service.py"

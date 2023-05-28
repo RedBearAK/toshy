@@ -543,6 +543,7 @@ def install_desktop_apps():
 def setup_kwin_script():
     """install the KWin script to notify D-Bus service about window focus changes"""
     print(f'\n\n§  Setting up the Toshy KWin script...\n{cnfg.separator}')
+    kwin_script_name    = 'toshy-dbus-notifyactivewindow'
     kwin_script_path    = os.path.join( cnfg.toshy_dir_path,
                                         'kde-kwin-dbus-service',
                                         'toshy-dbus-notifyactivewindow')
@@ -556,6 +557,12 @@ def setup_kwin_script():
         # Add metadata.desktop to the kwinscript package
         zipf.write( os.path.join(kwin_script_path, 'metadata.json'), arcname='metadata.json')
 
+    base_qdbus_cmd = 'qdbus org.kde.KWin /Scripting org.kde.kwin.Scripting'
+    
+    # Try to unload any existing KWin script by the same name
+    subprocess.run(f"{base_qdbus_cmd}.unloadScript {kwin_script_name}",
+                    capture_output=True, shell=True)
+    
     # Install the script using plasmapkg2
     result = subprocess.run(
         ['plasmapkg2', '-t', 'kwinscript', '-u', temp_file_path], capture_output=True, text=True)
@@ -566,13 +573,25 @@ def setup_kwin_script():
         print("Successfully installed the KWin script.")
 
     # Remove the temporary kwinscript file
-    os.remove(temp_file_path)
+    try:
+        os.remove(temp_file_path)
+    except (FileNotFoundError, PermissionError): pass
+
+    # Try to load the KWin script by name
+    subprocess.run(f"{base_qdbus_cmd}.loadScript {kwin_script_name}",
+                    capture_output=True, shell=True)
+    
+    # Try to start the KWin script by name
+    subprocess.run(f"{base_qdbus_cmd}.start {kwin_script_name}",
+                    capture_output=True, shell=True)
+    
 
 
 def setup_kde_dbus_service():
     """install the D-Bus service initialization script to receive window focus
     change notifications from the KWin script on KDE desktops (Wayland)"""
     print(f'\n\n§  Setting up the Toshy KDE D-Bus service...\n{cnfg.separator}')
+
     # need to autostart "$HOME/.local/bin/toshy-kde-dbus-service"
     user_path               = os.path.expanduser('~')
     autostart_dir_path      = os.path.join(user_path, '.config', 'autostart')
@@ -588,10 +607,13 @@ def setup_kde_dbus_service():
         error(f"Problem trying to make sure '{autostart_dir_path}' is directory.\n\t{file_error}")
         sys.exit(1)
     shutil.copy(dbus_svc_desktop_file, autostart_dir_path)
+    print(f'Toshy KDE D-Bus service should autostart at login.')
+
+    subprocess.run('pkill -f "toshy_kde_dbus_service"', shell=True)
     subprocess.Popen(   start_dbus_svc_cmd, shell=True,
                         stdout=subprocess.DEVNULL,
                         stderr=subprocess.DEVNULL   )
-    print(f'Toshy KDE D-Bus service should autostart at login (and is running now).')
+    print(f'Toshy KDE D-Bus service should be running now.')
 
 
 def setup_systemd_services():
