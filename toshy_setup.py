@@ -540,72 +540,36 @@ def install_desktop_apps():
     replace_home_in_file(gui_desktop_file)
 
 
-def add_kwin_script_to_kwinrc():
-    """utility function to add Toshy KWin script to KWin RC file"""
-    # Define path to kwinrc
-    kwinrc_path = os.path.join(os.path.expanduser('~'), '.config', 'kwinrc')
-
-    # Check if kwinrc exists and create if it does not
-    if not os.path.exists(kwinrc_path):
-        open(kwinrc_path, 'a').close()
-
-    # Create a ConfigParser object and read kwinrc
-    config = configparser.ConfigParser()
-    config.read(kwinrc_path)
-
-    # Check if 'Plugins' section exists and create if it does not
-    if 'Plugins' not in config.sections():
-        config.add_section('Plugins')
-
-    # Check if 'toshy-dbus-notifyactivewindowEnabled' option exists in 'Plugins' section 
-    # and set to 'true' if it does not
-    if 'toshy-dbus-notifyactivewindowEnabled' not in config['Plugins']:
-        config.set('Plugins', 'toshy-dbus-notifyactivewindowEnabled', 'true')
-    elif config['Plugins'].getboolean('toshy-dbus-notifyactivewindowEnabled') is False:
-        config.set('Plugins', 'toshy-dbus-notifyactivewindowEnabled', 'true')
-
-    # Write changes back to kwinrc
-    with open(kwinrc_path, 'w') as configfile:
-        config.write(configfile)
-
-
 def setup_kwin_script():
     """install the KWin script to notify D-Bus service about window focus changes"""
     print(f'\n\n§  Setting up the Toshy KWin script...\n{cnfg.separator}')
     kwin_script_name    = 'toshy-dbus-notifyactivewindow'
     kwin_script_path    = os.path.join( cnfg.toshy_dir_path,
-                                        'kde-kwin-dbus-service',
-                                        'toshy-dbus-notifyactivewindow')
+                                        'kde-kwin-dbus-service', kwin_script_name)
     temp_file_path      = '/tmp/toshy-dbus-notifyactivewindow.kwinscript'
 
     # Create a zip file (overwrite if it exists)
     with zipfile.ZipFile(temp_file_path, 'w') as zipf:
         # Add main.js to the kwinscript package
-        zipf.write( os.path.join(kwin_script_path, 'contents', 'code', 'main.js'),
-                    arcname='contents/code/main.js')
+        zipf.write(os.path.join(kwin_script_path, 'contents', 'code', 'main.js'),
+                                arcname='contents/code/main.js')
         # Add metadata.desktop to the kwinscript package
-        zipf.write( os.path.join(kwin_script_path, 'metadata.json'), arcname='metadata.json')
+        zipf.write(os.path.join(kwin_script_path, 'metadata.json'), arcname='metadata.json')
 
-    base_qdbus_cmd = 'qdbus org.kde.KWin /Scripting org.kde.kwin.Scripting'
-    
-    # Try to unload any existing KWin script by the same name
-    subprocess.run(f"{base_qdbus_cmd}.unloadScript {kwin_script_name}",
-                    capture_output=True, shell=True)
-    
     # Try to remove any installed KWin script entirely
     result = subprocess.run(
-        ['plasmapkg2', '-t', 'kwinscript', '-r', temp_file_path], capture_output=True, text=True)
-    
+        ['kpackagetool5', '-t', 'kwinscript', '-r', kwin_script_name],
+        capture_output=True, text=True)
+
     if result.returncode != 0:
         pass
-        # print(f"Error removing the KWin script. The error was:\n\t{result.stderr}")
     else:
         print("Successfully removed the KWin script.")
 
     # Install the script using plasmapkg2
     result = subprocess.run(
-        ['plasmapkg2', '-t', 'kwinscript', '-i', temp_file_path], capture_output=True, text=True)
-    
+        ['kpackagetool5', '-t', 'kwinscript', '-i', temp_file_path], capture_output=True, text=True)
+
     if result.returncode != 0:
         print(f"Error installing the KWin script. The error was:\n\t{result.stderr}")
     else:
@@ -616,19 +580,19 @@ def setup_kwin_script():
         os.remove(temp_file_path)
     except (FileNotFoundError, PermissionError): pass
 
-    # Try to load the KWin script by name
-    subprocess.run(f"{base_qdbus_cmd}.loadScript {kwin_script_name}",
-                    capture_output=True, shell=True)
+    # Enable the script using kwriteconfig5
+    result = subprocess.run(
+        [   'kwriteconfig5', '--file', 'kwinrc', '--group', 'Plugins', '--key',
+            f'{kwin_script_name}Enabled', 'true'],
+        capture_output=True, text=True)
     
-    # Try to start the KWin script by name
-    subprocess.run(f"{base_qdbus_cmd}.start {kwin_script_name}",
-                    capture_output=True, shell=True)
-    
-    # Make sure script is added as "enabled" in ~/.config/kwinrc
-    add_kwin_script_to_kwinrc()
+    if result.returncode != 0:
+        print(f"Error enabling the KWin script. The error was:\n\t{result.stderr}")
+    else:
+        print("Successfully enabled the KWin script.")
+
     # Try to get KWin to notice and activate the script on its own, now that it's in RC file
     subprocess.run(['qdbus', 'org.kde.KWin', '/KWin', 'reconfigure'])
-
 
 
 def setup_kde_dbus_service():
