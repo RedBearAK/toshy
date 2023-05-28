@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 
+from enum import auto
 import os
 import sys
 import pwd
@@ -579,6 +580,13 @@ def setup_kde_dbus_service():
     dbus_svc_desktop_file   = os.path.join(dbus_svc_desktop_path, 'Toshy_KDE_DBus_Service.desktop')
     start_dbus_svc_cmd      = os.path.join(user_path, '.local', 'bin', 'toshy-kde-dbus-service')
     replace_home_in_file(dbus_svc_desktop_file)
+
+    # ensure autostart directory exists
+    try:
+        os.makedirs(autostart_dir_path, exist_ok=True)
+    except (PermissionError, NotADirectoryError, FileExistsError) as file_error:
+        error(f"Problem trying to make sure '{autostart_dir_path}' is directory.\n\t{file_error}")
+        sys.exit(1)
     shutil.copy(dbus_svc_desktop_file, autostart_dir_path)
     subprocess.Popen(   start_dbus_svc_cmd, shell=True,
                         stdout=subprocess.DEVNULL,
@@ -606,7 +614,11 @@ def autostart_tray_icon():
     dest_link_file      = os.path.join(autostart_dir_path, 'Toshy_Tray.desktop')
 
     # Need to create autostart folder if necessary
-    os.makedirs(autostart_dir_path, exist_ok=True)
+    try:
+        os.makedirs(autostart_dir_path, exist_ok=True)
+    except (PermissionError, NotADirectoryError, FileExistsError) as file_error:
+        error(f"Problem trying to make sure '{autostart_dir_path}' is directory.\n\t{file_error}")
+        sys.exit(1)
     subprocess.run(['ln', '-sf', tray_desktop_file, dest_link_file])
 
     print(f'Tray icon should appear in system tray at each login.')
