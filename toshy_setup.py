@@ -328,36 +328,11 @@ def install_distro_pkgs():
         if has_systemd or 'systemd' not in pkg
     ]
 
-    apt_distros = [
-        'ubuntu',
-        'mint',
-        'lmde',
-        'popos',
-        'eos',
-        'neon',
-        'zorin',
-        'debian',
-    ]
-
-    dnf_distros_Fedora = [
-        'fedora',
-        'fedoralinux'
-    ]
-    dnf_distros_RHEL = [
-        'almalinux',
-        'rocky',
-        'rhel',
-    ]
-
-    pacman_distros = [
-        'arch',
-        'endeavouros',
-        'manjaro',
-    ]
-
-    zypper_distros = [
-        'opensuse',
-    ]
+    apt_distros = ['ubuntu', 'mint', 'lmde', 'popos', 'eos', 'neon', 'zorin', 'debian']
+    dnf_distros_Fedora = ['fedora', 'fedoralinux']
+    dnf_distros_RHEL = ['almalinux', 'rocky', 'rhel']
+    pacman_distros = ['arch', 'endeavouros', 'manjaro']
+    zypper_distros = ['opensuse']
 
     if cnfg.DISTRO_NAME in apt_distros:
         call_attention_to_password_prompt()
