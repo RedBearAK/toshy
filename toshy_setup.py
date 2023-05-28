@@ -8,6 +8,7 @@ import grp
 import json
 import signal
 import shutil
+import zipfile
 import argparse
 import datetime
 import platform
@@ -57,7 +58,7 @@ class InstallerSettings:
         self.SESSION_TYPE       = None
         self.DESKTOP_ENV        = None
         
-        self.systemctl_present  = shutil.which('systemctl')
+        self.systemd_present    = shutil.which('systemd') is not None
         self.init_system        = None
 
         self.pkgs_json_dct      = None
@@ -97,12 +98,12 @@ def get_environment_info():
     print(f'\n§  Getting environment information...\n{cnfg.separator}')
 
     known_init_systems = {
-        'systemd': 'Systemd',
-        'init': 'SysVinit',
-        'upstart': 'Upstart',
-        'openrc': 'OpenRC',
-        'runit': 'Runit',
-        'initng': 'Initng'
+        'systemd':              'Systemd',
+        'init':                 'SysVinit',
+        'upstart':              'Upstart',
+        'openrc':               'OpenRC',
+        'runit':                'Runit',
+        'initng':               'Initng'
     }
 
     try:
@@ -319,13 +320,10 @@ def install_distro_pkgs():
     """install needed packages from list for distro type"""
     print(f'\n\n§  Installing native packages...\n{cnfg.separator}')
 
-    # Check for systemd
-    has_systemd = shutil.which("systemd") is not None
-
     # Filter out systemd packages if not present
     cnfg.pkgs_for_distro = [
         pkg for pkg in cnfg.pkgs_for_distro 
-        if has_systemd or 'systemd' not in pkg
+        if cnfg.systemd_present or 'systemd' not in pkg
     ]
 
     apt_distros = ['ubuntu', 'mint', 'lmde', 'popos', 'eos', 'neon', 'zorin', 'debian']
@@ -480,13 +478,10 @@ def install_pip_packages():
     venv_python_cmd = os.path.join(cnfg.venv_path, 'bin', 'python')
     venv_pip_cmd    = os.path.join(cnfg.venv_path, 'bin', 'pip')
     
-    # Check for systemd
-    has_systemd = shutil.which("systemd") is not None
-
     # Filter out systemd packages if not present
     cnfg.pip_pkgs = [
         pkg for pkg in cnfg.pip_pkgs 
-        if has_systemd or 'systemd' not in pkg
+        if cnfg.systemd_present or 'systemd' not in pkg
     ]
 
     commands        = [
@@ -517,48 +512,84 @@ def install_bin_commands():
     subprocess.run([script_path])
 
 
+# Replace $HOME with user home directory
+def replace_home_in_file(filename):
+    """utility function to replace '$HOME' in .desktop files with actual home path"""
+    # Read in the file
+    with open(filename, 'r') as file:
+        file_data = file.read()
+    # Replace the target string
+    file_data = file_data.replace('$HOME', cnfg.home_dir_path)
+    # Write the file out again
+    with open(filename, 'w') as file:
+        file.write(file_data)
+
+
 def install_desktop_apps():
     """install the convenient scripts to manage Toshy"""
     print(f'\n\n§  Installing Toshy desktop apps...\n{cnfg.separator}')
     script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'toshy-desktopapps-setup.sh')
     subprocess.run([script_path])
 
-    # Replace $HOME with user home directory
-    def replace_home_in_file(filename):
-        # Read in the file
-        with open(filename, 'r') as file:
-            file_data = file.read()
-        # Replace the target string
-        file_data = file_data.replace('$HOME', cnfg.home_dir_path)
-        # Write the file out again
-        with open(filename, 'w') as file:
-            file.write(file_data)
-
-    desktop_files_path = os.path.join(cnfg.home_dir_path, '.local', 'share', 'applications')
-    tray_desktop_file = os.path.join(desktop_files_path, 'Toshy_Tray.desktop')
-    gui_desktop_file = os.path.join(desktop_files_path, 'Toshy_GUI.desktop')
+    desktop_files_path  = os.path.join(cnfg.home_dir_path, '.local', 'share', 'applications')
+    tray_desktop_file   = os.path.join(desktop_files_path, 'Toshy_Tray.desktop')
+    gui_desktop_file    = os.path.join(desktop_files_path, 'Toshy_GUI.desktop')
 
     replace_home_in_file(tray_desktop_file)
     replace_home_in_file(gui_desktop_file)
 
 
-def setup_kde_dbus_service():
-    """install the D-Bus service initialization script to receive
-    window focus change notifications from the KWin script on KDE desktops"""
-    print(f'\n\n§  Setting up the Toshy KDE D-Bus service...\n{cnfg.separator}')
-    
-
-
 def setup_kwin_script():
     """install the KWin script to notify D-Bus service about window focus changes"""
     print(f'\n\n§  Setting up the Toshy KWin script...\n{cnfg.separator}')
+    kwin_script_path    = os.path.join( cnfg.toshy_dir_path,
+                                        'kde-kwin-dbus-service',
+                                        'toshy-dbus-notifyactivewindow')
+    temp_file_path      = '/tmp/toshy-dbus-notifyactivewindow.kwinscript'
+
+    # Create a zip file (overwrite if it exists)
+    with zipfile.ZipFile(temp_file_path, 'w') as zipf:
+        # Add main.js to the kwinscript package
+        zipf.write( os.path.join(kwin_script_path, 'contents', 'code', 'main.js'),
+                    arcname='contents/code/main.js')
+        # Add metadata.desktop to the kwinscript package
+        zipf.write( os.path.join(kwin_script_path, 'metadata.json'), arcname='metadata.json')
+
+    # Install the script using plasmapkg2
+    result = subprocess.run(
+        ['plasmapkg2', '-t', 'kwinscript', '-i', temp_file_path], capture_output=True, text=True)
     
+    if result.returncode != 0:
+        print(f"Error installing the KWin script. The error was:\n\t{result.stderr}")
+    else:
+        print("Successfully installed the KWin script.")
+
+    # Remove the temporary kwinscript file
+    os.remove(temp_file_path)
+
+
+def setup_kde_dbus_service():
+    """install the D-Bus service initialization script to receive window focus
+    change notifications from the KWin script on KDE desktops (Wayland)"""
+    print(f'\n\n§  Setting up the Toshy KDE D-Bus service...\n{cnfg.separator}')
+    # need to autostart "$HOME/.local/bin/toshy-kde-dbus-service"
+    user_path               = os.path.expanduser('~')
+    autostart_dir_path      = os.path.join(user_path, '.config', 'autostart')
+    dbus_svc_desktop_path   = os.path.join(cnfg.toshy_dir_path, 'desktop')
+    dbus_svc_desktop_file   = os.path.join(dbus_svc_desktop_path, 'Toshy_KDE_DBus_Service.desktop')
+    start_dbus_svc_cmd      = os.path.join(user_path, '.local', 'bin', 'toshy-kde-dbus-service')
+    replace_home_in_file(dbus_svc_desktop_file)
+    shutil.copy(dbus_svc_desktop_file, autostart_dir_path)
+    subprocess.Popen(   start_dbus_svc_cmd, shell=True,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL   )
+    print(f'Toshy KDE D-Bus service should autostart at login (and is running now).')
 
 
 def setup_systemd_services():
-    """invoke the setup script to install the systemd service units"""
+    """invoke the systemd setup script to install the systemd service units"""
     print(f'\n\n§  Setting up the Toshy systemd services...\n{cnfg.separator}')
-    if cnfg.systemctl_present:
+    if cnfg.systemd_present:
         script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'bin', 'toshy-systemd-setup.sh')
         subprocess.run([script_path])
     else:
@@ -753,8 +784,8 @@ def main(cnfg: InstallerSettings):
     install_bin_commands()
     install_desktop_apps()
     if cnfg.DESKTOP_ENV in ['kde', 'plasma']:
-        setup_kde_dbus_service()
         setup_kwin_script()
+        setup_kde_dbus_service()
 
     setup_systemd_services()
 
