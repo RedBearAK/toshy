@@ -558,7 +558,7 @@ def setup_kwin_script():
 
     # Install the script using plasmapkg2
     result = subprocess.run(
-        ['plasmapkg2', '-t', 'kwinscript', '-i', temp_file_path], capture_output=True, text=True)
+        ['plasmapkg2', '-t', 'kwinscript', '-u', temp_file_path], capture_output=True, text=True)
     
     if result.returncode != 0:
         print(f"Error installing the KWin script. The error was:\n\t{result.stderr}")
