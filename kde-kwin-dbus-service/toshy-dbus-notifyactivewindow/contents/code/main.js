@@ -28,10 +28,6 @@ if (workspace.activeClient) {
     notifyActiveWindow(workspace.activeClient);
 }
 
-if (client) {
-    notifyActiveWindow(client)
-}
-
 workspace.clientActivated.connect(function(client){
     notifyActiveWindow(client);
 });
