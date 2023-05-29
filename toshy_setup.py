@@ -863,7 +863,8 @@ def handle_arguments():
         main(cnfg)
         sys.exit(0)
     elif args.list_distros:
-        print(f'Distro names known by the Toshy installer:\n\t{get_json_distro_names()}')
+        print(  f'Distro names known to the Toshy installer (to use with --override-distro):'
+                f'\n\n\t{get_json_distro_names()}\n')
         sys.exit(0)
     elif args.show_env:
         get_environment_info()
