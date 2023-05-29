@@ -566,7 +566,7 @@ def setup_kwin_script():
     else:
         print("Successfully removed the KWin script.")
 
-    # Install the script using plasmapkg2
+    # Install the KWin script
     result = subprocess.run(
         ['kpackagetool5', '-t', 'KWin/Script', '-i', temp_file_path], capture_output=True, text=True)
 
