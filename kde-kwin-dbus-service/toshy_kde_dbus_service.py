@@ -44,9 +44,9 @@ class DBUS_Object(dbus.service.Object):
         super().__init__(session_bus, object_path)
         self.interface_name     = interface_name
         self.dbus_svc_bus_name  = dbus.service.BusName(interface_name, bus=session_bus)
-        self.caption            = ""
-        self.resource_class     = ""
-        self.resource_name      = ""
+        self.caption            = "NO_DATA"
+        self.resource_class     = "NO_DATA"
+        self.resource_name      = "NO_DATA"
 
     @dbus.service.method(TOSHY_KDE_DBUS_SVC_IFACE, in_signature='sss')
     def NotifyActiveWindow(self, caption, resource_class, resource_name):
