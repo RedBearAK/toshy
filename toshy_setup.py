@@ -803,7 +803,8 @@ def get_json_distro_names():
     """utility function to return list of available distro names from packages.json file"""
     with open('packages.json') as f:
         data: Dict[str:str] = json.load(f)
-    keys = ", ".join(data.keys())
+    sorted_keys = sorted(data.keys())
+    keys = ",\n\t".join(sorted_keys)
     return keys
 
 
