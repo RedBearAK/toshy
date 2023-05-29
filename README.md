@@ -100,7 +100,7 @@ There's no simple way around this, since the keymapper is only designed to send 
 
     - Automatically installed by Toshy installer
 
-- X11 or Wayland+GNOME
+- X11/Xorg or Wayland+GNOME or Wayland+KDE (Plasma)
 
     - Wayland+GNOME requires one of these GNOME Shell extensions‡ (see note):
 
@@ -113,7 +113,7 @@ There's no simple way around this, since the keymapper is only designed to send 
         - Xremap (try this if you have an older GNOME version)
         - https://extensions.gnome.org/extension/5060/xremap/
 
-- Wayland+KDE (Plasma) should be possible at some point (in development)
+    - Wayland+KDE has a small glitch where you have to change the focused window once after the KWin script it installed, to get the app-specific remapping to start working. 
 
 - `systemd` (but you can just manually run the config from terminal, or shell script, or tray indicator menu)
 
@@ -150,8 +150,8 @@ There will be no issue when installing both of the compatible extensions, which 
 - Fedora 36/[37*]/38 (from Red Hat)
 
     - Standard GNOME variant tested
-    - KDE variant tested (X11/Xorg session only, Wayland+KDE in development)
-    - Fedora 37 not directly tested, but should work
+    - KDE variant tested (X11/Xorg or Wayland+KDE session)
+    - Fedora 37 not directly tested, but should work since F36/F38 work
 
 - AlmaLinux 9.2 and/or Rocky Linux 9.2 (RHEL clones)
 
@@ -181,14 +181,14 @@ sudo apt install mint-meta-mate mint-meta-xfce mint-meta-cinnamon
 
     - Ubuntu 22.04/23.04
     - Xubuntu 23.04
-    - Kubuntu 22.04/23.04 (X11/Xorg only, Wayland+KDE in dev.)
+    - Kubuntu 22.04/23.04 (X11/Xorg or Wayland+KDE)
     - Lubuntu 23.04
 
 - Pop!_OS 22.04 LTS (Ubuntu-based)
 
 - KDE Neon (based on Ubuntu LTS releases)
 
-    - X11/Xorg session only (Wayland+KDE in development)
+    - X11/Xorg or Wayland+KDE session
 
 - Zorin OS 16.2 (Ubuntu-based)
 
@@ -239,7 +239,7 @@ sudo apt install mint-meta-mate mint-meta-xfce mint-meta-cinnamon
 
 - X11/Xorg (all desktops)
 - Wayland+GNOME
-- Wayland+KDE_Plasma (in development)
+- Wayland+KDE (change window focus once to make it work)
 
 If you are in an X11/Xorg login session, the desktop environment or window manager doesn't really matter. The keymapper gets the window class/name/title information directly from the X server with `Xlib`.  
 
@@ -247,7 +247,7 @@ On the other hand, if you are in a Wayland session, it is only possible to obtai
 
 As of now, this means only the combination of Wayland+GNOME is fully usable for app-specific shortcut remapping, and this requires at least one of three known compatible GNOME Shell extensions to be installed. See above in "Requirements".  
 
-At some point it should be possible to have Wayland+KDE_Plasma working, and possibly Wayland+sway and Wayland+hyprland. The methods to do this already exist in the `xremap` keymapper, but that project is written in Rust and `keyszer` is written in Python.  
+At some point it should be possible to have Wayland+KDE_Plasma working (UPDATE: Wayland+KDE is pretty much working), and possibly Wayland+sway and Wayland+hyprland. The methods to do this already exist in the `xremap` keymapper, but that project is written in Rust and `keyszer` is written in Python.  
 
 There are specific remaps or overrrides of default remaps for several common desktop environments (or distros which have shortcut peculiarities in their default desktop setups). They become active if the desktop environment is detected correctly by the `env.py` module used by the config file, or the information about the desktop can be placed in some `OVERRIDE` variables in the config file.  
 
