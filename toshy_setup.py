@@ -790,6 +790,13 @@ def uninstall_toshy():
     print("Uninstalling Toshy...")
     remove_desktop_tweaks()
     # TODO: do more uninstaller stuff...
+    # run the systemd-remove script
+    # unload/uninstall/remove KWin script
+    # kill the KDE D-Bus service
+    # run the desktopapps-remove script
+    # run the bincommands-remove script
+    # remove the 'udev' rules file
+    # refresh the active 'udev' rules
 
 
 def get_json_distro_names():
@@ -814,8 +821,13 @@ def handle_arguments():
     parser.add_argument(
         '--override-distro',
         type=str,
-        dest='override_distro',
-        help=f'Override auto-detection of distro name/type. Options:\n\t\t{get_json_distro_names()}'
+        # dest='override_distro',
+        help=f'Override auto-detection of distro name/type. See --list-distros'
+    )
+    parser.add_argument(
+        '--list-distros',
+        action='store_true',
+        help='Display list of distro names to use with --override-distro'
     )
     parser.add_argument(
         '--uninstall',
@@ -825,19 +837,19 @@ def handle_arguments():
     parser.add_argument(
         '--show-env',
         action='store_true',
-        dest='show_env',
+        # dest='show_env',
         help='Show the environment the installer detects, and exit'
     )
     parser.add_argument(
         '--apply-tweaks',
         action='store_true',
-        dest='apply_tweaks',
+        # dest='apply_tweaks',
         help='Apply desktop environment tweaks only, no install'
     )
     parser.add_argument(
         '--remove-tweaks',
         action='store_true',
-        dest='remove_tweaks',
+        # dest='remove_tweaks',
         help='Remove desktop environment tweaks only, no install'
     )
 
@@ -848,6 +860,10 @@ def handle_arguments():
         cnfg.override_distro = args.override_distro
         # proceed with normal install sequence
         main(cnfg)
+        sys.exit(0)
+    elif args.list_distros:
+        print(f'Distro names known by the Toshy installer:\n\t{get_json_distro_names()}')
+        sys.exit(0)
     elif args.show_env:
         get_environment_info()
         sys.exit(0)
