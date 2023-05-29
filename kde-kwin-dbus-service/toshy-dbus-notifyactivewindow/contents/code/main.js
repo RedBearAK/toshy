@@ -18,9 +18,9 @@ function notifyActiveWindow(client){
         "/org/toshy/Toshy",
         "org.toshy.Toshy",
         "NotifyActiveWindow",
-        "caption" in client ? client.caption : "",
-        "resourceClass" in client ? client.resourceClass : "",
-        "resourceName" in client ? client.resourceName : ""
+        "caption" in client ? client.caption : "UNDEF",
+        "resourceClass" in client ? client.resourceClass : "UNDEF",
+        "resourceName" in client ? client.resourceName : "UNDEF"
     );
 }
 
