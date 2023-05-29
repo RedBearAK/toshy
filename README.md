@@ -54,11 +54,13 @@ The other problem is that the Unicode entry shortcut only seems to work if you h
 
 There's no simple way around this, since the keymapper is only designed to send key codes from a virtual keyboard. Unlike AutoHotkey in Windows, which can just "send" a character pasted in an AHK script to an application (although there are potential problems with that if the AHK file encoding is wrong). 
 
-## General improvements over Kinto's config
+## General improvements over Kinto
+
+ 1. Moving between different desktop environments and session types (X11/Xorg or Wayland) **_on the same machine_** is MUCH easier, due to the use of an "environment" module that feeds information to the config file about what type of environment it is starting up in. This allows some dynamic remaps specific to each type of Linux desktop environment, and without re-running the installer process (at least that is the goal). It also prompts the keymapper (a special development branch of `keyszer`) to use the correct method to get the window context information for the environment. The keymapper will also prompt the user in verbose logging output if the environment is NOT compatible yet. So if you are like me and enjoy spending time experimenting with different session types and different desktop environments on the same Linux system, Toshy will work much better for that, and will improve over time.  
 
  1. Multi-user support: I believe some changes I've made will facilitate proper multi-user support on the same system. Even in the case of the user invoking a "Switch User" feature in their desktop environment, where the first user's desktop is still running in the background while another user is logged into their own desktop and using the screen (and physical keyboard). This is a very convenient feature even if you aren't actually sharing your computer with another person. There are many reasons why you might want to log into a different user's desktop to test something. Currently this absolutely requires `systemd` and `loginctl`.  
 
- 1. A start on Wayland support. More on that further down.  
+ 1. A start on Wayland support. Two Wayland+[desktop environment] types are working now: Wayland+GNOME (needs shell extension installed) and Wayland+KDE (Plasma, installs a KWin script that needs to see a window activation event to start functioning). Wayland+sway and Wayland+Hyprland support is theoretically possible. More on that further down.  
 
  1. The Option-key special characters, as described above. Two different layouts are available.  
 
@@ -133,7 +135,9 @@ flatpak install extensionmanager
 
 You can just use the "Browse" tab in this application to search for the extensions by name and quickly install them.  
 
-There will be no issue when installing both of the compatible extensions, which might be advisable to have less risk of not having a working extension for a while the next time you upgrade your system in-place and wind up with a newer version of GNOME. I expect at least one of the extensions will always be updated to support the latest GNOME. The branch of `keyszer` installed by Toshy will seamlessly jump to using the other extension in case one fails or is disabled for any reason.  
+There will be no issue when installing more than one of the compatible extensions, which might be advisable to reduce the risk of not having a working extension for a while the next time you upgrade your system in-place and wind up with a newer, temporarily unsupported version of GNOME. I expect at least one of the extensions will always be updated to support the latest GNOME. The branch of `keyszer` installed by Toshy will seamlessly jump to using the other extension in case one fails or is disabled/uninstalled for any reason. You just need to have at least one from the list installed and enabled.  
+
+The `Xremap` GNOME shell extension is the only one that supports older GNOME versions, so it's the only one that will show up when browsing the extensions list from an environment like Zorin OS (GNOME 3.38.x) or the distros based on Red Hat Enterprise Linux (clones like AlmaLinux, Rocky Linux, EuroLinux, etc.) which are still using GNOME 40.x.  
 
 ## How to Install
 
@@ -145,7 +149,7 @@ There will be no issue when installing both of the compatible extensions, which 
 ./toshy_setup.py
 ```
 
-## Currently working Linux distros:
+## Currently tested/working Linux distros:
 
 - Fedora 36/[37*]/38 (from Red Hat)
 
@@ -245,7 +249,7 @@ If you are in an X11/Xorg login session, the desktop environment or window manag
 
 On the other hand, if you are in a Wayland session, it is only possible to obtain the per-application or per-window information (for specific shortcut keymaps) by using solutions that are custom to a limited set of desktop environments (or window managers).  
 
-As of now, this means only the combination of Wayland+GNOME is fully usable for app-specific shortcut remapping, and this requires at least one of three known compatible GNOME Shell extensions to be installed. See above in "Requirements".  
+For Wayland+GNOME this requires at least one of the known compatible GNOME Shell extensions to be installed. See above in "Requirements".  
 
 At some point it should be possible to have Wayland+KDE_Plasma working (UPDATE: Wayland+KDE is pretty much working), and possibly Wayland+sway and Wayland+hyprland. The methods to do this already exist in the `xremap` keymapper, but that project is written in Rust and `keyszer` is written in Python.  
 
@@ -307,19 +311,17 @@ toshy-tray
 
 This section will list some common questions, issues and fixes/tweaks that may be necessary for different distros, desktops or devices (and are not yet handled by the Toshy installer or config file). 
 
-### How do I know Toshy is working correctly?
+### How do I know Toshy is working correctly? (or, It sort of works but sort of doesn't, what's going on?)
 
-There are two levels to what the Toshy config does (just like Kinto, from which the base config file was taken). Level one is the shifting of some of the modifier keys. In most cases, even on an unsupported Wayland environment, the shifting of the modifier keys will work and some basic "global" shortcuts like cut/copy/paste will appear to work, and you'll be able to open new tabs and close them in a browser with the expected `Cmd` key shortcuts. This can create a false impression that the whole thing is "working" when it actually isn't.  
+There are two levels to what the Toshy config does (just like Kinto, from which the base config file was taken). Level one is the shifting of some of the modifier keys. In most cases, even on an unsupported Wayland environment, the shifting of the modifier keys will work and some basic "global" shortcuts like cut/copy/paste (X/C/V) will appear to work, and you'll be able to open new tabs and close them in a browser with the expected `Cmd` key shortcuts. This can create a false impression that the whole thing is "working" when it actually isn't.  
 
-The second level of remapping is the group/class-specific (such as "in terminals") modmaps and keymaps, and then the true app-specific keymaps. These will either be working or not working.  
+The second level of remapping is the application group/class-specific modmaps and keymaps (such as "in terminals"), and then the true app-specific keymaps for individual applications (such as "in Firefox"). These will either be working or not working.  
 
-One simple check will be whether you can increase **_AND_** decrease the font size in a terminal window with the `Cmd+Equal` keys and `Cmd+Minus` keys, respectively. Ordinarily, increasing the font size in a terminal requires `Shift+Ctrl+Plus`, while decreasing the font size works without the `Shift` key with `Ctrl+Minus`. If the simpler shortcut works, you know two things: Your terminal's application class is recognized and found in the list of "terminals" in the config, and of course you also know that the app-specific matching on the window attributes (class and name/title) should be working in general throughout all applications.  
+One of the best simple tests, if you have Firefox installed, is if using the `Cmd+comma` shortcut (which opens preferences in many macOS applications) opens a new tab in Firefox, then rapidly types the string "about:preferences", and opens the Firefox preferences. If this works, or even if it just gets through typing the "about:preferences" in the address bar, it's a clear indication that the app-specific keymaps are working. Because this is only supposed to happen when a Firefox web browser window class is detected.  
 
-Another simple test, if you have Firefox installed, is if using the `Cmd+comma` shortcut (opens preferences in many macOS applications) opens a new tab and rapidly types the string "about:preferences" and then opens the Firefox preferences. If this works, it's a clear indication that the app-specific keymaps are working.  
+If you think app-specific remaps are working in general, but for some reason they aren't working in a specific app, the app's "class" may be different than expected by the config file. Try to identify it, and let us know what the "class" and "name" attributes are.  
 
-If the Firefox test works, but the terminal test didn't do what was expected, then your terminal's class may not be in the list of "known" terminals in the config file. Try to identify it, and let us know what the attributes are.  
-
-In X11/Xorg environments, run this in a terminal, then click with the "cross" mouse cursor on the window you're trying to identify: 
+In X11/Xorg environments, run this in a terminal, then click with the "cross" mouse cursor on the window you're trying to identify:  
 
 ```sh
 xprop WM_CLASS _NET_WM_NAME
@@ -343,9 +345,11 @@ You should see some kind of output like this, which will display the class and n
 (DD) COMBO: RCtrl-MINUS => Ctrl-MINUS in KMAP: 'General Terminals'
 ```
 
-In this example the Xfce4-terminal application is being correctly recognized as a terminal, and the equivalent of `Cmd+Minus` is remapped onto `Ctrl+Minus`.  
+In this example the Xfce4-terminal application is being correctly recognized as a terminal (`in KMAP: 'General Terminals'`), and the equivalent of `Cmd+Minus` is remapped onto `Ctrl+Minus`.  
 
-To get back to using the background Toshy services, just use the `(Re)Start Toshy Services` option from the Toshy tray icon menu, or in the Toshy Preferences GUI app, or just run this command in the terminal to restart the `systemd` services:  
+If this terminal was not being recognized as a terminal, it would probably show `in KMAP: 'General GUI'` instead.  
+
+To get back to using the background Toshy services if you've run any of the "manual" commands, just use the `(Re)Start Toshy Services` option from the Toshy tray icon menu, or in the Toshy Preferences GUI app, or just run this command in the terminal to restart the `systemd` services:  
 
 ```sh
 toshy-services-restart
@@ -365,7 +369,7 @@ The backup folders are typically less than 1 MB in size, as the Python virtual e
 
 Using some software like Visual Studio Code, it is possible to compare the old and new config files in a "diff" sort of view and quickly see the differences. This can make it very easy to merge your custom changes back into the new config file with a few clicks. Then all you need to do is save the new config and restart the Toshy services or config script.  
 
-If you keep your modifications within the `keyszer` API functions at the very beginning of the script, and the "User Apps" marked section around the middle of the config file, it should be pretty easy to merge your customizations back whenever you update Toshy or install on a new machine. The "User Apps" section is designed to be a good place in the config to put some customizations like making the brightness and volume keys on a laptop function row work correctly for your specific machine.  
+If you keep your modifications within the `keyszer` API functions at the very beginning of the config file, and the "User Apps" marked section around the middle of the config file, it should be pretty easy to merge your customizations back whenever you update Toshy or install on a new machine. The "User Apps" section is designed to be a good place in the config to put some customizations like making the brightness and volume keys on a laptop function row work correctly for your specific machine.  
 
 I will be trying to work on doing a more automatic copying/merging of existing user settings into a new config file.  
 
@@ -435,7 +439,7 @@ If you do need to disable or reduce the suspend timer because of the touchpad is
 
 ### VSCode(s) and Firefox menu stealing focus when hitting `Option/Alt`
 
-For Firefox, the fix is relatively simple: Get to the advanced config settings by hitting `Cmd+comma` (if Toshy or Kinto is enabled), or by entering "about:config" into the URL/address bar. Accept the warning, and search for:  
+For Firefox, the fix is relatively simple: Get to the advanced config settings by entering `about:config` into the URL/address bar. Accept the warning, and search for:  
 
 ```ini
 ui.key.menuAccessKeyFocuses
@@ -443,7 +447,7 @@ ui.key.menuAccessKeyFocuses
 
 Double-click the item to change it from "true" to "false", and the `Option/Alt` key will stop focusing the menu bar.  
 
-For VSCode/VSCodium/Code-OSS, use `Cmd+Shift+P` to open the command palette, enter "open user settings json" to open the settings JSON file where you need to place these lines:  
+For VSCode/VSCodium/Code-OSS, use `Cmd+Shift+P` to open the command palette, enter `open user settings json` to open the settings JSON file where you need to place these lines:  
 
 ```json
     "window.titleBarStyle": "custom",
@@ -461,7 +465,7 @@ If there is nothing else in your user settings JSON file, it would need to have 
 }
 ```
 
-And the last line in every section of a JSON formatted file can't have a commma at the end, or there will be an error.  
+And the last line in every section of a JSON formatted file can't have a comma at the end, or there will be an error.  
 
 You may be prompted to restart the app after saving this particular set of lines, and it will change how the VSCode window looks, with a combined menu/titlebar. The `Option/Alt` key will no longer focus the menu bar.  
 
@@ -473,7 +477,7 @@ The Option-key special characters in particular rely on a shortcut combo (`Shift
 
 This will also usually affect "macros" where you attempt to get the keymapper to type out multiple characters or strings or perform multiple shortcut combos when you use a shortcut. They may fail somewhere in the middle, or a shifted character will come out as a non-shifted character.  
 
-A solution to this has been implemented in `keyszer`, and the API function is already in the Toshy config file. Injecting a short delay before and after the "normal" key press (to make sure that the modifier press and release are seen as happening with the correct timing) will usually solve the issue.  
+A solution (well, a "mitigation") for this has been implemented in `keyszer`, and the API function is already in the Toshy config file. Injecting a short delay before and after the "normal" key press (to make sure that the modifier press and release are seen as happening with the correct timing) will usually solve the issue.  
 
 Look for this code early in the Toshy config file:  
 
