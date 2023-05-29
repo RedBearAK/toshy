@@ -4,13 +4,6 @@ import re
 import os
 import subprocess
 
-from pprint import pformat as ppf
-from pprint import pprint
-
-# not in standard library
-try: import psutil
-except ModuleNotFoundError: psutil = None
-
 # ENV module version: 2023-05-22
 
 VERBOSE = True
@@ -26,18 +19,14 @@ def debug(*args, ctx="DD"):
         return
     print(f"({ctx})", *args, flush=FLUSH)
 
-
 def warn(*args, ctx="WW"):
     print(f"({ctx})", *args, flush=FLUSH)
-
 
 def error(*args, ctx="EE"):
     print(f"({ctx})", *args, flush=FLUSH)
 
-
 def log(*args, ctx="--"):
     print(f"({ctx})", *args, flush=FLUSH)
-
 
 def info(*args, ctx="--"):
     log(*args, ctx=ctx)
@@ -64,33 +53,42 @@ def get_env_info():
     SESSION_TYPE    = None
     DESKTOP_ENV     = None
 
-    env_info        = {}
+    env_info_dct    = {}
     _distro_name    = ""
     _desktop_env    = ""
 
+    # Map each file path to its file object if it exists
+    release_files = {
+        '/etc/os-release': None,
+        '/etc/lsb-release': None,
+        '/etc/arch-release': None,
+    }
+    for path in release_files.keys():
+        if os.path.isfile(path):
+            with open(path, 'r', encoding='UTF-8') as f:
+                release_files[path] = f.read().splitlines()
+
     ########################################################################
     ##  Get distro name
-    if 1 == 2:
-        pass
-    elif os.path.isfile('/etc/os-release'):
-        with open('/etc/os-release', 'r') as f:
-            for line in f:
-                if line.startswith('NAME='):
-                    _distro_name = line.split('=')[1].strip().strip('"')
-                    break
-                elif line.startswith('PRETTY_NAME='):
-                    _distro_name = line.split('=')[1].strip().strip('"')
-                    break
-    elif os.path.isfile('/etc/lsb-release'):
-        with open('/etc/lsb-release', 'r') as f:
-            for line in f:
-                if line.startswith('DISTRIB_ID='):
-                    _distro_name = line.split('=')[1].strip()
-                    break
-                elif line.startswith('DISTRIB_DESCRIPTION='):
-                    _distro_name = line.split('=')[1].strip().strip('"')
-                    break
-    elif os.path.isfile('/etc/arch-release'):
+    if release_files['/etc/os-release']:
+        for line in release_files['/etc/os-release']:
+            line: str
+            if line.startswith('NAME='):
+                _distro_name = line.split('=')[1].strip().strip('"')
+                break
+            elif line.startswith('PRETTY_NAME='):
+                _distro_name = line.split('=')[1].strip().strip('"')
+                break
+    elif release_files['/etc/lsb-release']:
+        for line in release_files['/etc/lsb-release']:
+            line: str
+            if line.startswith('DISTRIB_ID='):
+                _distro_name = line.split('=')[1].strip().strip('"')
+                break
+            elif line.startswith('DISTRIB_DESCRIPTION='):
+                _distro_name = line.split('=')[1].strip().strip('"')
+                break
+    elif release_files['/etc/arch-release']:
         _distro_name = 'arch'
 
     distro_names = {            # simplify distro names
@@ -124,28 +122,27 @@ def get_env_info():
     if isinstance(DISTRO_NAME, str):
         DISTRO_NAME = DISTRO_NAME.casefold()
 
-    env_info['DISTRO_NAME'] = DISTRO_NAME
+    env_info_dct['DISTRO_NAME'] = DISTRO_NAME
 
     ########################################################################
     ##  Get distro version
-
-    if os.path.isfile('/etc/os-release'):
-        with open('/etc/os-release', 'r') as f:
-            for line in f:
-                if line.startswith('VERSION_ID='):
-                    DISTRO_VER = line.split('=')[1].strip().strip('"')
-                    break
-    elif os.path.isfile('/etc/lsb-release'):
-        with open('/etc/lsb-release', 'r') as f:
-            for line in f:
-                if line.startswith('DISTRIB_RELEASE='):
-                    DISTRO_VER = line.split('=')[1].strip().strip('"')
-                    break
+    if release_files['/etc/os-release']:
+        for line in release_files['/etc/os-release']:
+            line: str
+            if line.startswith('VERSION_ID='):
+                DISTRO_VER = line.split('=')[1].strip().strip('"')
+                break
+    elif release_files['/etc/lsb-release']:
+        for line in release_files['/etc/lsb-release']:
+            line: str
+            if line.startswith('DISTRIB_RELEASE='):
+                DISTRO_VER = line.split('=')[1].strip().strip('"')
+                break
 
     if not DISTRO_VER:
-        env_info['DISTRO_VER'] = 'notfound'
+        env_info_dct['DISTRO_VER'] = 'notfound'
     else:
-        env_info['DISTRO_VER'] = DISTRO_VER
+        env_info_dct['DISTRO_VER'] = DISTRO_VER
 
 
     ########################################################################
@@ -191,7 +188,7 @@ def get_env_info():
     if SESSION_TYPE not in ['x11', 'wayland']:
         raise EnvironmentError(f'\n\nENV: Unknown session type: {SESSION_TYPE}.\n')
 
-    env_info['SESSION_TYPE'] = SESSION_TYPE
+    env_info_dct['SESSION_TYPE'] = SESSION_TYPE
 
 
     ########################################################################
@@ -236,30 +233,34 @@ def get_env_info():
         error(f'Desktop Environment not in de_names list! Should fix this.\n\t{_desktop_env = }')
         DESKTOP_ENV = _desktop_env
 
-    if psutil:
-        # Doublecheck the desktop environment by checking for identifiable running processes
-        for proc in psutil.process_iter(['name']):
-            if proc.info['name'] in ['plasmashell', 'kwin_ft', 'kwin_x11']:
-                if DESKTOP_ENV != 'kde':
-                    error(f'Desktop may be misidentified: {DESKTOP_ENV = }. KWin detected.')
-                    DESKTOP_ENV = 'kde'
-                    break
-            if proc.info['name'] == 'gnome-shell':
-                if DESKTOP_ENV != 'gnome':
-                    error(f'Desktop may be misidentified: {DESKTOP_ENV = }. GNOME Shell detected.')
-                    DESKTOP_ENV = 'gnome'
-                    break
-            if proc.info['name'] == 'sway':
-                if DESKTOP_ENV != 'sway':
-                    error(f'Desktop may be misidentified: {DESKTOP_ENV = }. SwayWM detected.')
-                    DESKTOP_ENV = 'sway'
-                    break
-    else:
-        debug(f'ENV: The process doublecheck was bypassed because "psutil" was not imported.')
+    # Doublecheck the desktop environment by checking for identifiable running processes
+    def check_process(names, desktop_env):
+        nonlocal DESKTOP_ENV
+        for name in names:
+            command = f"pgrep {name}"
+            try:
+                subprocess.check_output(command, shell=True)
+                if DESKTOP_ENV != desktop_env:
+                    error(  f"Desktop may be misidentified: '{DESKTOP_ENV}'\n"
+                            f"'{desktop_env}' was detected and will be used instead.")
+                    DESKTOP_ENV = desktop_env
+                break  # Stop checking if any of the processes are found
+            except subprocess.CalledProcessError:
+                pass
 
-    env_info['DESKTOP_ENV'] = DESKTOP_ENV
+    processes = {
+        'kde': ['plasmashell', 'kwin_ft', 'kwin_wayland', 'kwin_x11'],
+        'gnome': ['gnome-shell'],
+        'sway': ['sway']
+    }
+
+    for desktop_env, process_names in processes.items():
+        check_process(process_names, desktop_env)
+
+
+    env_info_dct['DESKTOP_ENV'] = DESKTOP_ENV
     
-    return env_info
+    return env_info_dct
 
 
 if __name__ == '__main__':
@@ -267,8 +268,8 @@ if __name__ == '__main__':
     _env_info = get_env_info()
     print('')
     debug(  f'Toshy env module sees this environment:'
-            f'\n\t DISTRO_NAME     = \'{_env_info["DISTRO_NAME"]}\''
-            f'\n\t DISTRO_VER      = \'{_env_info["DISTRO_VER"]}\''
-            f'\n\t SESSION_TYPE    = \'{_env_info["SESSION_TYPE"]}\''
-            f'\n\t DESKTOP_ENV     = \'{_env_info["DESKTOP_ENV"]}\''
+            f'\n\t\t DISTRO_NAME     = \'{_env_info["DISTRO_NAME"]}\''
+            f'\n\t\t DISTRO_VER      = \'{_env_info["DISTRO_VER"]}\''
+            f'\n\t\t SESSION_TYPE    = \'{_env_info["SESSION_TYPE"]}\''
+            f'\n\t\t DESKTOP_ENV     = \'{_env_info["DESKTOP_ENV"]}\''
             f'\n', ctx="EV")
