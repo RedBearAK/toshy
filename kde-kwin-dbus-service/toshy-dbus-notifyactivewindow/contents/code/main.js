@@ -24,20 +24,25 @@ function notifyActiveWindow(client){
     );
 }
 
-var originalClient = workspace.activeClient;
-var allClients = workspace.clientList();
+function switchWindows() {
+    var originalClient = workspace.activeClient;
+    var allClients = workspace.clientList();
 
-// Index of the currently active client
-var originalIndex = allClients.indexOf(originalClient);
+    // Index of the currently active client
+    var originalIndex = allClients.indexOf(originalClient);
 
-// Calculate the index of the next client in the list
-var nextIndex = (originalIndex + 1) % allClients.length;
+    // Calculate the index of the next client in the list
+    var nextIndex = (originalIndex + 1) % allClients.length;
 
-// Activate the next client (equivalent to Alt+Tab)
-workspace.activateClient(allClients[nextIndex]);
+    // Activate the next client (equivalent to Alt+Tab)
+    workspace.activateClient(allClients[nextIndex]);
 
-// Re-activate the original client (equivalent to Alt+Tab)
-workspace.activateClient(originalClient);
+    // Re-activate the original client (equivalent to Alt+Tab)
+    workspace.activateClient(originalClient);
+}
+
+// Set a delay of 1000ms (1 second) before executing the script
+setTimeout(switchWindows, 1000);
 
 if (workspace.activeClient) {
     notifyActiveWindow(workspace.activeClient);
