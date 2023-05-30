@@ -153,11 +153,14 @@
         "git",
         "cairo-devel", 
         "dbus-1-devel",
+        "python310-tk",
         "python310-dbus-python-devel",
         "python-devel",
         "tk",
         "gobject-introspection-devel",
         "libappindicator3-devel",
+        "libnotify-tools",
+        "typelib-1_0-AyatanaAppIndicator3-0_1",
         "systemd-devel"
     ],
     "debian": [
