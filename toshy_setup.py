@@ -329,7 +329,7 @@ def install_distro_pkgs():
     apt_distros = ['ubuntu', 'mint', 'lmde', 'popos', 'eos', 'neon', 'zorin', 'debian']
     dnf_distros_Fedora = ['fedora', 'fedoralinux']
     dnf_distros_RHEL = ['almalinux', 'rocky', 'rhel']
-    pacman_distros = ['arch', 'endeavouros', 'manjaro']
+    pacman_distros = ['arch', 'arcolinux', 'endeavouros', 'manjaro']
     zypper_distros = ['opensuse-tumbleweed']
 
     if cnfg.DISTRO_NAME in apt_distros:
