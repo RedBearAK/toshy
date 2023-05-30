@@ -593,6 +593,8 @@ Which task-switching style works for you is down to personal preference, and how
 
 KDE Plasma desktops tend to have the Meta/Super/Win/Cmd key bound to open the application menu. Like the other desktop environments that bind the `Meta` key to do something by itself, this appears to be an alien concept as far as the regular keyboard shortcut control panel is concerned. You won't find it there. To disable this secret modifier-only binding, you have to put something in a hidden dotfile and refresh `KWin`.  
 
+> UPDATE: The Toshy installer will now take care of this, and `toshy_setup.py` has command-line options to apply or remove this tweak independently of the full install procedure. 
+
 Open the file `~/.config/kwinrc`, or create it if it doesn't exist. Append this information at the end of the file: 
 
 ```ini
