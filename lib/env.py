@@ -99,6 +99,7 @@ def get_env_info():
         'Manjaro':              'manjaro',
         'KDE Neon':             'neon',
         'Linux Mint':           'mint',
+        'openSUSE.*':           'opensuse',
         'Pop!_OS':              'popos',
         'Red Hat.*':            'rhel',
         'Rocky.*':              'rocky',
