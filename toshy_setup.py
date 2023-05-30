@@ -330,7 +330,7 @@ def install_distro_pkgs():
     dnf_distros_Fedora = ['fedora', 'fedoralinux']
     dnf_distros_RHEL = ['almalinux', 'rocky', 'rhel']
     pacman_distros = ['arch', 'endeavouros', 'manjaro']
-    zypper_distros = ['opensuse']
+    zypper_distros = ['opensuse-tumbleweed']
 
     if cnfg.DISTRO_NAME in apt_distros:
         call_attention_to_password_prompt()

@@ -148,7 +148,7 @@
         "systemd-devel",
         "xset"
     ],
-    "opensuse": [
+    "opensuse-tumbleweed": [
         "gcc",
         "git",
         "cairo-devel", 
