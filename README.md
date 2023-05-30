@@ -237,11 +237,10 @@ sudo apt install mint-meta-mate mint-meta-xfce mint-meta-cinnamon
 
     - antiX & MX Linux are based on Debian 11 Bullseye and identify as `debian`.
 
-- openSUSE Leap 15.4 - PYTHON VERY OLD! Good luck.  
+- openSUSE Tumbleweed (rolling release)
 
-    - Python 3.10/3.11 is in general use now, Leap has Python 3.6.x
-
-- openSUSE Tumbleweed (rolling release) - in testing
+    - GNOME desktop works (Wayland session needs shell extensions, see Requirements)
+    - KDE desktop works (X11/Xorg or Wayland)
 
 ## Currently working desktop environments / window managers
 
