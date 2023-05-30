@@ -379,6 +379,8 @@ def install_distro_pkgs():
             print('Update your Arch-based system and try the Toshy installer again. Exiting.')
             sys.exit(1)
     elif cnfg.DISTRO_NAME in zypper_distros:
+        # TODO: alias 'qdbus' to 'qdbus-qt5' for openSUSE
+        subprocess.run('alias qdbus="qdbus-qt5 "', shell=True)
         # TODO: make sure this actually works!
         subprocess.run(['sudo', 'zypper', '--non-interactive', 'install'] + cnfg.pkgs_for_distro)
 

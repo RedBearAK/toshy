@@ -149,18 +149,16 @@
         "xset"
     ],
     "opensuse": [
+        "gcc",
         "git",
-        "cairo-devel",
-        "cairo-gobject-devel",
+        "cairo-devel", 
         "dbus-1-devel",
-        "python3-dbus",
-        "python3-devel",
-        "python3-pip",
-        "python3-tk",
+        "python310-dbus-python-devel",
+        "python-devel",
+        "tk",
         "gobject-introspection-devel",
         "libappindicator3-devel",
-        "systemd-devel",
-        "xset"
+        "systemd-devel"
     ],
     "debian": [
         "git",
