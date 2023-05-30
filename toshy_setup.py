@@ -380,7 +380,7 @@ def install_distro_pkgs():
             sys.exit(1)
     elif cnfg.DISTRO_NAME in zypper_distros:
         # TODO: make sure this actually works!
-        subprocess.run(['zypper', '--non-interactive', 'install'] + cnfg.pkgs_for_distro)
+        subprocess.run(['sudo', 'zypper', '--non-interactive', 'install'] + cnfg.pkgs_for_distro)
 
     else:
         print(f"\nERROR: Installer does not know how to handle distro: {cnfg.DISTRO_NAME}\n")
