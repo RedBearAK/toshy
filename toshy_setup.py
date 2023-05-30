@@ -13,10 +13,8 @@ import datetime
 import platform
 import textwrap
 import subprocess
-import configparser
 
-from argparse import Namespace
-from typing import Dict, Union
+from typing import Dict
 # local import
 import lib.env as env
 from lib.logger import debug, error
@@ -64,6 +62,7 @@ class InstallerSettings:
         self.pkgs_json_dct      = None
         self.pkgs_for_distro    = None
         self.pip_pkgs           = None
+        self.qdbus              = 'qdbus-qt5' if shutil.which('qdbus-qt5') else cnfg.qdbus
 
         self.home_dir_path      = os.path.abspath(os.path.expanduser('~'))
         self.toshy_dir_path     = os.path.join(self.home_dir_path, '.config', 'toshy')
@@ -378,10 +377,8 @@ def install_distro_pkgs():
             print('Installer will fail with version mismatches if you have not updated recently.')
             print('Update your Arch-based system and try the Toshy installer again. Exiting.')
             sys.exit(1)
+
     elif cnfg.DISTRO_NAME in zypper_distros:
-        # TODO: alias 'qdbus' to 'qdbus-qt5' for openSUSE
-        subprocess.run('alias qdbus="qdbus-qt5 "', shell=True)
-        # TODO: make sure this actually works!
         subprocess.run(['sudo', 'zypper', '--non-interactive', 'install'] + cnfg.pkgs_for_distro)
 
     else:
@@ -594,7 +591,7 @@ def setup_kwin_script():
         print("Successfully enabled the KWin script.")
 
     # Try to get KWin to notice and activate the script on its own, now that it's in RC file
-    subprocess.run(['qdbus', 'org.kde.KWin', '/KWin', 'reconfigure'])
+    subprocess.run([cnfg.qdbus, 'org.kde.KWin', '/KWin', 'reconfigure'])
 
 
 def setup_kde_dbus_service():
@@ -656,77 +653,30 @@ def autostart_tray_icon():
     print(f'Tray icon should appear in system tray at each login.')
 
 
-###################################################################################################
-# fix the bad behavior of 'configparser' changing options to lower case (KDE no likey)
-class CaseSensitiveConfigParser(configparser.ConfigParser):
-    def optionxform(self, optionstr):
-        return optionstr
-
-
 def apply_kde_tweak():
     """Add a tweak to kwinrc file to disable Meta key opening app menu."""
 
-    # Define path to kwinrc
-    kwinrc_path = os.path.join(os.path.expanduser('~'), '.config', 'kwinrc')
-
-    # Check if kwinrc exists and create if it does not
-    if not os.path.exists(kwinrc_path):
-        open(kwinrc_path, 'a').close()
-
-    # Create a ConfigParser object and read kwinrc
-    config = CaseSensitiveConfigParser()
-    config.read(kwinrc_path)
-
-    # Check if 'ModifierOnlyShortcuts' section exists and create if it does not
-    if 'ModifierOnlyShortcuts' not in config.sections():
-        config.add_section('ModifierOnlyShortcuts')
-
-    # Set 'Meta' option in 'ModifierOnlyShortcuts' section to empty
-    config.set('ModifierOnlyShortcuts', 'Meta', '')
-
-    # Write changes back to kwinrc
-    with open(kwinrc_path, 'w') as configfile:
-        config.write(configfile)
+    subprocess.run(
+        "kwriteconfig5 --file kwinrc --group ModifierOnlyShortcuts --key Meta ''", shell=True)
 
     # Run reconfigure command
-    subprocess.run(['qdbus', 'org.kde.KWin', '/KWin', 'reconfigure'],
+    subprocess.run([cnfg.qdbus, 'org.kde.KWin', '/KWin', 'reconfigure'],
                     stderr=subprocess.DEVNULL,
                     stdout=subprocess.DEVNULL)
     print(f'Disabled Meta key opening application menu.')
 
 
-
 def remove_kde_tweak():
     """Remove the tweak to kwinrc file that disables Meta key opening app menu."""
 
-    # Define path to kwinrc
-    kwinrc_path = os.path.join(os.path.expanduser('~'), '.config', 'kwinrc')
-
-    # Check if kwinrc exists, if not there is nothing to do
-    if not os.path.exists(kwinrc_path):
-        return
-
-    # Create a ConfigParser object and read kwinrc
-    config = CaseSensitiveConfigParser()
-    config.read(kwinrc_path)
-
-    # Check if 'ModifierOnlyShortcuts' section exists, if not there is nothing to do
-    if 'ModifierOnlyShortcuts' not in config.sections():
-        return
-
-    # Check if 'Meta' option exists in 'ModifierOnlyShortcuts' section, if not there is nothing to do
-    if 'Meta' not in config['ModifierOnlyShortcuts']:
-        return
-
-    # Remove 'Meta' option from 'ModifierOnlyShortcuts' section
-    config.remove_option('ModifierOnlyShortcuts', 'Meta')
-
-    # Write changes back to kwinrc
-    with open(kwinrc_path, 'w') as configfile:
-        config.write(configfile)
+    subprocess.run(
+        'kwriteconfig5 --file kwinrc --group ModifierOnlyShortcuts --key Meta --delete',
+        shell=True)
 
     # Run reconfigure command
-    subprocess.run(['qdbus', 'org.kde.KWin', '/KWin', 'reconfigure'])
+    subprocess.run([cnfg.qdbus, 'org.kde.KWin', '/KWin', 'reconfigure'],
+                    stderr=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL)
     print(f'Removed tweak to disable Meta key opening application menu.')
 ###################################################################################################
 
