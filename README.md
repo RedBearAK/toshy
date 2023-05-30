@@ -256,7 +256,7 @@ For Wayland+GNOME this requires at least one of the known compatible GNOME Shell
 
 At some point it should be possible to have Wayland+KDE_Plasma working (UPDATE: Wayland+KDE is pretty much working), and possibly Wayland+sway and Wayland+hyprland. The methods to do this already exist in the `xremap` keymapper, but that project is written in Rust and `keyszer` is written in Python.  
 
-There are specific remaps or overrrides of default remaps for several common desktop environments (or distros which have shortcut peculiarities in their default desktop setups). They become active if the desktop environment is detected correctly by the `env.py` module used by the config file, or the information about the desktop can be placed in some `OVERRIDE` variables in the config file.  
+There are specific remaps or overrides of default remaps for several common desktop environments (or distros which have shortcut peculiarities in their default desktop setups). They become active if the desktop environment is detected correctly by the `env.py` module used by the config file, or the information about the desktop can be placed in some `OVERRIDE` variables in the config file.  
 
 ## Usage
 
