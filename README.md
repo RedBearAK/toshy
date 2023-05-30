@@ -204,12 +204,16 @@ sudo apt install mint-meta-mate mint-meta-xfce mint-meta-cinnamon
 
 - Manjaro (Arch-based)
 
-    - GNOME and Xfce desktop variants tested
+    - NOTE: Manjaro only seems to use X11/Xorg for now
+    - GNOME desktop variant tested
+    - Xfce desktop variant tested
+    - KDE Plasma desktop variant tested (see FAQ Re: Application Menu shortcut)
 
 - EndeavourOS (Arch-based)
 
     - Most desktops should work in X11/Xorg
-    - GNOME desktop should work in Wayland also (requires extension)
+    - GNOME desktop should work in X11/Xorg and Wayland (requires extension)
+    - KDE (Plasma) desktop should work in X11/Xorg and Wayland
 
 - Arch in general? (maybe, needs more testing)
 
@@ -604,6 +608,10 @@ qdbus org.kde.KWin /KWin reconfigure
 ```
 
 To undo this, remove or comment out the same text in the file, and run the same command. The `Meta` key binding should be back.  
+
+### Manjaro KDE shortcut for Application Menu
+
+Something strange is happening in Manjaro KDE with the shortcut to open the application menu/launcher applet. In the primary shortcut settings control panel, there is a shortcut of `Alt+F1` set, which should work with the Toshy config. But the `Alt+F1` shortcut doesn't even work with Toshy disabled. If you right-click on the menu icon you can open the applet settings dialog and set the `Alt+F1` shortcut in its preferences (choose to reassign it) and then hit Apply, and it will start working with `Cmd+Space` when Toshy is enabled. And also it will now work even when Toshy is disabled. There are other identically named shortcut settings in the main KDE control panel for shortcuts, but they seem to want to open `krunner`, the search/launcher bar that pops out from the top of the screen.  
 
 ### More Will Follow...
 
