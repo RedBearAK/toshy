@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-
 import os
 import sys
 import pwd
@@ -8,14 +7,14 @@ import grp
 import json
 import signal
 import shutil
+import zipfile
 import argparse
 import datetime
 import platform
 import textwrap
 import subprocess
 
-from argparse import Namespace
-from typing import Any
+from typing import Dict
 # local import
 import lib.env as env
 from lib.logger import debug, error
@@ -57,12 +56,13 @@ class InstallerSettings:
         self.SESSION_TYPE       = None
         self.DESKTOP_ENV        = None
         
-        self.systemctl_present  = shutil.which('systemctl')
+        self.systemctl_present  = shutil.which('systemctl') is not None
         self.init_system        = None
 
         self.pkgs_json_dct      = None
         self.pkgs_for_distro    = None
         self.pip_pkgs           = None
+        self.qdbus              = 'qdbus-qt5' if shutil.which('qdbus-qt5') else cnfg.qdbus
 
         self.home_dir_path      = os.path.abspath(os.path.expanduser('~'))
         self.toshy_dir_path     = os.path.join(self.home_dir_path, '.config', 'toshy')
@@ -80,6 +80,7 @@ class InstallerSettings:
         self.input_group_name   = 'input'
         self.user_name          = pwd.getpwuid(os.getuid()).pw_name
 
+        self.tweak_applied      = None
         self.should_reboot      = None
         self.reboot_tmp_file    = "/tmp/toshy_installer_says_reboot"
         self.reboot_ascii_art   = textwrap.dedent("""
@@ -97,12 +98,12 @@ def get_environment_info():
     print(f'\n§  Getting environment information...\n{cnfg.separator}')
 
     known_init_systems = {
-        'systemd': 'Systemd',
-        'init': 'SysVinit',
-        'upstart': 'Upstart',
-        'openrc': 'OpenRC',
-        'runit': 'Runit',
-        'initng': 'Initng'
+        'systemd':              'Systemd',
+        'init':                 'SysVinit',
+        'upstart':              'Upstart',
+        'openrc':               'OpenRC',
+        'runit':                'Runit',
+        'initng':               'Initng'
     }
 
     try:
@@ -286,7 +287,27 @@ def load_package_list():
     """load package list from JSON file"""
     with open('packages.json') as f:
         cnfg.pkgs_json_dct = json.load(f)
-    cnfg.pip_pkgs = cnfg.pkgs_json_dct['pip']
+
+    # cnfg.pip_pkgs = cnfg.pkgs_json_dct['pip']
+
+    cnfg.pip_pkgs = [
+            "pillow",
+            "lockfile",
+            "dbus-python",
+            "systemd-python",
+            "pygobject",
+            "tk",
+            "sv_ttk",
+            "psutil",
+            "watchdog",
+            "inotify-simple",
+            "evdev",
+            "appdirs",
+            "ordered-set",
+            "python-xlib",
+            "six"
+    ]
+
     try:
         cnfg.pkgs_for_distro = cnfg.pkgs_json_dct[cnfg.DISTRO_NAME]
     except KeyError:
@@ -299,45 +320,17 @@ def install_distro_pkgs():
     """install needed packages from list for distro type"""
     print(f'\n\n§  Installing native packages...\n{cnfg.separator}')
 
-    # Check for systemd
-    has_systemd = shutil.which("systemd") is not None
-
     # Filter out systemd packages if not present
     cnfg.pkgs_for_distro = [
         pkg for pkg in cnfg.pkgs_for_distro 
-        if has_systemd or 'systemd' not in pkg
+        if cnfg.systemctl_present or 'systemd' not in pkg
     ]
 
-    apt_distros = [
-        'ubuntu',
-        'mint',
-        'lmde',
-        'popos',
-        'eos',
-        'neon',
-        'zorin',
-        'debian',
-    ]
-
-    dnf_distros_Fedora = [
-        'fedora',
-        'fedoralinux'
-    ]
-    dnf_distros_RHEL = [
-        'almalinux',
-        'rocky',
-        'rhel',
-    ]
-
-    pacman_distros = [
-        'arch',
-        'endeavouros',
-        'manjaro',
-    ]
-
-    zypper_distros = [
-        'opensuse',
-    ]
+    apt_distros = ['ubuntu', 'mint', 'lmde', 'popos', 'eos', 'neon', 'zorin', 'debian']
+    dnf_distros_Fedora = ['fedora', 'fedoralinux']
+    dnf_distros_RHEL = ['almalinux', 'rocky', 'rhel']
+    pacman_distros = ['arch', 'endeavouros', 'manjaro']
+    zypper_distros = ['opensuse-tumbleweed']
 
     if cnfg.DISTRO_NAME in apt_distros:
         call_attention_to_password_prompt()
@@ -384,9 +377,9 @@ def install_distro_pkgs():
             print('Installer will fail with version mismatches if you have not updated recently.')
             print('Update your Arch-based system and try the Toshy installer again. Exiting.')
             sys.exit(1)
+
     elif cnfg.DISTRO_NAME in zypper_distros:
-        # TODO: make sure this actually works!
-        subprocess.run(['zypper', '--non-interactive', 'install'] + cnfg.pkgs_for_distro)
+        subprocess.run(['sudo', 'zypper', '--non-interactive', 'install'] + cnfg.pkgs_for_distro)
 
     else:
         print(f"\nERROR: Installer does not know how to handle distro: {cnfg.DISTRO_NAME}\n")
@@ -470,7 +463,7 @@ def install_toshy_files():
 
 def setup_virtual_env():
     """setup a virtual environment to install Python packages"""
-    print(f'\n\n§  Setting up virtual environment...\n{cnfg.separator}')
+    print(f'\n\n§  Setting up Python virtual environment...\n{cnfg.separator}')
 
     # Create the virtual environment if it doesn't exist
     if not os.path.exists(cnfg.venv_path):
@@ -485,13 +478,10 @@ def install_pip_packages():
     venv_python_cmd = os.path.join(cnfg.venv_path, 'bin', 'python')
     venv_pip_cmd    = os.path.join(cnfg.venv_path, 'bin', 'pip')
     
-    # Check for systemd
-    has_systemd = shutil.which("systemd") is not None
-
     # Filter out systemd packages if not present
     cnfg.pip_pkgs = [
         pkg for pkg in cnfg.pip_pkgs 
-        if has_systemd or 'systemd' not in pkg
+        if cnfg.systemctl_present or 'systemd' not in pkg
     ]
 
     commands        = [
@@ -522,33 +512,119 @@ def install_bin_commands():
     subprocess.run([script_path])
 
 
+# Replace $HOME with user home directory
+def replace_home_in_file(filename):
+    """utility function to replace '$HOME' in .desktop files with actual home path"""
+    # Read in the file
+    with open(filename, 'r') as file:
+        file_data = file.read()
+    # Replace the target string
+    file_data = file_data.replace('$HOME', cnfg.home_dir_path)
+    # Write the file out again
+    with open(filename, 'w') as file:
+        file.write(file_data)
+
+
 def install_desktop_apps():
     """install the convenient scripts to manage Toshy"""
     print(f'\n\n§  Installing Toshy desktop apps...\n{cnfg.separator}')
     script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'toshy-desktopapps-setup.sh')
     subprocess.run([script_path])
 
-    # Replace $HOME with user home directory
-    def replace_home_in_file(filename):
-        # Read in the file
-        with open(filename, 'r') as file:
-            file_data = file.read()
-        # Replace the target string
-        file_data = file_data.replace('$HOME', cnfg.home_dir_path)
-        # Write the file out again
-        with open(filename, 'w') as file:
-            file.write(file_data)
-
-    desktop_files_path = os.path.join(cnfg.home_dir_path, '.local', 'share', 'applications')
-    tray_desktop_file = os.path.join(desktop_files_path, 'Toshy_Tray.desktop')
-    gui_desktop_file = os.path.join(desktop_files_path, 'Toshy_GUI.desktop')
+    desktop_files_path  = os.path.join(cnfg.home_dir_path, '.local', 'share', 'applications')
+    tray_desktop_file   = os.path.join(desktop_files_path, 'Toshy_Tray.desktop')
+    gui_desktop_file    = os.path.join(desktop_files_path, 'Toshy_GUI.desktop')
 
     replace_home_in_file(tray_desktop_file)
     replace_home_in_file(gui_desktop_file)
 
 
+def setup_kwin_script():
+    """install the KWin script to notify D-Bus service about window focus changes"""
+    print(f'\n\n§  Setting up the Toshy KWin script...\n{cnfg.separator}')
+    kwin_script_name    = 'toshy-dbus-notifyactivewindow'
+    kwin_script_path    = os.path.join( cnfg.toshy_dir_path,
+                                        'kde-kwin-dbus-service', kwin_script_name)
+    temp_file_path      = '/tmp/toshy-dbus-notifyactivewindow.kwinscript'
+
+    # Create a zip file (overwrite if it exists)
+    with zipfile.ZipFile(temp_file_path, 'w') as zipf:
+        # Add main.js to the kwinscript package
+        zipf.write(os.path.join(kwin_script_path, 'contents', 'code', 'main.js'),
+                                arcname='contents/code/main.js')
+        # Add metadata.desktop to the kwinscript package
+        zipf.write(os.path.join(kwin_script_path, 'metadata.json'), arcname='metadata.json')
+
+    # Try to remove any installed KWin script entirely
+    result = subprocess.run(
+        ['kpackagetool5', '-t', 'KWin/Script', '-r', kwin_script_name],
+        capture_output=True, text=True)
+
+    if result.returncode != 0:
+        pass
+    else:
+        print("Successfully removed the KWin script.")
+
+    # Install the KWin script
+    result = subprocess.run(
+        ['kpackagetool5', '-t', 'KWin/Script', '-i', temp_file_path], capture_output=True, text=True)
+
+    if result.returncode != 0:
+        print(f"Error installing the KWin script. The error was:\n\t{result.stderr}")
+    else:
+        print("Successfully installed the KWin script.")
+
+    # Remove the temporary kwinscript file
+    try:
+        os.remove(temp_file_path)
+    except (FileNotFoundError, PermissionError): pass
+
+    # Enable the script using kwriteconfig5
+    result = subprocess.run(
+        [   'kwriteconfig5', '--file', 'kwinrc', '--group', 'Plugins', '--key',
+            f'{kwin_script_name}Enabled', 'true'],
+        capture_output=True, text=True)
+    
+    if result.returncode != 0:
+        print(f"Error enabling the KWin script. The error was:\n\t{result.stderr}")
+    else:
+        print("Successfully enabled the KWin script.")
+
+    # Try to get KWin to notice and activate the script on its own, now that it's in RC file
+    subprocess.run([cnfg.qdbus, 'org.kde.KWin', '/KWin', 'reconfigure'])
+
+
+def setup_kde_dbus_service():
+    """install the D-Bus service initialization script to receive window focus
+    change notifications from the KWin script on KDE desktops (Wayland)"""
+    print(f'\n\n§  Setting up the Toshy KDE D-Bus service...\n{cnfg.separator}')
+
+    # need to autostart "$HOME/.local/bin/toshy-kde-dbus-service"
+    user_path               = os.path.expanduser('~')
+    autostart_dir_path      = os.path.join(user_path, '.config', 'autostart')
+    dbus_svc_desktop_path   = os.path.join(cnfg.toshy_dir_path, 'desktop')
+    dbus_svc_desktop_file   = os.path.join(dbus_svc_desktop_path, 'Toshy_KDE_DBus_Service.desktop')
+    start_dbus_svc_cmd      = os.path.join(user_path, '.local', 'bin', 'toshy-kde-dbus-service')
+    replace_home_in_file(dbus_svc_desktop_file)
+
+    # ensure autostart directory exists
+    try:
+        os.makedirs(autostart_dir_path, exist_ok=True)
+    except (PermissionError, NotADirectoryError, FileExistsError) as file_error:
+        error(f"Problem trying to make sure '{autostart_dir_path}' is directory.\n\t{file_error}")
+        sys.exit(1)
+    shutil.copy(dbus_svc_desktop_file, autostart_dir_path)
+    print(f'Toshy KDE D-Bus service should autostart at login.')
+
+    subprocess.run('pkill -f "toshy_kde_dbus_service"', shell=True)
+    subprocess.Popen(   start_dbus_svc_cmd, shell=True,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL   )
+    print(f'Toshy KDE D-Bus service should be running now.')
+
+
 def setup_systemd_services():
-    """invoke the setup script to install the systemd service units"""
+    """invoke the systemd setup script to install the systemd service units"""
     print(f'\n\n§  Setting up the Toshy systemd services...\n{cnfg.separator}')
     if cnfg.systemctl_present:
         script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'bin', 'toshy-systemd-setup.sh')
@@ -567,10 +643,42 @@ def autostart_tray_icon():
     dest_link_file      = os.path.join(autostart_dir_path, 'Toshy_Tray.desktop')
 
     # Need to create autostart folder if necessary
-    os.makedirs(autostart_dir_path, exist_ok=True)
+    try:
+        os.makedirs(autostart_dir_path, exist_ok=True)
+    except (PermissionError, NotADirectoryError, FileExistsError) as file_error:
+        error(f"Problem trying to make sure '{autostart_dir_path}' is directory.\n\t{file_error}")
+        sys.exit(1)
     subprocess.run(['ln', '-sf', tray_desktop_file, dest_link_file])
 
     print(f'Tray icon should appear in system tray at each login.')
+
+
+def apply_kde_tweak():
+    """Add a tweak to kwinrc file to disable Meta key opening app menu."""
+
+    subprocess.run(
+        "kwriteconfig5 --file kwinrc --group ModifierOnlyShortcuts --key Meta ''", shell=True)
+
+    # Run reconfigure command
+    subprocess.run([cnfg.qdbus, 'org.kde.KWin', '/KWin', 'reconfigure'],
+                    stderr=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL)
+    print(f'Disabled Meta key opening application menu.')
+
+
+def remove_kde_tweak():
+    """Remove the tweak to kwinrc file that disables Meta key opening app menu."""
+
+    subprocess.run(
+        'kwriteconfig5 --file kwinrc --group ModifierOnlyShortcuts --key Meta --delete',
+        shell=True)
+
+    # Run reconfigure command
+    subprocess.run([cnfg.qdbus, 'org.kde.KWin', '/KWin', 'reconfigure'],
+                    stderr=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL)
+    print(f'Removed tweak to disable Meta key opening application menu.')
+###################################################################################################
 
 
 def apply_desktop_tweaks():
@@ -582,15 +690,14 @@ def apply_desktop_tweaks():
             instead of (or in addition to) here in the installer. 
     """
 
-    tweak_applied = None
     print(f'\n\n§  Applying any known desktop environment tweaks...\n{cnfg.separator}')
 
     # if GNOME, disable `overlay-key`
     # gsettings set org.gnome.mutter overlay-key ''
     if cnfg.DESKTOP_ENV == 'gnome':
-        subprocess.run(['gsettings', 'set', 'org.gnome.mutter', 'overlay-key', "''"])
+        subprocess.run(['gsettings', 'set', 'org.gnome.mutter', 'overlay-key', ''])
         print(f'Disabling Super/Meta/Win/Cmd key opening the GNOME overview...')
-        tweak_applied = True
+        cnfg.tweak_applied = True
 
         def is_extension_enabled(extension_uuid):
             output = subprocess.check_output(
@@ -605,24 +712,13 @@ def apply_desktop_tweaks():
             print(f"RECOMMENDATION: Install AppIndicator GNOME extension\n"
                 "Easiest method: 'flatpak install extensionmanager', search for 'appindicator'")
 
-    # TODO:
-    # if KDE Plasma, disable Meta key opening app menu by
-    # appending this to ~/.config/kwinrc:
-
-    kde_meta_key = textwrap.dedent("""
-                                [ModifierOnlyShortcuts]
-                                Meta=
-                                """)
-
-    # then run command: 
-    # qdbus org.kde.KWin /KWin reconfigure
     if cnfg.DESKTOP_ENV == 'kde':
-        # subprocess.run(['qdbus', 'org.kde.KWin', '/KWin', 'reconfigure'])
-        pass
+        apply_kde_tweak()
+        cnfg.tweak_applied = True
     
     # if KDE, install `ibus` or `fcitx` and choose as input manager (ask for confirmation)
     
-    if not tweak_applied:
+    if not cnfg.tweak_applied:
         print(f'If nothing printed, no tweaks available for "{cnfg.DESKTOP_ENV}" yet.')
 
 
@@ -635,33 +731,37 @@ def remove_desktop_tweaks():
     # gsettings reset org.gnome.mutter overlay-key
     if cnfg.DESKTOP_ENV == 'gnome':
         subprocess.run(['gsettings', 'reset', 'org.gnome.mutter', 'overlay-key'])
+        print(f'Removed tweak to disable GNOME "overlay-key" binding to Meta/Super.')
 
-    # TODO:
-    # if KDE Plasma, remove this text, or comment out the
-    # 'Meta=' line from ~/.config/kwinrc:
-
-    kde_meta_key = textwrap.dedent("""
-                                [ModifierOnlyShortcuts]
-                                Meta=
-                                """)
-
-    # then run command: 
-    # qdbus org.kde.KWin /KWin reconfigure
     if cnfg.DESKTOP_ENV == 'kde':
-        subprocess.run(['qdbus', 'org.kde.KWin', '/KWin', 'reconfigure'])
+        remove_kde_tweak()
+        print(f'Removed tweak to disable Meta opening KDE application menu.')
 
 
 def uninstall_toshy():
     print("Uninstalling Toshy...")
     remove_desktop_tweaks()
     # TODO: do more uninstaller stuff...
+    # run the systemd-remove script
+    # unload/uninstall/remove KWin script
+    # kill the KDE D-Bus service
+    # run the desktopapps-remove script
+    # run the bincommands-remove script
+    # remove the 'udev' rules file
+    # refresh the active 'udev' rules
 
 
-def show_environment():
-    pass
+def get_json_distro_names():
+    """utility function to return list of available distro names from packages.json file"""
+    with open('packages.json') as f:
+        data: Dict[str:str] = json.load(f)
+    sorted_keys = sorted(data.keys())
+    keys = ",\n\t".join(sorted_keys)
+    return keys
 
 
 def handle_arguments():
+    """deal with CLI arguments given to installer script"""
     parser = argparse.ArgumentParser(
         description='Toshy Installer - options are mutually exclusive',
         epilog='Default action: Install Toshy'
@@ -674,8 +774,13 @@ def handle_arguments():
     parser.add_argument(
         '--override-distro',
         type=str,
-        dest='override_distro',
-        help='Override auto-detection of distro name/type'
+        # dest='override_distro',
+        help=f'Override auto-detection of distro name/type. See --list-distros'
+    )
+    parser.add_argument(
+        '--list-distros',
+        action='store_true',
+        help='Display list of distro names to use with --override-distro'
     )
     parser.add_argument(
         '--uninstall',
@@ -685,20 +790,20 @@ def handle_arguments():
     parser.add_argument(
         '--show-env',
         action='store_true',
-        dest='show_env',
+        # dest='show_env',
         help='Show the environment the installer detects, and exit'
     )
     parser.add_argument(
         '--apply-tweaks',
         action='store_true',
-        dest='apply_tweaks',
-        help='Apply desktop environment tweaks (NOT IMPLEMENTED YET)'
+        # dest='apply_tweaks',
+        help='Apply desktop environment tweaks only, no install'
     )
     parser.add_argument(
         '--remove-tweaks',
         action='store_true',
-        dest='remove_tweaks',
-        help='Remove desktop environment tweaks (NOT IMPLEMENTED YET)'
+        # dest='remove_tweaks',
+        help='Remove desktop environment tweaks only, no install'
     )
 
     args = parser.parse_args()
@@ -708,15 +813,20 @@ def handle_arguments():
         cnfg.override_distro = args.override_distro
         # proceed with normal install sequence
         main(cnfg)
+        sys.exit(0)
+    elif args.list_distros:
+        print(  f'Distro names known to the Toshy installer (to use with --override-distro):'
+                f'\n\n\t{get_json_distro_names()}\n')
+        sys.exit(0)
     elif args.show_env:
         get_environment_info()
         sys.exit(0)
     elif args.apply_tweaks:
-        raise NotImplementedError
         apply_desktop_tweaks()
+        sys.exit(0)
     elif args.remove_tweaks:
-        raise NotImplementedError
         remove_desktop_tweaks()
+        sys.exit(0)
     elif args.uninstall:
         raise NotImplementedError
         uninstall_toshy()
@@ -744,6 +854,10 @@ def main(cnfg: InstallerSettings):
     install_pip_packages()
     install_bin_commands()
     install_desktop_apps()
+    if cnfg.DESKTOP_ENV in ['kde', 'plasma']:
+        setup_kwin_script()
+        setup_kde_dbus_service()
+
     setup_systemd_services()
 
     autostart_tray_icon()

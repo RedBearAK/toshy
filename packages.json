@@ -1,33 +1,4 @@
 {
-    "comments": [
-        "pip packages list includes pre-installing keyszer support packages",
-        "keyszer support packages are from inotify-simple down to end of list",
-        "pip, wheel, setuptools are installed separately in main installer ...",
-        "... script before the rest of the pip list is installed, to minimize ...",
-        "... the presentation of (new version available) warnings in the terminal"
-    ],
-    "pip": [
-        "pillow",
-        "lockfile",
-        "dbus-python",
-        "systemd-python",
-        "pygobject",
-        "tk",
-        "sv_ttk",
-        "psutil",
-        "watchdog",
-        "inotify-simple",
-        "evdev",
-        "appdirs",
-        "ordered-set",
-        "python-xlib",
-        "six"
-    ],
-    "kde": [
-        "ibus",
-        "ibus-qt",
-        "ibus-gtk"
-    ],
     "fedora": [
         "git",
         "evtest",
@@ -177,19 +148,20 @@
         "systemd-devel",
         "xset"
     ],
-    "opensuse": [
+    "opensuse-tumbleweed": [
+        "gcc",
         "git",
-        "cairo-devel",
-        "cairo-gobject-devel",
+        "cairo-devel", 
         "dbus-1-devel",
-        "python3-dbus",
-        "python3-devel",
-        "python3-pip",
-        "python3-tk",
+        "python310-tk",
+        "python310-dbus-python-devel",
+        "python-devel",
+        "tk",
         "gobject-introspection-devel",
         "libappindicator3-devel",
-        "systemd-devel",
-        "xset"
+        "libnotify-tools",
+        "typelib-1_0-AyatanaAppIndicator3-0_1",
+        "systemd-devel"
     ],
     "debian": [
         "git",
@@ -258,8 +230,5 @@
         "python-pip",
         "systemd",
         "tk"
-    ],
-    "nothing": [
-        "leave this section here at the end"
     ]
 }
