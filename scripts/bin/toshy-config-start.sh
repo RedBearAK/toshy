@@ -24,4 +24,4 @@ pkill -f "bin/xkeysnail"
 # shellcheck disable=SC1091
 source "$HOME/.config/toshy/.venv/bin/activate"
 
-$(which keyszer) -w -c "$HOME/.config/toshy/toshy_config.py"
+keyszer -w -c "$HOME/.config/toshy/toshy_config.py"
