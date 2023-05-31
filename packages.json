@@ -203,6 +203,20 @@
         "systemd",
         "tk"
     ],
+    "arcolinux": [
+        "cairo",
+        "dbus",
+        "evtest",
+        "git",
+        "gobject-introspection",
+        "libappindicator-gtk3",
+        "pkg-config",
+        "python",
+        "python-dbus",
+        "python-pip",
+        "systemd",
+        "tk"
+    ],
     "endeavouros": [
         "cairo",
         "dbus",

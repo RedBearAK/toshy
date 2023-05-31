@@ -73,7 +73,10 @@ def get_env_info():
     if release_files['/etc/os-release']:
         for line in release_files['/etc/os-release']:
             line: str
-            if line.startswith('NAME='):
+            if line.startswith('ID='):
+                _distro_name = line.split('=')[1].strip().strip('"')
+                break
+            elif line.startswith('NAME='):
                 _distro_name = line.split('=')[1].strip().strip('"')
                 break
             elif line.startswith('PRETTY_NAME='):

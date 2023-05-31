@@ -684,7 +684,7 @@ keyboards_IBM = [
     'IBM Rapid Access Keyboard',
     'IBM Space Saver II',
     'IBM Model M',
-    'IBM Model F',    
+    'IBM Model F',
 ]
 keyboards_Chromebook = [
     # Add specific Chromebook keyboard device names to this list
@@ -701,10 +701,10 @@ keyboards_Apple = [
 ]
 
 kbtype_lists = {
-    'IBM': keyboards_IBM, 
-    'Chromebook': keyboards_Chromebook, 
-    'Windows': keyboards_Windows, 
-    'Apple': keyboards_Apple
+    'IBM':          keyboards_IBM,
+    'Chromebook':   keyboards_Chromebook,
+    'Windows':      keyboards_Windows,
+    'Apple':        keyboards_Apple
 }
 
 # List of all known keyboard devices from all lists

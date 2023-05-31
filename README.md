@@ -106,22 +106,25 @@ There's no simple way around this, since the keymapper is only designed to send 
 
     - Wayland+GNOME requires one of these GNOME Shell extensions‡ (see note):
 
-        - Focused Window D-Bus
-        - https://extensions.gnome.org/extension/5592/focused-window-d-bus/
+        - ### Name: 'Xremap' (try this if you have an older GNOME version)
+        - UUID: `xremap@k0kubun.com`
+        - URL: https://extensions.gnome.org/extension/5060/xremap/
 
-        - Window Calls Extended
-        - https://extensions.gnome.org/extension/4974/window-calls-extended/
+        - ### Name: 'Window Calls Extended'
+        - UUID: `window-calls-extended@hseliger.eu`
+        - URL: https://extensions.gnome.org/extension/4974/window-calls-extended/
 
-        - Xremap (try this if you have an older GNOME version)
-        - https://extensions.gnome.org/extension/5060/xremap/
+        - ### Name: 'Focused Window D-Bus'
+        - UUID: `focused-window-dbus@flexagoon.com`
+        - URL: https://extensions.gnome.org/extension/5592/focused-window-d-bus/
 
     - Wayland+KDE has a small glitch where you have to change the focused window once after the KWin script it installed, to get the app-specific remapping to start working. 
 
-- `systemd` (but you can just manually run the config from terminal, or shell script, or tray indicator menu)
+- `systemd` (but you can just manually run the config from terminal, shell script, or tray indicator menu)
 
 - D-Bus, and `dbus-python` (for the tray indicator and GUI app)
 
-‡ Note: It's very easy to search for and install GNOME Shell extensions now, if you install the "Extension Manager" Flatpak application from Flathub. No need to mess around with downloading a zip file from `extensions.gnome.org` and manually installing/enabling in the terminal. Many distros with GNOME need the `AppIndicator & KStatusNotifier` extension to make the tray icon appear in the top bar, and if you want to use Wayland you'll need one of the extensions from the list above.  
+‡ Note: It's very easy to search for and install GNOME Shell extensions now, if you install the "Extension Manager" Flatpak application from Flathub. No need to mess around with downloading a zip file from `extensions.gnome.org` and manually installing/enabling in the terminal. Many distros with GNOME need the `AppIndicator and KStatusNotifier` extension to make the tray icon appear in the top bar, and if you want to use Wayland you'll need one of the extensions from the list above.  
 
 ```sh
 flatpak install com.mattjakeman.ExtensionManager
@@ -149,11 +152,63 @@ The `Xremap` GNOME shell extension is the only one that supports older GNOME ver
 ./toshy_setup.py
 ```
 
-## Currently tested/working Linux distros:
+### Options for installer
+
+The installer has a couple of options available:  
+
+```sh
+./toshy_setup.py --show-env
+```
+
+This will just show what the installer will see as the environment when you try to install, but won't actually run the full install process.  
+
+```sh
+./toshy_setup.py --list-distros
+```
+
+This will print out a list of the distros that the Toshy installer theoretically "knows" how to deal with, as far as knowing the correct package manager to use and having a list of package names that would actually work. This can be used with:  
+
+```sh
+./toshy_setup.py --override-distro=distroname
+```
+
+This option will force the installer to attempt the install for that distro name/type. You can use this if you have a distro that is not on the distro list yet, but you think it is close enough to one of the existing distros in the list that the installer should do the right things. For instance if you have some very Arch-ish or very Debian-ish distro, or something based on Ubuntu (there are many!) that doesn't identify as one of the "known" distros when you use `--show-env` and `--list-distros`, then you can try to make it install using one of the related distro names. This will probably work, if the distro is just a minor variation of its parent distro.  
+
+You don't have to run any of these commands before trying the installer, it will let you know almost immediately if it doesn't know how to install on your distro.  
+
+Other options for the installer:  
+
+```sh
+./toshy_setup.py --apply-tweaks
+```
+
+Just apply the "desktop tweaks" for the environment, don't do the full install.  
+
+```sh
+./toshy_setup.py --remove-tweaks
+```
+
+Removes the "desktop tweaks" the installer applied.  
+
+And finally:  
+
+```sh
+./toshy_setup.py --fancy-pants
+```
+
+This will do the full install, but add various things that I find convenient, fun, or somehow makes the desktop environment more Mac-like.  
+
+At the moment this just installs a monospace font that I find enjoyable to use in terminals and some code editors (Fantasque Sans Mono, but from a GitHub fork with coding ligatures removed), and in KDE it will install a KWin script that allows task switching with `Cmd+Tab` to bring all windows of the same application to the front together, as a group (like macOS, or like GNOME's "Switch applications").  
+
+## Currently working/tested Linux distros:
+
+What I've been able to test so far:  
+
+### Red Hat and similar distros
 
 - Fedora 36/[37*]/38 (from Red Hat)
 
-    - Standard GNOME variant tested
+    - Standard GNOME variant tested (Wayland session requires extensions)
     - KDE variant tested (X11/Xorg or Wayland+KDE session)
     - Fedora 37 not directly tested, but should work since F36/F38 work
 
@@ -161,25 +216,28 @@ The `Xremap` GNOME shell extension is the only one that supports older GNOME ver
 
     - Tested with "Workstation" installer choice, not "Server with GUI"
     - Some non-default (but official) repos will be enabled
-    - NB: There is no journal output for "user" services, for some reason
+    - NB: There is no journal for "user" services, for some reason
 
-- Other RHEL clones should be supportable **_(just need distro name added to installer)_**
+- Other RHEL clones should be supportable
 
     - EuroLinux? Probably.
     - Red Hat Enterprise Linux itself? Probably.
+    - Try `./toshy_setup.py --override-distro=almalinux`
 
-- Linux Mint 21.1 (Ubuntu-based)
+### openSUSE (RPM-based packaging system)
 
-    - Cinnamon desktop
-    - Xfce desktop
-    - MATE desktop
-    - All desktops can be installed on the same Mint system:
+- openSUSE Tumbleweed (rolling release)
 
-```sh
-sudo apt install mint-meta-mate mint-meta-xfce mint-meta-cinnamon
-```
+    - GNOME desktop works (Wayland session needs shell extensions, see Requirements)
+    - KDE desktop works (X11/Xorg or Wayland)
+    - Other desktop choices should work, if session is X11/Xorg
 
-- LMDE 5 (Linux Mint Debian Edition)
+- openSUSE Leap is currently UNSUPPORTED
+
+    - Leap still comes with Python version 3.6.x
+    - Current Python version on most distros is 3.9/3.10/3.11
+
+### Ubuntu variants and Ubuntu-based distros
 
 - Ubuntu official variants tested:
 
@@ -202,50 +260,70 @@ sudo apt install mint-meta-mate mint-meta-xfce mint-meta-cinnamon
 
 - elementary OS 7.0 (Ubuntu-based)
 
-- Manjaro (Arch-based)
+- Linux Mint 21.1 (Ubuntu-based)
 
-    - NOTE: Manjaro only seems to use X11/Xorg for now
-    - GNOME desktop variant tested
-    - Xfce desktop variant tested
-    - KDE Plasma desktop variant tested (see FAQ Re: Application Menu shortcut)
+    - Cinnamon desktop
+    - Xfce desktop
+    - MATE desktop
+    - All desktops can be installed on the same Mint system:
+    - `sudo apt install mint-meta-mate mint-meta-xfce mint-meta-cinnamon`
+
+### Debian and Debian-based distros
+
+- LMDE 5 (Linux Mint Debian Edition)
+
+- antiX (Debian-based, related to MX Linux)
+
+    - Preliminary support, no SysVinit services yet, so no auto-start.
+    - Starting only the "config script" from the tray icon menu should work now.
+    - Use `toshy-config-start` or `toshy-config-start-verbose` for manual start.
+    - Only "rox-icewm" desktop verified/tested.
+
+- MX Linux (Debian-based, related to antiX)
+
+    - Preliminary support, no SysVinit services yet, so no auto-start.
+    - Starting only the "config script" from the tray icon menu should work now.
+    - Use `toshy-config-start` or `toshy-config-start-verbose` for manual start.
+    - Choosing advanced options and booting with `systemd` will work fine.
+
+- Debian distros in general might work, because:
+
+    - antiX & MX Linux are based on Debian 11 Bullseye and identify as `debian`.
+
+### Arch, Arch-based and related distros
+
+- Arcolinux (Arch-based)
+
+    - ArcolinuxL ISO (full installer) tested
+    - Multiple desktops tested (GNOME, KDE, others)
+    - X11/Xorg and Wayland+KDE, Wayland+GNOME
+    - `plasma-wayland-session` can be installed
+    - See FAQ Re: Application Menu shortcut fix
+    - NB: No journal for "user" systemd services, for some reason
 
 - EndeavourOS (Arch-based)
 
     - Most desktops should work in X11/Xorg
     - GNOME desktop should work in X11/Xorg and Wayland (requires extension)
     - KDE (Plasma) desktop should work in X11/Xorg and Wayland
+    - `plasma-wayland-session` can be installed
+
+- Manjaro (Arch-based)
+
+    - GNOME desktop variant tested
+    - Xfce desktop variant tested
+    - KDE Plasma desktop variant tested
+    - `plasma-wayland-session` can be installed
+    - See FAQ Re: Application Menu shortcut fix
 
 - Arch in general? (maybe, needs more testing)
 
     - Installer will try to work on any distro that identifies as `Arch`
 
-- antiX (Debian-based, related to MX Linux)
-
-    - Preliminary support, no SysVinit services yet, so no auto-start.
-    - Use `toshy-config-start` or `toshy-config-start-verbose` for manual start.
-    - Starting only the "config script" from the tray icon menu should work now.
-    - Only "rox-icewm" desktop verified/tested.
-
-- MX Linux (Debian-based, related to antiX)
-
-    - Preliminary support, no SysVinit services yet, so no auto-start.
-    - Use `toshy-config-start` or `toshy-config-start-verbose` for manual start.
-    - Starting only the "config script" from the tray icon menu should work now.
-    - Choosing advanced options and booting with `systemd` will work fine.
-
-- Debian in general might work, because:
-
-    - antiX & MX Linux are based on Debian 11 Bullseye and identify as `debian`.
-
-- openSUSE Tumbleweed (rolling release)
-
-    - GNOME desktop works (Wayland session needs shell extensions, see Requirements)
-    - KDE desktop works (X11/Xorg or Wayland)
-
 ## Currently working desktop environments / window managers
 
-- X11/Xorg (all desktops)
-- Wayland+GNOME
+- X11/Xorg (all desktop environments)
+- Wayland+GNOME (needs shell extension)
 - Wayland+KDE (change window focus once to make it work)
 
 If you are in an X11/Xorg login session, the desktop environment or window manager doesn't really matter. The keymapper gets the window class/name/title information directly from the X server with `Xlib`.  
@@ -610,9 +688,9 @@ qdbus org.kde.KWin /KWin reconfigure
 
 To undo this, remove or comment out the same text in the file, and run the same command. The `Meta` key binding should be back.  
 
-### Manjaro KDE shortcut for Application Menu
+### Manjaro/Arcolinux KDE shortcut for Application Menu
 
-Something strange is happening in Manjaro KDE with the shortcut to open the application menu/launcher applet. In the primary shortcut settings control panel, there is a shortcut of `Alt+F1` set, which should work with the Toshy config. But the `Alt+F1` shortcut doesn't even work with Toshy disabled. If you right-click on the menu icon you can open the applet settings dialog and set the `Alt+F1` shortcut in its preferences (choose to reassign it) and then hit Apply, and it will start working with `Cmd+Space` when Toshy is enabled. And also it will now work even when Toshy is disabled. There are other identically named shortcut settings in the main KDE control panel for shortcuts, but they seem to want to open `krunner`, the search/launcher bar that pops out from the top of the screen.  
+Something strange is happening in Manjaro KDE and Arcolinux KDE desktops with the shortcut to open the application menu/launcher applet. In the primary shortcut settings control panel, there is a shortcut of `Alt+F1` set, which should work with the Toshy config. But the `Alt+F1` shortcut doesn't even work with Toshy disabled. If you right-click on the menu icon you can open the applet settings dialog and set the `Alt+F1` shortcut in its preferences (choose to reassign it) and then hit Apply, and it will start working with `Cmd+Space` when Toshy is enabled. And also it will now work even when Toshy is disabled. There are other identically named shortcut settings in the main KDE control panel for shortcuts, but they seem to want to open `krunner`, the search/launcher bar that pops out from the top of the screen.  
 
 ### More Will Follow...
 

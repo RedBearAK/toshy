@@ -80,7 +80,10 @@ class InstallerSettings:
         self.input_group_name   = 'input'
         self.user_name          = pwd.getpwuid(os.getuid()).pw_name
 
+        self.fancy_pants        = None
         self.tweak_applied      = None
+        self.remind_extensions  = None
+
         self.should_reboot      = None
         self.reboot_tmp_file    = "/tmp/toshy_installer_says_reboot"
         self.reboot_ascii_art   = textwrap.dedent("""
@@ -329,7 +332,7 @@ def install_distro_pkgs():
     apt_distros = ['ubuntu', 'mint', 'lmde', 'popos', 'eos', 'neon', 'zorin', 'debian']
     dnf_distros_Fedora = ['fedora', 'fedoralinux']
     dnf_distros_RHEL = ['almalinux', 'rocky', 'rhel']
-    pacman_distros = ['arch', 'endeavouros', 'manjaro']
+    pacman_distros = ['arch', 'arcolinux', 'endeavouros', 'manjaro']
     zypper_distros = ['opensuse-tumbleweed']
 
     if cnfg.DISTRO_NAME in apt_distros:
@@ -448,7 +451,8 @@ def install_toshy_files():
                 'LICENSE',
                 '.gitignore',
                 'packages.json',
-                'README.md'
+                'README.md',
+                'kwin-application-switcher'
             )
         )
     except shutil.Error as copy_error:
@@ -653,7 +657,7 @@ def autostart_tray_icon():
     print(f'Tray icon should appear in system tray at each login.')
 
 
-def apply_kde_tweak():
+def apply_kde_tweaks():
     """Add a tweak to kwinrc file to disable Meta key opening app menu."""
 
     subprocess.run(
@@ -664,9 +668,25 @@ def apply_kde_tweak():
                     stderr=subprocess.DEVNULL,
                     stdout=subprocess.DEVNULL)
     print(f'Disabled Meta key opening application menu.')
+    
+    if cnfg.fancy_pants:
+        # How to install nclarius grouped "Application Switcher" KWin script:
+        # git clone https://github.com/nclarius/kwin-application-switcher.git
+        # cd kwin-application-switcher
+        # ./install.sh
+        switcher_url    = 'https://github.com/nclarius/kwin-application-switcher.git'
+        script_path     = os.path.dirname(os.path.realpath(__file__))
+        # git should be installed by this point? Not necessarily.
+        if shutil.which('git'):
+            subprocess.run(f"git clone {switcher_url}", shell=True)
+            command_dir     = os.path.join(script_path, 'kwin-application-switcher')
+            subprocess.run(f"./install.sh", cwd=command_dir, shell=True)
+            print(f'Installed "Application Switcher" KWin script.')
+        else:
+            print(f"ERROR: Unable to clone KWin Application Switcher. 'git' not installed.")
 
 
-def remove_kde_tweak():
+def remove_kde_tweaks():
     """Remove the tweak to kwinrc file that disables Meta key opening app menu."""
 
     subprocess.run(
@@ -696,7 +716,7 @@ def apply_desktop_tweaks():
     # gsettings set org.gnome.mutter overlay-key ''
     if cnfg.DESKTOP_ENV == 'gnome':
         subprocess.run(['gsettings', 'set', 'org.gnome.mutter', 'overlay-key', ''])
-        print(f'Disabling Super/Meta/Win/Cmd key opening the GNOME overview...')
+        print(f'Disabled Super/Meta/Win/Cmd key opening the GNOME overview.')
         cnfg.tweak_applied = True
 
         def is_extension_enabled(extension_uuid):
@@ -713,11 +733,49 @@ def apply_desktop_tweaks():
                 "Easiest method: 'flatpak install extensionmanager', search for 'appindicator'")
 
     if cnfg.DESKTOP_ENV == 'kde':
-        apply_kde_tweak()
+        apply_kde_tweaks()
         cnfg.tweak_applied = True
     
     # if KDE, install `ibus` or `fcitx` and choose as input manager (ask for confirmation)
-    
+
+    if cnfg.fancy_pants:
+        # install Fantasque Sans Mono NoLig (no ligatures) from GitHub fork
+        font_file   = 'FantasqueSansMono-LargeLineHeight-NoLoopK-NameSuffix.zip'
+        font_url    = 'https://github.com/spinda/fantasque-sans-ligatures/releases/download/v1.8.1'
+        font_link   = f'{font_url}/{font_file}'
+        subprocess.run(
+            f'curl -LO "{font_link}" || wget --trust-server-names "{font_link}"', shell=True,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+        zip_path    = f'./{font_file}'
+        folder_name = font_file.rsplit('.', 1)[0]
+        extract_dir = '/tmp/'
+
+        # Open the zip file and check if it has a top-level directory
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            # Get the first part of each path in the zip file
+            top_dirs = {name.split('/')[0] for name in zip_ref.namelist()}
+            
+            # If the zip doesn't have a consistent top-level directory, create one and adjust extract_dir
+            if len(top_dirs) > 1:
+                extract_dir = os.path.join(extract_dir, folder_name)
+                os.makedirs(extract_dir, exist_ok=True)
+            
+            zip_ref.extractall(extract_dir)
+
+        otf_dir = f'{extract_dir}/OTF/'
+        os.makedirs(os.path.expanduser('~/.local/share/fonts'), exist_ok=True)
+
+        for file in os.listdir(otf_dir):
+            if file.endswith('.otf'):
+                subprocess.run(f'mv "{otf_dir}/{file}" ~/.local/share/fonts/', shell=True)
+        
+        # Update the font cache
+        subprocess.run('fc-cache -f -v', shell=True,
+                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+        print(f'\nInstalled font: {folder_name}')
+
     if not cnfg.tweak_applied:
         print(f'If nothing printed, no tweaks available for "{cnfg.DESKTOP_ENV}" yet.')
 
@@ -734,7 +792,7 @@ def remove_desktop_tweaks():
         print(f'Removed tweak to disable GNOME "overlay-key" binding to Meta/Super.')
 
     if cnfg.DESKTOP_ENV == 'kde':
-        remove_kde_tweak()
+        remove_kde_tweaks()
         print(f'Removed tweak to disable Meta opening KDE application menu.')
 
 
@@ -790,20 +848,22 @@ def handle_arguments():
     parser.add_argument(
         '--show-env',
         action='store_true',
-        # dest='show_env',
         help='Show the environment the installer detects, and exit'
     )
     parser.add_argument(
         '--apply-tweaks',
         action='store_true',
-        # dest='apply_tweaks',
         help='Apply desktop environment tweaks only, no install'
     )
     parser.add_argument(
         '--remove-tweaks',
         action='store_true',
-        # dest='remove_tweaks',
         help='Remove desktop environment tweaks only, no install'
+    )
+    parser.add_argument(
+        '--fancy-pants',
+        action='store_true',
+        help='Optional: install fonts, KDE task switcher, etc...'
     )
 
     args = parser.parse_args()
@@ -830,6 +890,9 @@ def handle_arguments():
     elif args.uninstall:
         raise NotImplementedError
         uninstall_toshy()
+    elif args.fancy_pants:
+        cnfg.fancy_pants = True
+        main(cnfg)
     else:
         # proceed with normal install sequence if no CLI args given
         main(cnfg)
@@ -877,6 +940,10 @@ def main(cnfg: InstallerSettings):
                 f'{cnfg.separator}\n'
         )
 
+    if cnfg.remind_extensions or (cnfg.DESKTOP_ENV == 'gnome' and cnfg.SESSION_TYPE == 'wayland'):
+        print(f'MUST INSTALL GNOME EXTENSIONS IF USING WAYLAND SESSION. See README.')
+        
+
     if not cnfg.should_reboot:
         # Try to start the tray icon immediately, if reboot is not indicated
         # tray_command        = ['gtk-launch', 'Toshy_Tray']
@@ -895,6 +962,8 @@ def main(cnfg: InstallerSettings):
                 f'Rebooting should not be necessary.\n'
                 f'{cnfg.separator}\n'
         )
+        if cnfg.SESSION_TYPE == 'wayland' and cnfg.DESKTOP_ENV == 'kde':
+            print(f'SWITCH TO A DIFFERENT WINDOW ONCE TO GET KWIN SCRIPT TO START WORKING!')
 
     print('')   # blank line to avoid crowding the prompt after install is done
 
