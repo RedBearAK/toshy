@@ -701,9 +701,9 @@ keyboards_Apple = [
 ]
 
 kbtype_lists = {
-    'IBM':          keyboards_IBM, 
-    'Chromebook':   keyboards_Chromebook, 
-    'Windows':      keyboards_Windows, 
+    'IBM':          keyboards_IBM,
+    'Chromebook':   keyboards_Chromebook,
+    'Windows':      keyboards_Windows,
     'Apple':        keyboards_Apple
 }
 
