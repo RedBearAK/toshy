@@ -190,6 +190,16 @@ Just apply the "desktop tweaks" for the environment, don't do the full install.
 
 Removes the "desktop tweaks" the installer applied.  
 
+And finally:  
+
+```sh
+./toshy_setup.py --fancy-pants
+```
+
+This will do the full install, but add various things that I find convenient, fun, or somehow makes the desktop environment more Mac-like.  
+
+At the moment this just installs a monospace font that I find enjoyable to use in terminals and some code editors (Fantasque Sans Mono, but from a GitHub fork with coding ligatures removed), and in KDE it will install a KWin script that allows task switching with `Cmd+Tab` to bring all windows of the same application to the front together, as a group (like macOS, or like GNOME's "Switch applications").  
+
 ## Currently working/tested Linux distros:
 
 What I've been able to test so far:  
