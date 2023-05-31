@@ -770,7 +770,8 @@ def apply_desktop_tweaks():
                 subprocess.run(f'mv "{otf_dir}/{file}" ~/.local/share/fonts/', shell=True)
         
         # Update the font cache
-        subprocess.run('fc-cache -f -v', shell=True)
+        subprocess.run('fc-cache -f -v', shell=True,
+                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
         print(f'Installed font: {folder_name}')
 
