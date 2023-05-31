@@ -746,21 +746,33 @@ def apply_desktop_tweaks():
         subprocess.run(
             f'curl -LO "{font_link}" || wget --trust-server-names "{font_link}"', shell=True)
 
-        zip_path = './FantasqueSansMono-LargeLineHeight-NoLoopK-NameSuffix.zip'
+        zip_path    = f'./{font_file}'
+        folder_name = font_file.rsplit('.', 1)[0]
         extract_dir = '/tmp/'
 
+        # Open the zip file and check if it has a top-level directory
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            # Get the first part of each path in the zip file
+            top_dirs = {name.split('/')[0] for name in zip_ref.namelist()}
+            
+            # If the zip doesn't have a consistent top-level directory, create one and adjust extract_dir
+            if len(top_dirs) > 1:
+                extract_dir = os.path.join(extract_dir, folder_name)
+                os.makedirs(extract_dir, exist_ok=True)
+            
             zip_ref.extractall(extract_dir)
 
-        otf_dir = '/tmp/FantasqueSansMono-LargeLineHeight-NoLoopK-NameSuffix/OTF/'
+        otf_dir = f'{extract_dir}/OTF/'
         os.makedirs(os.path.expanduser('~/.local/share/fonts'), exist_ok=True)
 
         for file in os.listdir(otf_dir):
             if file.endswith('.otf'):
                 subprocess.run(f'mv "{otf_dir}/{file}" ~/.local/share/fonts/', shell=True)
+        
         # Update the font cache
         subprocess.run('fc-cache -f -v', shell=True)
-        print(f'Installed font: Fantasque Sans Mono noLig (no ligatures, NoLoopK, LargeLineHeight)')
+
+        print(f'Installed font: {folder_name}')
 
     if not cnfg.tweak_applied:
         print(f'If nothing printed, no tweaks available for "{cnfg.DESKTOP_ENV}" yet.')
