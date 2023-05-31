@@ -62,7 +62,7 @@ class InstallerSettings:
         self.pkgs_json_dct      = None
         self.pkgs_for_distro    = None
         self.pip_pkgs           = None
-        self.qdbus              = 'qdbus-qt5' if shutil.which('qdbus-qt5') else cnfg.qdbus
+        self.qdbus              = 'qdbus-qt5' if shutil.which('qdbus-qt5') else 'qdbus'
 
         self.home_dir_path      = os.path.abspath(os.path.expanduser('~'))
         self.toshy_dir_path     = os.path.join(self.home_dir_path, '.config', 'toshy')
