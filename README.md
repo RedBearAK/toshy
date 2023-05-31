@@ -124,7 +124,7 @@ There's no simple way around this, since the keymapper is only designed to send 
 
 - D-Bus, and `dbus-python` (for the tray indicator and GUI app)
 
-‡ Note: It's very easy to search for and install GNOME Shell extensions now, if you install the "Extension Manager" Flatpak application from Flathub. No need to mess around with downloading a zip file from `extensions.gnome.org` and manually installing/enabling in the terminal. Many distros with GNOME need the `AppIndicator and KStatusNotifier` extension to make the tray icon appear in the top bar, and if you want to use Wayland you'll need one of the extensions from the list above.  
+‡ Note: It's very easy to search for and install GNOME Shell extensions now, if you install the "Extension Manager" Flatpak application from Flathub. No need to mess around with downloading a zip file from `extensions.gnome.org` and manually installing/enabling in the terminal. Many distros with GNOME need the `AppIndicator and KStatusNotifierItem` extension to make the tray icon appear in the top bar, and if you want to use Wayland you'll need one of the extensions from the list above.  
 
 ```sh
 flatpak install com.mattjakeman.ExtensionManager
