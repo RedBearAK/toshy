@@ -941,6 +941,7 @@ def main(cnfg: InstallerSettings):
 
     if cnfg.remind_extensions or (cnfg.DESKTOP_ENV == 'gnome' and cnfg.SESSION_TYPE == 'wayland'):
         print(f'MUST INSTALL GNOME EXTENSIONS IF USING WAYLAND SESSION. See README.')
+        
 
     if not cnfg.should_reboot:
         # Try to start the tray icon immediately, if reboot is not indicated
@@ -960,6 +961,8 @@ def main(cnfg: InstallerSettings):
                 f'Rebooting should not be necessary.\n'
                 f'{cnfg.separator}\n'
         )
+        if cnfg.SESSION_TYPE == 'wayland' and cnfg.DESKTOP_ENV == 'kde':
+            print(f'SWITCH TO A DIFFERENT WINDOW ONCE TO GET KWIN SCRIPT TO START WORKING!')
 
     print('')   # blank line to avoid crowding the prompt after install is done
 
