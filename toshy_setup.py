@@ -744,7 +744,8 @@ def apply_desktop_tweaks():
         font_url    = 'https://github.com/spinda/fantasque-sans-ligatures/releases/download/v1.8.1'
         font_link   = f'{font_url}/{font_file}'
         subprocess.run(
-            f'curl -LO "{font_link}" || wget --trust-server-names "{font_link}"', shell=True)
+            f'curl -LO "{font_link}" || wget --trust-server-names "{font_link}"', shell=True,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
         zip_path    = f'./{font_file}'
         folder_name = font_file.rsplit('.', 1)[0]
@@ -773,7 +774,7 @@ def apply_desktop_tweaks():
         subprocess.run('fc-cache -f -v', shell=True,
                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-        print(f'Installed font: {folder_name}')
+        print(f'\nInstalled font: {folder_name}')
 
     if not cnfg.tweak_applied:
         print(f'If nothing printed, no tweaks available for "{cnfg.DESKTOP_ENV}" yet.')
