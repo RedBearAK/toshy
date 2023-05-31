@@ -25,4 +25,4 @@ pkill -f "bin/xkeysnail"
 source "$HOME/.config/toshy/.venv/bin/activate"
 
 # Start keyszer with verbose flag [-v] and anti-buffering flag [--flush]
-$(which keyszer) --flush -w -v -c "$HOME/.config/toshy/toshy_config.py"
+keyszer --flush -w -v -c "$HOME/.config/toshy/toshy_config.py"
