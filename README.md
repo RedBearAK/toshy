@@ -202,7 +202,7 @@ At the moment this just installs a monospace font that I find enjoyable to use i
 
 ## Currently working/tested Linux distros:
 
-What I've been able to test so far (older or newever versions, within reason, may also work):  
+This is a list of Linux distributions and desktop variants I've been able to test so far. For those with release versions provided, that is just what I happened to download and test. Older or newer versions of the same distro, within reason, may also work.  
 
 ### Red Hat and similar distros
 
