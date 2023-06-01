@@ -16,12 +16,12 @@ fi
 
 if [[ -z "$VIRTUAL_ENV" ]]; then
     # If the VIRTUAL_ENV variable is empty, the virtual environment is not active.
-    echo -e "To activate the Toshy Python virtual environment, run this command: \n"
-    echo -e "\t\t\t\t source toshy-venv \n"
-    echo -e "(Ignore the text above if you've already run the command as shown.) \n"
+    echo -e "\n To activate the Toshy Python virtual environment, run this command: \n"
+    echo -e "\t\t\t source toshy-venv \n"
+    echo -e " (Ignore the text above if you've already run the command as shown.) \n\n"
 else
     # If the VIRTUAL_ENV variable is not empty, the virtual environment is active.
-    echo "The Toshy Python virtual environment is ACTIVE in this shell already."
+    echo -e "\n The Toshy Python virtual environment is ACTIVE in this shell already. \n"
     return 0
 fi
 
