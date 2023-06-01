@@ -37,6 +37,8 @@ ln -sf "$TOSHY_CFG/scripts/bin/toshy-config-stop.sh"           "$LOCAL_BIN/toshy
 ln -sf "$TOSHY_CFG/scripts/bin/toshy-tray.sh"                  "$LOCAL_BIN/toshy-tray"
 ln -sf "$TOSHY_CFG/scripts/bin/toshy-gui.sh"                   "$LOCAL_BIN/toshy-gui"
 ln -sf "$TOSHY_CFG/scripts/bin/toshy-env.sh"                   "$LOCAL_BIN/toshy-env"
+ln -sf "$TOSHY_CFG/scripts/bin/toshy-venv.sh"                  "$LOCAL_BIN/toshy-venv"
+ln -sf "$TOSHY_CFG/scripts/bin/toshy-devices.sh"               "$LOCAL_BIN/toshy-devices"
 ln -sf "$TOSHY_CFG/scripts/bin/toshy-kde-dbus-service.sh"      "$LOCAL_BIN/toshy-kde-dbus-service"
 
 
@@ -57,9 +59,11 @@ echo "- toshy-config-stop"
 echo "- toshy-tray"
 echo "- toshy-gui"
 echo "- toshy-env"
+echo "- toshy-venv"
+echo "- toshy-devices"
 echo "- toshy-kde-dbus-service"
 echo ""
-echo "The commands will not be available until you close the current terminal, or "
+echo "The commands may not be available until you close the current terminal, or "
 echo "run 'hash -r', or source your shell RC file to refresh executable hash table."
 echo ""
 
