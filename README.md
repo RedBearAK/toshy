@@ -198,7 +198,17 @@ And finally:
 
 This will do the full install, but add various things that I find convenient, fun, or somehow makes the desktop environment more Mac-like.  
 
-At the moment this just installs a monospace font that I find enjoyable to use in terminals and some code editors. (It's "Fantasque Sans Mono", but from a GitHub fork with coding ligatures removed, and you'll need to select it in your terminal or code editor preferences if you want to try it.) And in KDE this option will install a KWin script that allows task switching with `Cmd+Tab` to bring all windows of the same application to the front together, as a group (like macOS, or like GNOME's "Switch applications").  
+At the moment this installer option will do the following: 
+
+- Installs "Fantasque Sans Mono noLig" font
+    - From a fork with no coding ligatures
+    - LargeLineHeight-NoLoopK variant
+    - Try it in terminals or code editors
+- GNOME: Set "Switch applications" to `Alt+Tab`
+- GNOME: Set "Switch windows of an application" to `Alt+Grave`
+- KDE: Installs "Application Switcher" KWin script
+- KDE: Disables task switcher option "Show selected window"
+- KDE: Sets the task switcher to "Large Icons"
 
 ## Currently working/tested Linux distros:
 
