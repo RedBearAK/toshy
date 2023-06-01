@@ -74,7 +74,7 @@ There's no simple way around this, since the keymapper is only designed to send 
 
  1. This one is starting to become less relevant, with most common GTK apps already moving to GTK 4. But apps that use GTK 3 had a really annoying bug where they wouldn't recognize the "navigation" functions on the keypad keys (what the keypad keys do when NumLock is off) if you tried to use them with a modifier key (i.e., as part of a shortcut). Those keys would just get ignored. So if you didn't have the equivalent "real" navigation keys anywhere on your keyboard, there was no way to use shortcuts involving things like PgUp/PgDn/Home/End (on the numeric keypad). A `modmap` in the Toshy config will automatically fix this, if NumLock is off and the "Forced Numpad" feature (below) is disabled.  
 
- 1. "Forced Numpad" feature: On PCs, if the keyboard has a numeric keypad, NumLock is typically off, so the keypad doesn't automatically act as a Numpad, instead providing navigation functions until you turn NumLock on. But if you've used macOS for any length of time, you might have noticed that the numeric keypad is always a numeric keypad, and the "Clear" key sends `Escape` to clear calculator apps. You have to use `Fn+Clear` to disable NumLock and get to the navigation functions. A `modmap` in the Toshy config is enabled by default and makes the numeric keypad always a numeric keypad, and turns the NumLock key into a "Clear" key. This can be disabled in the tray icon menu or GUI preferences app, or termporarily disabled with `Fn+Clear` (on Apple keyboards) or the equivalent of `Option+NumLock` on PC keyboards (usually this is physical `Win+NumLock`).  
+ 1. "Forced Numpad" feature: On PCs, if the keyboard has a numeric keypad, NumLock is typically off, so the keypad doesn't automatically act as a Numpad, instead providing navigation functions until you turn NumLock on. But if you've used macOS for any length of time, you might have noticed that the numeric keypad is always a numeric keypad, and the "Clear" key sends `Escape` to clear calculator apps. You have to use `Fn+Clear` to disable NumLock and get to the navigation functions. A `modmap` in the Toshy config is enabled by default and makes the numeric keypad always a numeric keypad, and turns the NumLock key into a "Clear" key. This can be disabled in the tray icon menu or GUI preferences app, or temporarily disabled with `Fn+Clear` (on Apple keyboards) or the equivalent of `Option+NumLock` on PC keyboards (usually this is physical `Win+NumLock`).  
 
  1. Sections of the config file are labeled with ASCII art designed to be readable on a "minimap" or "overview" sidebar view found in many text editors and code editors, to make finding certain parts of the config file a little easier. There's also a "tag" on each section that can be located easily with a `Find` search in any text editor.  
 
@@ -138,7 +138,7 @@ flatpak install extensionmanager
 
 You can just use the "Browse" tab in this application to search for the extensions by name and quickly install them.  
 
-There will be no issue when installing more than one of the compatible extensions, which might be advisable to reduce the risk of not having a working extension for a while the next time you upgrade your system in-place and wind up with a newer, temporarily unsupported version of GNOME. I expect at least one of the extensions will always be updated to support the latest GNOME. The branch of `keyszer` installed by Toshy will seamlessly jump to using the other extension in case one fails or is disabled/uninstalled for any reason. You just need to have at least one from the list installed and enabled.  
+There will be no issue when installing more than one of the compatible extensions. Which might be advisable, to reduce the risk of not having a working extension for a while the next time you upgrade your system in-place and wind up with a newer, temporarily unsupported version of GNOME. I expect at least one of the extensions will always be updated quickly to support the latest GNOME. The branch of `keyszer` installed by Toshy will seamlessly jump to trying the other extensions in case one fails or is disabled/uninstalled for any reason. You just need to have at least one from the list installed and enabled, and when it responds over D-Bus to the query from `keyszer` it will be marked as the "good" one and used from then on, unless it stops responding. Lather, rinse, repeat.  
 
 The `Xremap` GNOME shell extension is the only one that supports older GNOME versions, so it's the only one that will show up when browsing the extensions list from an environment like Zorin OS (GNOME 3.38.x) or the distros based on Red Hat Enterprise Linux (clones like AlmaLinux, Rocky Linux, EuroLinux, etc.) which are still using GNOME 40.x.  
 
@@ -198,11 +198,11 @@ And finally:
 
 This will do the full install, but add various things that I find convenient, fun, or somehow makes the desktop environment more Mac-like.  
 
-At the moment this just installs a monospace font that I find enjoyable to use in terminals and some code editors (Fantasque Sans Mono, but from a GitHub fork with coding ligatures removed), and in KDE it will install a KWin script that allows task switching with `Cmd+Tab` to bring all windows of the same application to the front together, as a group (like macOS, or like GNOME's "Switch applications").  
+At the moment this just installs a monospace font that I find enjoyable to use in terminals and some code editors. (It's "Fantasque Sans Mono", but from a GitHub fork with coding ligatures removed, and you'll need to select it in your terminal or code editor preferences if you want to try it.) And in KDE this option will install a KWin script that allows task switching with `Cmd+Tab` to bring all windows of the same application to the front together, as a group (like macOS, or like GNOME's "Switch applications").  
 
 ## Currently working/tested Linux distros:
 
-What I've been able to test so far:  
+What I've been able to test so far (older or newever versions, within reason, may also work):  
 
 ### Red Hat and similar distros
 
@@ -215,14 +215,15 @@ What I've been able to test so far:
 - AlmaLinux 9.2 and/or Rocky Linux 9.2 (RHEL clones)
 
     - Tested with "Workstation" installer choice, not "Server with GUI"
-    - Some non-default (but official) repos will be enabled
+    - Default GNOME desktop tested
+    - Some non-default (but official) repos like CRB will be enabled
     - NB: There is no journal for "user" services, for some reason
 
 - Other RHEL clones should be supportable
 
     - EuroLinux? Probably.
     - Red Hat Enterprise Linux itself? Probably.
-    - Try `./toshy_setup.py --override-distro=almalinux`
+    - Try `./toshy_setup.py --override-distro=almalinux` or `=rhel`
 
 ### openSUSE (RPM-based packaging system)
 
@@ -338,7 +339,7 @@ There are specific remaps or overrides of default remaps for several common desk
 
 ## Usage
 
-Toshy does its best to set itself up automatically on any Linux system that uses `systemd` and that is a "known" Linux distro type that the installer knows how to deal with (i.e., has a list of the correct packages to install, and knows how to use the package manager). Generally this means distros that use `apt`, `dnf` or `pacman` so far.  
+Toshy does its best to set itself up automatically on any Linux system that uses `systemd` and that is a "known" Linux distro type that the installer knows how to deal with (i.e., has a list of the correct packages to install, and knows how to use the package manager). Generally this means distros that use `apt`, `dnf` or `pacman` so far (and `zypper` from openSUSE now).  
 
 If the install was successful, there should be a number of different terminal commands available to check the status of the Toshy `systemd` user services (the services are not system-wide, in an attempt to support multi-user setups and be ready to support Wayland more easily) and stop/start/restart the services.  
 
