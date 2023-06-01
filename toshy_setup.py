@@ -146,7 +146,17 @@ def get_environment_info():
             f'\n')
 
 
+def get_json_distro_names():
+    """utility function to return list of available distro names from packages.json file"""
+    with open('packages.json') as f:
+        data: Dict[str:str] = json.load(f)
+    sorted_keys = sorted(data.keys())
+    keys = ",\n\t".join(sorted_keys)
+    return keys
+
+
 def call_attention_to_password_prompt():
+    """utility function to emphasize the sudo password prompt"""
     try:
         subprocess.run( ['sudo', '-n', 'true'],
                         stdout=subprocess.DEVNULL,
@@ -160,6 +170,7 @@ def call_attention_to_password_prompt():
 
 
 def prompt_for_reboot():
+    """utility function to make sure user is reminded to reboot if necessary"""
     cnfg.should_reboot = True
     if not os.path.exists(cnfg.reboot_tmp_file):
         os.mknod(cnfg.reboot_tmp_file)
@@ -286,29 +297,17 @@ def verify_user_groups():
         prompt_for_reboot()
 
 
-def load_package_list():
+def load_package_lists():
     """load package list from JSON file"""
     with open('packages.json') as f:
         cnfg.pkgs_json_dct = json.load(f)
 
-    # cnfg.pip_pkgs = cnfg.pkgs_json_dct['pip']
-
+    # everything from 'inotify-simple' to 'six' is just to make `keyszer` install smoother
     cnfg.pip_pkgs = [
-            "pillow",
-            "lockfile",
-            "dbus-python",
-            "systemd-python",
-            "pygobject",
-            "tk",
-            "sv_ttk",
-            "psutil",
-            "watchdog",
-            "inotify-simple",
-            "evdev",
-            "appdirs",
-            "ordered-set",
-            "python-xlib",
-            "six"
+        "pillow", "lockfile", "dbus-python", "systemd-python",
+        "pygobject", "tk", "sv_ttk", "psutil", "watchdog",
+        "inotify-simple", "evdev", "appdirs", "ordered-set",
+        "python-xlib", "six"
     ]
 
     try:
@@ -656,9 +655,54 @@ def autostart_tray_icon():
 
     print(f'Tray icon should appear in system tray at each login.')
 
+###################################################################################################
+##  TWEAKS UTILITY FUNCTIONS - START
+###################################################################################################
 
-def apply_kde_tweaks():
-    """Add a tweak to kwinrc file to disable Meta key opening app menu."""
+
+def apply_tweaks_GNOME():
+    """utility function to add desktop tweaks to GNOME"""
+    # Disable GNOME `overlay-key` binding to Meta/Super/Win/Cmd
+    # gsettings set org.gnome.mutter overlay-key ''
+    subprocess.run(['gsettings', 'set', 'org.gnome.mutter', 'overlay-key', ''])
+    print(f'Disabled Meta/Super/Win/Cmd key opening the GNOME overview.')
+
+    # Set the keyboard shortcut for "Switch applications" to "Alt+Tab"
+    # gsettings set org.gnome.desktop.wm.keybindings switch-applications "['<Alt>Tab']"
+    subprocess.run(['gsettings', 'set', 'org.gnome.desktop.wm.keybindings',
+                    'switch-applications', "['<Alt>Tab']"])
+    # Set the keyboard shortcut for "Switch windows of an application" to "Alt+`" (Alt+Grave)
+    # gsettings set org.gnome.desktop.wm.keybindings switch-group "['<Alt>grave']"
+    subprocess.run(['gsettings', 'set', 'org.gnome.desktop.wm.keybindings',
+                    'switch-group', "['<Alt>grave']"])
+    print(f'Enabled "Switch applications" Mac-like task switching.')
+    
+    # Enable "Expandable folders" in Nautilus
+    # dconf write /org/gnome/nautilus/list-view/use-tree-view true
+    subprocess.run(['dconf', 'write', '/org/gnome/nautilus/list-view/use-tree-view', 'true'])
+    
+    # Set default view option in Nautilus to "list-view"
+    # dconf write /org/gnome/nautilus/preferences/default-folder-viewer "'list-view'"
+    subprocess.run(['dconf', 'write', '/org/gnome/nautilus/preferences/default-folder-viewer',
+                    "'list-view'"])
+    print(f'Set Nautilus to "List" view with "Expandable folders" enabled.')
+
+
+def remove_tweaks_GNOME():
+    """utility function to remove the tweaks applied to GNOME"""
+    subprocess.run(['gsettings', 'reset', 'org.gnome.mutter', 'overlay-key'])
+    print(f'Removed tweak to disable GNOME "overlay-key" binding to Meta/Super.')
+    
+    # gsettings reset org.gnome.desktop.wm.keybindings switch-applications
+    subprocess.run(['gsettings', 'reset', 'org.gnome.desktop.wm.keybindings',
+                    'switch-applications'])
+    # gsettings reset org.gnome.desktop.wm.keybindings switch-group
+    subprocess.run(['gsettings', 'reset', 'org.gnome.desktop.wm.keybindings', 'switch-group'])
+    print(f'Removed tweak to enable more Mac-like task switching')
+
+
+def apply_tweaks_KDE():
+    """utility function to add desktop tweaks to KDE"""
 
     subprocess.run(
         "kwriteconfig5 --file kwinrc --group ModifierOnlyShortcuts --key Meta ''", shell=True)
@@ -699,8 +743,8 @@ def apply_kde_tweaks():
         print(f'Set task switcher to Large Icons, disabled show window.')
 
 
-def remove_kde_tweaks():
-    """Remove the tweak to kwinrc file that disables Meta key opening app menu."""
+def remove_tweaks_KDE():
+    """utility function to remove the tweaks applied to KDE"""
 
     subprocess.run(
         'kwriteconfig5 --file kwinrc --group ModifierOnlyShortcuts --key Meta --delete',
@@ -711,6 +755,10 @@ def remove_kde_tweaks():
                     stderr=subprocess.DEVNULL,
                     stdout=subprocess.DEVNULL)
     print(f'Removed tweak to disable Meta key opening application menu.')
+
+
+###################################################################################################
+##  TWEAKS UTILITY FUNCTIONS - END
 ###################################################################################################
 
 
@@ -725,42 +773,19 @@ def apply_desktop_tweaks():
 
     print(f'\n\n§  Applying any known desktop environment tweaks...\n{cnfg.separator}')
 
-    # if GNOME, disable `overlay-key`
-    # gsettings set org.gnome.mutter overlay-key ''
     if cnfg.DESKTOP_ENV == 'gnome':
-        subprocess.run(['gsettings', 'set', 'org.gnome.mutter', 'overlay-key', ''])
-        print(f'Disabled Super/Meta/Win/Cmd key opening the GNOME overview.')
+        apply_tweaks_GNOME()
         cnfg.tweak_applied = True
 
-        # Set the keyboard shortcut for "Switch applications" to "Alt+Tab"
-        # gsettings set org.gnome.desktop.wm.keybindings switch-applications "['<Alt>Tab']"
-        subprocess.run(['gsettings', 'set', 'org.gnome.desktop.wm.keybindings',
-                        'switch-applications', "['<Alt>Tab']"])
-        # Set the keyboard shortcut for "Switch windows of an application" to "Alt+`" (Alt+Grave)
-        # gsettings set org.gnome.desktop.wm.keybindings switch-group "['<Alt>grave']"
-        subprocess.run(['gsettings', 'set', 'org.gnome.desktop.wm.keybindings',
-                        'switch-group', "['<Alt>grave']"])
-        print(f'Enable "Switch applications" Mac-like task switching.')
 
-        def is_extension_enabled(extension_uuid):
-            output = subprocess.check_output(
-                        ['gsettings', 'get', 'org.gnome.shell', 'enabled-extensions'])
-            extensions = output.decode().strip().replace("'", "").split(",")
-            return extension_uuid in extensions
-
-        if is_extension_enabled("appindicatorsupport@rgcjonas.gmail.com"):
-            print("AppIndicator extension is enabled. Tray icon should work.")
-            # pass
-        else:
-            print(f"RECOMMENDATION: Install AppIndicator GNOME extension\n"
-                "Easiest method: 'flatpak install extensionmanager', search for 'appindicator'")
 
     if cnfg.DESKTOP_ENV == 'kde':
-        apply_kde_tweaks()
+        apply_tweaks_KDE()
         cnfg.tweak_applied = True
     
     # if KDE, install `ibus` or `fcitx` and choose as input manager (ask for confirmation)
 
+    # General (not DE specific) "fancy pants" additions:
     if cnfg.fancy_pants:
         # install Fantasque Sans Mono NoLig (no ligatures) from GitHub fork
         font_file   = 'FantasqueSansMono-LargeLineHeight-NoLoopK-NameSuffix.zip'
@@ -811,20 +836,10 @@ def remove_desktop_tweaks():
     # if GNOME, re-enable `overlay-key`
     # gsettings reset org.gnome.mutter overlay-key
     if cnfg.DESKTOP_ENV == 'gnome':
-        subprocess.run(['gsettings', 'reset', 'org.gnome.mutter', 'overlay-key'])
-        print(f'Removed tweak to disable GNOME "overlay-key" binding to Meta/Super.')
-        
-        # gsettings reset org.gnome.desktop.wm.keybindings switch-applications
-        subprocess.run(['gsettings', 'reset', 'org.gnome.desktop.wm.keybindings',
-                        'switch-applications'])
-        # gsettings reset org.gnome.desktop.wm.keybindings switch-group
-        subprocess.run(['gsettings', 'reset', 'org.gnome.desktop.wm.keybindings', 'switch-group'])
-        print(f'Removed tweak to enable more Mac-like task switching')
-
+        remove_tweaks_GNOME()
 
     if cnfg.DESKTOP_ENV == 'kde':
-        remove_kde_tweaks()
-        print(f'Removed tweak to disable Meta opening KDE application menu.')
+        remove_tweaks_KDE()
 
 
 def uninstall_toshy():
@@ -840,16 +855,7 @@ def uninstall_toshy():
     # refresh the active 'udev' rules
 
 
-def get_json_distro_names():
-    """utility function to return list of available distro names from packages.json file"""
-    with open('packages.json') as f:
-        data: Dict[str:str] = json.load(f)
-    sorted_keys = sorted(data.keys())
-    keys = ",\n\t".join(sorted_keys)
-    return keys
-
-
-def handle_arguments():
+def handle_cli_arguments():
     """deal with CLI arguments given to installer script"""
     parser = argparse.ArgumentParser(
         description='Toshy Installer - options are mutually exclusive',
@@ -934,11 +940,17 @@ def main(cnfg: InstallerSettings):
 
     get_environment_info()
 
+    valid_distro_names = get_json_distro_names()
+    if cnfg.DISTRO_NAME not in valid_distro_names:
+        print(f"\nInstaller does not know how to deal with distro '{cnfg.DISTRO_NAME}'\n")
+        print(f'Maybe try one of these with "--override-distro" option:\n\t{valid_distro_names}')
+        sys.exit(1)
+
     load_uinput_module()
     install_udev_rules()
     verify_user_groups()
 
-    load_package_list()
+    load_package_lists()
     install_distro_pkgs()
     clone_keyszer_branch()
 
@@ -956,6 +968,20 @@ def main(cnfg: InstallerSettings):
 
     autostart_tray_icon()
     apply_desktop_tweaks()
+
+    if cnfg.DESKTOP_ENV == 'gnome':
+        def is_extension_enabled(extension_uuid):
+            output = subprocess.check_output(
+                        ['gsettings', 'get', 'org.gnome.shell', 'enabled-extensions'])
+            extensions = output.decode().strip().replace("'", "").split(",")
+            return extension_uuid in extensions
+
+        if is_extension_enabled("appindicatorsupport@rgcjonas.gmail.com"):
+            print("AppIndicator extension is enabled. Tray icon should work.")
+            # pass
+        else:
+            print(f"RECOMMENDATION: Install AppIndicator GNOME extension\n"
+                "Easiest method: 'flatpak install extensionmanager', search for 'appindicator'")
 
     if cnfg.should_reboot or os.path.exists(cnfg.reboot_tmp_file):
         cnfg.should_reboot = True
@@ -1016,7 +1042,7 @@ if __name__ == '__main__':
 
     cnfg = InstallerSettings()
 
-    handle_arguments()
+    handle_cli_arguments()
 
     # This gets called in handle_arguments() as 'else' action
     # when there are no arguments passed:
