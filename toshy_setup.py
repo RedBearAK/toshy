@@ -685,12 +685,13 @@ def apply_kde_tweaks():
         else:
             print(f"ERROR: Unable to clone KWin Application Switcher. 'git' not installed.")
         
-        # Set the HighlightWindows value to false
-        subprocess.run(['kwriteconfig5', '--file', 'kwinrc', 
-                        '--group', 'TabBox', '--key', 'HighlightWindows', 'false'], shell=True)
         # Set the LayoutName value to big_icons
-        subprocess.run(['kwriteconfig5', '--file', 'kwinrc', 
-                        '--group', 'TabBox', '--key', 'LayoutName', 'big_icons'], shell=True)
+        subprocess.run(
+            'kwriteconfig5 --file kwinrc --group TabBox --key LayoutName big_icons', shell=True)
+        # Set the HighlightWindows value to false
+        subprocess.run(
+            'kwriteconfig5 --file kwinrc --group TabBox --key HighlightWindows false', shell=True)
+
         # Run reconfigure command
         subprocess.run([cnfg.qdbus, 'org.kde.KWin', '/KWin', 'reconfigure'],
                         stderr=subprocess.DEVNULL,
