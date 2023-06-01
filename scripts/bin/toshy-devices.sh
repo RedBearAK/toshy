@@ -19,6 +19,6 @@ fi
 # shellcheck disable=SC1091
 source "$HOME/.config/toshy/.venv/bin/activate"
 
-echo -e "\nList of devices seen by the keymapper (keyszer): \n\n"
+echo -e "\nList of devices seen by the keymapper (keyszer): \n"
 
 keyszer --list-devices
