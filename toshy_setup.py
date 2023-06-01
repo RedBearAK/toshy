@@ -40,7 +40,7 @@ if platform.system() != 'Windows':
     signal.signal(signal.SIGUSR2,   signal_handler)
 else:
     signal.signal(signal.SIGINT,    signal_handler)
-    print(f'This is only meant to run on Linux. Exiting...')
+    print(f'This is only meant to run on Linux. Exiting.')
     sys.exit(1)
 
 
@@ -233,7 +233,7 @@ def install_udev_rules():
             print(f'"udev" rules file successfully installed.')
             reload_udev_rules()
         except subprocess.CalledProcessError as proc_error:
-            print(f'\nERROR: Problem while installing "udev" rules file for keymapper...\n')
+            print(f'\nERROR: Problem while installing "udev" rules file for keymapper.\n')
             err_output: bytes = proc_error.output  # Type hinting the error_output variable
             # Deal with possible 'NoneType' error output
             print(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
@@ -255,7 +255,7 @@ def verify_user_groups():
             call_attention_to_password_prompt()
             subprocess.run(['sudo', 'groupadd', cnfg.input_group_name], check=True)
         except subprocess.CalledProcessError as proc_error:
-            print(f'\nERROR: Problem when trying to create "input" group...\n')
+            print(f'\nERROR: Problem when trying to create "input" group.\n')
             err_output: bytes = proc_error.output  # Type hinting the error_output variable
             # Deal with possible 'NoneType' error output
             print(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
@@ -266,7 +266,7 @@ def verify_user_groups():
     group_info = grp.getgrnam(cnfg.input_group_name)
     if cnfg.user_name in group_info.gr_mem:
         print(f'User "{cnfg.user_name}" is a member of '
-                f'group "{cnfg.input_group_name}", continuing...')
+                f'group "{cnfg.input_group_name}".')
     else:
         # Add the user to the input group
         try:
@@ -275,14 +275,14 @@ def verify_user_groups():
                 ['sudo', 'usermod', '-aG', cnfg.input_group_name, cnfg.user_name], check=True)
         except subprocess.CalledProcessError as proc_error:
             print(f'\nERROR: Problem when trying to add user "{cnfg.user_name}" to '
-                    f'group "{cnfg.input_group_name}"...\n')
+                    f'group "{cnfg.input_group_name}".\n')
             err_output: bytes = proc_error.output  # Type hinting the error_output variable
             # Deal with possible 'NoneType' error output
             print(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
             print(f'\nERROR: Install failed.')
             sys.exit(1)
 
-        print(f'User "{cnfg.user_name}" added to group "{cnfg.input_group_name}"...')
+        print(f'User "{cnfg.user_name}" added to group "{cnfg.input_group_name}".')
         prompt_for_reboot()
 
 
@@ -423,10 +423,10 @@ def backup_toshy_config():
         except OSError as os_error:
             print(f"Failed to create backup directory: {os_error}")
             exit(1)
-        print(f'Backup completed to {toshy_backup_dir_path}')
+        print(f"Backup completed to '{toshy_backup_dir_path}'")
         cnfg.backup_succeeded = True
     else:
-        print(f'No existing Toshy folder to backup...')
+        print(f'No existing Toshy folder to backup.')
         cnfg.backup_succeeded = True
 
 
@@ -434,7 +434,7 @@ def install_toshy_files():
     """install Toshy files"""
     print(f'\n\n§  Installing Toshy files...\n{cnfg.separator}')
     if not cnfg.backup_succeeded:
-        print(f'Backup of Toshy config folder failed? Bailing out...')
+        print(f'Backup of Toshy config folder failed? Bailing out.')
         exit(1)
     script_name = os.path.basename(__file__)
     keyszer_tmp = os.path.basename(cnfg.keyszer_tmp_path)
@@ -462,7 +462,7 @@ def install_toshy_files():
     toshy_default_cfg = os.path.join(
         cnfg.toshy_dir_path, 'toshy-default-config', 'toshy_config.py')
     shutil.copy(toshy_default_cfg, cnfg.toshy_dir_path)
-    print(f'Toshy files installed in {cnfg.toshy_dir_path}...')
+    print(f"Toshy files installed in '{cnfg.toshy_dir_path}'.")
 
 
 def setup_virtual_env():
@@ -497,7 +497,7 @@ def install_pip_packages():
     for command in commands:
         result = subprocess.run(command)
         if result.returncode != 0:
-            print(f'Error installing/upgrading Python packages. Installer exiting...')
+            print(f'Error installing/upgrading Python packages. Installer exiting.')
             sys.exit(1)
     if os.path.exists('./keyszer-temp'):
         result = subprocess.run([venv_pip_cmd, 'install', '--upgrade', './keyszer-temp'])
@@ -505,7 +505,7 @@ def install_pip_packages():
             print(f'Error installing/upgrading "keyszer".')
             sys.exit(1)
     else:
-        print(f'"keyszer-temp" folder missing... Unable to install "keyszer".')
+        print(f'"keyszer-temp" folder missing. Unable to install "keyszer".')
         sys.exit(1)
 
 
@@ -684,6 +684,19 @@ def apply_kde_tweaks():
             print(f'Installed "Application Switcher" KWin script.')
         else:
             print(f"ERROR: Unable to clone KWin Application Switcher. 'git' not installed.")
+        
+        # Set the LayoutName value to big_icons
+        subprocess.run(
+            'kwriteconfig5 --file kwinrc --group TabBox --key LayoutName big_icons', shell=True)
+        # Set the HighlightWindows value to false
+        subprocess.run(
+            'kwriteconfig5 --file kwinrc --group TabBox --key HighlightWindows false', shell=True)
+
+        # Run reconfigure command
+        subprocess.run([cnfg.qdbus, 'org.kde.KWin', '/KWin', 'reconfigure'],
+                        stderr=subprocess.DEVNULL,
+                        stdout=subprocess.DEVNULL)
+        print(f'Set task switcher to Large Icons, disabled show window.')
 
 
 def remove_kde_tweaks():
@@ -718,6 +731,16 @@ def apply_desktop_tweaks():
         subprocess.run(['gsettings', 'set', 'org.gnome.mutter', 'overlay-key', ''])
         print(f'Disabled Super/Meta/Win/Cmd key opening the GNOME overview.')
         cnfg.tweak_applied = True
+
+        # Set the keyboard shortcut for "Switch applications" to "Alt+Tab"
+        # gsettings set org.gnome.desktop.wm.keybindings switch-applications "['<Alt>Tab']"
+        subprocess.run(['gsettings', 'set', 'org.gnome.desktop.wm.keybindings',
+                        'switch-applications', "['<Alt>Tab']"])
+        # Set the keyboard shortcut for "Switch windows of an application" to "Alt+`" (Alt+Grave)
+        # gsettings set org.gnome.desktop.wm.keybindings switch-group "['<Alt>grave']"
+        subprocess.run(['gsettings', 'set', 'org.gnome.desktop.wm.keybindings',
+                        'switch-group', "['<Alt>grave']"])
+        print(f'Enable "Switch applications" Mac-like task switching.')
 
         def is_extension_enabled(extension_uuid):
             output = subprocess.check_output(
@@ -790,6 +813,14 @@ def remove_desktop_tweaks():
     if cnfg.DESKTOP_ENV == 'gnome':
         subprocess.run(['gsettings', 'reset', 'org.gnome.mutter', 'overlay-key'])
         print(f'Removed tweak to disable GNOME "overlay-key" binding to Meta/Super.')
+        
+        # gsettings reset org.gnome.desktop.wm.keybindings switch-applications
+        subprocess.run(['gsettings', 'reset', 'org.gnome.desktop.wm.keybindings',
+                        'switch-applications'])
+        # gsettings reset org.gnome.desktop.wm.keybindings switch-group
+        subprocess.run(['gsettings', 'reset', 'org.gnome.desktop.wm.keybindings', 'switch-group'])
+        print(f'Removed tweak to enable more Mac-like task switching')
+
 
     if cnfg.DESKTOP_ENV == 'kde':
         remove_kde_tweaks()
@@ -797,12 +828,12 @@ def remove_desktop_tweaks():
 
 
 def uninstall_toshy():
-    print("Uninstalling Toshy...")
+    print(f'\n\n§  Uninstalling Toshy...\n{cnfg.separator}')
     remove_desktop_tweaks()
-    # TODO: do more uninstaller stuff...
+    # TODO: do more uninstaller stuff:
     # run the systemd-remove script
-    # unload/uninstall/remove KWin script
-    # kill the KDE D-Bus service
+    # unload/uninstall/remove KWin script(s)
+    # kill the KDE D-Bus service script
     # run the desktopapps-remove script
     # run the bincommands-remove script
     # remove the 'udev' rules file
@@ -863,7 +894,7 @@ def handle_arguments():
     parser.add_argument(
         '--fancy-pants',
         action='store_true',
-        help='Optional: install fonts, KDE task switcher, etc...'
+        help='Optional: install font, KDE task switcher, etc...'
     )
 
     args = parser.parse_args()
@@ -936,7 +967,7 @@ def main(cnfg: InstallerSettings):
                 f'{cnfg.reboot_ascii_art}'
                 f'{cnfg.separator}\n\n'
                 f'Toshy install complete. Report issues on the GitHub repo.\n'
-                '>>> ALERT: Permissions changed. You MUST reboot for Toshy to work...\n'
+                '>>> ALERT: Permissions changed. You MUST reboot for Toshy to work.\n'
                 f'{cnfg.separator}\n'
         )
 

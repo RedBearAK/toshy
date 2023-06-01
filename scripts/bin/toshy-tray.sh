@@ -19,4 +19,4 @@ fi
 # shellcheck disable=SC1091
 source "$HOME/.config/toshy/.venv/bin/activate"
 
-$(which python3) "$HOME/.config/toshy/toshy_tray.py"
+python3 "$HOME/.config/toshy/toshy_tray.py"

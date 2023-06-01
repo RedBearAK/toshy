@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-# Run the Toshy environment module to show what it sees
+# Show the devices that keyszer sees
 
 # Check if the script is being run as root
 if [[ $EUID -eq 0 ]]; then
@@ -19,4 +19,6 @@ fi
 # shellcheck disable=SC1091
 source "$HOME/.config/toshy/.venv/bin/activate"
 
-python3 "$HOME/.config/toshy/lib/env.py"
+echo -e "\nList of devices seen by the keymapper (keyszer): \n"
+
+keyszer --list-devices
