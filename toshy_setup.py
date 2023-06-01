@@ -176,6 +176,12 @@ def prompt_for_reboot():
         os.mknod(cnfg.reboot_tmp_file)
 
 
+def elevate_privileges():
+    """utility function to elevate privileges so the rest of the installer will work"""
+
+    subprocess.run(['sudo', 'echo', 'Using elevated privileges...'], shell=True, check=True)
+
+
 def load_uinput_module():
     """Check to see if `uinput` kernel module is loaded"""
 
@@ -945,6 +951,8 @@ def main(cnfg: InstallerSettings):
         print(f"\nInstaller does not know how to deal with distro '{cnfg.DISTRO_NAME}'\n")
         print(f'Maybe try one of these with "--override-distro" option:\n\t{valid_distro_names}')
         sys.exit(1)
+
+    elevate_privileges()
 
     load_uinput_module()
     install_udev_rules()
