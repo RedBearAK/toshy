@@ -688,11 +688,14 @@ def apply_kde_tweaks():
         # Set the HighlightWindows value to false
         subprocess.run(['kwriteconfig5', '--file', '~/.config/kwinrc', 
                         '--group', 'TabBox', '--key', 'HighlightWindows', 'false'])
-
         # Set the LayoutName value to big_icons
         subprocess.run(['kwriteconfig5', '--file', '~/.config/kwinrc', 
                         '--group', 'TabBox', '--key', 'LayoutName', 'big_icons'])
-
+        # Run reconfigure command
+        subprocess.run([cnfg.qdbus, 'org.kde.KWin', '/KWin', 'reconfigure'],
+                        stderr=subprocess.DEVNULL,
+                        stdout=subprocess.DEVNULL)
+        print(f'Set task switcher to Large Icons, disabled show window.')
 
 
 def remove_kde_tweaks():
