@@ -165,7 +165,7 @@ def call_attention_to_password_prompt():
     except subprocess.CalledProcessError:
         # sudo requires a password
         print('')
-        print('-- PASSWORD REQUIRED --')
+        print('-- PASSWORD REQUIRED TO CONTINUE WITH INSTALL --')
         print('')
 
 
@@ -179,7 +179,8 @@ def prompt_for_reboot():
 def elevate_privileges():
     """utility function to elevate privileges so the rest of the installer will work"""
 
-    subprocess.run(['sudo', 'echo', 'Using elevated privileges...'], shell=True, check=True)
+    call_attention_to_password_prompt()
+    subprocess.run('sudo echo "Using elevated privileges..."', shell=True, check=True)
 
 
 def load_uinput_module():
@@ -968,6 +969,7 @@ def main(cnfg: InstallerSettings):
     install_pip_packages()
     install_bin_commands()
     install_desktop_apps()
+
     if cnfg.DESKTOP_ENV in ['kde', 'plasma']:
         setup_kwin_script()
         setup_kde_dbus_service()
