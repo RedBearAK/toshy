@@ -215,14 +215,15 @@ What I've been able to test so far (older or newever versions, within reason, ma
 - AlmaLinux 9.2 and/or Rocky Linux 9.2 (RHEL clones)
 
     - Tested with "Workstation" installer choice, not "Server with GUI"
-    - Some non-default (but official) repos will be enabled
+    - Default GNOME desktop tested
+    - Some non-default (but official) repos like CRB will be enabled
     - NB: There is no journal for "user" services, for some reason
 
 - Other RHEL clones should be supportable
 
     - EuroLinux? Probably.
     - Red Hat Enterprise Linux itself? Probably.
-    - Try `./toshy_setup.py --override-distro=almalinux`
+    - Try `./toshy_setup.py --override-distro=almalinux` or `=rhel`
 
 ### openSUSE (RPM-based packaging system)
 
