@@ -776,10 +776,15 @@ def apply_tweaks_KDE():
         script_path     = os.path.dirname(os.path.realpath(__file__))
         # git should be installed by this point? Not necessarily.
         if shutil.which('git'):
-            subprocess.run(["git", "clone", switcher_url], check=True)
-            command_dir     = os.path.join(script_path, 'kwin-application-switcher')
-            subprocess.run(["./install.sh"], cwd=command_dir, check=True)
-            print(f'Installed "Application Switcher" KWin script.')
+            try:
+                subprocess.run(["git", "clone", switcher_url], check=True,
+                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                command_dir     = os.path.join(script_path, 'kwin-application-switcher')
+                subprocess.run(["./install.sh"], cwd=command_dir, check=True,
+                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                print(f'Installed "Application Switcher" KWin script.')
+            except subprocess.CalledProcessError as proc_error:
+                print(f'Something went wrong installing KWin Application Switcher.\n\t{proc_error}')
         else:
             print(f"ERROR: Unable to clone KWin Application Switcher. 'git' not installed.")
         
