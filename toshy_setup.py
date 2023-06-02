@@ -146,15 +146,6 @@ def get_environment_info():
             f'\n')
 
 
-def get_json_distro_names():
-    """utility function to return list of available distro names from packages.json file"""
-    with open('packages.json') as f:
-        data: Dict[str:str] = json.load(f)
-    sorted_keys = sorted(data.keys())
-    keys = ",\n\t".join(sorted_keys)
-    return keys
-
-
 def call_attention_to_password_prompt():
     """utility function to emphasize the sudo password prompt"""
     try:
@@ -304,30 +295,72 @@ def verify_user_groups():
         prompt_for_reboot()
 
 
-def load_package_lists():
-    """load package list from JSON file"""
-    with open('packages.json') as f:
-        cnfg.pkgs_json_dct = json.load(f)
+# def load_package_lists():
+#     """load package list from JSON file"""
+#     with open('packages.json') as f:
+#         cnfg.pkgs_json_dct = json.load(f)
 
-    # everything from 'inotify-simple' to 'six' is just to make `keyszer` install smoother
-    cnfg.pip_pkgs = [
-        "pillow", "lockfile", "dbus-python", "systemd-python",
-        "pygobject", "tk", "sv_ttk", "psutil", "watchdog",
-        "inotify-simple", "evdev", "appdirs", "ordered-set",
-        "python-xlib", "six"
-    ]
 
-    try:
-        cnfg.pkgs_for_distro = cnfg.pkgs_json_dct[cnfg.DISTRO_NAME]
-    except KeyError:
-        print(f"\nERROR: No list of packages found for this distro: '{cnfg.DISTRO_NAME}'")
-        print(f'Installation cannot proceed without a list of packages. Sorry.\n')
-        sys.exit(1)
+distro_groups_map = {
+    'redhat-based':    ["fedora", "fedoralinux", "almalinux", "rocky", "rhel"],
+    'opensuse-based':  ["opensuse-tumbleweed"],
+    'ubuntu-based':    ["ubuntu", "mint", "popos", "eos", "neon", "zorin"],
+    'debian-based':    ["lmde", "debian"],
+    'arch-based':      ["arch", "arcolinux", "endeavouros", "manjaro"],
+    # Add more as needed...
+}
+
+pkg_groups_map = {
+    "redhat-based":    ["gcc", "git", "cairo-devel", "cairo-gobject-devel", "dbus-devel",
+                        "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
+                        "gobject-introspection-devel", "libappindicator-gtk3", "xset",
+                        "systemd-devel"],
+    "opensuse-based":  ["gcc", "git", "cairo-devel",  "dbus-1-devel",
+                        "python310-tk", "python310-dbus-python-devel", "python-devel",
+                        "gobject-introspection-devel", "libappindicator3-devel", "tk",
+                        "libnotify-tools", "typelib-1_0-AyatanaAppIndicator3-0_1",
+                        "systemd-devel"],
+    "ubuntu-based":    ["curl", "git", "input-utils", "libcairo2-dev", "libnotify-bin",
+                        "python3-dbus", "python3-dev", "python3-pip", "python3-venv",
+                        "python3-tk", "libdbus-1-dev", "libgirepository1.0-dev",
+                        "gir1.2-appindicator3-0.1", "libsystemd-dev"],
+    "debian-based":    ["curl", "git", "input-utils", "libcairo2-dev", "libdbus-1-dev",
+                        "python3-dbus", "python3-dev", "python3-venv", "python3-tk",
+                        "libgirepository1.0-dev", "libsystemd-dev",
+                        "gir1.2-ayatanaappindicator3-0.1"],
+    "arch-based":      ["cairo", "dbus", "evtest", "git", "gobject-introspection", "tk",
+                        "libappindicator-gtk3", "pkg-config", "python-dbus", "python-pip",
+                        "python", "systemd"],
+}
+
+extra_pkgs_map = {
+    # Add a distro name and its additional packages here as needed
+    # 'distro_name': ["pkg1", "pkg2", ...],
+    'fedora':          ["evtest"],
+    'fedoralinux':     ["evtest"]
+}
 
 
 def install_distro_pkgs():
     """install needed packages from list for distro type"""
     print(f'\n\n§  Installing native packages...\n{cnfg.separator}')
+
+    pkg_group = None
+    for group, distros in distro_groups_map.items():
+        if cnfg.DISTRO_NAME in distros:
+            pkg_group = group
+            break
+
+    if pkg_group is None:
+        print(f"\nERROR: No list of packages found for this distro: '{cnfg.DISTRO_NAME}'")
+        print(f'Installation cannot proceed without a list of packages. Sorry.\n')
+        sys.exit(1)
+
+    cnfg.pkgs_for_distro = pkg_groups_map[pkg_group]
+
+    # Add extra packages for specific distros
+    if cnfg.DISTRO_NAME in extra_pkgs_map:
+        cnfg.pkgs_for_distro.extend(extra_pkgs_map[cnfg.DISTRO_NAME])
 
     # Filter out systemd packages if not present
     cnfg.pkgs_for_distro = [
@@ -335,29 +368,24 @@ def install_distro_pkgs():
         if cnfg.systemctl_present or 'systemd' not in pkg
     ]
 
-    apt_distros = ['ubuntu', 'mint', 'lmde', 'popos', 'eos', 'neon', 'zorin', 'debian']
-    dnf_distros_Fedora = ['fedora', 'fedoralinux']
-    dnf_distros_RHEL = ['almalinux', 'rocky', 'rhel']
-    pacman_distros = ['arch', 'arcolinux', 'endeavouros', 'manjaro']
-    zypper_distros = ['opensuse-tumbleweed']
+    apt_distros     = distro_groups_map['ubuntu-based'] + distro_groups_map['debian-based']
+    dnf_distros     = distro_groups_map['redhat-based']
+    pacman_distros  = distro_groups_map['arch-based']
+    zypper_distros  = distro_groups_map['opensuse-based']
 
     if cnfg.DISTRO_NAME in apt_distros:
         call_attention_to_password_prompt()
         subprocess.run(['sudo', 'apt', 'install', '-y'] + cnfg.pkgs_for_distro)
 
-    elif cnfg.DISTRO_NAME in dnf_distros_Fedora:
-        call_attention_to_password_prompt()
-        subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro)
-
-    elif cnfg.DISTRO_NAME in dnf_distros_RHEL:
-        call_attention_to_password_prompt()
-        # for libappindicator-gtk3:
-        # sudo dnf install epel-release
-        subprocess.run('sudo dnf install epel-release', shell=True)
-        # for gobject-introspection-devel:
-        # sudo dnf config-manager --set-enabled crb
-        subprocess.run('sudo dnf config-manager --set-enabled crb', shell=True)
-        subprocess.run('sudo dnf update -y', shell=True)
+    elif cnfg.DISTRO_NAME in dnf_distros:
+        # do extra stuff only if distro is a RHEL type (not Fedora)
+        if cnfg.DISTRO_NAME not in ['fedora', 'fedoralinux']:
+            call_attention_to_password_prompt()
+            # for libappindicator-gtk3: sudo dnf install epel-release
+            subprocess.run('sudo dnf install epel-release', shell=True)
+            # for gobject-introspection-devel: sudo dnf config-manager --set-enabled crb
+            subprocess.run('sudo dnf config-manager --set-enabled crb', shell=True)
+            subprocess.run('sudo dnf update -y', shell=True)
         subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro)
 
     elif cnfg.DISTRO_NAME in pacman_distros:
@@ -395,8 +423,17 @@ def install_distro_pkgs():
         sys.exit(1)
 
 
+def get_json_distro_names():
+    """utility function to return list of available distro names from packages.json file"""
+    # with open('packages.json') as f:
+    #     data: Dict[str:str] = json.load(f)
+    sorted_keys = sorted(distro_groups_map.keys())
+    keys = ",\n\t".join(sorted_keys)
+    return keys
+
+
 def clone_keyszer_branch():
-    """clone the latest `keyszer` from GitHub"""
+    """clone the designated `keyszer` branch from GitHub"""
     print(f'\n\n§  Cloning keyszer branch ({cnfg.keyszer_branch})...\n{cnfg.separator}')
     
     # Check if `git` command exists. If not, exit script with error.
@@ -471,7 +508,7 @@ def install_toshy_files():
     print(f"Toshy files installed in '{cnfg.toshy_dir_path}'.")
 
 
-def setup_virtual_env():
+def setup_python_virt_env():
     """setup a virtual environment to install Python packages"""
     print(f'\n\n§  Setting up Python virtual environment...\n{cnfg.separator}')
 
@@ -488,8 +525,14 @@ def install_pip_packages():
     venv_python_cmd = os.path.join(cnfg.venv_path, 'bin', 'python')
     venv_pip_cmd    = os.path.join(cnfg.venv_path, 'bin', 'pip')
     
-    # Filter out systemd packages if not present
-    cnfg.pip_pkgs = [
+    # everything from 'inotify-simple' to 'six' is just to make `keyszer` install smoother
+    cnfg.pip_pkgs   = [
+        "lockfile", "dbus-python", "systemd-python", "pygobject", "tk", "sv_ttk", "psutil",
+        "watchdog", "inotify-simple", "evdev", "appdirs", "ordered-set", "python-xlib", "six"
+    ]
+
+    # Filter out systemd packages if no 'systemctl' present
+    cnfg.pip_pkgs   = [
         pkg for pkg in cnfg.pip_pkgs 
         if cnfg.systemctl_present or 'systemd' not in pkg
     ]
@@ -498,6 +541,7 @@ def install_pip_packages():
         [venv_python_cmd, '-m', 'pip', 'install', '--upgrade', 'pip'],
         [venv_pip_cmd, 'install', '--upgrade', 'wheel'],
         [venv_pip_cmd, 'install', '--upgrade', 'setuptools'],
+        [venv_pip_cmd, 'install', '--upgrade', 'pillow'],
         [venv_pip_cmd, 'install', '--upgrade'] + cnfg.pip_pkgs
     ]
     for command in commands:
@@ -626,10 +670,10 @@ def setup_kde_dbus_service():
     shutil.copy(dbus_svc_desktop_file, autostart_dir_path)
     print(f'Toshy KDE D-Bus service should autostart at login.')
 
-    subprocess.run('pkill -f "toshy_kde_dbus_service"', shell=True)
-    subprocess.Popen(   start_dbus_svc_cmd, shell=True,
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL   )
+    subprocess.run(['pkill', '-f', 'toshy_kde_dbus_service'])
+    subprocess.Popen([start_dbus_svc_cmd],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL)
     print(f'Toshy KDE D-Bus service should be running now.')
 
 
@@ -711,8 +755,8 @@ def remove_tweaks_GNOME():
 def apply_tweaks_KDE():
     """utility function to add desktop tweaks to KDE"""
 
-    subprocess.run(
-        "kwriteconfig5 --file kwinrc --group ModifierOnlyShortcuts --key Meta ''", shell=True)
+    subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group',
+                    'ModifierOnlyShortcuts', '--key', 'Meta', ''], check=True)
 
     # Run reconfigure command
     subprocess.run([cnfg.qdbus, 'org.kde.KWin', '/KWin', 'reconfigure'],
@@ -729,20 +773,19 @@ def apply_tweaks_KDE():
         script_path     = os.path.dirname(os.path.realpath(__file__))
         # git should be installed by this point? Not necessarily.
         if shutil.which('git'):
-            subprocess.run(f"git clone {switcher_url}", shell=True)
+            subprocess.run(["git", "clone", switcher_url], check=True)
             command_dir     = os.path.join(script_path, 'kwin-application-switcher')
-            subprocess.run(f"./install.sh", cwd=command_dir, shell=True)
+            subprocess.run(["./install.sh"], cwd=command_dir, check=True)
             print(f'Installed "Application Switcher" KWin script.')
         else:
             print(f"ERROR: Unable to clone KWin Application Switcher. 'git' not installed.")
         
         # Set the LayoutName value to big_icons
-        subprocess.run(
-            'kwriteconfig5 --file kwinrc --group TabBox --key LayoutName big_icons', shell=True)
+        subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox',
+                        '--key', 'LayoutName', 'big_icons'], check=True)
         # Set the HighlightWindows value to false
-        subprocess.run(
-            'kwriteconfig5 --file kwinrc --group TabBox --key HighlightWindows false', shell=True)
-
+        subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox',
+                        '--key', 'HighlightWindows', 'false'], check=True)
         # Run reconfigure command
         subprocess.run([cnfg.qdbus, 'org.kde.KWin', '/KWin', 'reconfigure'],
                         stderr=subprocess.DEVNULL,
@@ -753,9 +796,8 @@ def apply_tweaks_KDE():
 def remove_tweaks_KDE():
     """utility function to remove the tweaks applied to KDE"""
 
-    subprocess.run(
-        'kwriteconfig5 --file kwinrc --group ModifierOnlyShortcuts --key Meta --delete',
-        shell=True)
+    subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group',
+                    'ModifierOnlyShortcuts', '--key', 'Meta', '--delete'], check=True)
 
     # Run reconfigure command
     subprocess.run([cnfg.qdbus, 'org.kde.KWin', '/KWin', 'reconfigure'],
@@ -798,9 +840,15 @@ def apply_desktop_tweaks():
         font_file   = 'FantasqueSansMono-LargeLineHeight-NoLoopK-NameSuffix.zip'
         font_url    = 'https://github.com/spinda/fantasque-sans-ligatures/releases/download/v1.8.1'
         font_link   = f'{font_url}/{font_file}'
-        subprocess.run(
-            f'curl -LO "{font_link}" || wget --trust-server-names "{font_link}"', shell=True,
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+        if shutil.which('curl'):
+            subprocess.run(['curl', '-LO', font_link], 
+                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        elif shutil.which('wget'):
+            subprocess.run(['wget', font_link],
+                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        else:
+            print("ERROR: Neither 'curl' nor 'wget' is available.")
 
         zip_path    = f'./{font_file}'
         folder_name = font_file.rsplit('.', 1)[0]
@@ -959,13 +1007,15 @@ def main(cnfg: InstallerSettings):
     install_udev_rules()
     verify_user_groups()
 
-    load_package_lists()
+    # load_package_lists()
     install_distro_pkgs()
+
     clone_keyszer_branch()
 
     backup_toshy_config()
     install_toshy_files()
-    setup_virtual_env()
+
+    setup_python_virt_env()
     install_pip_packages()
     install_bin_commands()
     install_desktop_apps()
