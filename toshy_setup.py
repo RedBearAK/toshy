@@ -311,24 +311,24 @@ distro_groups_map = {
 }
 
 pkg_groups_map = {
-    "redhat-based":    ["gcc", "git", "cairo-devel", "cairo-gobject-devel", "dbus-devel",
+    'redhat-based':    ["gcc", "git", "cairo-devel", "cairo-gobject-devel", "dbus-devel",
                         "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
                         "gobject-introspection-devel", "libappindicator-gtk3", "xset",
                         "systemd-devel"],
-    "opensuse-based":  ["gcc", "git", "cairo-devel",  "dbus-1-devel",
+    'opensuse-based':  ["gcc", "git", "cairo-devel",  "dbus-1-devel",
                         "python310-tk", "python310-dbus-python-devel", "python-devel",
                         "gobject-introspection-devel", "libappindicator3-devel", "tk",
                         "libnotify-tools", "typelib-1_0-AyatanaAppIndicator3-0_1",
                         "systemd-devel"],
-    "ubuntu-based":    ["curl", "git", "input-utils", "libcairo2-dev", "libnotify-bin",
+    'ubuntu-based':    ["curl", "git", "input-utils", "libcairo2-dev", "libnotify-bin",
                         "python3-dbus", "python3-dev", "python3-pip", "python3-venv",
                         "python3-tk", "libdbus-1-dev", "libgirepository1.0-dev",
                         "gir1.2-appindicator3-0.1", "libsystemd-dev"],
-    "debian-based":    ["curl", "git", "input-utils", "libcairo2-dev", "libdbus-1-dev",
+    'debian-based':    ["curl", "git", "input-utils", "libcairo2-dev", "libdbus-1-dev",
                         "python3-dbus", "python3-dev", "python3-venv", "python3-tk",
                         "libgirepository1.0-dev", "libsystemd-dev",
                         "gir1.2-ayatanaappindicator3-0.1"],
-    "arch-based":      ["cairo", "dbus", "evtest", "git", "gobject-introspection", "tk",
+    'arch-based':      ["cairo", "dbus", "evtest", "git", "gobject-introspection", "tk",
                         "libappindicator-gtk3", "pkg-config", "python-dbus", "python-pip",
                         "python", "systemd"],
 }
@@ -372,6 +372,7 @@ def install_distro_pkgs():
     dnf_distros     = distro_groups_map['redhat-based']
     pacman_distros  = distro_groups_map['arch-based']
     zypper_distros  = distro_groups_map['opensuse-based']
+    debug(f'\n{apt_distros = }\n{dnf_distros = }\n{pacman_distros = }\n{zypper_distros}\n')
 
     if cnfg.DISTRO_NAME in apt_distros:
         call_attention_to_password_prompt()
