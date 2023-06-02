@@ -426,11 +426,14 @@ def install_distro_pkgs():
 
 def get_json_distro_names():
     """utility function to return list of available distro names from packages.json file"""
-    # with open('packages.json') as f:
-    #     data: Dict[str:str] = json.load(f)
-    sorted_keys = sorted(distro_groups_map.keys())
-    keys = ",\n\t".join(sorted_keys)
-    return keys
+
+    distro_list = []
+    for group in distro_groups_map.values():
+        distro_list.extend(group)
+
+    sorted_distro_list = sorted(distro_list)
+    distros = ",\n\t".join(sorted_distro_list)
+    return distros
 
 
 def clone_keyszer_branch():
