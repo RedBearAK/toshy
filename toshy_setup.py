@@ -168,10 +168,10 @@ def prompt_for_reboot():
 
 
 def elevate_privileges():
-    """utility function to elevate privileges so the rest of the installer will work"""
+    """utility function to elevate privileges early in the installer process"""
 
     call_attention_to_password_prompt()
-    subprocess.run('sudo echo "Using elevated privileges..."', shell=True, check=True)
+    subprocess.run(['sudo', 'bash', '-c', 'echo -e "\nUsing elevated privileges..."'], check=True)
 
 
 def load_uinput_module():
