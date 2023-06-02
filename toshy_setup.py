@@ -372,7 +372,6 @@ def install_distro_pkgs():
     dnf_distros     = distro_groups_map['redhat-based']
     pacman_distros  = distro_groups_map['arch-based']
     zypper_distros  = distro_groups_map['opensuse-based']
-    debug(f'\n{apt_distros = }\n{dnf_distros = }\n{pacman_distros = }\n{zypper_distros}\n')
 
     if cnfg.DISTRO_NAME in apt_distros:
         call_attention_to_password_prompt()
