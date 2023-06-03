@@ -840,10 +840,15 @@ def apply_desktop_tweaks():
 
     # General (not DE specific) "fancy pants" additions:
     if cnfg.fancy_pants:
+        
+        print(f'Installing font... ', end='')
+
         # install Fantasque Sans Mono NoLig (no ligatures) from GitHub fork
         font_file   = 'FantasqueSansMono-LargeLineHeight-NoLoopK-NameSuffix.zip'
         font_url    = 'https://github.com/spinda/fantasque-sans-ligatures/releases/download/v1.8.1'
         font_link   = f'{font_url}/{font_file}'
+
+        print(f'downloading... ', end='')
 
         if shutil.which('curl'):
             subprocess.run(['curl', '-LO', font_link], 
@@ -852,13 +857,15 @@ def apply_desktop_tweaks():
             subprocess.run(['wget', font_link],
                         stdout=DEVNULL, stderr=DEVNULL)
         else:
-            print("ERROR: Neither 'curl' nor 'wget' is available. Can't install font.")
+            print("\nERROR: Neither 'curl' nor 'wget' is available. Can't install font.")
 
         zip_path    = f'./{font_file}'
         
         if os.path.isfile(zip_path):
             folder_name = font_file.rsplit('.', 1)[0]
             extract_dir = '/tmp/'
+
+            print(f'unzipping... ', end='')
 
             # Open the zip file and check if it has a top-level directory
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
@@ -877,15 +884,20 @@ def apply_desktop_tweaks():
 
             os.makedirs(local_fonts_dir, exist_ok=True)
 
+            print(f'moving... ', end='')
+
             for file in os.listdir(otf_dir):
                 if file.endswith('.otf'):
                     src_path = os.path.join(otf_dir, file)
                     dest_path = os.path.join(local_fonts_dir, file)
                     shutil.move(src_path, dest_path)
-            
+
+            print(f'refreshing font cache... ', end='')
+
             # Update the font cache
             subprocess.run(['fc-cache', '-f', '-v'],
                             stdout=DEVNULL, stderr=DEVNULL)
+            print(f'Done.')
 
             print(f'Installed font: {folder_name}')
 
