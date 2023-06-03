@@ -1,10 +1,14 @@
 # Current status: Early Beta
 
-- May have issues installing on distros not on the "tested" list below.  
+- May have issues installing on distros not on the "tested" list below. Try the `--list-distros` and `--override-distro` options (separately) with the installer.  
 
-- May seem to run but not do any remapping, needing `toshy-config-start-verbose` in the terminal to troubleshoot.  
+- May seem to run at login, but not do any remapping, needing `toshy-config-start-verbose` in the terminal to troubleshoot. Or, it may just need a restart of the services from the tray icon or with `toshy-services-restart`.  
 
-- May cause the keyboard in some odd circumstances after install to have no output (default emergency bail out key is F16). If you don't have F16 on your keyboard, you may need to stop the Toshy services from the tray icon menu, or by opening the "Preferences" app from a menu with the mouse.  
+- May cause the keyboard in some odd circumstances after install/reboot to have no output (default emergency bail out key is F16). If you don't have F16 on your keyboard, you may need to stop and restart the Toshy services from the tray icon menu, or by opening the "Preferences" app from a menu with the mouse.  
+
+- The Wayland+KDE (Plasma) solution works but is still a bit "fragile" due to multiple separate components needing to work together. Also, if you have multiple desktop environments installed and one is KDE, you'll need to run the installer once while you are logged into a KDE session, so the necessary components get set up. After that you should be able to log into other DEs and choose either X11/Xorg or Wayland (only GNOME or KDE for now) sessions with no issue.  
+
+- Some distros have no `journal` output for the user services, for unknown reasons. I've seen this on Arcolinux, the RHEL clones.  
 
 # Toshy README
 
