@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
 import os
+from re import sub
 import sys
 import pwd
 import grp
-import json
 import signal
 import shutil
 import zipfile
@@ -14,6 +14,7 @@ import platform
 import textwrap
 import subprocess
 
+from subprocess import DEVNULL
 from typing import Dict
 # local import
 import lib.env as env
@@ -59,7 +60,6 @@ class InstallerSettings:
         self.systemctl_present  = shutil.which('systemctl') is not None
         self.init_system        = None
 
-        self.pkgs_json_dct      = None
         self.pkgs_for_distro    = None
         self.pip_pkgs           = None
         self.qdbus              = 'qdbus-qt5' if shutil.which('qdbus-qt5') else 'qdbus'
@@ -149,10 +149,7 @@ def get_environment_info():
 def call_attention_to_password_prompt():
     """utility function to emphasize the sudo password prompt"""
     try:
-        subprocess.run( ['sudo', '-n', 'true'],
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL,
-                        check=True)
+        subprocess.run( ['sudo', '-n', 'true'], stdout=DEVNULL, stderr=DEVNULL, check=True)
     except subprocess.CalledProcessError:
         # sudo requires a password
         print('')
@@ -174,6 +171,15 @@ def elevate_privileges():
     subprocess.run(['sudo', 'bash', '-c', 'echo -e "\nUsing elevated privileges..."'], check=True)
 
 
+def do_kwin_reconfigure():
+    """utility function to run the KWin reconfigure command"""
+    try:
+        subprocess.run([cnfg.qdbus, 'org.kde.KWin', '/KWin', 'reconfigure'],
+                        check=True, stderr=DEVNULL, stdout=DEVNULL)
+    except subprocess.CalledProcessError as proc_error:
+        error(f'Error while running KWin reconfigure.\n\t{proc_error}')
+
+
 def load_uinput_module():
     """Check to see if `uinput` kernel module is loaded"""
 
@@ -185,7 +191,7 @@ def load_uinput_module():
     except subprocess.CalledProcessError:
         print('"uinput" module is not loaded, loading now...')
         call_attention_to_password_prompt()
-        subprocess.run(f'sudo modprobe uinput', shell=True, check=True)
+        subprocess.run(['sudo', 'modprobe', 'uinput'], check=True)
 
     # Check if /etc/modules-load.d/ directory exists
     if os.path.isdir("/etc/modules-load.d/"):
@@ -198,6 +204,9 @@ def load_uinput_module():
                 subprocess.run(command, shell=True, check=True)
             except subprocess.CalledProcessError as proc_error:
                 print(f"Failed to create /etc/modules-load.d/uinput.conf: {proc_error}")
+                print(f'\nERROR: Install failed.')
+                sys.exit(1)
+
     else:
         # Check if /etc/modules file exists
         if os.path.isfile("/etc/modules"):
@@ -211,6 +220,9 @@ def load_uinput_module():
                         subprocess.run(command, shell=True, check=True)
                     except subprocess.CalledProcessError as proc_error:
                         print(f"ERROR: Failed to append 'uinput' to /etc/modules: {proc_error}")
+                        print(f'\nERROR: Install failed.')
+                        sys.exit(1)
+
 
 
 def reload_udev_rules():
@@ -249,7 +261,7 @@ def install_udev_rules():
             print(f'\nERROR: Install failed.')
             sys.exit(1)
     else:
-        print(f'"udev" rules file already in place.')
+        print(f'Correct "udev" rules already in place.')
 
 
 def verify_user_groups():
@@ -293,12 +305,6 @@ def verify_user_groups():
 
         print(f'User "{cnfg.user_name}" added to group "{cnfg.input_group_name}".')
         prompt_for_reboot()
-
-
-# def load_package_lists():
-#     """load package list from JSON file"""
-#     with open('packages.json') as f:
-#         cnfg.pkgs_json_dct = json.load(f)
 
 
 distro_groups_map = {
@@ -353,7 +359,8 @@ def install_distro_pkgs():
 
     if pkg_group is None:
         print(f"\nERROR: No list of packages found for this distro: '{cnfg.DISTRO_NAME}'")
-        print(f'Installation cannot proceed without a list of packages. Sorry.\n')
+        print(f'Installation cannot proceed without a list of packages. Sorry.')
+        print(f'Try some options in "./toshy_setup.py --help"\n')
         sys.exit(1)
 
     cnfg.pkgs_for_distro = pkg_groups_map[pkg_group]
@@ -382,10 +389,11 @@ def install_distro_pkgs():
         if cnfg.DISTRO_NAME not in ['fedora', 'fedoralinux']:
             call_attention_to_password_prompt()
             # for libappindicator-gtk3: sudo dnf install epel-release
-            subprocess.run('sudo dnf install epel-release', shell=True)
+            subprocess.run(['sudo', 'dnf', 'install', 'epel-release'])
             # for gobject-introspection-devel: sudo dnf config-manager --set-enabled crb
-            subprocess.run('sudo dnf config-manager --set-enabled crb', shell=True)
-            subprocess.run('sudo dnf update -y', shell=True)
+            subprocess.run(['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb'])
+            subprocess.run(['sudo', 'dnf', 'update', '-y'])
+        # now do the install of the list of packages
         subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro)
 
     elif cnfg.DISTRO_NAME in pacman_distros:
@@ -394,11 +402,7 @@ def install_distro_pkgs():
 
         if response in ['y', 'Y']:
             def is_package_installed(package):
-                result = subprocess.run(
-                                ['pacman', '-Q', package],
-                                stdout=subprocess.DEVNULL,
-                                stderr=subprocess.DEVNULL
-                            )
+                result = subprocess.run(['pacman', '-Q', package], stdout=DEVNULL, stderr=DEVNULL)
                 return result.returncode == 0
 
             pkgs_to_install = [
@@ -423,8 +427,8 @@ def install_distro_pkgs():
         sys.exit(1)
 
 
-def get_json_distro_names():
-    """utility function to return list of available distro names from packages.json file"""
+def get_distro_names():
+    """utility function to return list of available distro names"""
 
     distro_list = []
     for group in distro_groups_map.values():
@@ -596,7 +600,7 @@ def install_desktop_apps():
     replace_home_in_file(gui_desktop_file)
 
 
-def setup_kwin_script():
+def setup_kwin2dbus_script():
     """install the KWin script to notify D-Bus service about window focus changes"""
     print(f'\n\n§  Setting up the Toshy KWin script...\n{cnfg.separator}')
     kwin_script_name    = 'toshy-dbus-notifyactivewindow'
@@ -648,7 +652,7 @@ def setup_kwin_script():
         print("Successfully enabled the KWin script.")
 
     # Try to get KWin to notice and activate the script on its own, now that it's in RC file
-    subprocess.run([cnfg.qdbus, 'org.kde.KWin', '/KWin', 'reconfigure'])
+    do_kwin_reconfigure()
 
 
 def setup_kde_dbus_service():
@@ -674,9 +678,7 @@ def setup_kde_dbus_service():
     print(f'Toshy KDE D-Bus service should autostart at login.')
 
     subprocess.run(['pkill', '-f', 'toshy_kde_dbus_service'])
-    subprocess.Popen([start_dbus_svc_cmd],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL)
+    subprocess.Popen([start_dbus_svc_cmd], stdout=DEVNULL, stderr=DEVNULL)
     print(f'Toshy KDE D-Bus service should be running now.')
 
 
@@ -762,9 +764,7 @@ def apply_tweaks_KDE():
                     'ModifierOnlyShortcuts', '--key', 'Meta', ''], check=True)
 
     # Run reconfigure command
-    subprocess.run([cnfg.qdbus, 'org.kde.KWin', '/KWin', 'reconfigure'],
-                    stderr=subprocess.DEVNULL,
-                    stdout=subprocess.DEVNULL)
+    do_kwin_reconfigure()
     print(f'Disabled Meta key opening application menu.')
     
     if cnfg.fancy_pants:
@@ -778,10 +778,10 @@ def apply_tweaks_KDE():
         if shutil.which('git'):
             try:
                 subprocess.run(["git", "clone", switcher_url], check=True,
-                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                                stdout=DEVNULL, stderr=DEVNULL)
                 command_dir     = os.path.join(script_path, 'kwin-application-switcher')
                 subprocess.run(["./install.sh"], cwd=command_dir, check=True,
-                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                                stdout=DEVNULL, stderr=DEVNULL)
                 print(f'Installed "Application Switcher" KWin script.')
             except subprocess.CalledProcessError as proc_error:
                 print(f'Something went wrong installing KWin Application Switcher.\n\t{proc_error}')
@@ -795,9 +795,7 @@ def apply_tweaks_KDE():
         subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox',
                         '--key', 'HighlightWindows', 'false'], check=True)
         # Run reconfigure command
-        subprocess.run([cnfg.qdbus, 'org.kde.KWin', '/KWin', 'reconfigure'],
-                        stderr=subprocess.DEVNULL,
-                        stdout=subprocess.DEVNULL)
+        do_kwin_reconfigure()
         print(f'Set task switcher to Large Icons, disabled show window.')
 
 
@@ -808,9 +806,7 @@ def remove_tweaks_KDE():
                     'ModifierOnlyShortcuts', '--key', 'Meta', '--delete'], check=True)
 
     # Run reconfigure command
-    subprocess.run([cnfg.qdbus, 'org.kde.KWin', '/KWin', 'reconfigure'],
-                    stderr=subprocess.DEVNULL,
-                    stdout=subprocess.DEVNULL)
+    do_kwin_reconfigure()
     print(f'Removed tweak to disable Meta key opening application menu.')
 
 
@@ -851,10 +847,10 @@ def apply_desktop_tweaks():
 
         if shutil.which('curl'):
             subprocess.run(['curl', '-LO', font_link], 
-                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        stdout=DEVNULL, stderr=DEVNULL)
         elif shutil.which('wget'):
             subprocess.run(['wget', font_link],
-                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        stdout=DEVNULL, stderr=DEVNULL)
         else:
             print("ERROR: Neither 'curl' nor 'wget' is available. Can't install font.")
 
@@ -876,16 +872,20 @@ def apply_desktop_tweaks():
                 
                 zip_ref.extractall(extract_dir)
 
-            otf_dir = f'{extract_dir}/OTF/'
-            os.makedirs(os.path.expanduser('~/.local/share/fonts'), exist_ok=True)
+            otf_dir         = f'{extract_dir}/OTF/'
+            local_fonts_dir = os.path.realpath(os.path.expanduser('~/.local/share/fonts'))
+
+            os.makedirs(local_fonts_dir, exist_ok=True)
 
             for file in os.listdir(otf_dir):
                 if file.endswith('.otf'):
-                    subprocess.run(f'mv "{otf_dir}/{file}" ~/.local/share/fonts/', shell=True)
+                    src_path = os.path.join(otf_dir, file)
+                    dest_path = os.path.join(local_fonts_dir, file)
+                    shutil.move(src_path, dest_path)
             
             # Update the font cache
-            subprocess.run('fc-cache -f -v', shell=True,
-                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.run(['fc-cache', '-f', '-v'],
+                            stdout=DEVNULL, stderr=DEVNULL)
 
             print(f'Installed font: {folder_name}')
 
@@ -978,7 +978,7 @@ def handle_cli_arguments():
         sys.exit(0)
     elif args.list_distros:
         print(  f'Distro names known to the Toshy installer (to use with --override-distro):'
-                f'\n\n\t{get_json_distro_names()}\n')
+                f'\n\n\t{get_distro_names()}\n')
         sys.exit(0)
     elif args.show_env:
         get_environment_info()
@@ -1005,7 +1005,7 @@ def main(cnfg: InstallerSettings):
 
     get_environment_info()
 
-    valid_distro_names = get_json_distro_names()
+    valid_distro_names = get_distro_names()
     if cnfg.DISTRO_NAME not in valid_distro_names:
         print(f"\nInstaller does not know how to deal with distro '{cnfg.DISTRO_NAME}'\n")
         print(f'Maybe try one of these with "--override-distro" option:\n\t{valid_distro_names}')
@@ -1017,7 +1017,6 @@ def main(cnfg: InstallerSettings):
     install_udev_rules()
     verify_user_groups()
 
-    # load_package_lists()
     install_distro_pkgs()
 
     clone_keyszer_branch()
@@ -1027,11 +1026,12 @@ def main(cnfg: InstallerSettings):
 
     setup_python_virt_env()
     install_pip_packages()
+
     install_bin_commands()
     install_desktop_apps()
 
     if cnfg.DESKTOP_ENV in ['kde', 'plasma']:
-        setup_kwin_script()
+        setup_kwin2dbus_script()
         setup_kde_dbus_service()
 
     setup_systemd_services()
@@ -1077,13 +1077,7 @@ def main(cnfg: InstallerSettings):
         tray_icon_cmd = [os.path.join(cnfg.home_dir_path, '.local', 'bin', 'toshy-tray')]
         # Try to launch the tray icon in a separate process not linked to current shell
         # Also, suppress output that might confuse the user
-        subprocess.Popen(
-            tray_icon_cmd,
-            shell=True,
-            close_fds=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        )
+        subprocess.Popen(tray_icon_cmd, close_fds=True, stdout=DEVNULL, stderr=DEVNULL)
         print(  f'\n\n{cnfg.separator}\n\n'
                 f'Toshy install complete. Report issues on the GitHub repo.\n'
                 f'Rebooting should not be necessary.\n'
@@ -1099,21 +1093,18 @@ if __name__ == '__main__':
 
     print('')   # blank line in terminal to start things off
 
-    # Check if 'sudo' command is available
+    # Check if 'sudo' command is available to user
     if not shutil.which('sudo'):
         print("Error: 'sudo' not found. Installer will fail without it. Exiting.")
         sys.exit(1)
 
-    # Invalidate any `sudo` ticket that might be hanging around
+    # Invalidate any `sudo` ticket that might be hanging around, to maximize 
+    # the length of time before `sudo` might demand the password again
     try:
-        subprocess.run("sudo -k", shell=True, check=True)
+        subprocess.run(['sudo', '-k'], check=True)
     except subprocess.CalledProcessError:
         print(f"ERROR: 'sudo' found, but 'sudo -k' did not work. Very strange.")
 
     cnfg = InstallerSettings()
 
     handle_cli_arguments()
-
-    # This gets called in handle_arguments() as 'else' action
-    # when there are no arguments passed:
-    # main(cnfg)
