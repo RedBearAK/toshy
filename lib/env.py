@@ -237,29 +237,31 @@ def get_env_info():
         error(f'Desktop Environment not in de_names list! Should fix this.\n\t{_desktop_env = }')
         DESKTOP_ENV = _desktop_env
 
-    # Doublecheck the desktop environment by checking for identifiable running processes
-    def check_process(names, desktop_env):
-        nonlocal DESKTOP_ENV
-        for name in names:
-            command = f"pgrep {name}"
-            try:
-                subprocess.check_output(command, shell=True)
-                if DESKTOP_ENV != desktop_env:
-                    error(  f"Desktop may be misidentified: '{DESKTOP_ENV}'\n"
-                            f"'{desktop_env}' was detected and will be used instead.")
-                    DESKTOP_ENV = desktop_env
-                break  # Stop checking if any of the processes are found
-            except subprocess.CalledProcessError:
-                pass
+    # do this only if DESKTOP_ENV is still None after the above step
+    if not DESKTOP_ENV:
+        # Doublecheck the desktop environment by checking for identifiable running processes
+        def check_process(names, desktop_env):
+            nonlocal DESKTOP_ENV
+            for name in names:
+                command = f"pgrep {name}"
+                try:
+                    subprocess.check_output(command, shell=True)
+                    if DESKTOP_ENV != desktop_env:
+                        error(  f"Desktop may be misidentified: '{DESKTOP_ENV}'\n"
+                                f"'{desktop_env}' was detected and will be used instead.")
+                        DESKTOP_ENV = desktop_env
+                    break  # Stop checking if any of the processes are found
+                except subprocess.CalledProcessError:
+                    pass
 
-    processes = {
-        'kde': ['plasmashell', 'kwin_ft', 'kwin_wayland', 'kwin_x11'],
-        'gnome': ['gnome-shell'],
-        'sway': ['sway']
-    }
+        processes = {
+            'kde': ['plasmashell', 'kwin_ft', 'kwin_wayland', 'kwin_x11'],
+            'gnome': ['gnome-shell'],
+            'sway': ['sway']
+        }
 
-    for desktop_env, process_names in processes.items():
-        check_process(process_names, desktop_env)
+        for desktop_env, process_names in processes.items():
+            check_process(process_names, desktop_env)
 
 
     env_info_dct['DESKTOP_ENV'] = DESKTOP_ENV
