@@ -389,7 +389,7 @@ def install_distro_pkgs():
         if cnfg.DISTRO_NAME not in ['fedora', 'fedoralinux']:
             call_attention_to_password_prompt()
             # for libappindicator-gtk3: sudo dnf install epel-release
-            subprocess.run(['sudo', 'dnf', 'install', 'epel-release'])
+            subprocess.run(['sudo', 'dnf', 'install', '-y', 'epel-release'])
             # for gobject-introspection-devel: sudo dnf config-manager --set-enabled crb
             subprocess.run(['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb'])
             subprocess.run(['sudo', 'dnf', 'update', '-y'])
