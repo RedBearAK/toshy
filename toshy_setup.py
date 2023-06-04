@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import os
-from re import sub
 import sys
 import pwd
 import grp
@@ -20,6 +19,8 @@ from typing import Dict
 import lib.env as env
 from lib.logger import debug, error
 
+# set a standard path for commands to avoid issues with user customized paths
+os.environ['PATH'] = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 
 if os.name == 'posix' and os.geteuid() == 0:
     print("This app should not be run as root/superuser.")
