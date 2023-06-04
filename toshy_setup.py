@@ -388,10 +388,10 @@ def install_distro_pkgs():
         # do extra stuff only if distro is a RHEL type (not Fedora)
         if cnfg.DISTRO_NAME not in ['fedora', 'fedoralinux']:
             call_attention_to_password_prompt()
-            # for libappindicator-gtk3: sudo dnf install epel-release
-            subprocess.run(['sudo', 'dnf', 'install', '-y', 'epel-release'])
             # for gobject-introspection-devel: sudo dnf config-manager --set-enabled crb
             subprocess.run(['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb'])
+            # for libappindicator-gtk3: sudo dnf install -y epel-release
+            subprocess.run(['sudo', 'dnf', 'install', '-y', 'epel-release'])
             subprocess.run(['sudo', 'dnf', 'update', '-y'])
         # now do the install of the list of packages
         subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro)
