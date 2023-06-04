@@ -880,16 +880,17 @@ def apply_desktop_tweaks():
                 
                 zip_ref.extractall(extract_dir)
 
-            otf_dir         = f'{extract_dir}/OTF/'
+            # use TTF instead of OTF to try and minimize "stem darkening" effect in KDE
+            font_dir        = f'{extract_dir}/TTF/'
             local_fonts_dir = os.path.realpath(os.path.expanduser('~/.local/share/fonts'))
 
             os.makedirs(local_fonts_dir, exist_ok=True)
 
             print(f'moving... ', end='')
 
-            for file in os.listdir(otf_dir):
-                if file.endswith('.otf'):
-                    src_path = os.path.join(otf_dir, file)
+            for file in os.listdir(font_dir):
+                if file.endswith('.ttf'):
+                    src_path = os.path.join(font_dir, file)
                     dest_path = os.path.join(local_fonts_dir, file)
                     shutil.move(src_path, dest_path)
 
