@@ -69,7 +69,7 @@ class InstallerSettings:
         self.home_dir_path          = os.path.abspath(os.path.expanduser('~'))
         self.toshy_dir_path         = os.path.join(self.home_dir_path, '.config', 'toshy')
         self.db_file_name           = 'toshy_user_preferences.sqlite'
-        self.db_file_path           = os.path.join(cnfg.toshy_dir_path, self.db_file_name)
+        self.db_file_path           = os.path.join(self.toshy_dir_path, self.db_file_name)
         self.backup_succeeded       = None
         self.existing_cfg_data      = None
         self.existing_cfg_slices    = None
