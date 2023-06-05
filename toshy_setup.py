@@ -739,6 +739,7 @@ def apply_tweaks_GNOME():
     cmd_path = 'org.gnome.Terminal.Legacy.Keybindings:/org/gnome/terminal/legacy/keybindings/'
     prefs_binding = '<Control>less'
     subprocess.run(['gsettings', 'set', cmd_path, 'preferences', prefs_binding])
+    print(f'Set a keybinding for GNOME Terminal preferences.')
     
     # Enable "Expandable folders" in Nautilus
     # dconf write /org/gnome/nautilus/list-view/use-tree-view true
