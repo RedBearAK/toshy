@@ -1224,7 +1224,7 @@ def main(cnfg: InstallerSettings):
         print(  f'\n\n'
                 f'{cnfg.separator}\n'
                 f'{cnfg.reboot_ascii_art}'
-                f'{cnfg.separator}\n\n'
+                f'{cnfg.separator}\n'
                 f'Toshy install complete. Report issues on the GitHub repo.\n'
                 '>>> ALERT: Permissions changed. You MUST reboot for Toshy to work.\n'
                 f'{cnfg.separator}\n'
@@ -1236,7 +1236,7 @@ def main(cnfg: InstallerSettings):
         # Try to launch the tray icon in a separate process not linked to current shell
         # Also, suppress output that might confuse the user
         subprocess.Popen(tray_icon_cmd, close_fds=True, stdout=DEVNULL, stderr=DEVNULL)
-        print(  f'\n\n{cnfg.separator}\n\n'
+        print(  f'\n\n{cnfg.separator}\n'
                 f'Toshy install complete. Report issues on the GitHub repo.\n'
                 f'Rebooting should not be necessary.\n'
                 f'{cnfg.separator}\n'
