@@ -1071,8 +1071,8 @@ def main(cnfg: InstallerSettings):
             print("AppIndicator extension is enabled. Tray icon should work.")
             # pass
         else:
-            print(f"RECOMMENDATION: Install AppIndicator GNOME extension\n"
-                "Easiest method: 'flatpak install extensionmanager', search for 'appindicator'")
+            print(f"\nRECOMMENDATION: Install AppIndicator GNOME extension\n"
+                "Easiest method: 'flatpak install extensionmanager', search for 'appindicator'\n")
 
     if cnfg.should_reboot or os.path.exists(cnfg.reboot_tmp_file):
         cnfg.should_reboot = True
@@ -1088,10 +1088,6 @@ def main(cnfg: InstallerSettings):
                 f'{cnfg.separator}\n'
         )
 
-    if cnfg.remind_extensions or (cnfg.DESKTOP_ENV == 'gnome' and cnfg.SESSION_TYPE == 'wayland'):
-        print(f'MUST INSTALL GNOME EXTENSIONS IF USING WAYLAND SESSION. See README.')
-        
-
     if not cnfg.should_reboot:
         # Try to start the tray icon immediately, if reboot is not indicated
         # tray_command        = ['gtk-launch', 'Toshy_Tray']
@@ -1106,6 +1102,9 @@ def main(cnfg: InstallerSettings):
         )
         if cnfg.SESSION_TYPE == 'wayland' and cnfg.DESKTOP_ENV == 'kde':
             print(f'SWITCH TO A DIFFERENT WINDOW ONCE TO GET KWIN SCRIPT TO START WORKING!')
+
+    if cnfg.remind_extensions or (cnfg.DESKTOP_ENV == 'gnome' and cnfg.SESSION_TYPE == 'wayland'):
+        print(f'You MUST install GNOME EXTENSIONS if using WAYLAND SESSION. See README.')
 
     print('')   # blank line to avoid crowding the prompt after install is done
 
