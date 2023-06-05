@@ -734,6 +734,12 @@ def apply_tweaks_GNOME():
                     'switch-group', "['<Alt>grave']"])
     print(f'Enabled "Switch applications" Mac-like task switching.')
     
+    # Enable keyboard shortcut for GNOME Terminal preferences dialog
+    # gsettings set org.gnome.Terminal.Legacy.Keybindings:/org/gnome/terminal/legacy/keybindings/ preferences '<Control>less'
+    cmd_path = 'org.gnome.Terminal.Legacy.Keybindings:/org/gnome/terminal/legacy/keybindings/'
+    prefs_binding = '<Control>less'
+    subprocess.run(['gsettings', 'set', cmd_path, 'preferences', prefs_binding])
+    
     # Enable "Expandable folders" in Nautilus
     # dconf write /org/gnome/nautilus/list-view/use-tree-view true
     subprocess.run(['dconf', 'write', '/org/gnome/nautilus/list-view/use-tree-view', 'true'])
