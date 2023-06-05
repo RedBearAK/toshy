@@ -176,18 +176,22 @@ def dot_Xmodmap_warning():
     """Check for '.Xmodmap' file in user's home folder, show warning about mod key remaps"""
     xmodmap_file_path = os.path.realpath(os.path.join(os.path.expanduser('~'), '.Xmodmap'))
     if os.path.isfile(xmodmap_file_path):
-        print(f"\n\t WARNING: You have an '.Xmodmap' file in your home folder!")
-        print(f'This can cause confusing PROBLEMS if you are remapping any modifier keys!\n')
+        print(f'\n{cnfg.separator}')
+        print(f"\t WARNING: You have an '.Xmodmap' file in your home folder!!! \n")
+        print(f' This can cause confusing PROBLEMS if you are remapping any modifier keys!')
+        print(f'{cnfg.separator}\n')
         
         secret_code = ''.join(random.choice(string.ascii_letters) for _ in range(4))
         
-        response = input(f"Do you take responsibility for the issues an '.Xmodmap' file may cause?"
-                        f"\n\t If you understand, enter the secret code '{secret_code}': ")
+        response = input(
+            f"You must take responsibility for the issues an '.Xmodmap' file may cause."
+            f"\n\n\t If you understand, enter the secret code '{secret_code}': "
+        )
         
         if response == secret_code:
-            print("Good code. User has taken responsibility for '.Xmodmap' file. Proceeding...")
+            print(f"\nGood code. User has taken responsibility for '.Xmodmap' file. Proceeding...\n")
         else:
-            print("Code does not match! Try the installer again after dealing with '.Xmodmap'.")
+            print(f"\nCode does not match! Try the installer again after dealing with '.Xmodmap'.\n")
             sys.exit(1)
 
 
