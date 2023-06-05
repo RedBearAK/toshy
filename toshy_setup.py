@@ -5,6 +5,8 @@ import re
 import sys
 import pwd
 import grp
+import random
+import string
 import signal
 import shutil
 import zipfile
@@ -28,7 +30,7 @@ if os.name == 'posix' and os.geteuid() == 0:
     sys.exit(1)
 
 def signal_handler(sig, frame):
-    """handle signals like Ctrl+C"""
+    """Handle signals like Ctrl+C"""
     if sig in (signal.SIGINT, signal.SIGQUIT):
         # Perform any cleanup code here before exiting
         # traceback.print_stack(frame)
@@ -49,7 +51,7 @@ else:
 
 
 class InstallerSettings:
-    """set up variables for necessary information to be used by all functions"""
+    """Set up variables for necessary information to be used by all functions"""
     def __init__(self) -> None:
         self.separator              = '============================================================'
         self.env_info_dct           = None
@@ -102,7 +104,7 @@ class InstallerSettings:
 
 
 def get_environment_info():
-    """get back the distro name, distro version, session type and 
+    """Get back the distro name, distro version, session type and 
         desktop environment from `env.py` module"""
     print(f'\n§  Getting environment information...\n{cnfg.separator}')
 
@@ -153,7 +155,7 @@ def get_environment_info():
 
 
 def call_attention_to_password_prompt():
-    """utility function to emphasize the sudo password prompt"""
+    """Utility function to emphasize the sudo password prompt"""
     try:
         subprocess.run( ['sudo', '-n', 'true'], stdout=DEVNULL, stderr=DEVNULL, check=True)
     except subprocess.CalledProcessError:
@@ -164,21 +166,40 @@ def call_attention_to_password_prompt():
 
 
 def prompt_for_reboot():
-    """utility function to make sure user is reminded to reboot if necessary"""
+    """Utility function to make sure user is reminded to reboot if necessary"""
     cnfg.should_reboot = True
     if not os.path.exists(cnfg.reboot_tmp_file):
         os.mknod(cnfg.reboot_tmp_file)
 
 
+def dot_Xmodmap_warning():
+    """Check for '.Xmodmap' file in user's home folder, show warning about mod key remaps"""
+    xmodmap_file_path = os.path.realpath(os.path.join(os.path.expanduser('~'), '.Xmodmap'))
+    if os.path.isfile(xmodmap_file_path):
+        print(f"\n\t WARNING: You have an '.Xmodmap' file in your home folder!")
+        print(f'This can cause confusing PROBLEMS if you are remapping any modifier keys!\n')
+        
+        secret_code = ''.join(random.choice(string.ascii_letters) for _ in range(4))
+        
+        response = input(f"Do you take responsibility for the issues an '.Xmodmap' file may cause?"
+                        f"\n\t If you understand, enter the secret code '{secret_code}': ")
+        
+        if response == secret_code:
+            print("Good code. User has taken responsibility for '.Xmodmap' file. Proceeding...")
+        else:
+            print("Code does not match! Try the installer again after dealing with '.Xmodmap'.")
+            sys.exit(1)
+
+
 def elevate_privileges():
-    """utility function to elevate privileges early in the installer process"""
+    """Elevate privileges early in the installer process"""
 
     call_attention_to_password_prompt()
     subprocess.run(['sudo', 'bash', '-c', 'echo -e "\nUsing elevated privileges..."'], check=True)
 
 
 def do_kwin_reconfigure():
-    """utility function to run the KWin reconfigure command"""
+    """Utility function to run the KWin reconfigure command"""
     try:
         subprocess.run([cnfg.qdbus, 'org.kde.KWin', '/KWin', 'reconfigure'],
                         check=True, stderr=DEVNULL, stdout=DEVNULL)
@@ -244,7 +265,7 @@ def reload_udev_rules():
 
 
 def install_udev_rules():
-    """set up udev rules file to give user/keyszer access to uinput"""
+    """Set up `udev` rules file to give user/keyszer access to uinput"""
     print(f'\n\n§  Installing "udev" rules file for keymapper...\n{cnfg.separator}')
     rules_file_path = '/etc/udev/rules.d/90-toshy-keymapper-input.rules'
     rule_content = (
@@ -354,7 +375,7 @@ extra_pkgs_map = {
 
 
 def install_distro_pkgs():
-    """install needed packages from list for distro type"""
+    """Install needed packages from list for distro type"""
     print(f'\n\n§  Installing native packages...\n{cnfg.separator}')
 
     pkg_group = None
@@ -434,7 +455,7 @@ def install_distro_pkgs():
 
 
 def get_distro_names():
-    """utility function to return list of available distro names"""
+    """Utility function to return list of available distro names"""
 
     distro_list = []
     for group in distro_groups_map.values():
@@ -446,7 +467,7 @@ def get_distro_names():
 
 
 def clone_keyszer_branch():
-    """clone the designated `keyszer` branch from GitHub"""
+    """Clone the designated `keyszer` branch from GitHub"""
     print(f'\n\n§  Cloning keyszer branch ({cnfg.keyszer_branch})...\n{cnfg.separator}')
     
     # Check if `git` command exists. If not, exit script with error.
@@ -465,7 +486,7 @@ def clone_keyszer_branch():
 
 
 def extract_slices(data: str) -> Dict[str, str]:
-    """utility function to store user content slices from existing config file data"""
+    """Utility function to store user content slices from existing config file data"""
     slices = {}
     pattern_start       = r'###  SLICE_MARK_START: (\w+)  ###.*'
     pattern_end         = r'###  SLICE_MARK_END: (\w+)  ###.*'
@@ -486,7 +507,7 @@ def extract_slices(data: str) -> Dict[str, str]:
 
 
 def merge_slices(data: str, slices: Dict[str, str]) -> str:
-    """utility function to merge stored slices into new config file data"""
+    """Utility function to merge stored slices into new config file data"""
     pattern_start = r'###  SLICE_MARK_START: (\w+)  ###.*'
     pattern_end = r'###  SLICE_MARK_END: (\w+)  ###.*'
     matches_start = list(re.finditer(pattern_start, data))
@@ -510,7 +531,7 @@ def merge_slices(data: str, slices: Dict[str, str]) -> str:
 
 
 def backup_toshy_config():
-    """backup existing Toshy config folder"""
+    """Backup existing Toshy config folder"""
     print(f'\n\n§  Backing up existing Toshy config folder...\n{cnfg.separator}')
     timestamp = datetime.datetime.now().strftime('_%Y%m%d_%H%M%S')
     toshy_backup_dir_path = os.path.abspath(cnfg.toshy_dir_path + timestamp)
@@ -561,7 +582,7 @@ def backup_toshy_config():
 
 
 def install_toshy_files():
-    """install Toshy files"""
+    """Install Toshy files"""
     print(f'\n\n§  Installing Toshy files...\n{cnfg.separator}')
     if not cnfg.backup_succeeded:
         print(f'Backup of Toshy config folder failed? Bailing out.')
@@ -629,7 +650,7 @@ def install_toshy_files():
 
 
 def setup_python_virt_env():
-    """setup a virtual environment to install Python packages"""
+    """Setup a virtual environment to install Python packages"""
     print(f'\n\n§  Setting up Python virtual environment...\n{cnfg.separator}')
 
     # Create the virtual environment if it doesn't exist
@@ -640,7 +661,7 @@ def setup_python_virt_env():
 
 
 def install_pip_packages():
-    """install `pip` packages for Python"""
+    """Install `pip` packages for Python"""
     print(f'\n\n§  Installing/upgrading Python packages...\n{cnfg.separator}')
     venv_python_cmd = os.path.join(cnfg.venv_path, 'bin', 'python')
     venv_pip_cmd    = os.path.join(cnfg.venv_path, 'bin', 'pip')
@@ -680,7 +701,7 @@ def install_pip_packages():
 
 
 def install_bin_commands():
-    """install the convenient scripts to manage Toshy"""
+    """Install the convenient scripts to manage Toshy"""
     print(f'\n\n§  Installing Toshy script commands...\n{cnfg.separator}')
     script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'toshy-bincommands-setup.sh')
     subprocess.run([script_path])
@@ -688,7 +709,7 @@ def install_bin_commands():
 
 # Replace $HOME with user home directory
 def replace_home_in_file(filename):
-    """utility function to replace '$HOME' in .desktop files with actual home path"""
+    """Utility function to replace '$HOME' in .desktop files with actual home path"""
     # Read in the file
     with open(filename, 'r') as file:
         file_data = file.read()
@@ -700,7 +721,7 @@ def replace_home_in_file(filename):
 
 
 def install_desktop_apps():
-    """install the convenient scripts to manage Toshy"""
+    """Install the convenient scripts to manage Toshy"""
     print(f'\n\n§  Installing Toshy desktop apps...\n{cnfg.separator}')
     script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'toshy-desktopapps-setup.sh')
     subprocess.run([script_path])
@@ -714,7 +735,7 @@ def install_desktop_apps():
 
 
 def setup_kwin2dbus_script():
-    """install the KWin script to notify D-Bus service about window focus changes"""
+    """Install the KWin script to notify D-Bus service about window focus changes"""
     print(f'\n\n§  Setting up the Toshy KWin script...\n{cnfg.separator}')
     kwin_script_name    = 'toshy-dbus-notifyactivewindow'
     kwin_script_path    = os.path.join( cnfg.toshy_dir_path,
@@ -769,7 +790,7 @@ def setup_kwin2dbus_script():
 
 
 def setup_kde_dbus_service():
-    """install the D-Bus service initialization script to receive window focus
+    """Install the D-Bus service initialization script to receive window focus
     change notifications from the KWin script on KDE desktops (Wayland)"""
     print(f'\n\n§  Setting up the Toshy KDE D-Bus service...\n{cnfg.separator}')
 
@@ -796,7 +817,7 @@ def setup_kde_dbus_service():
 
 
 def setup_systemd_services():
-    """invoke the systemd setup script to install the systemd service units"""
+    """Invoke the systemd setup script to install the systemd service units"""
     print(f'\n\n§  Setting up the Toshy systemd services...\n{cnfg.separator}')
     if cnfg.systemctl_present:
         script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'bin', 'toshy-systemd-setup.sh')
@@ -806,7 +827,7 @@ def setup_systemd_services():
 
 
 def autostart_tray_icon():
-    """set the tray icon to autostart at login"""
+    """Set up the tray icon to autostart at login"""
     print(f'\n\n§  Setting tray icon to load automatically at login...\n{cnfg.separator}')
     user_path           = os.path.expanduser('~')
     desktop_files_path  = os.path.join(user_path, '.local', 'share', 'applications')
@@ -830,7 +851,7 @@ def autostart_tray_icon():
 
 
 def apply_tweaks_GNOME():
-    """utility function to add desktop tweaks to GNOME"""
+    """Utility function to add desktop tweaks to GNOME"""
     # Disable GNOME `overlay-key` binding to Meta/Super/Win/Cmd
     # gsettings set org.gnome.mutter overlay-key ''
     subprocess.run(['gsettings', 'set', 'org.gnome.mutter', 'overlay-key', ''])
@@ -865,7 +886,7 @@ def apply_tweaks_GNOME():
 
 
 def remove_tweaks_GNOME():
-    """utility function to remove the tweaks applied to GNOME"""
+    """Utility function to remove the tweaks applied to GNOME"""
     subprocess.run(['gsettings', 'reset', 'org.gnome.mutter', 'overlay-key'])
     print(f'Removed tweak to disable GNOME "overlay-key" binding to Meta/Super.')
     
@@ -878,7 +899,7 @@ def remove_tweaks_GNOME():
 
 
 def apply_tweaks_KDE():
-    """utility function to add desktop tweaks to KDE"""
+    """Utility function to add desktop tweaks to KDE"""
 
     subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group',
                     'ModifierOnlyShortcuts', '--key', 'Meta', ''], check=True)
@@ -920,7 +941,7 @@ def apply_tweaks_KDE():
 
 
 def remove_tweaks_KDE():
-    """utility function to remove the tweaks applied to KDE"""
+    """Utility function to remove the tweaks applied to KDE"""
 
     subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group',
                     'ModifierOnlyShortcuts', '--key', 'Meta', '--delete'], check=True)
@@ -937,7 +958,7 @@ def remove_tweaks_KDE():
 
 def apply_desktop_tweaks():
     """
-    fix things like Meta key activating overview in GNOME or KDE Plasma
+    Fix things like Meta key activating overview in GNOME or KDE Plasma
     and fix the Unicode sequences in KDE Plasma
     
     TODO: These tweaks should probably be done at startup of the config
@@ -1027,7 +1048,7 @@ def apply_desktop_tweaks():
 
 
 def remove_desktop_tweaks():
-    """undo the relevant desktop tweaks"""
+    """Undo the relevant desktop tweaks"""
 
     print(f'\n\n§  Removing any applied desktop environment tweaks...\n{cnfg.separator}')
 
@@ -1054,7 +1075,7 @@ def uninstall_toshy():
 
 
 def handle_cli_arguments():
-    """deal with CLI arguments given to installer script"""
+    """Deal with CLI arguments given to installer script"""
     parser = argparse.ArgumentParser(
         description='Toshy Installer - options are mutually exclusive',
         epilog='Default action: Install Toshy'
@@ -1134,7 +1155,7 @@ def handle_cli_arguments():
 
 
 def main(cnfg: InstallerSettings):
-    """Main installer function"""
+    """Main installer function to call specific functions in proper sequence"""
 
     get_environment_info()
 
@@ -1143,6 +1164,8 @@ def main(cnfg: InstallerSettings):
         print(f"\nInstaller does not know how to deal with distro '{cnfg.DISTRO_NAME}'\n")
         print(f'Maybe try one of these with "--override-distro" option:\n\t{valid_distro_names}')
         sys.exit(1)
+
+    dot_Xmodmap_warning()
 
     elevate_privileges()
 
