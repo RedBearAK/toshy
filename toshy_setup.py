@@ -180,7 +180,7 @@ def dot_Xmodmap_warning():
     if os.path.isfile(xmodmap_file_path):
         print(f'\n{cnfg.separator}')
         print(f"\t WARNING: You have an '.Xmodmap' file in your home folder!!! \n")
-        print(f' This can cause confusing PROBLEMS if you are remapping any modifier keys!')
+        print(f'   This can cause confusing PROBLEMS if you are remapping any modifier keys!')
         print(f'{cnfg.separator}\n')
         
         secret_code = ''.join(random.choice(string.ascii_letters) for _ in range(4))
