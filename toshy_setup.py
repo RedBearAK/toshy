@@ -180,6 +180,7 @@ def dot_Xmodmap_warning():
     xmodmap_file_path = os.path.realpath(os.path.join(os.path.expanduser('~'), '.Xmodmap'))
     if os.path.isfile(xmodmap_file_path):
         print(f'\n{cnfg.separator}')
+        print(f'{cnfg.separator}')
         if os.environ['COLORTERM']:
             # Terminal supports ANSI escape sequences
             print("\033[1;31m\t WARNING: You have an '.Xmodmap' file in your home folder!!!\033[0m")
@@ -187,6 +188,7 @@ def dot_Xmodmap_warning():
             # Terminal might not support ANSI escape sequences
             print(f"\t WARNING: You have an '.Xmodmap' file in your home folder!!! \n")
         print(f'   This can cause confusing PROBLEMS if you are remapping any modifier keys!')
+        print(f'{cnfg.separator}')
         print(f'{cnfg.separator}\n')
         
         secret_code = ''.join(random.choice(string.ascii_letters) for _ in range(4))
