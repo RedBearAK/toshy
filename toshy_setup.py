@@ -1087,8 +1087,7 @@ def main(cnfg: InstallerSettings):
                 '>>> ALERT: Permissions changed. You MUST reboot for Toshy to work.\n'
                 f'{cnfg.separator}\n'
         )
-
-    if not cnfg.should_reboot:
+    else:
         # Try to start the tray icon immediately, if reboot is not indicated
         # tray_command        = ['gtk-launch', 'Toshy_Tray']
         tray_icon_cmd = [os.path.join(cnfg.home_dir_path, '.local', 'bin', 'toshy-tray')]
