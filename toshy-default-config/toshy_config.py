@@ -678,8 +678,9 @@ dialogs_Escape_lod = [
     {clas:"^.*nautilus$",                name:"^.*Properties$|^Preferences$|^Create Archive$"},
     {clas:"^Transmission-gtk$|^com.transmissionbt.Transmission.*$", not_name:"^Transmission$"},
     {clas:"^org.gnome.Software$",        not_name:"^Software$"},
-    {clas:"^gnome-text-editor|org.gnome.TextEditor$", name:"^Preferences$"},
+    {clas:"^gnome-text-editor$|^org.gnome.TextEditor$", name:"^Preferences$"},
     {clas:"^org.gnome.Shell.Extensions$"},
+    {clas:"^konsole$|^org.kde.konsole$", name:"^Configure.*Konsole$|^Edit Profile.*Konsole$"},
 ]
 
 ### dialogs_CloseWin_lod = send these windows the "Close window" combo for Cmd+W
