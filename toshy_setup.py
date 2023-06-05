@@ -34,7 +34,7 @@ def signal_handler(sig, frame):
     if sig in (signal.SIGINT, signal.SIGQUIT):
         # Perform any cleanup code here before exiting
         # traceback.print_stack(frame)
-        print(f'\nSIGINT or SIGQUIT received. Exiting.\n')
+        print(f'\n\nSIGINT or SIGQUIT received. Exiting.\n')
         sys.exit(0)
 
 if platform.system() != 'Windows':
@@ -1163,6 +1163,8 @@ def handle_cli_arguments():
 def main(cnfg: InstallerSettings):
     """Main installer function to call specific functions in proper sequence"""
 
+    dot_Xmodmap_warning()
+
     get_environment_info()
 
     valid_distro_names = get_distro_names()
@@ -1170,8 +1172,6 @@ def main(cnfg: InstallerSettings):
         print(f"\nInstaller does not know how to deal with distro '{cnfg.DISTRO_NAME}'\n")
         print(f'Maybe try one of these with "--override-distro" option:\n\t{valid_distro_names}')
         sys.exit(1)
-
-    dot_Xmodmap_warning()
 
     elevate_privileges()
 
