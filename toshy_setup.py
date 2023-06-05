@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import re
 import sys
 import pwd
 import grp
@@ -50,44 +51,48 @@ else:
 class InstallerSettings:
     """set up variables for necessary information to be used by all functions"""
     def __init__(self) -> None:
-        self.separator          = '============================================='
-        self.env_info_dct       = None
-        self.override_distro    = None
-        self.DISTRO_NAME        = None
-        self.DISTRO_VER         = None
-        self.SESSION_TYPE       = None
-        self.DESKTOP_ENV        = None
+        self.separator              = '============================================================'
+        self.env_info_dct           = None
+        self.override_distro        = None
+        self.DISTRO_NAME            = None
+        self.DISTRO_VER             = None
+        self.SESSION_TYPE           = None
+        self.DESKTOP_ENV            = None
         
-        self.systemctl_present  = shutil.which('systemctl') is not None
-        self.init_system        = None
+        self.systemctl_present      = shutil.which('systemctl') is not None
+        self.init_system            = None
 
-        self.pkgs_for_distro    = None
-        self.pip_pkgs           = None
-        self.qdbus              = 'qdbus-qt5' if shutil.which('qdbus-qt5') else 'qdbus'
+        self.pkgs_for_distro        = None
+        self.pip_pkgs               = None
+        self.qdbus                  = 'qdbus-qt5' if shutil.which('qdbus-qt5') else 'qdbus'
 
-        self.home_dir_path      = os.path.abspath(os.path.expanduser('~'))
-        self.toshy_dir_path     = os.path.join(self.home_dir_path, '.config', 'toshy')
-        self.backup_succeeded   = None
-        self.venv_path          = os.path.join(self.toshy_dir_path, '.venv')
+        self.home_dir_path          = os.path.abspath(os.path.expanduser('~'))
+        self.toshy_dir_path         = os.path.join(self.home_dir_path, '.config', 'toshy')
+        self.db_file_name           = 'toshy_user_preferences.sqlite'
+        self.db_file_path           = os.path.join(cnfg.toshy_dir_path, self.db_file_name)
+        self.backup_succeeded       = None
+        self.existing_cfg_data      = None
+        self.existing_cfg_slices    = None
+        self.venv_path              = os.path.join(self.toshy_dir_path, '.venv')
 
-        self.keyszer_tmp_path   = os.path.join('.', 'keyszer-temp')
+        self.keyszer_tmp_path       = os.path.join('.', 'keyszer-temp')
 
-        # keyszer_branch          = 'env_and_adapt_to_capslock'
-        # keyszer_branch          = 'environ_api'
-        self.keyszer_branch     = 'environ_api_kde'
-        self.keyszer_url        = 'https://github.com/RedBearAK/keyszer.git'
-        self.keyszer_clone_cmd  = f'git clone -b {self.keyszer_branch} {self.keyszer_url}'
+        # keyszer_branch              = 'env_and_adapt_to_capslock'
+        # keyszer_branch              = 'environ_api'
+        self.keyszer_branch         = 'environ_api_kde'
+        self.keyszer_url            = 'https://github.com/RedBearAK/keyszer.git'
+        self.keyszer_clone_cmd      = f'git clone -b {self.keyszer_branch} {self.keyszer_url}'
 
-        self.input_group_name   = 'input'
-        self.user_name          = pwd.getpwuid(os.getuid()).pw_name
+        self.input_group_name       = 'input'
+        self.user_name              = pwd.getpwuid(os.getuid()).pw_name
 
-        self.fancy_pants        = None
-        self.tweak_applied      = None
-        self.remind_extensions  = None
+        self.fancy_pants            = None
+        self.tweak_applied          = None
+        self.remind_extensions      = None
 
-        self.should_reboot      = None
-        self.reboot_tmp_file    = "/tmp/toshy_installer_says_reboot"
-        self.reboot_ascii_art   = textwrap.dedent("""
+        self.should_reboot          = None
+        self.reboot_tmp_file        = "/tmp/toshy_installer_says_reboot"
+        self.reboot_ascii_art       = textwrap.dedent("""
                 ██████      ███████     ██████       ██████       ██████      ████████     ██ 
                 ██   ██     ██          ██   ██     ██    ██     ██    ██        ██        ██ 
                 ██████      █████       ██████      ██    ██     ██    ██        ██        ██ 
@@ -452,8 +457,56 @@ def clone_keyszer_branch():
 
     if os.path.exists(cnfg.keyszer_tmp_path):
         # force a fresh copy of keyszer every time script is run
-        shutil.rmtree(cnfg.keyszer_tmp_path, ignore_errors=True)
+        try:
+            shutil.rmtree(cnfg.keyszer_tmp_path) # , ignore_errors=True)
+        except (OSError, PermissionError, FileNotFoundError) as file_err:
+            error(f"Problem removing existing '{cnfg.keyszer_tmp_path}' folder:\n\t{file_err}")
     subprocess.run(cnfg.keyszer_clone_cmd.split() + [cnfg.keyszer_tmp_path])
+
+
+def extract_slices(data: str) -> Dict[str, str]:
+    """utility function to store user content slices from existing config file data"""
+    slices = {}
+    pattern_start       = r'###  SLICE_MARK_START: (\w+)  ###.*'
+    pattern_end         = r'###  SLICE_MARK_END: (\w+)  ###.*'
+    matches_start       = list(re.finditer(pattern_start, data))
+    matches_end         = list(re.finditer(pattern_end, data))
+    if len(matches_start) != len(matches_end):
+        raise ValueError(   f'Mismatched slice markers in config file:'
+                            f'\n\t{matches_start}, {matches_end}')
+    for begin, end in zip(matches_start, matches_end):
+        slice_name = begin.group(1)
+        if end.group(1) != slice_name:
+            raise ValueError(f'Mismatched slice markers in config file:\n\t{slice_name}')
+        slice_start     = begin.end()
+        slice_end       = end.start()
+        slices[slice_name] = data[slice_start:slice_end]
+    
+    return slices
+
+
+def merge_slices(data: str, slices: Dict[str, str]) -> str:
+    """utility function to merge stored slices into new config file data"""
+    pattern_start = r'###  SLICE_MARK_START: (\w+)  ###.*'
+    pattern_end = r'###  SLICE_MARK_END: (\w+)  ###.*'
+    matches_start = list(re.finditer(pattern_start, data))
+    matches_end = list(re.finditer(pattern_end, data))
+    data_slices = []
+    previous_end = 0
+    for begin, end in zip(matches_start, matches_end):
+        slice_name = begin.group(1)
+        if end.group(1) != slice_name:
+            raise ValueError(f'Mismatched slice markers in config file:\n\t{slice_name}')
+        slice_start = begin.end()
+        slice_end = end.start()
+        # add the part of the data before the slice, and the slice itself
+        data_slices.extend([data[previous_end:slice_start], 
+                            slices.get(slice_name, data[slice_start:slice_end])])
+        previous_end = slice_end
+    # add the part of the data after the last slice
+    data_slices.append(data[previous_end:])
+
+    return "".join(data_slices)
 
 
 def backup_toshy_config():
@@ -462,6 +515,30 @@ def backup_toshy_config():
     timestamp = datetime.datetime.now().strftime('_%Y%m%d_%H%M%S')
     toshy_backup_dir_path = os.path.abspath(cnfg.toshy_dir_path + timestamp)
     if os.path.exists(os.path.join(os.path.expanduser('~'), '.config', 'toshy')):
+
+        cfg_file_path   = os.path.join(cnfg.toshy_dir_path, 'toshy_config.py')
+        if os.path.isfile(cfg_file_path):
+            try:
+                with open(cfg_file_path, 'r', encoding='UTF-8') as file:
+                    cnfg.existing_cfg_data = file.read()
+                print(f'Prepared existing config file data for merging into new config.')
+            except (FileNotFoundError, PermissionError, OSError) as file_err:
+                cnfg.existing_cfg_data = None
+                error(f'Problem reading existing config file contents.\n\t{file_err}')
+
+            if cnfg.existing_cfg_data is not None:
+                try:
+                    cnfg.existing_cfg_slices = extract_slices(cnfg.existing_cfg_data)
+                except ValueError as value_err:
+                    error(f'Problem extracting marked slices from existing config.\n\t{value_err}')
+
+        if os.path.isfile(cnfg.db_file_path):
+            try:
+                os.unlink(f'/tmp/{cnfg.db_file_name}')
+                shutil.copy(cnfg.db_file_path, '/tmp/')
+            except (FileNotFoundError, PermissionError, OSError) as file_err:
+                error(f'Problem copying preferences db file to /tmp:\n\t{file_err}')
+
         try:
             # Define the ignore function
             def ignore_venv(dirname, filenames):
@@ -472,7 +549,7 @@ def backup_toshy_config():
             print(f"Failed to copy directory: {copy_error}")
             exit(1)
         except OSError as os_error:
-            print(f"Failed to create backup directory: {os_error}")
+            print(f"Failed to copy directory: {os_error}")
             exit(1)
         print(f"Backup completed to '{toshy_backup_dir_path}'")
         cnfg.backup_succeeded = True
@@ -491,7 +568,10 @@ def install_toshy_files():
     keyszer_tmp = os.path.basename(cnfg.keyszer_tmp_path)
     try:
         if os.path.exists(cnfg.toshy_dir_path):
-            shutil.rmtree(cnfg.toshy_dir_path, ignore_errors=True)
+            try:
+                shutil.rmtree(cnfg.toshy_dir_path) # , ignore_errors=True)
+            except (OSError, PermissionError, FileNotFoundError) as file_err:
+                error(f'Problem removing existing Toshy config folder after backup:\n\t{file_err}')
         # Copy files recursively from source to destination
         shutil.copytree(
             '.', 
@@ -514,6 +594,36 @@ def install_toshy_files():
         cnfg.toshy_dir_path, 'toshy-default-config', 'toshy_config.py')
     shutil.copy(toshy_default_cfg, cnfg.toshy_dir_path)
     print(f"Toshy files installed in '{cnfg.toshy_dir_path}'.")
+
+    if os.path.isfile(f'/tmp/{cnfg.db_file_name}'):
+        try:
+            shutil.copy(f'/tmp/{cnfg.db_file_name}', cnfg.toshy_dir_path)
+            print(f'Copied preferences db file from existing config folder.')
+        except (FileExistsError, FileNotFoundError, PermissionError, OSError) as file_err:
+            error(f'Problem copying preferences db file from /tmp:\n\t{file_err}')
+
+    # Apply user customizations to the new config file.
+    new_cfg_file = os.path.join(cnfg.toshy_dir_path, 'toshy_config.py')
+    if cnfg.existing_cfg_slices is not None:
+        try:
+            with open(new_cfg_file, 'r', encoding='UTF-8') as file:
+                new_cfg_data = file.read()
+        except (FileNotFoundError, PermissionError, OSError) as file_err:
+            error(f'Problem reading new config file:\n\t{file_err}')
+            sys.exit(1)
+        merged_cfg_data = None
+        try:
+            merged_cfg_data = merge_slices(new_cfg_data, cnfg.existing_cfg_slices)
+        except ValueError as value_err:
+            error(f'Problem when merging user customizations with new config file:\n\t{value_err}')
+        if merged_cfg_data is not None:
+            try:
+                with open(new_cfg_file, 'w', encoding='UTF-8') as file:
+                    file.write(merged_cfg_data)
+            except (FileNotFoundError, PermissionError, OSError) as file_err:
+                error(f'Problem writing to new config file:\n\t{file_err}')
+                sys.exit(1)
+            print(f"Existing user customizations applied to the new config file.")
 
 
 def setup_python_virt_env():
@@ -672,8 +782,8 @@ def setup_kde_dbus_service():
     # ensure autostart directory exists
     try:
         os.makedirs(autostart_dir_path, exist_ok=True)
-    except (PermissionError, NotADirectoryError, FileExistsError) as file_error:
-        error(f"Problem trying to make sure '{autostart_dir_path}' is directory.\n\t{file_error}")
+    except (PermissionError, NotADirectoryError, FileExistsError) as file_err:
+        error(f"Problem trying to make sure '{autostart_dir_path}' is directory.\n\t{file_err}")
         sys.exit(1)
     shutil.copy(dbus_svc_desktop_file, autostart_dir_path)
     print(f'Toshy KDE D-Bus service should autostart at login.')
@@ -705,8 +815,8 @@ def autostart_tray_icon():
     # Need to create autostart folder if necessary
     try:
         os.makedirs(autostart_dir_path, exist_ok=True)
-    except (PermissionError, NotADirectoryError, FileExistsError) as file_error:
-        error(f"Problem trying to make sure '{autostart_dir_path}' is directory.\n\t{file_error}")
+    except (PermissionError, NotADirectoryError, FileExistsError) as file_err:
+        error(f"Problem trying to make sure '{autostart_dir_path}' is directory.\n\t{file_err}")
         sys.exit(1)
     subprocess.run(['ln', '-sf', tray_desktop_file, dest_link_file])
 
@@ -1071,7 +1181,7 @@ def main(cnfg: InstallerSettings):
             print("AppIndicator extension is enabled. Tray icon should work.")
             # pass
         else:
-            print(f"\nRECOMMENDATION: Install AppIndicator GNOME extension\n"
+            print(f"\nRECOMMENDATION: Install 'AppIndicator' GNOME extension\n"
                 "Easiest method: 'flatpak install extensionmanager', search for 'appindicator'\n")
 
     if cnfg.should_reboot or os.path.exists(cnfg.reboot_tmp_file):
