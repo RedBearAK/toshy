@@ -14,18 +14,25 @@ from keyszer.lib.key_context import KeyContext
 from keyszer.config_api import *
 
 
+###  SLICE_MARK_START: keyszer_api  ###  CHANGES MADE OUTSIDE THESE MARKS WILL BE IGNORED ON UPGRADE
+
 # Keyszer-specific config settings - REMOVE OR SET TO DEFAULTS FOR DISTRIBUTION
 dump_diagnostics_key(Key.F15)   # default key: F15
 emergency_eject_key(Key.F16)    # default key: F16
+
 timeouts(
-    multipurpose    = 1,        # default: 1 sec
-    suspend         = 1,        # default: 1 sec, try 0.1 sec for touchpads
+    multipurpose        = 1,        # default: 1 sec
+    suspend             = 1,        # default: 1 sec, try 0.1 sec for touchpads
 )
+
 # Delays often needed for Wayland (at least in GNOME using shell extensions)
 throttle_delays(
-    key_pre_delay_ms  = 10,      # default: 0 ms, range: 0-150 ms, suggested: 1-50 ms
-    key_post_delay_ms = 15,      # default: 0 ms, range: 0-150 ms, suggested: 1-100 ms
+    key_pre_delay_ms    = 8,      # default: 0 ms, range: 0-150 ms, suggested: 1-50 ms
+    key_post_delay_ms   = 12,      # default: 0 ms, range: 0-150 ms, suggested: 1-100 ms
 )
+
+###  SLICE_MARK_END: keyszer_api  ###  CHANGES MADE OUTSIDE THESE MARKS WILL BE IGNORED ON UPGRADE
+
 
 
 ###############################################################################
@@ -55,7 +62,7 @@ from lib.settings_class import Settings
 # Toshy config file
 TOSHY_PART      = 'config'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Config file'
-APP_VERSION     = '2023.0516'
+APP_VERSION     = '2023.0604'
 
 # Settings object used to tweak preferences "live" between gui, tray and config.
 cnfg = Settings(config_dir_path)
@@ -78,11 +85,15 @@ debug(cnfg, ctx="CG")
 ##########################################################################
 # Set up some useful environment variables
 
+###  SLICE_MARK_START: env_overrides  ###  CHANGES MADE OUTSIDE THESE MARKS WILL BE IGNORED ON UPGRADE
+
 # MANUALLY set any environment information if the auto-identification isn't working:
 OVERRIDE_DISTRO_NAME     = None
 OVERRIDE_DISTRO_VER      = None
 OVERRIDE_SESSION_TYPE    = None
 OVERRIDE_DESKTOP_ENV     = None
+
+###  SLICE_MARK_END: env_overrides  ###  CHANGES MADE OUTSIDE THESE MARKS WILL BE IGNORED ON UPGRADE
 
 # leave all of this alone!
 DISTRO_NAME     = None
@@ -462,44 +473,45 @@ def negRgx(rgx_str):
 ###                                                ###
 ######################################################
 
-# Use the following for testing terminal keymaps
-# terminals = [ "", ... ]
-# xbindkeys -mk
-terminals = [
-    "alacritty",
-    "cutefish-terminal",
-    "deepin-terminal",
-    "eterm",
-    "gnome-terminal",
-    "gnome-terminal-server",
-    "guake",
-    "hyper",
-    "io.elementary.terminal",
-    "kinto-gui.py",
-    "kitty",
-    "Kgx",                      # GNOME Console terminal app
-    "konsole",
-    "lxterminal",
-    "mate-terminal",
-    "org.gnome.Console",
-    "org.kde.konsole",
-    "roxterm",
-    "qterminal",
-    "st",
-    "sakura",
-    "station",
-    "tabby",
-    "terminator",
-    "termite",
-    "tilda",
-    "tilix",
-    "urxvt",
-    "xfce4-terminal",
-    "xterm",
-    "yakuake",
-]
-terminals = [x.casefold() for x in terminals]
-termStr = toRgxStr(terminals)
+# # OBSOLETED by the "list of dicts" `terminals_lod` below
+# # Use the following for testing terminal keymaps
+# # terminals = [ "", ... ]
+# # xbindkeys -mk
+# terminals = [
+#     "alacritty",
+#     "cutefish-terminal",
+#     "deepin-terminal",
+#     "eterm",
+#     "gnome-terminal",
+#     "gnome-terminal-server",
+#     "guake",
+#     "hyper",
+#     "io.elementary.terminal",
+#     "kinto-gui.py",
+#     "kitty",
+#     "Kgx",  # GNOME Console terminal app (comes from "King's Cross")
+#     "konsole",
+#     "lxterminal",
+#     "mate-terminal",
+#     "org.gnome.Console",
+#     "org.kde.konsole",
+#     "roxterm",
+#     "qterminal",
+#     "st",
+#     "sakura",
+#     "station",
+#     "tabby",
+#     "terminator",
+#     "termite",
+#     "tilda",
+#     "tilix",
+#     "urxvt",
+#     "xfce4-terminal",
+#     "xterm",
+#     "yakuake",
+# ]
+# terminals = [x.casefold() for x in terminals]
+# termStr = toRgxStr(terminals)
 
 terminals_lod = [
     {clas:"^alacritty$"                 },
@@ -535,6 +547,7 @@ terminals_lod = [
     {clas:"^yakuake$"                   },
 ]
 
+# TODO: remove usage of this in favor of `vscodes_lod` below it
 vscodes = [
     "code",
     "vscodium",
@@ -593,9 +606,10 @@ remotes_lod = [
     {clas:"^Wfica$"                      },
 ]
 
-# Add remote desktop clients & VMs for no remapping
-terminals.extend(remotes)
-termStr_ext = toRgxStr(terminals)
+# # OBSOLETED by "list of dicts" `terminals_lod` above
+# # Add remote desktop clients & VMs for no remapping
+# terminals.extend(remotes)
+# termStr_ext = toRgxStr(terminals)
 
 terminals_and_remotes_lod = [
     {lst:terminals_lod                  },
@@ -659,10 +673,10 @@ filemanagers = [
 filemanagers = [x.casefold() for x in filemanagers]
 filemanagerStr = "|".join(str('^'+x+'$') for x in filemanagers)
 
-### dialogs_Esc_lod = send these windows the Escape key for Cmd+W
-dialogs_Esc_lod = [
+### dialogs_Escape_lod = send these windows the Escape key for Cmd+W
+dialogs_Escape_lod = [
     {clas:"^.*nautilus$",                name:"^.*Properties$|^Preferences$|^Create Archive$"},
-    {clas:"^Transmission-gtk$|^com.transmissionbt.Transmission.*$",          not_name:"^Transmission$"},
+    {clas:"^Transmission-gtk$|^com.transmissionbt.Transmission.*$", not_name:"^Transmission$"},
     {clas:"^org.gnome.Software$",        not_name:"^Software$"},
     {clas:"^gnome-text-editor|org.gnome.TextEditor$", name:"^Preferences$"},
     {clas:"^org.gnome.Shell.Extensions$"},
@@ -2568,7 +2582,13 @@ keymap("OptSpecialChars - US", {
 ###                                                                                ###
 ###                                                                                ###
 ######################################################################################
-### Good place for adding new custom keymaps for user applications and custom function keys
+### This is a good location in the config file for adding new custom keymaps for 
+### user applications and custom function keys. Watch out that you don't override 
+### any "general" shortcuts like Cmd+Z/X/C/V that may be defined below this section. 
+### Changes made between the "slice" marks will be retained by the Toshy installer 
+### if you reinstall and it finds matching start/end markers for each section. 
+
+###  SLICE_MARK_START: user_apps  ###  CHANGES MADE OUTSIDE THESE MARKS WILL BE IGNORED ON UPGRADE
 
 # REMOVE THE CONTENTS OF THIS FOR GENERAL USE
 keymap("User hardware keys", {
@@ -2576,6 +2596,8 @@ keymap("User hardware keys", {
 # }, when = lambda ctx: ctx.wm_class.casefold() not in remotes)
 # }, when = matchProps(not_clas=remoteStr))
 }, when = matchProps(not_lst=remotes_lod))
+
+###  SLICE_MARK_END: user_apps  ###  CHANGES MADE OUTSIDE THESE MARKS WILL BE IGNORED ON UPGRADE
 
 
 
@@ -3034,18 +3056,28 @@ keymap("Wordwise - not vscode", {
 # Keybindings for VS Code and variants
 keymap("VSCodes overrides for Chromebook/IBM - Sublime", {
     C("C-Alt-g"):               C("C-f2"),                      # Chromebook/IBM - Sublime - find_all_under
-}, when = lambda ctx: matchProps(clas=vscodeStr)(ctx) and ( isKBtype('Chromebook')(ctx) or isKBtype('IBM')(ctx) ) and cnfg.ST3_in_VSCode)
+}, when = lambda ctx:
+    matchProps(clas=vscodeStr)(ctx) and 
+    ( isKBtype('Chromebook')(ctx) or isKBtype('IBM')(ctx) ) and 
+    cnfg.ST3_in_VSCode)
 keymap("VSCodes overrides for not Chromebook/IBM - Sublime", {
     C("Super-C-g"):             C("C-f2"),                      # Default - Sublime - find_all_under
-}, when = lambda ctx: matchProps(clas=vscodeStr)(ctx) and not ( isKBtype('Chromebook')(ctx) or isKBtype('IBM')(ctx) ) and cnfg.ST3_in_VSCode)
+}, when = lambda ctx:
+    matchProps(clas=vscodeStr)(ctx) and 
+    not ( isKBtype('Chromebook')(ctx) or 
+    isKBtype('IBM')(ctx) ) and cnfg.ST3_in_VSCode)
 keymap("VSCodes overrides for Chromebook/IBM", {
     C("Alt-c"):                 C("LC-c"),                      #  Chromebook/IBM - Terminal - Sigint
     C("Alt-x"):                 C("LC-x"),                      #  Chromebook/IBM - Terminal - Exit nano
-}, when = lambda ctx: matchProps(clas=vscodeStr)(ctx) and ( isKBtype('Chromebook')(ctx) or isKBtype('IBM')(ctx) ) )
+}, when = lambda ctx:
+    matchProps(clas=vscodeStr)(ctx) and 
+    ( isKBtype('Chromebook')(ctx) or isKBtype('IBM')(ctx) ) )
 keymap("VSCodes overrides for not Chromebook/IBM", {
     C("Super-c"):               C("LC-c"),                      # Default - Terminal - Sigint
     C("Super-x"):               C("LC-x"),                      # Default - Terminal - Exit nano
-}, when = lambda ctx: matchProps(clas=vscodeStr)(ctx) and not ( isKBtype('Chromebook')(ctx) or isKBtype('IBM')(ctx) ) )
+}, when = lambda ctx:
+    matchProps(clas=vscodeStr)(ctx) and 
+    not ( isKBtype('Chromebook')(ctx) or isKBtype('IBM')(ctx) ) )
 keymap("VSCodes", {
     # C("Super-Space"):           C("LC-Space"),                  # Basic code completion (conflicts with input switching)
 
@@ -3104,13 +3136,17 @@ keymap("Sublime Text overrides for Chromebook/IBM", {
     C("Alt-x"):                 C("LC-x"),                      #  Chromebook/IBM - Terminal - Exit nano
     C("Alt-Refresh"):           ignore_combo,                   # Chromebook/IBM - cancel find_all_under
     C("Alt-C-g"):               C("Alt-Refresh"),               # Chromebook/IBM - find_all_under
-}, when = lambda ctx: matchProps(clas=sublimeStr)(ctx) and ( isKBtype('Chromebook')(ctx) or isKBtype('IBM')(ctx) ) )
+}, when = lambda ctx:
+    matchProps(clas=sublimeStr)(ctx) and 
+    ( isKBtype('Chromebook')(ctx) or isKBtype('IBM')(ctx) ) )
 keymap("Sublime Text overrides for not Chromebook/IBM", {
     # C("Super-c"):               C("LC-c"),                      # Default - Terminal - Sigint
     # C("Super-x"):               C("LC-x"),                      # Default - Terminal - Exit nano
     C("Alt-f3"):                ignore_combo,                   # Default - cancel find_all_under
     C("Super-C-g"):             C("Alt-f3"),                    # Default - find_all_under
-}, when = lambda ctx: matchProps(clas=sublimeStr)(ctx) and not ( isKBtype('Chromebook')(ctx) or isKBtype('IBM')(ctx) ) )
+}, when = lambda ctx:
+    matchProps(clas=sublimeStr)(ctx) and 
+    not ( isKBtype('Chromebook')(ctx) or isKBtype('IBM')(ctx) ) )
 keymap("Sublime Text", {
     # C("Super-c"):               C("LC-c"),                      # Default - Terminal - Sigint
     # C("Super-x"):               C("LC-x"),                      # Default - Terminal - Exit nano
@@ -3185,6 +3221,7 @@ keymap("Linux Mint xed text editor", {
 }, when = matchProps(clas="^xed$") )
 
 
+
 ###########################  DIALOG FIXES  ###########################
 ###                                                                ###
 ###                                                                ###
@@ -3198,20 +3235,20 @@ keymap("Linux Mint xed text editor", {
 ######################################################################
 ### Fixes for the problem of modal dialogs and other "child" 
 ### windows failing to close with Cmd+W.
-### Many dialogs respond to the Escape key, others may 
-### require the "Close window" shortcut (normally Alt+F4 but not always) to close.
+### Many dialogs respond to the Escape key, others may require the 
+### "Close window" shortcut (normally Alt+F4 but not always) to close.
 ### 
 ### Cmd+W can't just be always mapped to the "Close window" shortcut for all apps 
 ### because some apps will "quit" rather than just closing a tab.
 ### 
 ### To add window conditions to the list, search for the list names in 
 ### the "LISTS" section near the top of this config file. 
-### dialogs_Esc_lod = send these windows the Escape key for Cmd+W
+### dialogs_Escape_lod = send these windows the Escape key for Cmd+W
 ### dialogs_CloseWin_lod = send these windows the "Close window" shortcut for Cmd+W
 
 keymap("Cmd+W dialog fix - send Escape", {
     C("RC-W"):                  C("Esc"),
-}, when = matchProps(lst=dialogs_Esc_lod))
+}, when = matchProps(lst=dialogs_Escape_lod))
 
 
 keymap("Cmd+W dialog fix - Super+Q Manjaro GNOME", {
@@ -3315,38 +3352,45 @@ keymap("Kitty terminal - not tab nav", {
 keymap("GenTerms overrides: elementary OS", {
     C("LC-Right"):              [bind,C("Super-Right")],        # SL - Change workspace (eos)
     C("LC-Left"):               [bind,C("Super-Left")],         # SL - Change workspace (eos)
-}, when = lambda ctx: matchProps(clas=termStr)(ctx) and DISTRO_NAME == 'eos')
+# }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DISTRO_NAME == 'eos')
+}, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_NAME == 'eos')
 keymap("GenTerms overrides: Fedora", {
     C("RC-H"):                  C("Super-h"),                   # Hide Window/Minimize app (gnome/fedora)
-}, when = lambda ctx: matchProps(clas=termStr)(ctx) and DISTRO_NAME in ['fedora', 'almalinux'] )
+# }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DISTRO_NAME in ['fedora', 'almalinux'] )
+}, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_NAME in ['fedora', 'almalinux'] )
 keymap("GenTerms overrides: Pop!_OS", {
     C("LC-Right"):              [bind,C("Super-C-Up")],         # SL - Change workspace (popos)
     C("LC-Left"):               [bind,C("Super-C-Down")],       # SL - Change workspace (popos)
-}, when = lambda ctx: matchProps(clas=termStr)(ctx) and DISTRO_NAME == 'popos')
+# }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DISTRO_NAME == 'popos')
+}, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_NAME == 'popos')
 keymap("GenTerms overrides: Ubuntu/Fedora", {
     C("LC-Right"):              [bind,C("Super-Page_Up")],      # SL - Change workspace (ubuntu/fedora)
     C("LC-Left"):               [bind,C("Super-Page_Down")],    # SL - Change workspace (ubuntu/fedora)
-}, when = lambda ctx: matchProps(clas=termStr)(ctx) and DISTRO_NAME in ['ubuntu', 'fedora'] )
+# }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DISTRO_NAME in ['ubuntu', 'fedora'] )
+}, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_NAME in ['ubuntu', 'fedora'] )
 
 
 # Overrides to General Terminals shortcuts for specific desktop environments
 keymap("GenTerms overrides: Budgie", {
     C("LC-Right"):              [bind,C("C-Alt-Right")],        # Default SL - Change workspace (budgie)
     C("LC-Left"):               [bind,C("C-Alt-Left")],         # Default SL - Change workspace (budgie)
-}, when = lambda ctx: matchProps(clas=termStr)(ctx) and DESKTOP_ENV == 'budgie' )
+# }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DESKTOP_ENV == 'budgie' )
+}, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DESKTOP_ENV == 'budgie' )
 keymap("GenTerms overrides: GNOME", {
     ### Keyboard input source (language/layout) switching in GNOME
     # C("LC-Space"):              update_kb_layout,             # keyboard input source (language) switching (gnome)
     # C("Shift-LC-Space"):        update_kb_layout,             # keyboard input source (language) switching (reverse) (gnome)
     C("LC-Space"):             [bind,C("Super-Space")],         # keyboard input source (language) switching (gnome)
     C("Shift-LC-Space"):       [bind,C("Super-Shift-Space")],   # keyboard input source (language) switching (reverse) (gnome)
-}, when = lambda ctx: matchProps(clas=termStr)(ctx) and DESKTOP_ENV == 'gnome' )
+# }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DESKTOP_ENV == 'gnome' )
+}, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DESKTOP_ENV == 'gnome' )
 keymap("GenTerms overrides: Xfce4", {
     C("RC-Grave"):             [bind,C("Super-Tab")],           # xfce4 Switch within app group
     C("Shift-RC-Grave"):       [bind,C("Super-Shift-Tab")],     # xfce4 Switch within app group
     C("LC-Right"):             [bind,C("C-Alt-Home")],          # SL - Change workspace xfce4
     C("LC-Left"):              [bind,C("C-Alt-End")],           # SL - Change workspace xfce4
-}, when = lambda ctx: matchProps(clas=termStr)(ctx) and DESKTOP_ENV == 'xfce' )
+# }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DESKTOP_ENV == 'xfce' )
+}, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DESKTOP_ENV == 'xfce' )
 
 
 # Active in all apps in the terminals list
@@ -3409,7 +3453,8 @@ keymap("General Terminals", {
     C("RC-SLASH"):              C("C-Shift-SLASH"),
     C("RC-KPASTERISK"):         C("C-Shift-KPASTERISK"),
 
-}, when = matchProps(clas=termStr))
+# }, when = matchProps(clas=termStr))
+}, when = matchProps(lst=terminals_lod))
 
 
 
@@ -3429,7 +3474,8 @@ keymap("General Terminals", {
 keymap("Cmd+Dot not in terminals", {
     C("RC-Dot"):                C("Esc"),                       # Mimic macOS Cmd+dot = Escape key (not in terminals)
 # }, when = lambda ctx: ctx.wm_class.casefold() not in terminals)
-}, when = matchProps(not_clas=termStr_ext) )
+# }, when = matchProps(not_clas=termStr_ext) )
+}, when = matchProps(not_lst=terminals_and_remotes_lod) )
 
 
 # Overrides to General GUI shortcuts for specific keyboard types
