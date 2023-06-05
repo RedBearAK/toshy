@@ -670,11 +670,11 @@ dialogs_Esc_lod = [
 
 ### dialogs_CloseWin_lod = send these windows the "Close window" combo for Cmd+W
 dialogs_CloseWin_lod = [
-    {clas:"^Gnome-control-center$",      not_name:"^Settings$"},
-    {clas:"^gnome-terminal$",            name:"^Preferences.*$"},
-    {clas:"^gnome-terminal-pref.*$",   name:"^Preferences.*$"},
-    {clas:"^pcloud$"                     },
-    {clas:"^Totem$",                     not_name:"^Videos$"},
+    {clas:"^Gnome-control-center$",     not_name:"^Settings$"},
+    {clas:"^gnome-terminal.*$",         name:"^Preferences.*$"},
+    {clas:"^gnome-terminal-pref.*$",    name:"^Preferences.*$"},
+    {clas:"^pcloud$"                    },
+    {clas:"^Totem$",                    not_name:"^Videos$"},
 ]
 
 # Lists of keyboard device names, to match keyboard type
