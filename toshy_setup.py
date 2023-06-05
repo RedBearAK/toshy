@@ -989,14 +989,14 @@ def apply_desktop_tweaks():
     # General (not DE specific) "fancy pants" additions:
     if cnfg.fancy_pants:
         
-        print(f'Installing font... ', end='', flush=True)
+        print(f'Installing font: ', end='', flush=True)
 
         # install Fantasque Sans Mono NoLig (no ligatures) from GitHub fork
         font_file   = 'FantasqueSansMono-LargeLineHeight-NoLoopK-NameSuffix.zip'
         font_url    = 'https://github.com/spinda/fantasque-sans-ligatures/releases/download/v1.8.1'
         font_link   = f'{font_url}/{font_file}'
 
-        print(f'downloading... ', end='', flush=True)
+        print(f'Downloading… ', end='', flush=True)
 
         if shutil.which('curl'):
             subprocess.run(['curl', '-LO', font_link], 
@@ -1013,7 +1013,7 @@ def apply_desktop_tweaks():
             folder_name = font_file.rsplit('.', 1)[0]
             extract_dir = f'{cnfg.run_tmp_dir}/'
 
-            print(f'unzipping... ', end='', flush=True)
+            print(f'Unzipping… ', end='', flush=True)
 
             # Open the zip file and check if it has a top-level directory
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
@@ -1033,7 +1033,7 @@ def apply_desktop_tweaks():
 
             os.makedirs(local_fonts_dir, exist_ok=True)
 
-            print(f'moving... ', end='', flush=True)
+            print(f'Moving… ', end='', flush=True)
 
             for file in os.listdir(font_dir):
                 if file.endswith('.ttf'):
@@ -1041,7 +1041,7 @@ def apply_desktop_tweaks():
                     dest_path = os.path.join(local_fonts_dir, file)
                     shutil.move(src_path, dest_path)
 
-            print(f'refreshing font cache... ', end='', flush=True)
+            print(f'Refreshing font cache… ', end='', flush=True)
 
             # Update the font cache
             subprocess.run(['fc-cache', '-f', '-v'],
