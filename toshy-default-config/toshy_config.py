@@ -14,7 +14,8 @@ from keyszer.lib.key_context import KeyContext
 from keyszer.config_api import *
 
 
-###  SLICE_MARK_START: keyszer_api  ###  CHANGES MADE OUTSIDE THESE MARKS WILL BE IGNORED ON UPGRADE
+###################################################################################################
+###  SLICE_MARK_START: keyszer_api  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 
 # Keyszer-specific config settings - REMOVE OR SET TO DEFAULTS FOR DISTRIBUTION
 dump_diagnostics_key(Key.F15)   # default key: F15
@@ -31,7 +32,8 @@ throttle_delays(
     key_post_delay_ms   = 12,      # default: 0 ms, range: 0-150 ms, suggested: 1-100 ms
 )
 
-###  SLICE_MARK_END: keyszer_api  ###  CHANGES MADE OUTSIDE THESE MARKS WILL BE IGNORED ON UPGRADE
+###  SLICE_MARK_END: keyszer_api  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
+###################################################################################################
 
 
 
@@ -85,7 +87,8 @@ debug(cnfg, ctx="CG")
 ##########################################################################
 # Set up some useful environment variables
 
-###  SLICE_MARK_START: env_overrides  ###  CHANGES MADE OUTSIDE THESE MARKS WILL BE IGNORED ON UPGRADE
+###################################################################################################
+###  SLICE_MARK_START: env_overrides  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 
 # MANUALLY set any environment information if the auto-identification isn't working:
 OVERRIDE_DISTRO_NAME     = None
@@ -93,7 +96,8 @@ OVERRIDE_DISTRO_VER      = None
 OVERRIDE_SESSION_TYPE    = None
 OVERRIDE_DESKTOP_ENV     = None
 
-###  SLICE_MARK_END: env_overrides  ###  CHANGES MADE OUTSIDE THESE MARKS WILL BE IGNORED ON UPGRADE
+###  SLICE_MARK_END: env_overrides  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
+###################################################################################################
 
 # leave all of this alone!
 DISTRO_NAME     = None
@@ -183,41 +187,55 @@ last_dt_combo = None
 
 def isKBtype(kbtype: str, map=None):
     """
-    ## Match on the keyboard type for conditional modmaps and keymaps
+    ### Match on the keyboard type for conditional modmaps and keymaps
     
-    ### Valid Types
+    #### Valid Types
     
     - IBM | Chromebook | Windows | Apple
-
-    ### Hierarchy of validations:
-
-    1. Is device name in keyboard type list matching `kbtype` arg?
-    2. Is `kbtype` string in the device name string?
-    3. Is `kbtype` "Windows" and other type strings _not_ in device name
+    
+    #### Hierarchy of validations:
+    
+    1. Check if the device name is in the keyboards_UserCustom_dct dictionary.
+    2. Is device name in keyboard type list matching `kbtype` arg?
+    3. Is `kbtype` string in the device name string?
+    4. Is `kbtype` "Windows" and other type strings _not_ in device name
         and device name _not_ in `all_keyboards` list?
     """
+    # Create a "UserCustom" keyboard dictionary with casefolded keys
+    keyboards_UserCustom_lower_dct = {k.casefold(): v for k, v in keyboards_UserCustom_dct.items()}
     regex_list = kbtype_lists.get(kbtype, [])
+
     def _isKBtype(ctx: KeyContext):
-        logging_enabled = False
+        logging_enabled = True
         kb_dev_name = ctx.device_name.casefold()
+
+        # Check the keyboards_UserCustom_dct dictionary
+        custom_kb_type = keyboards_UserCustom_lower_dct.get(kb_dev_name, None)
+        if custom_kb_type is not None and custom_kb_type.casefold() == kbtype.casefold():
+            if logging_enabled:
+                debug(f"KB_TYPE: '{ctx.device_name}' in custom dict. Type is '{custom_kb_type}'.")
+            return True
+
         for regex in regex_list:
             if re.search(regex, kb_dev_name, re.I):
                 if logging_enabled:
-                    debug(f'KB_TYPE: "{kbtype}" {re.search(regex, kb_dev_name, re.I)}')
+                    debug(f"KB_TYPE: '{kbtype}' {re.search(regex, kb_dev_name, re.I)}")
                 return True
+
         if kbtype.casefold() in kb_dev_name:
             if logging_enabled:
-                debug(f'KB_TYPE: "{kbtype}" Keyword found in device name.')
+                debug(f"KB_TYPE: '{kbtype}' Keyword found in device name: '{ctx.device_name}'")
             return True
+
         if kbtype == "Windows":
             if not re.search("IBM|Chromebook|Apple", kb_dev_name, re.I):
                 if kb_dev_name not in all_keyboards:
                     if logging_enabled:
-                        debug(f'KB_TYPE: "{kbtype}" Unidentified, not in other lists, "IBM|Chromebook|Apple" not in name.')
+                        debug(  f"KB_TYPE: '{ctx.device_name}' defaulting to 'Windows' type.")
                     return True
         return False
 
-    return _isKBtype
+    return _isKBtype    # return the inner function
 
 
 def isDoubleTap(dt_combo):
@@ -691,6 +709,22 @@ dialogs_CloseWin_lod = [
     {clas:"^pcloud$"                    },
     {clas:"^Totem$",                    not_name:"^Videos$"},
 ]
+
+
+###################################################################################################
+###  SLICE_MARK_START: kbtype_override  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
+
+keyboards_UserCustom_dct = {
+    # Add your keyboard device here if its type is misidentified by isKBtype() function
+    # Valid types to map device to: Apple, Windows, IBM, Chromebook
+    # Example:
+    'My Keyboard Device Name': 'Apple',
+    # 'AT Translated Set 2 keyboard': 'Windows',
+}
+
+###  SLICE_MARK_END: kbtype_override  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
+###################################################################################################
+
 
 # Lists of keyboard device names, to match keyboard type
 keyboards_IBM = [
@@ -2589,16 +2623,16 @@ keymap("OptSpecialChars - US", {
 ### Changes made between the "slice" marks will be retained by the Toshy installer 
 ### if you reinstall and it finds matching start/end markers for each section. 
 
-###  SLICE_MARK_START: user_apps  ###  CHANGES MADE OUTSIDE THESE MARKS WILL BE IGNORED ON UPGRADE
+###################################################################################################
+###  SLICE_MARK_START: user_apps  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 
 # REMOVE THE CONTENTS OF THIS FOR GENERAL USE
 keymap("User hardware keys", {
 
-# }, when = lambda ctx: ctx.wm_class.casefold() not in remotes)
-# }, when = matchProps(not_clas=remoteStr))
 }, when = matchProps(not_lst=remotes_lod))
 
-###  SLICE_MARK_END: user_apps  ###  CHANGES MADE OUTSIDE THESE MARKS WILL BE IGNORED ON UPGRADE
+###  SLICE_MARK_END: user_apps  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
+###################################################################################################
 
 
 
