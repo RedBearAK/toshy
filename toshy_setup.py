@@ -53,7 +53,9 @@ else:
 class InstallerSettings:
     """Set up variables for necessary information to be used by all functions"""
     def __init__(self) -> None:
-        self.separator              = '============================================================'
+        sep_reps                    = 80
+        self.sep_char               = '='
+        self.separator              = self.sep_char * sep_reps
         self.env_info_dct           = None
         self.override_distro        = None
         self.DISTRO_NAME            = None
