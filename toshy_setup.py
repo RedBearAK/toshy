@@ -535,6 +535,8 @@ def backup_toshy_config():
         if os.path.isfile(cnfg.db_file_path):
             try:
                 os.unlink(f'/tmp/{cnfg.db_file_name}')
+            except (FileNotFoundError, PermissionError, OSError): pass
+            try:
                 shutil.copy(cnfg.db_file_path, '/tmp/')
             except (FileNotFoundError, PermissionError, OSError) as file_err:
                 error(f'Problem copying preferences db file to /tmp:\n\t{file_err}')
