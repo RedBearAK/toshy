@@ -95,7 +95,8 @@ class InstallerSettings:
         self.remind_extensions      = None
 
         self.should_reboot          = None
-        self.reboot_tmp_file        = "/tmp/toshy_installer_says_reboot"
+        self.run_tmp_dir            = os.environ.get('XDG_RUNTIME_DIR') or '/tmp'
+        self.reboot_tmp_file        = f"{self.run_tmp_dir}/toshy_installer_says_reboot"
         self.reboot_ascii_art       = textwrap.dedent("""
                 ██████      ███████     ██████       ██████       ██████      ████████     ██ 
                 ██   ██     ██          ██   ██     ██    ██     ██    ██        ██        ██ 
@@ -561,12 +562,12 @@ def backup_toshy_config():
 
         if os.path.isfile(cnfg.db_file_path):
             try:
-                os.unlink(f'/tmp/{cnfg.db_file_name}')
+                os.unlink(f'{cnfg.run_tmp_dir}/{cnfg.db_file_name}')
             except (FileNotFoundError, PermissionError, OSError): pass
             try:
-                shutil.copy(cnfg.db_file_path, '/tmp/')
+                shutil.copy(cnfg.db_file_path, f'{cnfg.run_tmp_dir}/')
             except (FileNotFoundError, PermissionError, OSError) as file_err:
-                error(f'Problem copying preferences db file to /tmp:\n\t{file_err}')
+                error(f"Problem copying preferences db file to '{cnfg.run_tmp_dir}':\n\t{file_err}")
 
         try:
             # Define the ignore function
@@ -624,12 +625,12 @@ def install_toshy_files():
     shutil.copy(toshy_default_cfg, cnfg.toshy_dir_path)
     print(f"Toshy files installed in '{cnfg.toshy_dir_path}'.")
 
-    if os.path.isfile(f'/tmp/{cnfg.db_file_name}'):
+    if os.path.isfile(f'{cnfg.run_tmp_dir}/{cnfg.db_file_name}'):
         try:
-            shutil.copy(f'/tmp/{cnfg.db_file_name}', cnfg.toshy_dir_path)
+            shutil.copy(f'{cnfg.run_tmp_dir}/{cnfg.db_file_name}', cnfg.toshy_dir_path)
             print(f'Copied preferences db file from existing config folder.')
         except (FileExistsError, FileNotFoundError, PermissionError, OSError) as file_err:
-            error(f'Problem copying preferences db file from /tmp:\n\t{file_err}')
+            error(f"Problem copying preferences db file from '{cnfg.run_tmp_dir}':\n\t{file_err}")
 
     # Apply user customizations to the new config file.
     new_cfg_file = os.path.join(cnfg.toshy_dir_path, 'toshy_config.py')
@@ -746,7 +747,7 @@ def setup_kwin2dbus_script():
     kwin_script_name    = 'toshy-dbus-notifyactivewindow'
     kwin_script_path    = os.path.join( cnfg.toshy_dir_path,
                                         'kde-kwin-dbus-service', kwin_script_name)
-    temp_file_path      = '/tmp/toshy-dbus-notifyactivewindow.kwinscript'
+    temp_file_path      = f'{cnfg.run_tmp_dir}/toshy-dbus-notifyactivewindow.kwinscript'
 
     # Create a zip file (overwrite if it exists)
     with zipfile.ZipFile(temp_file_path, 'w') as zipf:
@@ -1010,7 +1011,7 @@ def apply_desktop_tweaks():
         
         if os.path.isfile(zip_path):
             folder_name = font_file.rsplit('.', 1)[0]
-            extract_dir = '/tmp/'
+            extract_dir = f'{cnfg.run_tmp_dir}/'
 
             print(f'unzipping... ', end='', flush=True)
 
