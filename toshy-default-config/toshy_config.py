@@ -217,9 +217,10 @@ def isKBtype(kbtype: str, map=None):
             return True
 
         for regex in regex_list:
-            if re.search(regex, kb_dev_name, re.I):
+            match = re.search(regex, kb_dev_name, re.I)
+            if match:
                 if logging_enabled:
-                    debug(f"KB_TYPE: '{kbtype}' {re.search(regex, kb_dev_name, re.I)}")
+                    debug(f"KB_TYPE: '{kbtype}' {match}")
                 return True
 
         if kbtype.casefold() in kb_dev_name:
@@ -719,7 +720,6 @@ keyboards_UserCustom_dct = {
     # Valid types to map device to: Apple, Windows, IBM, Chromebook
     # Example:
     'My Keyboard Device Name': 'Apple',
-    # 'AT Translated Set 2 keyboard': 'Windows',
 }
 
 ###  SLICE_MARK_END: kbtype_override  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
@@ -747,6 +747,8 @@ keyboards_Windows = [
 keyboards_Apple = [
     # Add specific Apple/Mac keyboard device names to this list
     'Mitsumi Electric Apple Extended USB Keyboard',
+    'Magic Keyboard with Numeric Keypad',
+    'Magic Keyboard.*',
 ]
 
 kbtype_lists = {
