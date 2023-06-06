@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
 import os
-from re import sub
+import re
 import sys
 import pwd
 import grp
+import random
+import string
 import signal
 import shutil
 import zipfile
@@ -20,17 +22,19 @@ from typing import Dict
 import lib.env as env
 from lib.logger import debug, error
 
+# set a standard path for commands to avoid issues with user customized paths
+os.environ['PATH'] = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 
 if os.name == 'posix' and os.geteuid() == 0:
     print("This app should not be run as root/superuser.")
     sys.exit(1)
 
 def signal_handler(sig, frame):
-    """handle signals like Ctrl+C"""
+    """Handle signals like Ctrl+C"""
     if sig in (signal.SIGINT, signal.SIGQUIT):
         # Perform any cleanup code here before exiting
         # traceback.print_stack(frame)
-        print(f'\nSIGINT or SIGQUIT received. Exiting.\n')
+        print(f'\n\nSIGINT or SIGQUIT received. Exiting.\n')
         sys.exit(0)
 
 if platform.system() != 'Windows':
@@ -47,46 +51,53 @@ else:
 
 
 class InstallerSettings:
-    """set up variables for necessary information to be used by all functions"""
+    """Set up variables for necessary information to be used by all functions"""
     def __init__(self) -> None:
-        self.separator          = '============================================='
-        self.env_info_dct       = None
-        self.override_distro    = None
-        self.DISTRO_NAME        = None
-        self.DISTRO_VER         = None
-        self.SESSION_TYPE       = None
-        self.DESKTOP_ENV        = None
+        sep_reps                    = 80
+        self.sep_char               = '='
+        self.separator              = self.sep_char * sep_reps
+        self.env_info_dct           = None
+        self.override_distro        = None
+        self.DISTRO_NAME            = None
+        self.DISTRO_VER             = None
+        self.SESSION_TYPE           = None
+        self.DESKTOP_ENV            = None
         
-        self.systemctl_present  = shutil.which('systemctl') is not None
-        self.init_system        = None
+        self.systemctl_present      = shutil.which('systemctl') is not None
+        self.init_system            = None
 
-        self.pkgs_for_distro    = None
-        self.pip_pkgs           = None
-        self.qdbus              = 'qdbus-qt5' if shutil.which('qdbus-qt5') else 'qdbus'
+        self.pkgs_for_distro        = None
+        self.pip_pkgs               = None
+        self.qdbus                  = 'qdbus-qt5' if shutil.which('qdbus-qt5') else 'qdbus'
 
-        self.home_dir_path      = os.path.abspath(os.path.expanduser('~'))
-        self.toshy_dir_path     = os.path.join(self.home_dir_path, '.config', 'toshy')
-        self.backup_succeeded   = None
-        self.venv_path          = os.path.join(self.toshy_dir_path, '.venv')
+        self.home_dir_path          = os.path.abspath(os.path.expanduser('~'))
+        self.toshy_dir_path         = os.path.join(self.home_dir_path, '.config', 'toshy')
+        self.db_file_name           = 'toshy_user_preferences.sqlite'
+        self.db_file_path           = os.path.join(self.toshy_dir_path, self.db_file_name)
+        self.backup_succeeded       = None
+        self.existing_cfg_data      = None
+        self.existing_cfg_slices    = None
+        self.venv_path              = os.path.join(self.toshy_dir_path, '.venv')
 
-        self.keyszer_tmp_path   = os.path.join('.', 'keyszer-temp')
+        self.keyszer_tmp_path       = os.path.join('.', 'keyszer-temp')
 
-        # keyszer_branch          = 'env_and_adapt_to_capslock'
-        # keyszer_branch          = 'environ_api'
-        self.keyszer_branch     = 'environ_api_kde'
-        self.keyszer_url        = 'https://github.com/RedBearAK/keyszer.git'
-        self.keyszer_clone_cmd  = f'git clone -b {self.keyszer_branch} {self.keyszer_url}'
+        # keyszer_branch              = 'env_and_adapt_to_capslock'
+        # keyszer_branch              = 'environ_api'
+        self.keyszer_branch         = 'environ_api_kde'
+        self.keyszer_url            = 'https://github.com/RedBearAK/keyszer.git'
+        self.keyszer_clone_cmd      = f'git clone -b {self.keyszer_branch} {self.keyszer_url}'
 
-        self.input_group_name   = 'input'
-        self.user_name          = pwd.getpwuid(os.getuid()).pw_name
+        self.input_group_name       = 'input'
+        self.user_name              = pwd.getpwuid(os.getuid()).pw_name
 
-        self.fancy_pants        = None
-        self.tweak_applied      = None
-        self.remind_extensions  = None
+        self.fancy_pants            = None
+        self.tweak_applied          = None
+        self.remind_extensions      = None
 
-        self.should_reboot      = None
-        self.reboot_tmp_file    = "/tmp/toshy_installer_says_reboot"
-        self.reboot_ascii_art   = textwrap.dedent("""
+        self.should_reboot          = None
+        self.run_tmp_dir            = os.environ.get('XDG_RUNTIME_DIR') or '/tmp'
+        self.reboot_tmp_file        = f"{self.run_tmp_dir}/toshy_installer_says_reboot"
+        self.reboot_ascii_art       = textwrap.dedent("""
                 ██████      ███████     ██████       ██████       ██████      ████████     ██ 
                 ██   ██     ██          ██   ██     ██    ██     ██    ██        ██        ██ 
                 ██████      █████       ██████      ██    ██     ██    ██        ██        ██ 
@@ -96,7 +107,7 @@ class InstallerSettings:
 
 
 def get_environment_info():
-    """get back the distro name, distro version, session type and 
+    """Get back the distro name, distro version, session type and 
         desktop environment from `env.py` module"""
     print(f'\n§  Getting environment information...\n{cnfg.separator}')
 
@@ -147,7 +158,7 @@ def get_environment_info():
 
 
 def call_attention_to_password_prompt():
-    """utility function to emphasize the sudo password prompt"""
+    """Utility function to emphasize the sudo password prompt"""
     try:
         subprocess.run( ['sudo', '-n', 'true'], stdout=DEVNULL, stderr=DEVNULL, check=True)
     except subprocess.CalledProcessError:
@@ -158,21 +169,51 @@ def call_attention_to_password_prompt():
 
 
 def prompt_for_reboot():
-    """utility function to make sure user is reminded to reboot if necessary"""
+    """Utility function to make sure user is reminded to reboot if necessary"""
     cnfg.should_reboot = True
     if not os.path.exists(cnfg.reboot_tmp_file):
         os.mknod(cnfg.reboot_tmp_file)
 
 
+def dot_Xmodmap_warning():
+    """Check for '.Xmodmap' file in user's home folder, show warning about mod key remaps"""
+    xmodmap_file_path = os.path.realpath(os.path.join(os.path.expanduser('~'), '.Xmodmap'))
+    if os.path.isfile(xmodmap_file_path):
+        print(f'\n{cnfg.separator}')
+        print(f'{cnfg.separator}')
+        if os.environ['COLORTERM']:
+            # Terminal supports ANSI escape sequences
+            print("\033[1;31m\t WARNING: You have an '.Xmodmap' file in your home folder!!!\033[0m")
+        else:
+            # Terminal might not support ANSI escape sequences
+            print(f"\t WARNING: You have an '.Xmodmap' file in your home folder!!! \n")
+        print(f'   This can cause confusing PROBLEMS if you are remapping any modifier keys!')
+        print(f'{cnfg.separator}')
+        print(f'{cnfg.separator}\n')
+        
+        secret_code = ''.join(random.choice(string.ascii_letters) for _ in range(4))
+        
+        response = input(
+            f"You must take responsibility for the issues an '.Xmodmap' file may cause."
+            f"\n\n\t If you understand, enter the secret code '{secret_code}': "
+        )
+        
+        if response == secret_code:
+            print(f"\nGood code. User has taken responsibility for '.Xmodmap' file. Proceeding...\n")
+        else:
+            print(f"\nCode does not match! Try the installer again after dealing with '.Xmodmap'.\n")
+            sys.exit(1)
+
+
 def elevate_privileges():
-    """utility function to elevate privileges early in the installer process"""
+    """Elevate privileges early in the installer process"""
 
     call_attention_to_password_prompt()
     subprocess.run(['sudo', 'bash', '-c', 'echo -e "\nUsing elevated privileges..."'], check=True)
 
 
 def do_kwin_reconfigure():
-    """utility function to run the KWin reconfigure command"""
+    """Utility function to run the KWin reconfigure command"""
     try:
         subprocess.run([cnfg.qdbus, 'org.kde.KWin', '/KWin', 'reconfigure'],
                         check=True, stderr=DEVNULL, stdout=DEVNULL)
@@ -238,7 +279,7 @@ def reload_udev_rules():
 
 
 def install_udev_rules():
-    """set up udev rules file to give user/keyszer access to uinput"""
+    """Set up `udev` rules file to give user/keyszer access to uinput"""
     print(f'\n\n§  Installing "udev" rules file for keymapper...\n{cnfg.separator}')
     rules_file_path = '/etc/udev/rules.d/90-toshy-keymapper-input.rules'
     rule_content = (
@@ -348,7 +389,7 @@ extra_pkgs_map = {
 
 
 def install_distro_pkgs():
-    """install needed packages from list for distro type"""
+    """Install needed packages from list for distro type"""
     print(f'\n\n§  Installing native packages...\n{cnfg.separator}')
 
     pkg_group = None
@@ -388,10 +429,10 @@ def install_distro_pkgs():
         # do extra stuff only if distro is a RHEL type (not Fedora)
         if cnfg.DISTRO_NAME not in ['fedora', 'fedoralinux']:
             call_attention_to_password_prompt()
-            # for libappindicator-gtk3: sudo dnf install epel-release
-            subprocess.run(['sudo', 'dnf', 'install', '-y', 'epel-release'])
             # for gobject-introspection-devel: sudo dnf config-manager --set-enabled crb
             subprocess.run(['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb'])
+            # for libappindicator-gtk3: sudo dnf install -y epel-release
+            subprocess.run(['sudo', 'dnf', 'install', '-y', 'epel-release'])
             subprocess.run(['sudo', 'dnf', 'update', '-y'])
         # now do the install of the list of packages
         subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro)
@@ -428,7 +469,7 @@ def install_distro_pkgs():
 
 
 def get_distro_names():
-    """utility function to return list of available distro names"""
+    """Utility function to return list of available distro names"""
 
     distro_list = []
     for group in distro_groups_map.values():
@@ -440,7 +481,7 @@ def get_distro_names():
 
 
 def clone_keyszer_branch():
-    """clone the designated `keyszer` branch from GitHub"""
+    """Clone the designated `keyszer` branch from GitHub"""
     print(f'\n\n§  Cloning keyszer branch ({cnfg.keyszer_branch})...\n{cnfg.separator}')
     
     # Check if `git` command exists. If not, exit script with error.
@@ -451,16 +492,90 @@ def clone_keyszer_branch():
 
     if os.path.exists(cnfg.keyszer_tmp_path):
         # force a fresh copy of keyszer every time script is run
-        shutil.rmtree(cnfg.keyszer_tmp_path, ignore_errors=True)
+        try:
+            shutil.rmtree(cnfg.keyszer_tmp_path) # , ignore_errors=True)
+        except (OSError, PermissionError, FileNotFoundError) as file_err:
+            error(f"Problem removing existing '{cnfg.keyszer_tmp_path}' folder:\n\t{file_err}")
     subprocess.run(cnfg.keyszer_clone_cmd.split() + [cnfg.keyszer_tmp_path])
 
 
+def extract_slices(data: str) -> Dict[str, str]:
+    """Utility function to store user content slices from existing config file data"""
+    slices = {}
+    pattern_start       = r'###  SLICE_MARK_START: (\w+)  ###.*'
+    pattern_end         = r'###  SLICE_MARK_END: (\w+)  ###.*'
+    matches_start       = list(re.finditer(pattern_start, data))
+    matches_end         = list(re.finditer(pattern_end, data))
+    if len(matches_start) != len(matches_end):
+        raise ValueError(   f'Mismatched slice markers in config file:'
+                            f'\n\t{matches_start}, {matches_end}')
+    for begin, end in zip(matches_start, matches_end):
+        slice_name = begin.group(1)
+        if end.group(1) != slice_name:
+            raise ValueError(f'Mismatched slice markers in config file:\n\t{slice_name}')
+        slice_start     = begin.end()
+        slice_end       = end.start()
+        slices[slice_name] = data[slice_start:slice_end]
+    
+    return slices
+
+
+def merge_slices(data: str, slices: Dict[str, str]) -> str:
+    """Utility function to merge stored slices into new config file data"""
+    pattern_start = r'###  SLICE_MARK_START: (\w+)  ###.*'
+    pattern_end = r'###  SLICE_MARK_END: (\w+)  ###.*'
+    matches_start = list(re.finditer(pattern_start, data))
+    matches_end = list(re.finditer(pattern_end, data))
+    data_slices = []
+    previous_end = 0
+    for begin, end in zip(matches_start, matches_end):
+        slice_name = begin.group(1)
+        if end.group(1) != slice_name:
+            raise ValueError(f'Mismatched slice markers in config file:\n\t{slice_name}')
+        slice_start = begin.end()
+        slice_end = end.start()
+        # add the part of the data before the slice, and the slice itself
+        data_slices.extend([data[previous_end:slice_start], 
+                            slices.get(slice_name, data[slice_start:slice_end])])
+        previous_end = slice_end
+    # add the part of the data after the last slice
+    data_slices.append(data[previous_end:])
+
+    return "".join(data_slices)
+
+
 def backup_toshy_config():
-    """backup existing Toshy config folder"""
+    """Backup existing Toshy config folder"""
     print(f'\n\n§  Backing up existing Toshy config folder...\n{cnfg.separator}')
     timestamp = datetime.datetime.now().strftime('_%Y%m%d_%H%M%S')
     toshy_backup_dir_path = os.path.abspath(cnfg.toshy_dir_path + timestamp)
     if os.path.exists(os.path.join(os.path.expanduser('~'), '.config', 'toshy')):
+
+        cfg_file_path   = os.path.join(cnfg.toshy_dir_path, 'toshy_config.py')
+        if os.path.isfile(cfg_file_path):
+            try:
+                with open(cfg_file_path, 'r', encoding='UTF-8') as file:
+                    cnfg.existing_cfg_data = file.read()
+                print(f'Prepared existing config file data for merging into new config.')
+            except (FileNotFoundError, PermissionError, OSError) as file_err:
+                cnfg.existing_cfg_data = None
+                error(f'Problem reading existing config file contents.\n\t{file_err}')
+
+            if cnfg.existing_cfg_data is not None:
+                try:
+                    cnfg.existing_cfg_slices = extract_slices(cnfg.existing_cfg_data)
+                except ValueError as value_err:
+                    error(f'Problem extracting marked slices from existing config.\n\t{value_err}')
+
+        if os.path.isfile(cnfg.db_file_path):
+            try:
+                os.unlink(f'{cnfg.run_tmp_dir}/{cnfg.db_file_name}')
+            except (FileNotFoundError, PermissionError, OSError): pass
+            try:
+                shutil.copy(cnfg.db_file_path, f'{cnfg.run_tmp_dir}/')
+            except (FileNotFoundError, PermissionError, OSError) as file_err:
+                error(f"Problem copying preferences db file to '{cnfg.run_tmp_dir}':\n\t{file_err}")
+
         try:
             # Define the ignore function
             def ignore_venv(dirname, filenames):
@@ -471,7 +586,7 @@ def backup_toshy_config():
             print(f"Failed to copy directory: {copy_error}")
             exit(1)
         except OSError as os_error:
-            print(f"Failed to create backup directory: {os_error}")
+            print(f"Failed to copy directory: {os_error}")
             exit(1)
         print(f"Backup completed to '{toshy_backup_dir_path}'")
         cnfg.backup_succeeded = True
@@ -481,7 +596,7 @@ def backup_toshy_config():
 
 
 def install_toshy_files():
-    """install Toshy files"""
+    """Install Toshy files"""
     print(f'\n\n§  Installing Toshy files...\n{cnfg.separator}')
     if not cnfg.backup_succeeded:
         print(f'Backup of Toshy config folder failed? Bailing out.')
@@ -490,7 +605,10 @@ def install_toshy_files():
     keyszer_tmp = os.path.basename(cnfg.keyszer_tmp_path)
     try:
         if os.path.exists(cnfg.toshy_dir_path):
-            shutil.rmtree(cnfg.toshy_dir_path, ignore_errors=True)
+            try:
+                shutil.rmtree(cnfg.toshy_dir_path) # , ignore_errors=True)
+            except (OSError, PermissionError, FileNotFoundError) as file_err:
+                error(f'Problem removing existing Toshy config folder after backup:\n\t{file_err}')
         # Copy files recursively from source to destination
         shutil.copytree(
             '.', 
@@ -514,9 +632,39 @@ def install_toshy_files():
     shutil.copy(toshy_default_cfg, cnfg.toshy_dir_path)
     print(f"Toshy files installed in '{cnfg.toshy_dir_path}'.")
 
+    if os.path.isfile(f'{cnfg.run_tmp_dir}/{cnfg.db_file_name}'):
+        try:
+            shutil.copy(f'{cnfg.run_tmp_dir}/{cnfg.db_file_name}', cnfg.toshy_dir_path)
+            print(f'Copied preferences db file from existing config folder.')
+        except (FileExistsError, FileNotFoundError, PermissionError, OSError) as file_err:
+            error(f"Problem copying preferences db file from '{cnfg.run_tmp_dir}':\n\t{file_err}")
+
+    # Apply user customizations to the new config file.
+    new_cfg_file = os.path.join(cnfg.toshy_dir_path, 'toshy_config.py')
+    if cnfg.existing_cfg_slices is not None:
+        try:
+            with open(new_cfg_file, 'r', encoding='UTF-8') as file:
+                new_cfg_data = file.read()
+        except (FileNotFoundError, PermissionError, OSError) as file_err:
+            error(f'Problem reading new config file:\n\t{file_err}')
+            sys.exit(1)
+        merged_cfg_data = None
+        try:
+            merged_cfg_data = merge_slices(new_cfg_data, cnfg.existing_cfg_slices)
+        except ValueError as value_err:
+            error(f'Problem when merging user customizations with new config file:\n\t{value_err}')
+        if merged_cfg_data is not None:
+            try:
+                with open(new_cfg_file, 'w', encoding='UTF-8') as file:
+                    file.write(merged_cfg_data)
+            except (FileNotFoundError, PermissionError, OSError) as file_err:
+                error(f'Problem writing to new config file:\n\t{file_err}')
+                sys.exit(1)
+            print(f"Existing user customizations applied to the new config file.")
+
 
 def setup_python_virt_env():
-    """setup a virtual environment to install Python packages"""
+    """Setup a virtual environment to install Python packages"""
     print(f'\n\n§  Setting up Python virtual environment...\n{cnfg.separator}')
 
     # Create the virtual environment if it doesn't exist
@@ -527,7 +675,7 @@ def setup_python_virt_env():
 
 
 def install_pip_packages():
-    """install `pip` packages for Python"""
+    """Install `pip` packages for Python"""
     print(f'\n\n§  Installing/upgrading Python packages...\n{cnfg.separator}')
     venv_python_cmd = os.path.join(cnfg.venv_path, 'bin', 'python')
     venv_pip_cmd    = os.path.join(cnfg.venv_path, 'bin', 'pip')
@@ -567,7 +715,7 @@ def install_pip_packages():
 
 
 def install_bin_commands():
-    """install the convenient scripts to manage Toshy"""
+    """Install the convenient scripts to manage Toshy"""
     print(f'\n\n§  Installing Toshy script commands...\n{cnfg.separator}')
     script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'toshy-bincommands-setup.sh')
     subprocess.run([script_path])
@@ -575,7 +723,7 @@ def install_bin_commands():
 
 # Replace $HOME with user home directory
 def replace_home_in_file(filename):
-    """utility function to replace '$HOME' in .desktop files with actual home path"""
+    """Utility function to replace '$HOME' in .desktop files with actual home path"""
     # Read in the file
     with open(filename, 'r') as file:
         file_data = file.read()
@@ -587,7 +735,7 @@ def replace_home_in_file(filename):
 
 
 def install_desktop_apps():
-    """install the convenient scripts to manage Toshy"""
+    """Install the convenient scripts to manage Toshy"""
     print(f'\n\n§  Installing Toshy desktop apps...\n{cnfg.separator}')
     script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'toshy-desktopapps-setup.sh')
     subprocess.run([script_path])
@@ -601,12 +749,12 @@ def install_desktop_apps():
 
 
 def setup_kwin2dbus_script():
-    """install the KWin script to notify D-Bus service about window focus changes"""
+    """Install the KWin script to notify D-Bus service about window focus changes"""
     print(f'\n\n§  Setting up the Toshy KWin script...\n{cnfg.separator}')
     kwin_script_name    = 'toshy-dbus-notifyactivewindow'
     kwin_script_path    = os.path.join( cnfg.toshy_dir_path,
                                         'kde-kwin-dbus-service', kwin_script_name)
-    temp_file_path      = '/tmp/toshy-dbus-notifyactivewindow.kwinscript'
+    temp_file_path      = f'{cnfg.run_tmp_dir}/toshy-dbus-notifyactivewindow.kwinscript'
 
     # Create a zip file (overwrite if it exists)
     with zipfile.ZipFile(temp_file_path, 'w') as zipf:
@@ -656,7 +804,7 @@ def setup_kwin2dbus_script():
 
 
 def setup_kde_dbus_service():
-    """install the D-Bus service initialization script to receive window focus
+    """Install the D-Bus service initialization script to receive window focus
     change notifications from the KWin script on KDE desktops (Wayland)"""
     print(f'\n\n§  Setting up the Toshy KDE D-Bus service...\n{cnfg.separator}')
 
@@ -671,8 +819,8 @@ def setup_kde_dbus_service():
     # ensure autostart directory exists
     try:
         os.makedirs(autostart_dir_path, exist_ok=True)
-    except (PermissionError, NotADirectoryError, FileExistsError) as file_error:
-        error(f"Problem trying to make sure '{autostart_dir_path}' is directory.\n\t{file_error}")
+    except (PermissionError, NotADirectoryError, FileExistsError) as file_err:
+        error(f"Problem trying to make sure '{autostart_dir_path}' is directory.\n\t{file_err}")
         sys.exit(1)
     shutil.copy(dbus_svc_desktop_file, autostart_dir_path)
     print(f'Toshy KDE D-Bus service should autostart at login.')
@@ -683,7 +831,7 @@ def setup_kde_dbus_service():
 
 
 def setup_systemd_services():
-    """invoke the systemd setup script to install the systemd service units"""
+    """Invoke the systemd setup script to install the systemd service units"""
     print(f'\n\n§  Setting up the Toshy systemd services...\n{cnfg.separator}')
     if cnfg.systemctl_present:
         script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'bin', 'toshy-systemd-setup.sh')
@@ -693,7 +841,7 @@ def setup_systemd_services():
 
 
 def autostart_tray_icon():
-    """set the tray icon to autostart at login"""
+    """Set up the tray icon to autostart at login"""
     print(f'\n\n§  Setting tray icon to load automatically at login...\n{cnfg.separator}')
     user_path           = os.path.expanduser('~')
     desktop_files_path  = os.path.join(user_path, '.local', 'share', 'applications')
@@ -704,8 +852,8 @@ def autostart_tray_icon():
     # Need to create autostart folder if necessary
     try:
         os.makedirs(autostart_dir_path, exist_ok=True)
-    except (PermissionError, NotADirectoryError, FileExistsError) as file_error:
-        error(f"Problem trying to make sure '{autostart_dir_path}' is directory.\n\t{file_error}")
+    except (PermissionError, NotADirectoryError, FileExistsError) as file_err:
+        error(f"Problem trying to make sure '{autostart_dir_path}' is directory.\n\t{file_err}")
         sys.exit(1)
     subprocess.run(['ln', '-sf', tray_desktop_file, dest_link_file])
 
@@ -717,7 +865,7 @@ def autostart_tray_icon():
 
 
 def apply_tweaks_GNOME():
-    """utility function to add desktop tweaks to GNOME"""
+    """Utility function to add desktop tweaks to GNOME"""
     # Disable GNOME `overlay-key` binding to Meta/Super/Win/Cmd
     # gsettings set org.gnome.mutter overlay-key ''
     subprocess.run(['gsettings', 'set', 'org.gnome.mutter', 'overlay-key', ''])
@@ -733,6 +881,13 @@ def apply_tweaks_GNOME():
                     'switch-group', "['<Alt>grave']"])
     print(f'Enabled "Switch applications" Mac-like task switching.')
     
+    # Enable keyboard shortcut for GNOME Terminal preferences dialog
+    # gsettings set org.gnome.Terminal.Legacy.Keybindings:/org/gnome/terminal/legacy/keybindings/ preferences '<Control>less'
+    cmd_path = 'org.gnome.Terminal.Legacy.Keybindings:/org/gnome/terminal/legacy/keybindings/'
+    prefs_binding = '<Control>less'
+    subprocess.run(['gsettings', 'set', cmd_path, 'preferences', prefs_binding])
+    print(f'Set a keybinding for GNOME Terminal preferences.')
+    
     # Enable "Expandable folders" in Nautilus
     # dconf write /org/gnome/nautilus/list-view/use-tree-view true
     subprocess.run(['dconf', 'write', '/org/gnome/nautilus/list-view/use-tree-view', 'true'])
@@ -745,7 +900,7 @@ def apply_tweaks_GNOME():
 
 
 def remove_tweaks_GNOME():
-    """utility function to remove the tweaks applied to GNOME"""
+    """Utility function to remove the tweaks applied to GNOME"""
     subprocess.run(['gsettings', 'reset', 'org.gnome.mutter', 'overlay-key'])
     print(f'Removed tweak to disable GNOME "overlay-key" binding to Meta/Super.')
     
@@ -758,7 +913,7 @@ def remove_tweaks_GNOME():
 
 
 def apply_tweaks_KDE():
-    """utility function to add desktop tweaks to KDE"""
+    """Utility function to add desktop tweaks to KDE"""
 
     subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group',
                     'ModifierOnlyShortcuts', '--key', 'Meta', ''], check=True)
@@ -800,7 +955,7 @@ def apply_tweaks_KDE():
 
 
 def remove_tweaks_KDE():
-    """utility function to remove the tweaks applied to KDE"""
+    """Utility function to remove the tweaks applied to KDE"""
 
     subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group',
                     'ModifierOnlyShortcuts', '--key', 'Meta', '--delete'], check=True)
@@ -817,7 +972,7 @@ def remove_tweaks_KDE():
 
 def apply_desktop_tweaks():
     """
-    fix things like Meta key activating overview in GNOME or KDE Plasma
+    Fix things like Meta key activating overview in GNOME or KDE Plasma
     and fix the Unicode sequences in KDE Plasma
     
     TODO: These tweaks should probably be done at startup of the config
@@ -841,14 +996,14 @@ def apply_desktop_tweaks():
     # General (not DE specific) "fancy pants" additions:
     if cnfg.fancy_pants:
         
-        print(f'Installing font... ', end='')
+        print(f'Installing font: ', end='', flush=True)
 
         # install Fantasque Sans Mono NoLig (no ligatures) from GitHub fork
         font_file   = 'FantasqueSansMono-LargeLineHeight-NoLoopK-NameSuffix.zip'
         font_url    = 'https://github.com/spinda/fantasque-sans-ligatures/releases/download/v1.8.1'
         font_link   = f'{font_url}/{font_file}'
 
-        print(f'downloading... ', end='')
+        print(f'Downloading… ', end='', flush=True)
 
         if shutil.which('curl'):
             subprocess.run(['curl', '-LO', font_link], 
@@ -863,9 +1018,9 @@ def apply_desktop_tweaks():
         
         if os.path.isfile(zip_path):
             folder_name = font_file.rsplit('.', 1)[0]
-            extract_dir = '/tmp/'
+            extract_dir = f'{cnfg.run_tmp_dir}/'
 
-            print(f'unzipping... ', end='')
+            print(f'Unzipping… ', end='', flush=True)
 
             # Open the zip file and check if it has a top-level directory
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
@@ -879,25 +1034,26 @@ def apply_desktop_tweaks():
                 
                 zip_ref.extractall(extract_dir)
 
-            otf_dir         = f'{extract_dir}/OTF/'
+            # use TTF instead of OTF to try and minimize "stem darkening" effect in KDE
+            font_dir        = f'{extract_dir}/TTF/'
             local_fonts_dir = os.path.realpath(os.path.expanduser('~/.local/share/fonts'))
 
             os.makedirs(local_fonts_dir, exist_ok=True)
 
-            print(f'moving... ', end='')
+            print(f'Moving… ', end='', flush=True)
 
-            for file in os.listdir(otf_dir):
-                if file.endswith('.otf'):
-                    src_path = os.path.join(otf_dir, file)
+            for file in os.listdir(font_dir):
+                if file.endswith('.ttf'):
+                    src_path = os.path.join(font_dir, file)
                     dest_path = os.path.join(local_fonts_dir, file)
                     shutil.move(src_path, dest_path)
 
-            print(f'refreshing font cache... ', end='')
+            print(f'Refreshing font cache… ', end='', flush=True)
 
             # Update the font cache
             subprocess.run(['fc-cache', '-f', '-v'],
                             stdout=DEVNULL, stderr=DEVNULL)
-            print(f'Done.')
+            print(f'Done.', flush=True)
 
             print(f'Installed font: {folder_name}')
 
@@ -906,7 +1062,7 @@ def apply_desktop_tweaks():
 
 
 def remove_desktop_tweaks():
-    """undo the relevant desktop tweaks"""
+    """Undo the relevant desktop tweaks"""
 
     print(f'\n\n§  Removing any applied desktop environment tweaks...\n{cnfg.separator}')
 
@@ -933,7 +1089,7 @@ def uninstall_toshy():
 
 
 def handle_cli_arguments():
-    """deal with CLI arguments given to installer script"""
+    """Deal with CLI arguments given to installer script"""
     parser = argparse.ArgumentParser(
         description='Toshy Installer - options are mutually exclusive',
         epilog='Default action: Install Toshy'
@@ -1013,7 +1169,9 @@ def handle_cli_arguments():
 
 
 def main(cnfg: InstallerSettings):
-    """Main installer function"""
+    """Main installer function to call specific functions in proper sequence"""
+
+    dot_Xmodmap_warning()
 
     get_environment_info()
 
@@ -1062,8 +1220,8 @@ def main(cnfg: InstallerSettings):
             print("AppIndicator extension is enabled. Tray icon should work.")
             # pass
         else:
-            print(f"RECOMMENDATION: Install AppIndicator GNOME extension\n"
-                "Easiest method: 'flatpak install extensionmanager', search for 'appindicator'")
+            print(f"\nRECOMMENDATION: Install 'AppIndicator' GNOME extension\n"
+                "Easiest method: 'flatpak install extensionmanager', search for 'appindicator'\n")
 
     if cnfg.should_reboot or os.path.exists(cnfg.reboot_tmp_file):
         cnfg.should_reboot = True
@@ -1073,30 +1231,28 @@ def main(cnfg: InstallerSettings):
         print(  f'\n\n'
                 f'{cnfg.separator}\n'
                 f'{cnfg.reboot_ascii_art}'
-                f'{cnfg.separator}\n\n'
+                f'{cnfg.separator}\n'
                 f'Toshy install complete. Report issues on the GitHub repo.\n'
                 '>>> ALERT: Permissions changed. You MUST reboot for Toshy to work.\n'
                 f'{cnfg.separator}\n'
         )
-
-    if cnfg.remind_extensions or (cnfg.DESKTOP_ENV == 'gnome' and cnfg.SESSION_TYPE == 'wayland'):
-        print(f'MUST INSTALL GNOME EXTENSIONS IF USING WAYLAND SESSION. See README.')
-        
-
-    if not cnfg.should_reboot:
+    else:
         # Try to start the tray icon immediately, if reboot is not indicated
         # tray_command        = ['gtk-launch', 'Toshy_Tray']
         tray_icon_cmd = [os.path.join(cnfg.home_dir_path, '.local', 'bin', 'toshy-tray')]
         # Try to launch the tray icon in a separate process not linked to current shell
         # Also, suppress output that might confuse the user
         subprocess.Popen(tray_icon_cmd, close_fds=True, stdout=DEVNULL, stderr=DEVNULL)
-        print(  f'\n\n{cnfg.separator}\n\n'
+        print(  f'\n\n{cnfg.separator}\n'
                 f'Toshy install complete. Report issues on the GitHub repo.\n'
                 f'Rebooting should not be necessary.\n'
                 f'{cnfg.separator}\n'
         )
         if cnfg.SESSION_TYPE == 'wayland' and cnfg.DESKTOP_ENV == 'kde':
             print(f'SWITCH TO A DIFFERENT WINDOW ONCE TO GET KWIN SCRIPT TO START WORKING!')
+
+    if cnfg.remind_extensions or (cnfg.DESKTOP_ENV == 'gnome' and cnfg.SESSION_TYPE == 'wayland'):
+        print(f'You MUST install GNOME EXTENSIONS if using WAYLAND SESSION. See README.')
 
     print('')   # blank line to avoid crowding the prompt after install is done
 
