@@ -1,10 +1,12 @@
-# Current status: Early Beta
+# Current status: Early Beta (Please Read Before Installing)
 
-- May have issues installing on distros not on the "tested" list below. Try the `--list-distros` and `--override-distro` options (separately) with the installer.  
+- PRIMARY ISSUE you may run into at this point: The Toshy config file tries to automatically identify the "type" of your keyboard based on some pre-existing lists of keyboard device names, which do not have many entries yet. So your keyboard may be misidentified, leading to modifier keys in the "wrong" place. BE PREPARED to identify the name of your keyboard device (try `toshy-devices` in a terminal) and enter it into the correct list in the config file to fix this problem. There is an editable "custom" list where the entry should be retained even if you reinstall later. Please take the time to FILE AN ISSUE if you encounter this, whether or not you are able to fix it on your own. Include your device name and what type it should be. The goal is to populate the default keyboard name lists so that this becomes a very unusual problem going forward. The bigger goal of Toshy has been to allow a mixed-type environment where you can use any combination of Apple, Windows (PC), IBM or Chromebook keyboards together without thinking about switching types.  
+
+- May have issues installing on distros not on the "tested" list below. Try the `--list-distros` and `--override-distro` options (separately) with the installer, if you think your distro is closely related to one on the list.  
 
 - May seem to run at login, but not do any remapping, needing `toshy-config-start-verbose` in the terminal to troubleshoot. Or, it may just need a restart of the services from the tray icon or with `toshy-services-restart`.  
 
-- May cause the keyboard in some odd circumstances after install/reboot to have no output (default emergency bail out key is F16). If you don't have F16 on your keyboard, you may need to stop and restart the Toshy services from the tray icon menu, or by opening the "Preferences" app from a menu with the mouse.  
+- May cause the keyboard in some odd circumstances after install/reboot to have no output (default emergency bail out key is F16, which can be changed in the config file before rebooting). If you don't have F16 on your keyboard, you may need to stop and restart the Toshy services from the tray icon menu, or by opening the "Preferences" app from a menu with the mouse.  
 
 - The Wayland+KDE (Plasma) solution works but is still a bit "fragile" due to multiple separate components needing to work together. Also, if you have multiple desktop environments installed and one is KDE, you'll need to run the installer once while you are logged into a KDE session, so the necessary components get set up. After that you should be able to log into other DEs and choose either X11/Xorg or Wayland (only GNOME or KDE for now) sessions with no issue.  
 
