@@ -453,6 +453,23 @@ toshy-services-restart
 
 ### What happened to my customizations of the config?!
 
+#### UPDATE: This shouldn't be a problem in the future
+
+Through extraordinary effort, some updates have been merged that try very hard to retain customizations you may have made to the Toshy config file, and preferences that have been saved to an `sqlite3` database file in your config folder. If you installed Toshy before today (June 5th, 2023), you will need to do one more reinstall from a freshly downloaded zip or clone of the repo. After that reinstall, your config file will contain the markers necessary for the Toshy installer to grab any changes you've made within those special marked sections of the file, and merge them into any new version of the config file as it continues to evolve. **_This will probably not always work over time, depending on what you did, and what changes need to be made to the default config file._** If it doesn't work, you'll just have to merge your customizations the old way, by hand. Hopefully that won't happen often. The same full backups of the entire config folder will happen, just like before. I'll leave the rest of this FAQ entry here for a while. It still has relevant info about the backups.  
+
+If you edit outside the "slice marks" that enable the merging process to work, your changes would still be overwritten every time you run the installer. If you think the config file needs a new location for an editable section, submit an issue about it.  
+
+Right now, the sections marked for attempted retention through upgrades/reinstalls are:  
+
+- API function settings for the keymapper (`keyszer`).  
+- Environment overrides (custom distro name, session type, etc.)  
+- Keyboard type override (**_submit an issue if you have this problem!_**)  
+- "User Apps" area, intended as a good place for things like laptop hardware/function keys remaps, or apps that haven't been added to the default config file yet.  
+
+**_Original, now slightly obsolete text of this FAQ entry below:_**  
+
+* * *  
+
 **Short version**: Don't worry, it's in a backup folder, and you can easily merge your changes back into the new config.  
 
 **Long version**: Because the config file is continually evolving, and the config file itself is really a "program" written in Python that is literally executed as Python code by the keymapper (`keyszer`) at runtime, it's a bit difficult to retain the changes you've made and be sure that the new version of the config file will load without some sort of error.  
@@ -473,6 +490,31 @@ There is an `include()` function in `keyszer` that theoretically allows separate
 
 ### My keyboard is not recognized as the correct type
 
+> **_NOTE! If you have this problem, please submit an issue report about it, so the device name can be added to the default Toshy config!_**  
+
+#### UPDATE: There is now a way to override the keyboard type
+
+Use the verbose manual config command below, and look for lines with `KB_TYPE:` to see your keyboard device name, as seen by the keymapper and the function that tries to identify the keyboard type. You can also find it in the list output by the command `toshy-devices`.  
+
+You can then take the device name and add it to this Python dictionary between special markers in the config file that will ensure the change will get retained when re-installing or upgrading Toshy:  
+
+```py
+keyboards_UserCustom_dct = {
+    # Add your keyboard device here if its type is misidentified by isKBtype() function
+    # Valid types to map device to: Apple, Windows, IBM, Chromebook
+    # Example:
+    'My Keyboard Device Name': 'Apple',
+}
+```
+
+This will force the keyboard to be treated as the 'type' you put after the colon.  
+
+> **_NOTE! If you have this problem, please submit an issue report about it, so the device name can be added to the default Toshy config!_**  
+
+**_Original content of this FAQ is below:_** 
+
+* * *  
+
 If you run the verbose output script you'll be able to see the device name that `keyszer` is seeing when you use your keyboard. Run this in a terminal, and then use a remapped shortcut like `Shift+Cmd+Left_Brace` or `Shift+Cmd+Right_Brace` (the square bracket keys). Or just `Cmd+Tab` away from the terminal and back.  
 
 ```sh
@@ -491,6 +533,12 @@ keyboards_Apple
 Add your device name as an item in the relevant list, and restart Toshy. The keyboard device should now be treated as the correct type, with the modifiers in the right places.  
 
 > **_NOTE! If you have this problem, please submit an issue report about it, so the device name can be added to the default Toshy config!_**  
+
+### My keyboard is a switchable Windows/Mac "universal" model
+
+I'm going to recommend that such keyboards be placed in the "Windows" mode. Most such keyboards won't be automatically identified as an "Apple" keyboard by Toshy (mostly because the device name won't contain "Apple") so things will probably work best if you just leave it in "Windows" mode and let Toshy deal with remapping the modifiers.  
+
+If that doesn't work out well, you'll need to add it to the custom dictionary described in the FAQ entry above to force the device to be identified as an "Apple" keyboard type, and try to use it in the Mac-compatibility mode.  
 
 ### CLI/Shell commands missing/unavailable
 
