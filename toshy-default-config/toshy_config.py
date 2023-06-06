@@ -201,38 +201,56 @@ def isKBtype(kbtype: str, map=None):
     4. Is `kbtype` "Windows" and other type strings _not_ in device name
         and device name _not_ in `all_keyboards` list?
     """
+
+    # guard against failure to give valid type arg
+    if kbtype not in ['IBM', 'Chromebook', 'Windows', 'Apple']:
+        error(  f"ERROR: Invalid type given to isKBtype() function: '{kbtype}'"
+                f'\n\t Valid types: IBM | Chromebook | Windows | Apple')
+        return False
+    
     # Create a "UserCustom" keyboard dictionary with casefolded keys
-    keyboards_UserCustom_lower_dct = {k.casefold(): v for k, v in keyboards_UserCustom_dct.items()}
-    regex_list = kbtype_lists.get(kbtype, [])
+    kbds_UserCustom_lower_dct   = {k.casefold(): v for k, v in keyboards_UserCustom_dct.items()}
+    kbtype_cf                   = kbtype.casefold()
+    pattern_lst                 = kbtype_lists.get(kbtype, [])
+    regex_lst                   = [re.compile(pattern, re.I) for pattern in pattern_lst]
+    not_win_type_rgx            = re.compile("IBM|Chromebook|Apple", re.I)
+    all_kbs_rgx                 = re.compile(toRgxStr(all_keyboards), re.I)
 
     def _isKBtype(ctx: KeyContext):
         logging_enabled = True
+        
         kb_dev_name = ctx.device_name.casefold()
 
-        # Check the keyboards_UserCustom_dct dictionary
-        custom_kb_type = keyboards_UserCustom_lower_dct.get(kb_dev_name, None)
-        if custom_kb_type is not None and custom_kb_type.casefold() == kbtype.casefold():
+        custom_kbtype = str(kbds_UserCustom_lower_dct.get(kb_dev_name, '')).casefold()
+        if custom_kbtype == kbtype_cf:
             if logging_enabled:
-                debug(f"KB_TYPE: '{ctx.device_name}' in custom dict. Type is '{custom_kb_type}'.")
+                debug(f"KB_TYPE: '{custom_kbtype}' | Custom type given for device: '{ctx.device_name}'")
             return True
 
-        for regex in regex_list:
-            match = re.search(regex, kb_dev_name, re.I)
+        for rgx in regex_lst:
+            match = rgx.search(kb_dev_name)
             if match:
                 if logging_enabled:
-                    debug(f"KB_TYPE: '{kbtype}' {match}")
+                    debug(f"KB_TYPE: '{kbtype}' | Regex matched on device name: '{ctx.device_name}'")
                 return True
 
-        if kbtype.casefold() in kb_dev_name:
+        if kbtype_cf in kb_dev_name:
             if logging_enabled:
-                debug(f"KB_TYPE: '{kbtype}' Keyword found in device name: '{ctx.device_name}'")
+                debug(f"KB_TYPE: '{kbtype}' | Type found in device name: '{ctx.device_name}'")
             return True
 
-        if kbtype == "Windows":
-            if not re.search("IBM|Chromebook|Apple", kb_dev_name, re.I):
-                if kb_dev_name not in all_keyboards:
+        if kbtype_cf == 'apple' and 'magic' in kb_dev_name and 'keyboard' in kb_dev_name:
+            if logging_enabled:
+                debug(f"KB_TYPE: '{kbtype}' | Identified as Magic Keyboard: '{ctx.device_name}' ")
+            return True
+
+        if kbtype_cf == 'windows':
+            # check there are no non-Windows type keywords on the device name
+            if not not_win_type_rgx.search(kb_dev_name):
+                # if kb_dev_name not in all_keyboards:
+                if not all_kbs_rgx.search(kb_dev_name):
                     if logging_enabled:
-                        debug(  f"KB_TYPE: '{ctx.device_name}' defaulting to 'Windows' type.")
+                        debug(f"KB_TYPE: '{kbtype}' | Device given default type: '{ctx.device_name}'")
                     return True
         return False
 
@@ -281,25 +299,6 @@ def isDoubleTap(dt_combo):
             return None
     return _isDoubleTap
 
-
-# def toggle_media_arrows_fix():
-#     """Toggle the value of the media_arrows_fix variable"""
-#     # Needs "from subprocess import run" somewhere
-#     def _toggle_media_arrows_fix():
-#         global media_arrows_fix
-#         media_arrows_fix = not media_arrows_fix
-#         if media_arrows_fix:
-#             subprocess.run('notify-send -u critical ALERT "Media Arrows Fix is now ENABLED.\
-#                 \rMedia function arrow keys will be PgUp/PgDn/Home/End\
-#                 \rwhen used with the Fn key.\
-#                 \rDisable with Shift+Opt+Cmd+M."', shell=True)
-#             debug("Media Arrows Fix is now ENABLED.")
-#         else:
-#             subprocess.run('notify-send -u critical ALERT "Media Arrows Fix is now DISABLED.\
-#                 \rRe-enable with Shift+Opt+Cmd+M."', shell=True)
-#             debug("Media Arrows Fix is now DISABLED.")
-
-#     return _toggle_media_arrows_fix
 
 
 # Correct syntax to reject all positional parameters: put `*,` at beginning
@@ -451,7 +450,7 @@ def matchProps(*,
     return _matchProps      # outer function returning inner function
 
 
-def toRgxStr(lst_of_str):
+def toRgxStr(lst_of_str) -> str:
     """
     Convert a list of strings into a casefolded             \n
     concatenated regex pattern string.
@@ -747,8 +746,8 @@ keyboards_Windows = [
 keyboards_Apple = [
     # Add specific Apple/Mac keyboard device names to this list
     'Mitsumi Electric Apple Extended USB Keyboard',
-    'Magic Keyboard with Numeric Keypad',
-    'Magic Keyboard.*',
+    '.*Magic.*Keyboard.*with.*Numeric.*Keypad.*',
+    '.*Magic.*Keyboard.*',
 ]
 
 kbtype_lists = {
@@ -759,8 +758,7 @@ kbtype_lists = {
 }
 
 # List of all known keyboard devices from all lists
-all_keyboards = [kb for kbtype in kbtype_lists.values() for kb in kbtype]
-all_kbs_rgx = re.compile(toRgxStr(all_keyboards), re.I)
+all_keyboards       = [kb for kbtype in kbtype_lists.values() for kb in kbtype]
 
 
 
