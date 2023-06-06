@@ -234,14 +234,14 @@ def isKBtype(kbtype: str, map=None):
                     debug(f"KB_TYPE: '{kbtype}' | Regex matched on device name: '{ctx.device_name}'")
                 return True
 
-        if kbtype_cf in kb_dev_name:
-            if logging_enabled:
-                debug(f"KB_TYPE: '{kbtype}' | Type found in device name: '{ctx.device_name}'")
-            return True
-
         if kbtype_cf == 'apple' and 'magic' in kb_dev_name and 'keyboard' in kb_dev_name:
             if logging_enabled:
                 debug(f"KB_TYPE: '{kbtype}' | Identified as Magic Keyboard: '{ctx.device_name}' ")
+            return True
+
+        if kbtype_cf in kb_dev_name:
+            if logging_enabled:
+                debug(f"KB_TYPE: '{kbtype}' | Type found in device name: '{ctx.device_name}'")
             return True
 
         if kbtype_cf == 'windows':
