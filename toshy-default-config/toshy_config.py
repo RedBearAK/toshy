@@ -211,14 +211,14 @@ def isKBtype(kbtype: str, map=None):
     # Create a "UserCustom" keyboard dictionary with casefolded keys
     kbds_UserCustom_lower_dct   = {k.casefold(): v for k, v in keyboards_UserCustom_dct.items()}
     kbtype_cf                   = kbtype.casefold()
-    pattern_lst                 = kbtype_lists.get(kbtype, [])
-    regex_lst                   = [re.compile(pattern, re.I) for pattern in pattern_lst]
+    # pattern_lst                 = kbtype_lists.get(kbtype, [])
+    # regex_lst                   = [re.compile(pattern, re.I) for pattern in pattern_lst]
+    regex_lst                   = kbtype_lists_rgx.get(kbtype, [])
     not_win_type_rgx            = re.compile("IBM|Chromebook|Apple", re.I)
-    all_kbs_rgx                 = re.compile(toRgxStr(all_keyboards), re.I)
+    # all_kbds_rgx                = re.compile(toRgxStr(all_keyboards), re.I)
 
     def _isKBtype(ctx: KeyContext):
         logging_enabled = True
-        
         kb_dev_name = ctx.device_name.casefold()
 
         custom_kbtype = str(kbds_UserCustom_lower_dct.get(kb_dev_name, '')).casefold()
@@ -245,13 +245,12 @@ def isKBtype(kbtype: str, map=None):
             return True
 
         if kbtype_cf == 'windows':
-            # check there are no non-Windows type keywords on the device name
+            # check there are no non-Windows type keywords in the device name
             if not not_win_type_rgx.search(kb_dev_name):
-                # if kb_dev_name not in all_keyboards:
-                if not all_kbs_rgx.search(kb_dev_name):
-                    if logging_enabled:
-                        debug(f"KB_TYPE: '{kbtype}' | Device given default type: '{ctx.device_name}'")
-                    return True
+                # if not all_kbds_rgx.search(kb_dev_name):
+                if logging_enabled:
+                    debug(f"KB_TYPE: '{kbtype}' | Device given default type: '{ctx.device_name}'")
+                return True
         return False
 
     return _isKBtype    # return the inner function
@@ -736,8 +735,7 @@ keyboards_IBM = [
 ]
 keyboards_Chromebook = [
     # Add specific Chromebook keyboard device names to this list
-    'Google .* Keyboard',
-    '.* Chromebook Keyboard',
+    'Google.*Keyboard',
 ]
 keyboards_Windows = [
     # Add specific Windows/PC keyboard device names to this list
@@ -746,8 +744,8 @@ keyboards_Windows = [
 keyboards_Apple = [
     # Add specific Apple/Mac keyboard device names to this list
     'Mitsumi Electric Apple Extended USB Keyboard',
-    '.*Magic.*Keyboard.*with.*Numeric.*Keypad.*',
-    '.*Magic.*Keyboard.*',
+    'Magic Keyboard with Numeric Keypad',
+    'Magic Keyboard',
 ]
 
 kbtype_lists = {
@@ -759,6 +757,24 @@ kbtype_lists = {
 
 # List of all known keyboard devices from all lists
 all_keyboards       = [kb for kbtype in kbtype_lists.values() for kb in kbtype]
+
+# keyboard lists compiled to regex objects (replacing spaces with wildcards)
+kbds_IBM_rgx        = [re.compile(kb.replace(" ", ".*"), re.I) for kb in keyboards_IBM]
+kbds_Chromebook_rgx = [re.compile(kb.replace(" ", ".*"), re.I) for kb in keyboards_Chromebook]
+kbds_Windows_rgx    = [re.compile(kb.replace(" ", ".*"), re.I) for kb in keyboards_Windows]
+kbds_Apple_rgx      = [re.compile(kb.replace(" ", ".*"), re.I) for kb in keyboards_Apple]
+
+# Dict mapping keyboard type keywords onto 
+kbtype_lists_rgx    = {
+    'IBM':          kbds_IBM_rgx,
+    'Chromebook':   kbds_Chromebook_rgx,
+    'Windows':      kbds_Windows_rgx,
+    'Apple':        kbds_Apple_rgx
+}
+
+# List of all known keyboard devices from all lists
+# all_kbds_rgx        = re.compile(toRgxStr(all_keyboards), re.I)
+not_win_type_rgx    = re.compile("IBM|Chromebook|Apple", re.I)
 
 
 

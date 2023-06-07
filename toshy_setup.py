@@ -22,6 +22,13 @@ from typing import Dict
 import lib.env as env
 from lib.logger import debug, error
 
+trash_dir   = os.path.expanduser("~/.local/share/Trash")
+file_path   = os.path.abspath(__file__)
+if trash_dir in file_path or '/trash/' in file_path.lower():
+    error(f"Path to this file: {file_path}")
+    error(f"You probably did not intend to run this from the TRASH, but you are. Exiting.")
+    sys.exit(1)
+
 # set a standard path for commands to avoid issues with user customized paths
 os.environ['PATH'] = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 
@@ -228,9 +235,9 @@ def load_uinput_module():
 
     try:
         subprocess.check_output("lsmod | grep uinput", shell=True)
-        print('"uinput" module is already loaded')
+        print('The "uinput" module is already loaded')
     except subprocess.CalledProcessError:
-        print('"uinput" module is not loaded, loading now...')
+        print('The "uinput" module is not loaded, loading now...')
         call_attention_to_password_prompt()
         subprocess.run(['sudo', 'modprobe', 'uinput'], check=True)
 
@@ -665,13 +672,13 @@ def install_toshy_files():
 
 def setup_python_virt_env():
     """Setup a virtual environment to install Python packages"""
-    print(f'\n\n§  Setting up Python virtual environment...\n{cnfg.separator}')
+    print(f'\n\n§  Setting up the Python virtual environment...\n{cnfg.separator}')
 
     # Create the virtual environment if it doesn't exist
     if not os.path.exists(cnfg.venv_path):
         subprocess.run([sys.executable, '-m', 'venv', cnfg.venv_path])
     # We do not need to "activate" the venv right now, just create it
-    print(f'Virtual environment setup complete.')
+    print(f'Python virtual environment setup complete.')
 
 
 def install_pip_packages():
@@ -754,10 +761,10 @@ def setup_kwin2dbus_script():
     kwin_script_name    = 'toshy-dbus-notifyactivewindow'
     kwin_script_path    = os.path.join( cnfg.toshy_dir_path,
                                         'kde-kwin-dbus-service', kwin_script_name)
-    temp_file_path      = f'{cnfg.run_tmp_dir}/toshy-dbus-notifyactivewindow.kwinscript'
+    kwin_tmp_file_path  = f'{cnfg.run_tmp_dir}/toshy-dbus-notifyactivewindow.kwinscript'
 
     # Create a zip file (overwrite if it exists)
-    with zipfile.ZipFile(temp_file_path, 'w') as zipf:
+    with zipfile.ZipFile(kwin_tmp_file_path, 'w') as zipf:
         # Add main.js to the kwinscript package
         zipf.write(os.path.join(kwin_script_path, 'contents', 'code', 'main.js'),
                                 arcname='contents/code/main.js')
@@ -776,7 +783,7 @@ def setup_kwin2dbus_script():
 
     # Install the KWin script
     result = subprocess.run(
-        ['kpackagetool5', '-t', 'KWin/Script', '-i', temp_file_path], capture_output=True, text=True)
+        ['kpackagetool5', '-t', 'KWin/Script', '-i', kwin_tmp_file_path], capture_output=True, text=True)
 
     if result.returncode != 0:
         print(f"Error installing the KWin script. The error was:\n\t{result.stderr}")
@@ -785,7 +792,7 @@ def setup_kwin2dbus_script():
 
     # Remove the temporary kwinscript file
     try:
-        os.remove(temp_file_path)
+        os.remove(kwin_tmp_file_path)
     except (FileNotFoundError, PermissionError): pass
 
     # Enable the script using kwriteconfig5
@@ -927,14 +934,21 @@ def apply_tweaks_KDE():
         # git clone https://github.com/nclarius/kwin-application-switcher.git
         # cd kwin-application-switcher
         # ./install.sh
-        switcher_url    = 'https://github.com/nclarius/kwin-application-switcher.git'
-        script_path     = os.path.dirname(os.path.realpath(__file__))
+        switcher_url        = 'https://github.com/nclarius/kwin-application-switcher.git'
+        switcher_dir        = 'kwin-application-switcher'
+        script_path         = os.path.dirname(os.path.realpath(__file__))
+        switcher_dir_path   = os.path.join(script_path, switcher_dir)
         # git should be installed by this point? Not necessarily.
         if shutil.which('git'):
             try:
-                subprocess.run(["git", "clone", switcher_url], check=True,
+                if os.path.exists(switcher_dir_path):
+                    try:
+                        shutil.rmtree(switcher_dir_path)
+                    except (FileNotFoundError, PermissionError, OSError) as file_err:
+                        print(f'Problem removing existing switcher clone folder:\n\t{file_err}')
+                subprocess.run(["git", "clone", switcher_url, switcher_dir_path], check=True,
                                 stdout=DEVNULL, stderr=DEVNULL)
-                command_dir     = os.path.join(script_path, 'kwin-application-switcher')
+                command_dir     = os.path.join(script_path, switcher_dir)
                 subprocess.run(["./install.sh"], cwd=command_dir, check=True,
                                 stdout=DEVNULL, stderr=DEVNULL)
                 print(f'Installed "Application Switcher" KWin script.')
@@ -942,13 +956,20 @@ def apply_tweaks_KDE():
                 print(f'Something went wrong installing KWin Application Switcher.\n\t{proc_error}')
         else:
             print(f"ERROR: Unable to clone KWin Application Switcher. 'git' not installed.")
-        
-        # Set the LayoutName value to big_icons
+
+        # Run reconfigure command
+        do_kwin_reconfigure()
+
+        # Set the LayoutName value to big_icons (shows task switcher with large icons, no previews)
         subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox',
                         '--key', 'LayoutName', 'big_icons'], check=True)
-        # Set the HighlightWindows value to false
+        # Set the HighlightWindows value to false (disables "Show selected window" option)
         subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox',
                         '--key', 'HighlightWindows', 'false'], check=True)
+        # Set the ApplicationsMode value to 1 (enables "Only one window per application" option)
+        subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox',
+                        '--key', 'ApplicationsMode', '1'], check=True)
+
         # Run reconfigure command
         do_kwin_reconfigure()
         print(f'Set task switcher to Large Icons, disabled show window.')
@@ -957,12 +978,16 @@ def apply_tweaks_KDE():
 def remove_tweaks_KDE():
     """Utility function to remove the tweaks applied to KDE"""
 
+    # Re-enable Meta key opening the application menu
     subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group',
                     'ModifierOnlyShortcuts', '--key', 'Meta', '--delete'], check=True)
+    # Disable the "Only one window per application" task switcher option
+    subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox', 
+                    '--key', 'ApplicationsMode', '--delete'], check=True)
 
     # Run reconfigure command
     do_kwin_reconfigure()
-    print(f'Removed tweak to disable Meta key opening application menu.')
+    print(f'Re-enabled Meta key opening application menu.')
 
 
 ###################################################################################################
@@ -1078,12 +1103,32 @@ def remove_desktop_tweaks():
 def uninstall_toshy():
     print(f'\n\n§  Uninstalling Toshy...\n{cnfg.separator}')
     remove_desktop_tweaks()
+    
     # TODO: do more uninstaller stuff:
+
     # run the systemd-remove script
+    if cnfg.systemctl_present:
+        script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'bin', 'toshy-systemd-remove.sh')
+        subprocess.run([script_path])
+    else:
+        print(f'System does not seem to be using "systemd"')
+
     # unload/uninstall/remove KWin script(s)
+
+
     # kill the KDE D-Bus service script
+    try:
+        subprocess.run(['pkill', '-f', 'toshy_kde_dbus_service'], check=True)
+    except subprocess.CalledProcessError as proc_err:
+        error(f'Problem terminating KDE D-Bus service script:\n\t{proc_err}')
+    # remove the KDE D-Bus service autostart file
+    
+
     # run the desktopapps-remove script
     # run the bincommands-remove script
+
+    # elevate_privileges()
+
     # remove the 'udev' rules file
     # refresh the active 'udev' rules
 
