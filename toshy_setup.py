@@ -22,6 +22,13 @@ from typing import Dict
 import lib.env as env
 from lib.logger import debug, error
 
+trash_dir   = os.path.expanduser("~/.local/share/Trash")
+file_path   = os.path.abspath(__file__)
+if trash_dir in file_path or '/trash/' in file_path.lower():
+    error(f"Path to this file: {file_path}")
+    error(f"You probably did not intend to run this from the TRASH, but you are. Exiting.")
+    sys.exit(1)
+
 # set a standard path for commands to avoid issues with user customized paths
 os.environ['PATH'] = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 
