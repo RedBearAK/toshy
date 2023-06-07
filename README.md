@@ -1,4 +1,4 @@
-# Current status: Early Beta (Please Read Before Installing)
+# Current status: Early Beta (Please Read)
 
 - PRIMARY ISSUE you may run into at this point: The Toshy config file tries to automatically identify the "type" of your keyboard based on some pre-existing lists of keyboard device names, which do not have many entries yet. So your keyboard may be misidentified, leading to modifier keys in the "wrong" place. BE PREPARED to identify the name of your keyboard device (try `toshy-devices` in a terminal) and enter it into the correct list in the config file to fix this problem. There is an editable "custom" list where the entry should be retained even if you reinstall later. Please take the time to FILE AN ISSUE if you encounter this, whether or not you are able to fix it on your own. Include your device name and what type it should be. The goal is to populate the default keyboard name lists so that this becomes a very unusual problem going forward. The bigger goal of Toshy has been to allow a mixed-type environment where you can use any combination of Apple, Windows (PC), IBM or Chromebook keyboards together without thinking about switching types.  
 
@@ -202,19 +202,20 @@ And finally:
 ./toshy_setup.py --fancy-pants
 ```
 
-This will do the full install, but add various things that I find convenient, fun, or somehow makes the desktop environment more Mac-like.  
+This will do the full install, but add various things that I find convenient, fun, or somehow makes the desktop environment behave more like macOS.  
 
 At the moment this installer option will do the following: 
 
-- Installs "Fantasque Sans Mono noLig" font
+- ALL: Installs "Fantasque Sans Mono noLig" font
     - From a fork with no coding ligatures
     - LargeLineHeight-NoLoopK variant
     - Try it in terminals or code editors
-- GNOME: Set "Switch applications" to `Alt+Tab`
-- GNOME: Set "Switch windows of an application" to `Alt+Grave`
-- KDE: Installs "Application Switcher" KWin script
+    - May look a bit "heavy" on KDE due to forced "stem darkening" in Qt apps
+- GNOME: Makes "Switch applications" the primary task switching style (groups apps like macOS)
+- KDE: Installs "Application Switcher" KWin script (groups apps like macOS/GNOME)
 - KDE: Disables task switcher option "Show selected window"
-- KDE: Sets the task switcher to "Large Icons"
+- KDE: Sets the task switcher to "Large Icons" (like macOS/GNOME task switcher)
+- KDE: Enables task switcher option "Only one window per application" (makes the task switcher dialog show only a single icon for each application, like macOS/GNOME)
 
 ## Currently working/tested Linux distros:
 
