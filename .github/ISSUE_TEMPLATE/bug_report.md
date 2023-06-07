@@ -18,7 +18,10 @@ Distro version:
 X11/Xorg or Wayland: 
 Desktop environment(s): 
 
-DE(s) tried with Wayland?: 
+Any DE(s) tried with Wayland?: 
+
+Keyboard type (IBM, Chromebook, Windows, Apple): 
+Keyboard device name (try 'toshy-devices'): 
 ```
 
 These terminal commands may provide helpful info:
@@ -26,6 +29,8 @@ These terminal commands may provide helpful info:
 - toshy-services-log  
 - toshy-services-status  
 - toshy-config-start-verbose  
+- toshy-devices
+- toshy-env
 
 Problem observed:  
 * * *
