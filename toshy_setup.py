@@ -20,20 +20,22 @@ from subprocess import DEVNULL
 from typing import Dict
 # local import
 import lib.env as env
-from lib.logger import debug, error
+from lib.logger import debug, error, warn, info
 
 trash_dir   = os.path.expanduser("~/.local/share/Trash")
 file_path   = os.path.abspath(__file__)
 if trash_dir in file_path or '/trash/' in file_path.lower():
+    print()
     error(f"Path to this file: {file_path}")
     error(f"You probably did not intend to run this from the TRASH, but you are. Exiting.")
+    print()
     sys.exit(1)
 
-# set a standard path for commands to avoid issues with user customized paths
+# set a standard path for duration of script run, to avoid issues with user customized paths
 os.environ['PATH'] = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 
 if os.name == 'posix' and os.geteuid() == 0:
-    print("This app should not be run as root/superuser.")
+    error("This app should not be run as root/superuser.")
     sys.exit(1)
 
 def signal_handler(sig, frame):
@@ -41,7 +43,7 @@ def signal_handler(sig, frame):
     if sig in (signal.SIGINT, signal.SIGQUIT):
         # Perform any cleanup code here before exiting
         # traceback.print_stack(frame)
-        print(f'\n\nSIGINT or SIGQUIT received. Exiting.\n')
+        debug(f'\n\nSIGINT or SIGQUIT received. Exiting.\n')
         sys.exit(0)
 
 if platform.system() != 'Windows':
@@ -52,7 +54,7 @@ if platform.system() != 'Windows':
     signal.signal(signal.SIGUSR2,   signal_handler)
 else:
     signal.signal(signal.SIGINT,    signal_handler)
-    print(f'This is only meant to run on Linux. Exiting.')
+    error(f'This is only meant to run on Linux. Exiting.')
     sys.exit(1)
 
 
@@ -142,7 +144,7 @@ def get_environment_info():
     else:
         error("ERROR: Init system (process 1) could not be determined. (See above error.)")
 
-    print('')   # blank line after init system message
+    print()   # blank line after init system message
 
     cnfg.env_info_dct   = env.get_env_info()
 
@@ -156,12 +158,12 @@ def get_environment_info():
     cnfg.SESSION_TYPE   = str(cnfg.env_info_dct.get('SESSION_TYPE', 'keymissing')).casefold()
     cnfg.DESKTOP_ENV    = str(cnfg.env_info_dct.get('DESKTOP_ENV',  'keymissing')).casefold()
     # This syntax fails on anything older than Python 3.8
-    print(  f'Toshy installer sees this environment:'
+    debug(  f'Toshy installer sees this environment:'
             f'\n\t{cnfg.DISTRO_NAME     = }'
             f'\n\t{cnfg.DISTRO_VER      = }'
             f'\n\t{cnfg.SESSION_TYPE    = }'
             f'\n\t{cnfg.DESKTOP_ENV     = }'
-            f'\n')
+            f'\n', ctx='EV')
 
 
 def call_attention_to_password_prompt():
@@ -170,9 +172,9 @@ def call_attention_to_password_prompt():
         subprocess.run( ['sudo', '-n', 'true'], stdout=DEVNULL, stderr=DEVNULL, check=True)
     except subprocess.CalledProcessError:
         # sudo requires a password
-        print('')
-        print('-- PASSWORD REQUIRED TO CONTINUE WITH INSTALL --')
-        print('')
+        print()
+        print('  -- PASSWORD REQUIRED TO CONTINUE WITH INSTALL --  ')
+        print()
 
 
 def prompt_for_reboot():
@@ -186,29 +188,34 @@ def dot_Xmodmap_warning():
     """Check for '.Xmodmap' file in user's home folder, show warning about mod key remaps"""
     xmodmap_file_path = os.path.realpath(os.path.join(os.path.expanduser('~'), '.Xmodmap'))
     if os.path.isfile(xmodmap_file_path):
-        print(f'\n{cnfg.separator}')
+        print()
         print(f'{cnfg.separator}')
+        print(f'{cnfg.separator}')
+        warn_str    = "\t WARNING: You have an '.Xmodmap' file in your home folder!!!"
         if os.environ['COLORTERM']:
             # Terminal supports ANSI escape sequences
-            print("\033[1;31m\t WARNING: You have an '.Xmodmap' file in your home folder!!!\033[0m")
+            warn(f"\033[1;31m{warn_str}\033[0m \n")
         else:
             # Terminal might not support ANSI escape sequences
-            print(f"\t WARNING: You have an '.Xmodmap' file in your home folder!!! \n")
+            warn(f"{warn_str} \n")
         print(f'   This can cause confusing PROBLEMS if you are remapping any modifier keys!')
         print(f'{cnfg.separator}')
-        print(f'{cnfg.separator}\n')
+        print(f'{cnfg.separator}')
+        print()
         
         secret_code = ''.join(random.choice(string.ascii_letters) for _ in range(4))
         
         response = input(
             f"You must take responsibility for the issues an '.Xmodmap' file may cause."
-            f"\n\n\t If you understand, enter the secret code '{secret_code}': "
+            f"\n\n\t\t If you understand, enter the secret code '{secret_code}': "
         )
         
         if response == secret_code:
-            print(f"\nGood code. User has taken responsibility for '.Xmodmap' file. Proceeding...\n")
+            print()
+            info(f"Good code. User has taken responsibility for '.Xmodmap' file. Proceeding...\n")
         else:
-            print(f"\nCode does not match! Try the installer again after dealing with '.Xmodmap'.\n")
+            print()
+            error(f"Code does not match! Try the installer again after dealing with '.Xmodmap'.\n")
             sys.exit(1)
 
 
@@ -251,8 +258,8 @@ def load_uinput_module():
                 command = "echo 'uinput' | sudo tee /etc/modules-load.d/uinput.conf >/dev/null"
                 subprocess.run(command, shell=True, check=True)
             except subprocess.CalledProcessError as proc_error:
-                print(f"Failed to create /etc/modules-load.d/uinput.conf: {proc_error}")
-                print(f'\nERROR: Install failed.')
+                error(f"Failed to create /etc/modules-load.d/uinput.conf:\n\t{proc_error}")
+                error(f'ERROR: Install failed.')
                 sys.exit(1)
 
     else:
@@ -267,8 +274,8 @@ def load_uinput_module():
                         command = "echo 'uinput' | sudo tee -a /etc/modules >/dev/null"
                         subprocess.run(command, shell=True, check=True)
                     except subprocess.CalledProcessError as proc_error:
-                        print(f"ERROR: Failed to append 'uinput' to /etc/modules: {proc_error}")
-                        print(f'\nERROR: Install failed.')
+                        error(f"ERROR: Failed to append 'uinput' to /etc/modules:\n\t{proc_error}")
+                        error(f'ERROR: Install failed.')
                         sys.exit(1)
 
 
@@ -302,11 +309,13 @@ def install_udev_rules():
             print(f'"udev" rules file successfully installed.')
             reload_udev_rules()
         except subprocess.CalledProcessError as proc_error:
-            print(f'\nERROR: Problem while installing "udev" rules file for keymapper.\n')
+            print()
+            error(f'ERROR: Problem while installing "udev" rules file for keymapper.\n')
             err_output: bytes = proc_error.output  # Type hinting the error_output variable
             # Deal with possible 'NoneType' error output
-            print(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
-            print(f'\nERROR: Install failed.')
+            error(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
+            print()
+            error(f'ERROR: Install failed.')
             sys.exit(1)
     else:
         print(f'Correct "udev" rules already in place.')
@@ -324,11 +333,13 @@ def verify_user_groups():
             call_attention_to_password_prompt()
             subprocess.run(['sudo', 'groupadd', cnfg.input_group_name], check=True)
         except subprocess.CalledProcessError as proc_error:
-            print(f'\nERROR: Problem when trying to create "input" group.\n')
+            print()
+            error(f'ERROR: Problem when trying to create "input" group.\n')
             err_output: bytes = proc_error.output  # Type hinting the error_output variable
             # Deal with possible 'NoneType' error output
-            print(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
-            print(f'\nERROR: Install failed.')
+            error(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
+            print()
+            error(f'ERROR: Install failed.')
             sys.exit(1)
 
     # Check if the user is already in the `input` group
@@ -343,12 +354,14 @@ def verify_user_groups():
             subprocess.run(
                 ['sudo', 'usermod', '-aG', cnfg.input_group_name, cnfg.user_name], check=True)
         except subprocess.CalledProcessError as proc_error:
-            print(f'\nERROR: Problem when trying to add user "{cnfg.user_name}" to '
+            print()
+            error(f'ERROR: Problem when trying to add user "{cnfg.user_name}" to '
                     f'group "{cnfg.input_group_name}".\n')
             err_output: bytes = proc_error.output  # Type hinting the error_output variable
             # Deal with possible 'NoneType' error output
-            print(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
-            print(f'\nERROR: Install failed.')
+            error(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
+            print()
+            error(f'ERROR: Install failed.')
             sys.exit(1)
 
         print(f'User "{cnfg.user_name}" added to group "{cnfg.input_group_name}".')
@@ -406,7 +419,8 @@ def install_distro_pkgs():
             break
 
     if pkg_group is None:
-        print(f"\nERROR: No list of packages found for this distro: '{cnfg.DISTRO_NAME}'")
+        print()
+        print(f"ERROR: No list of packages found for this distro: '{cnfg.DISTRO_NAME}'")
         print(f'Installation cannot proceed without a list of packages. Sorry.')
         print(f'Try some options in "./toshy_setup.py --help"\n')
         sys.exit(1)
@@ -445,7 +459,8 @@ def install_distro_pkgs():
         subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro)
 
     elif cnfg.DISTRO_NAME in pacman_distros:
-        print(f'\n\nNOTICE: It is ESSENTIAL to have an Arch-based system completely updated.')
+        print('\n') # double blank line
+        debug(f'NOTICE: It is ESSENTIAL to have an Arch-based system completely updated.\n', ctx="!!")
         response = input('Have you run "sudo pacman -Syu" recently? [y/N]: ')
 
         if response in ['y', 'Y']:
@@ -471,7 +486,8 @@ def install_distro_pkgs():
         subprocess.run(['sudo', 'zypper', '--non-interactive', 'install'] + cnfg.pkgs_for_distro)
 
     else:
-        print(f"\nERROR: Installer does not know how to handle distro: {cnfg.DISTRO_NAME}\n")
+        print()
+        error(f"ERROR: Installer does not know how to handle distro: {cnfg.DISTRO_NAME}\n")
         sys.exit(1)
 
 
@@ -1222,7 +1238,8 @@ def main(cnfg: InstallerSettings):
 
     valid_distro_names = get_distro_names()
     if cnfg.DISTRO_NAME not in valid_distro_names:
-        print(f"\nInstaller does not know how to deal with distro '{cnfg.DISTRO_NAME}'\n")
+        print()
+        print(f"Installer does not know how to deal with distro '{cnfg.DISTRO_NAME}'\n")
         print(f'Maybe try one of these with "--override-distro" option:\n\t{valid_distro_names}')
         sys.exit(1)
 
@@ -1265,7 +1282,8 @@ def main(cnfg: InstallerSettings):
             print("AppIndicator extension is enabled. Tray icon should work.")
             # pass
         else:
-            print(f"\nRECOMMENDATION: Install 'AppIndicator' GNOME extension\n"
+            print()
+            info(f"RECOMMENDATION: Install 'AppIndicator' GNOME extension\n"
                 "Easiest method: 'flatpak install extensionmanager', search for 'appindicator'\n")
 
     if cnfg.should_reboot or os.path.exists(cnfg.reboot_tmp_file):
@@ -1299,12 +1317,12 @@ def main(cnfg: InstallerSettings):
     if cnfg.remind_extensions or (cnfg.DESKTOP_ENV == 'gnome' and cnfg.SESSION_TYPE == 'wayland'):
         print(f'You MUST install GNOME EXTENSIONS if using WAYLAND SESSION. See README.')
 
-    print('')   # blank line to avoid crowding the prompt after install is done
+    print()   # blank line to avoid crowding the prompt after install is done
 
 
 if __name__ == '__main__':
 
-    print('')   # blank line in terminal to start things off
+    print()   # blank line in terminal to start things off
 
     # Check if 'sudo' command is available to user
     if not shutil.which('sudo'):
