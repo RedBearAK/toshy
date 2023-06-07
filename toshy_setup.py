@@ -228,9 +228,9 @@ def load_uinput_module():
 
     try:
         subprocess.check_output("lsmod | grep uinput", shell=True)
-        print('"uinput" module is already loaded')
+        print('The "uinput" module is already loaded')
     except subprocess.CalledProcessError:
-        print('"uinput" module is not loaded, loading now...')
+        print('The "uinput" module is not loaded, loading now...')
         call_attention_to_password_prompt()
         subprocess.run(['sudo', 'modprobe', 'uinput'], check=True)
 
@@ -665,13 +665,13 @@ def install_toshy_files():
 
 def setup_python_virt_env():
     """Setup a virtual environment to install Python packages"""
-    print(f'\n\n§  Setting up Python virtual environment...\n{cnfg.separator}')
+    print(f'\n\n§  Setting up the Python virtual environment...\n{cnfg.separator}')
 
     # Create the virtual environment if it doesn't exist
     if not os.path.exists(cnfg.venv_path):
         subprocess.run([sys.executable, '-m', 'venv', cnfg.venv_path])
     # We do not need to "activate" the venv right now, just create it
-    print(f'Virtual environment setup complete.')
+    print(f'Python virtual environment setup complete.')
 
 
 def install_pip_packages():
