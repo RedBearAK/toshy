@@ -754,10 +754,10 @@ def setup_kwin2dbus_script():
     kwin_script_name    = 'toshy-dbus-notifyactivewindow'
     kwin_script_path    = os.path.join( cnfg.toshy_dir_path,
                                         'kde-kwin-dbus-service', kwin_script_name)
-    temp_file_path      = f'{cnfg.run_tmp_dir}/toshy-dbus-notifyactivewindow.kwinscript'
+    kwin_tmp_file_path  = f'{cnfg.run_tmp_dir}/toshy-dbus-notifyactivewindow.kwinscript'
 
     # Create a zip file (overwrite if it exists)
-    with zipfile.ZipFile(temp_file_path, 'w') as zipf:
+    with zipfile.ZipFile(kwin_tmp_file_path, 'w') as zipf:
         # Add main.js to the kwinscript package
         zipf.write(os.path.join(kwin_script_path, 'contents', 'code', 'main.js'),
                                 arcname='contents/code/main.js')
@@ -776,7 +776,7 @@ def setup_kwin2dbus_script():
 
     # Install the KWin script
     result = subprocess.run(
-        ['kpackagetool5', '-t', 'KWin/Script', '-i', temp_file_path], capture_output=True, text=True)
+        ['kpackagetool5', '-t', 'KWin/Script', '-i', kwin_tmp_file_path], capture_output=True, text=True)
 
     if result.returncode != 0:
         print(f"Error installing the KWin script. The error was:\n\t{result.stderr}")
@@ -785,7 +785,7 @@ def setup_kwin2dbus_script():
 
     # Remove the temporary kwinscript file
     try:
-        os.remove(temp_file_path)
+        os.remove(kwin_tmp_file_path)
     except (FileNotFoundError, PermissionError): pass
 
     # Enable the script using kwriteconfig5
@@ -943,12 +943,16 @@ def apply_tweaks_KDE():
         else:
             print(f"ERROR: Unable to clone KWin Application Switcher. 'git' not installed.")
         
-        # Set the LayoutName value to big_icons
+        # Set the LayoutName value to big_icons (shows task switcher with large icons, no previews)
         subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox',
                         '--key', 'LayoutName', 'big_icons'], check=True)
-        # Set the HighlightWindows value to false
+        # Set the HighlightWindows value to false (disables "Show selected window" option)
         subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox',
                         '--key', 'HighlightWindows', 'false'], check=True)
+        # Set the ApplicationsMode value to 1 (enables "Only one window per application" option)
+        subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox',
+                        '--key', 'ApplicationsMode', '1'], check=True)
+
         # Run reconfigure command
         do_kwin_reconfigure()
         print(f'Set task switcher to Large Icons, disabled show window.')
@@ -957,12 +961,16 @@ def apply_tweaks_KDE():
 def remove_tweaks_KDE():
     """Utility function to remove the tweaks applied to KDE"""
 
+    # Re-enable Meta key opening the application menu
     subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group',
                     'ModifierOnlyShortcuts', '--key', 'Meta', '--delete'], check=True)
+    # Disable the "Only one window per application" task switcher option
+    subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox', 
+                    '--key', 'ApplicationsMode', '--delete'], check=True)
 
     # Run reconfigure command
     do_kwin_reconfigure()
-    print(f'Removed tweak to disable Meta key opening application menu.')
+    print(f'Re-enabled Meta key opening application menu.')
 
 
 ###################################################################################################
@@ -1078,12 +1086,32 @@ def remove_desktop_tweaks():
 def uninstall_toshy():
     print(f'\n\n§  Uninstalling Toshy...\n{cnfg.separator}')
     remove_desktop_tweaks()
+    
     # TODO: do more uninstaller stuff:
+
     # run the systemd-remove script
+    if cnfg.systemctl_present:
+        script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'bin', 'toshy-systemd-remove.sh')
+        subprocess.run([script_path])
+    else:
+        print(f'System does not seem to be using "systemd"')
+
     # unload/uninstall/remove KWin script(s)
+
+
     # kill the KDE D-Bus service script
+    try:
+        subprocess.run(['pkill', '-f', 'toshy_kde_dbus_service'], check=True)
+    except subprocess.CalledProcessError as proc_err:
+        error(f'Problem terminating KDE D-Bus service script:\n\t{proc_err}')
+    # remove the KDE D-Bus service autostart file
+    
+
     # run the desktopapps-remove script
     # run the bincommands-remove script
+
+    # elevate_privileges()
+
     # remove the 'udev' rules file
     # refresh the active 'udev' rules
 
