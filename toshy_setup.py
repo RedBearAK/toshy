@@ -927,14 +927,21 @@ def apply_tweaks_KDE():
         # git clone https://github.com/nclarius/kwin-application-switcher.git
         # cd kwin-application-switcher
         # ./install.sh
-        switcher_url    = 'https://github.com/nclarius/kwin-application-switcher.git'
-        script_path     = os.path.dirname(os.path.realpath(__file__))
+        switcher_url        = 'https://github.com/nclarius/kwin-application-switcher.git'
+        switcher_dir        = 'kwin-application-switcher'
+        script_path         = os.path.dirname(os.path.realpath(__file__))
+        switcher_dir_path   = os.path.join(script_path, switcher_dir)
         # git should be installed by this point? Not necessarily.
         if shutil.which('git'):
             try:
-                subprocess.run(["git", "clone", switcher_url], check=True,
+                if os.path.exists(switcher_dir_path):
+                    try:
+                        shutil.rmtree(switcher_dir_path)
+                    except (FileNotFoundError, PermissionError, OSError) as file_err:
+                        print(f'Problem removing existing switcher clone folder:\n\t{file_err}')
+                subprocess.run(["git", "clone", switcher_url, switcher_dir_path], check=True,
                                 stdout=DEVNULL, stderr=DEVNULL)
-                command_dir     = os.path.join(script_path, 'kwin-application-switcher')
+                command_dir     = os.path.join(script_path, switcher_dir)
                 subprocess.run(["./install.sh"], cwd=command_dir, check=True,
                                 stdout=DEVNULL, stderr=DEVNULL)
                 print(f'Installed "Application Switcher" KWin script.')
@@ -942,7 +949,10 @@ def apply_tweaks_KDE():
                 print(f'Something went wrong installing KWin Application Switcher.\n\t{proc_error}')
         else:
             print(f"ERROR: Unable to clone KWin Application Switcher. 'git' not installed.")
-        
+
+        # Run reconfigure command
+        do_kwin_reconfigure()
+
         # Set the LayoutName value to big_icons (shows task switcher with large icons, no previews)
         subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox',
                         '--key', 'LayoutName', 'big_icons'], check=True)
