@@ -68,6 +68,8 @@ path_fix_tmp_path   = os.path.join(run_tmp_dir, path_fix_tmp_file)
 # set a standard path for duration of script run, to avoid issues with user customized paths
 os.environ['PATH'] = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 
+do_not_ask_about_path = None
+
 if home_local_bin in orig_PATH_str:
     subprocess.run(['touch', path_good_tmp_path])
     do_not_ask_about_path = True
