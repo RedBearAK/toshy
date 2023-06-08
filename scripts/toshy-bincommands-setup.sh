@@ -136,7 +136,7 @@ if ! echo "$PATH" | grep -q -E "(^|:)$HOME/.local/bin(:|$)" || [ -f "$path_fix_t
 
             if [[ $toshy_installer_says_fix_path -eq 1 ]]; then
                 echo -e "\nAppending the line to $shell_rc..."
-                echo -e "\n$path_line" >> "${shell_rc}"
+                echo -e "\n$path_line\n" >> "${shell_rc}"
                 echo -e "Done. Restart your shell or run 'source $shell_rc' to apply the changes."
                 exit 0
             fi
