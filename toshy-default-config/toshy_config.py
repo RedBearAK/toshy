@@ -215,17 +215,20 @@ def isKBtype(kbtype: str, map=None):
     # regex_lst                   = [re.compile(pattern, re.I) for pattern in pattern_lst]
     regex_lst                   = kbtype_lists_rgx.get(kbtype, [])
     not_win_type_rgx            = re.compile("IBM|Chromebook|Apple", re.I)
-    # all_kbds_rgx                = re.compile(toRgxStr(all_keyboards), re.I)
+    all_kbds_rgx                = re.compile(toRgxStr(all_keyboards), re.I)
 
     def _isKBtype(ctx: KeyContext):
         logging_enabled = True
         kb_dev_name = ctx.device_name.casefold()
 
         custom_kbtype = str(kbds_UserCustom_lower_dct.get(kb_dev_name, '')).casefold()
-        if custom_kbtype == kbtype_cf:
+        # check for type match/mismatch only if custom type is truthy
+        if custom_kbtype and custom_kbtype == kbtype_cf:
             if logging_enabled:
-                debug(f"KB_TYPE: '{custom_kbtype}' | Custom type given for device: '{ctx.device_name}'")
+                debug(f"KB_TYPE: '{kbtype}' | Type override given for device: '{ctx.device_name}'")
             return True
+        elif custom_kbtype and custom_kbtype != kbtype_cf:
+            return False
 
         for rgx in regex_lst:
             match = rgx.search(kb_dev_name)
@@ -247,10 +250,10 @@ def isKBtype(kbtype: str, map=None):
         if kbtype_cf == 'windows':
             # check there are no non-Windows type keywords in the device name
             if not not_win_type_rgx.search(kb_dev_name):
-                # if not all_kbds_rgx.search(kb_dev_name):
-                if logging_enabled:
-                    debug(f"KB_TYPE: '{kbtype}' | Device given default type: '{ctx.device_name}'")
-                return True
+                if not all_kbds_rgx.search(kb_dev_name):
+                    if logging_enabled:
+                        debug(f"KB_TYPE: '{kbtype}' | Device given default type: '{ctx.device_name}'")
+                    return True
         return False
 
     return _isKBtype    # return the inner function
