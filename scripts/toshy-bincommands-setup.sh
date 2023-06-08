@@ -16,30 +16,30 @@ if [[ -z $USER ]] || [[ -z $HOME ]]; then
 fi
 
 
-TOSHY_CFG="$HOME/.config/toshy"
+TOSHY_BIN="$HOME/.config/toshy/scripts/bin"
 LOCAL_BIN="$HOME/.local/bin"
 
 echo -e "\nInstalling Toshy bin commands..."
 
 mkdir -p "$HOME/.local/bin"
 
-ln -sf "$TOSHY_CFG/scripts/bin/toshy-systemd-setup.sh"         "$LOCAL_BIN/toshy-systemd-setup"
-ln -sf "$TOSHY_CFG/scripts/bin/toshy-systemd-remove.sh"        "$LOCAL_BIN/toshy-systemd-remove"
-ln -sf "$TOSHY_CFG/scripts/bin/toshy-services-status.sh"       "$LOCAL_BIN/toshy-services-status"
-ln -sf "$TOSHY_CFG/scripts/bin/toshy-services-restart.sh"      "$LOCAL_BIN/toshy-services-restart"
-ln -sf "$TOSHY_CFG/scripts/bin/toshy-services-start.sh"        "$LOCAL_BIN/toshy-services-start"
-ln -sf "$TOSHY_CFG/scripts/bin/toshy-services-stop.sh"         "$LOCAL_BIN/toshy-services-stop"
-ln -sf "$TOSHY_CFG/scripts/bin/toshy-services-log.sh"          "$LOCAL_BIN/toshy-services-log"
-ln -sf "$TOSHY_CFG/scripts/bin/toshy-config-start.sh"          "$LOCAL_BIN/toshy-config-start"
-ln -sf "$TOSHY_CFG/scripts/bin/toshy-config-start-verbose.sh"  "$LOCAL_BIN/toshy-config-start-verbose"
-ln -sf "$TOSHY_CFG/scripts/bin/toshy-config-restart.sh"        "$LOCAL_BIN/toshy-config-restart"
-ln -sf "$TOSHY_CFG/scripts/bin/toshy-config-stop.sh"           "$LOCAL_BIN/toshy-config-stop"
-ln -sf "$TOSHY_CFG/scripts/bin/toshy-tray.sh"                  "$LOCAL_BIN/toshy-tray"
-ln -sf "$TOSHY_CFG/scripts/bin/toshy-gui.sh"                   "$LOCAL_BIN/toshy-gui"
-ln -sf "$TOSHY_CFG/scripts/bin/toshy-env.sh"                   "$LOCAL_BIN/toshy-env"
-ln -sf "$TOSHY_CFG/scripts/bin/toshy-venv.sh"                  "$LOCAL_BIN/toshy-venv"
-ln -sf "$TOSHY_CFG/scripts/bin/toshy-devices.sh"               "$LOCAL_BIN/toshy-devices"
-ln -sf "$TOSHY_CFG/scripts/bin/toshy-kde-dbus-service.sh"      "$LOCAL_BIN/toshy-kde-dbus-service"
+ln -sf "$TOSHY_BIN/scripts/bin/toshy-systemd-setup.sh"         "$LOCAL_BIN/toshy-systemd-setup"
+ln -sf "$TOSHY_BIN/scripts/bin/toshy-systemd-remove.sh"        "$LOCAL_BIN/toshy-systemd-remove"
+ln -sf "$TOSHY_BIN/scripts/bin/toshy-services-status.sh"       "$LOCAL_BIN/toshy-services-status"
+ln -sf "$TOSHY_BIN/scripts/bin/toshy-services-restart.sh"      "$LOCAL_BIN/toshy-services-restart"
+ln -sf "$TOSHY_BIN/scripts/bin/toshy-services-start.sh"        "$LOCAL_BIN/toshy-services-start"
+ln -sf "$TOSHY_BIN/scripts/bin/toshy-services-stop.sh"         "$LOCAL_BIN/toshy-services-stop"
+ln -sf "$TOSHY_BIN/scripts/bin/toshy-services-log.sh"          "$LOCAL_BIN/toshy-services-log"
+ln -sf "$TOSHY_BIN/scripts/bin/toshy-config-start.sh"          "$LOCAL_BIN/toshy-config-start"
+ln -sf "$TOSHY_BIN/scripts/bin/toshy-config-start-verbose.sh"  "$LOCAL_BIN/toshy-config-start-verbose"
+ln -sf "$TOSHY_BIN/scripts/bin/toshy-config-restart.sh"        "$LOCAL_BIN/toshy-config-restart"
+ln -sf "$TOSHY_BIN/scripts/bin/toshy-config-stop.sh"           "$LOCAL_BIN/toshy-config-stop"
+ln -sf "$TOSHY_BIN/scripts/bin/toshy-tray.sh"                  "$LOCAL_BIN/toshy-tray"
+ln -sf "$TOSHY_BIN/scripts/bin/toshy-gui.sh"                   "$LOCAL_BIN/toshy-gui"
+ln -sf "$TOSHY_BIN/scripts/bin/toshy-env.sh"                   "$LOCAL_BIN/toshy-env"
+ln -sf "$TOSHY_BIN/scripts/bin/toshy-venv.sh"                  "$LOCAL_BIN/toshy-venv"
+ln -sf "$TOSHY_BIN/scripts/bin/toshy-devices.sh"               "$LOCAL_BIN/toshy-devices"
+ln -sf "$TOSHY_BIN/scripts/bin/toshy-kde-dbus-service.sh"      "$LOCAL_BIN/toshy-kde-dbus-service"
 
 
 echo ""
@@ -125,7 +125,7 @@ if ! echo "$PATH" | grep -q -E "(^|:)$HOME/.local/bin(:|$)" || [ -f "$path_fix_t
         if [[ "${SHELL}" == */fish ]]; then
             path_line='set -U fish_user_paths $HOME/.local/bin $fish_user_paths'
         else
-            path_line='export PATH="$HOME/.local/bin:$PATH"'
+            path_line="export PATH=\"$HOME/.local/bin:\$PATH\""
         fi
 
         # Check if the line already exists in the RC file
