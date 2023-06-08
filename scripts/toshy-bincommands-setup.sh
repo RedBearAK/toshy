@@ -95,21 +95,21 @@ if ! echo "$PATH" | grep -q -E "(^|:)$HOME/.local/bin(:|$)" || [ -f "$path_fix_t
 
     if [[ ! $toshy_installer_says_fix_path -eq 1 ]]; then
 
-        echo -e "\nIt looks like '~/.local/bin' is not in your PATH."
+        echo -e "\nIt looks like '${HOME}/.local/bin' is not in your PATH."
         echo -e "To add it permanently, append the following line to your shell RC file:"
 
         case "$SHELL" in
             */bash)
                 shell_rc="$HOME/.bashrc"
-                echo 'export PATH="$HOME/.local/bin:$PATH"'
+                echo "export PATH=\"$HOME/.local/bin:\$PATH\""
                 ;;
             */zsh)
                 shell_rc="$HOME/.zshrc"
-                echo 'export PATH="$HOME/.local/bin:$PATH"'
+                echo "export PATH=\"$HOME/.local/bin:\$PATH\""
                 ;;
             */fish)
                 shell_rc="$HOME/.config/fish/config.fish"
-                echo 'set -U fish_user_paths $HOME/.local/bin $fish_user_paths'
+                echo "set -U fish_user_paths $HOME/.local/bin \$fish_user_paths"
                 ;;
             *)
                 echo "ALERT: Shell not recognized."
@@ -123,7 +123,7 @@ if ! echo "$PATH" | grep -q -E "(^|:)$HOME/.local/bin(:|$)" || [ -f "$path_fix_t
     if [[ -n "${shell_rc}" ]]; then
 
         if [[ "${SHELL}" == */fish ]]; then
-            path_line='set -U fish_user_paths $HOME/.local/bin $fish_user_paths'
+            path_line="set -U fish_user_paths $HOME/.local/bin \$fish_user_paths"
         else
             path_line="export PATH=\"$HOME/.local/bin:\$PATH\""
         fi
@@ -149,7 +149,7 @@ if ! echo "$PATH" | grep -q -E "(^|:)$HOME/.local/bin(:|$)" || [ -f "$path_fix_t
                     ;;
                 * )
                     echo -e "\nAppending the line to $shell_rc..."
-                    echo -e "\n$path_line" >> "${shell_rc}"
+                    echo -e "\n$path_line\n" >> "${shell_rc}"
                     echo -e "Done. Restart your shell or run 'source $shell_rc' to apply the changes."
                     ;;
             esac
