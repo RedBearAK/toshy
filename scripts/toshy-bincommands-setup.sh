@@ -93,7 +93,7 @@ fi
 # shellcheck disable=SC2016
 if ! echo "$PATH" | grep -q -E "(^|:)$HOME/.local/bin(:|$)" || [ -f "$path_fix_tmp_path" ]; then
 
-    if [ ! "$toshy_installer_says_fix_path" -eq 1 ]; then
+    if [[ ! $toshy_installer_says_fix_path -eq 1 ]]; then
 
         echo -e "\nIt looks like '~/.local/bin' is not in your PATH."
         echo -e "To add it permanently, append the following line to your shell RC file:"
@@ -134,7 +134,7 @@ if ! echo "$PATH" | grep -q -E "(^|:)$HOME/.local/bin(:|$)" || [ -f "$path_fix_t
             echo "The line is already in your $shell_rc file."
         else
 
-            if [ "$toshy_installer_says_fix_path" -eq 1 ]; then
+            if [[ $toshy_installer_says_fix_path -eq 1 ]]; then
                 echo -e "\nAppending the line to $shell_rc..."
                 echo -e "\n$path_line" >> "${shell_rc}"
                 echo -e "Done. Restart your shell or run 'source $shell_rc' to apply the changes."
