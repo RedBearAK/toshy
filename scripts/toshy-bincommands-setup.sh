@@ -77,12 +77,16 @@ fi
 path_good_tmp_file="toshy_installer_says_path_is_good"
 path_good_tmp_path="$run_tmp_dir/$path_good_tmp_file"
 
+echo "path_good_tmp_path: $path_good_tmp_path"
+
 if [ -f "$path_good_tmp_path" ]; then
     exit 0
 fi
 
 path_fix_tmp_file="toshy_installer_says_fix_path"
 path_fix_tmp_path="$run_tmp_dir/$path_fix_tmp_file"
+
+echo "path_fix_tmp_path: $path_fix_tmp_path"
 
 if [ -f "$path_fix_tmp_path" ]; then
     toshy_installer_says_fix_path=1
