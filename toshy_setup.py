@@ -71,8 +71,8 @@ os.environ['PATH'] = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/b
 do_not_ask_about_path = None
 
 if home_local_bin in orig_PATH_str:
-    with open(path_good_tmp_path, 'a'):
-        pass
+    with open(path_good_tmp_path, 'a') as file:
+        file.write('Nothing to see here.')
     # subprocess.run(['touch', path_good_tmp_path])
     do_not_ask_about_path = True
 else:
@@ -258,18 +258,18 @@ def ask_add_home_local_bin():
     """
     Check if `~/.local/bin` is in original PATH. Done earlier in script.
     Ask user if it is OK to add the `~/.local/bin` folder to the PATH permanently.
-    Touch temp file to allow bincommands script to bypass question.
+    Create temp file to allow bincommands script to bypass question.
     """
     if do_not_ask_about_path:
         pass
     else:
         print()
-        response = input('The "~/.local/bin" folder is not in your PATH. OK to add it? [Y/n]: ')
+        response = input('The "~/.local/bin" folder is not in PATH. OK to add it? [Y/n]: ') or 'y'
         if response in ['y', 'Y']:
             # create temp file that will get script to add local bin to path without asking
             # subprocess.run(['touch', path_fix_tmp_path])
-            with open(path_fix_tmp_path, 'a'):
-                pass
+            with open(path_fix_tmp_path, 'a') as file:
+                file.write('Nothing to see here.')
 
 
 def elevate_privileges():
