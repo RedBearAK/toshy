@@ -33,7 +33,7 @@ def signal_handler(sig, frame):
         # traceback.print_stack(frame)
         print('\n')
         debug(f'SIGINT or SIGQUIT received. Exiting.\n')
-        sys.exit(0)
+        sys.exit(1)
 
 if platform.system() != 'Windows':
     signal.signal(signal.SIGINT,    signal_handler)
@@ -209,10 +209,10 @@ def dot_Xmodmap_warning():
         warn_str    = "\t WARNING: You have an '.Xmodmap' file in your home folder!!!"
         if os.environ['COLORTERM']:
             # Terminal supports ANSI escape sequences
-            warn(f"\033[1;31m{warn_str}\033[0m \n")
+            print(f"\033[1;31m{warn_str}\033[0m \n")
         else:
             # Terminal might not support ANSI escape sequences
-            warn(f"{warn_str} \n")
+            print(f"{warn_str} \n")
         print(f'   This can cause confusing PROBLEMS if you are remapping any modifier keys!')
         print(f'{cnfg.separator}')
         print(f'{cnfg.separator}')
