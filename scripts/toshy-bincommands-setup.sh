@@ -88,6 +88,7 @@ path_fix_tmp_path="$run_tmp_dir/$path_fix_tmp_file"
 
 echo "path_fix_tmp_path: $path_fix_tmp_path"
 
+toshy_installer_says_fix_path=0
 if [ -f "$path_fix_tmp_path" ]; then
     toshy_installer_says_fix_path=1
 fi
@@ -139,7 +140,8 @@ if ! echo "$PATH" | grep -q -E "(^|:)$HOME/.local/bin(:|$)" || [ -f "$path_fix_t
         else
 
             if [[ $toshy_installer_says_fix_path -eq 1 ]]; then
-                echo -e "\nAppending the line to $shell_rc..."
+                echo -e "\nFixing path because installer said so..."
+                echo -e "Appending the export path line to \'$shell_rc\'..."
                 echo -e "\n$path_line\n" >> "${shell_rc}"
                 echo -e "Done. Restart your shell or run 'source $shell_rc' to apply the changes."
                 exit 0
