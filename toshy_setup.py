@@ -222,7 +222,7 @@ def dot_Xmodmap_warning():
         
         response = input(
             f"You must take responsibility for the issues an '.Xmodmap' file may cause."
-            f"\n\n\t\t If you understand, enter the secret code '{secret_code}': "
+            f"\n\n\t If you understand, enter the secret code '{secret_code}': "
         )
         
         if response == secret_code:
