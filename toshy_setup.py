@@ -22,18 +22,6 @@ from typing import Dict
 import lib.env as env
 from lib.logger import debug, error, warn, info
 
-trash_dir   = os.path.expanduser("~/.local/share/Trash")
-file_path   = os.path.abspath(__file__)
-if trash_dir in file_path or '/trash/' in file_path.lower():
-    print()
-    error(f"Path to this file: {file_path}")
-    error(f"You probably did not intend to run this from the TRASH, but you are. Exiting.")
-    print()
-    sys.exit(1)
-
-# set a standard path for duration of script run, to avoid issues with user customized paths
-os.environ['PATH'] = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
-
 if os.name == 'posix' and os.geteuid() == 0:
     error("This app should not be run as root/superuser.")
     sys.exit(1)
@@ -43,7 +31,8 @@ def signal_handler(sig, frame):
     if sig in (signal.SIGINT, signal.SIGQUIT):
         # Perform any cleanup code here before exiting
         # traceback.print_stack(frame)
-        debug(f'\n\nSIGINT or SIGQUIT received. Exiting.\n')
+        print('\n')
+        debug(f'SIGINT or SIGQUIT received. Exiting.\n')
         sys.exit(0)
 
 if platform.system() != 'Windows':
@@ -57,6 +46,32 @@ else:
     error(f'This is only meant to run on Linux. Exiting.')
     sys.exit(1)
 
+trash_dir   = os.path.expanduser("~/.local/share/Trash")
+file_path   = os.path.abspath(__file__)
+if trash_dir in file_path or '/trash/' in file_path.lower():
+    print()
+    error(f"Path to this file: {file_path}")
+    error(f"You probably did not intend to run this from the TRASH. See path. Exiting.")
+    print()
+    sys.exit(1)
+
+orig_PATH_str       = os.environ['PATH']
+home_local_bin      = os.path.join(os.path.expanduser('~'), '.local', 'bin')
+run_tmp_dir         = os.environ.get('XDG_RUNTIME_DIR') or '/tmp'
+
+path_good_tmp_file  = 'toshy_installer_says_path_is_good'
+path_good_tmp_path  = os.path.join(run_tmp_dir, path_good_tmp_file)
+
+path_fix_tmp_file   = 'toshy_installer_says_fix_path'
+path_fix_tmp_path   = os.path.join(run_tmp_dir, path_fix_tmp_file)
+
+# set a standard path for duration of script run, to avoid issues with user customized paths
+os.environ['PATH'] = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+
+if home_local_bin in orig_PATH_str:
+    subprocess.run(['touch', path_good_tmp_path])
+    do_not_ask_about_path = True
+# do the 'else' of touching 'path_fix_tmp_path' later in function that prompts user
 
 
 class InstallerSettings:
@@ -104,7 +119,7 @@ class InstallerSettings:
         self.remind_extensions      = None
 
         self.should_reboot          = None
-        self.run_tmp_dir            = os.environ.get('XDG_RUNTIME_DIR') or '/tmp'
+        self.run_tmp_dir            = run_tmp_dir
         self.reboot_tmp_file        = f"{self.run_tmp_dir}/toshy_installer_says_reboot"
         self.reboot_ascii_art       = textwrap.dedent("""
                 ██████      ███████     ██████       ██████       ██████      ████████     ██ 
@@ -212,11 +227,38 @@ def dot_Xmodmap_warning():
         
         if response == secret_code:
             print()
-            info(f"Good code. User has taken responsibility for '.Xmodmap' file. Proceeding...\n")
+            info("Good code. User has taken responsibility for '.Xmodmap' file. Proceeding...\n")
         else:
             print()
-            error(f"Code does not match! Try the installer again after dealing with '.Xmodmap'.\n")
+            error("Code does not match! Try the installer again after dealing with '.Xmodmap'.\n")
             sys.exit(1)
+
+
+def ask_is_distro_updated():
+    """Ask user if the distro has recently been updated"""
+    print()
+    debug('NOTICE: It is ESSENTIAL to have your system completely updated.', ctx="!!")
+    print()
+    response = input('Have you updated your system recently? [y/N]: ')
+
+    if response not in ['y', 'Y']:
+        print()
+        error("Try the installer again after you've done a full system update. Exiting.")
+        print()
+        sys.exit(1)
+
+
+def ask_add_home_local_bin():
+    """
+    Check if `~/.local/bin` is in original PATH. Done earlier in script.
+    Ask user if it is OK to add the `~/.local/bin` folder to the PATH permanently.
+    Touch temp file to allow bincommands script to bypass question.
+    """
+    if not do_not_ask_about_path:
+        response = input('The "~/.local/bin" folder is not in PATH. OK to add it? [Y/n]: ')
+        if response in ['y', 'Y']:
+            # touch temp file that will get script to add local bin to path without asking
+            subprocess.run(['touch', path_fix_tmp_path])
 
 
 def elevate_privileges():
@@ -277,7 +319,6 @@ def load_uinput_module():
                         error(f"ERROR: Failed to append 'uinput' to /etc/modules:\n\t{proc_error}")
                         error(f'ERROR: Install failed.')
                         sys.exit(1)
-
 
 
 def reload_udev_rules():
@@ -410,7 +451,7 @@ extra_pkgs_map = {
 
 def install_distro_pkgs():
     """Install needed packages from list for distro type"""
-    print(f'\n\n§  Installing native packages...\n{cnfg.separator}')
+    print(f'\n\n§  Installing native packages for this distro type...\n{cnfg.separator}')
 
     pkg_group = None
     for group, distros in distro_groups_map.items():
@@ -459,28 +500,28 @@ def install_distro_pkgs():
         subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro)
 
     elif cnfg.DISTRO_NAME in pacman_distros:
-        print('\n') # double blank line
-        debug(f'NOTICE: It is ESSENTIAL to have an Arch-based system completely updated.\n', ctx="!!")
-        response = input('Have you run "sudo pacman -Syu" recently? [y/N]: ')
+        # print('\n') # double blank line
+        # debug(f'NOTICE: It is ESSENTIAL to have an Arch-based system completely updated.\n', ctx="!!")
+        # response = input('Have you run "sudo pacman -Syu" recently? [y/N]: ')
 
-        if response in ['y', 'Y']:
-            def is_package_installed(package):
-                result = subprocess.run(['pacman', '-Q', package], stdout=DEVNULL, stderr=DEVNULL)
-                return result.returncode == 0
+        # if response in ['y', 'Y']:
+        def is_package_installed(package):
+            result = subprocess.run(['pacman', '-Q', package], stdout=DEVNULL, stderr=DEVNULL)
+            return result.returncode == 0
 
-            pkgs_to_install = [
-                pkg
-                for pkg in cnfg.pkgs_for_distro
-                if not is_package_installed(pkg)
-            ]
-            if pkgs_to_install:
-                call_attention_to_password_prompt()
-                subprocess.run(['sudo', 'pacman', '-S', '--noconfirm'] + pkgs_to_install)
+        pkgs_to_install = [
+            pkg
+            for pkg in cnfg.pkgs_for_distro
+            if not is_package_installed(pkg)
+        ]
+        if pkgs_to_install:
+            call_attention_to_password_prompt()
+            subprocess.run(['sudo', 'pacman', '-S', '--noconfirm'] + pkgs_to_install)
 
-        else:
-            print('Installer will fail with version mismatches if you have not updated recently.')
-            print('Update your Arch-based system and try the Toshy installer again. Exiting.')
-            sys.exit(1)
+        # else:
+        #     print('Installer will fail with version mismatches if you have not updated recently.')
+        #     print('Update your Arch-based system and try the Toshy installer again. Exiting.')
+        #     sys.exit(1)
 
     elif cnfg.DISTRO_NAME in zypper_distros:
         subprocess.run(['sudo', 'zypper', '--non-interactive', 'install'] + cnfg.pkgs_for_distro)
@@ -1233,6 +1274,8 @@ def main(cnfg: InstallerSettings):
     """Main installer function to call specific functions in proper sequence"""
 
     dot_Xmodmap_warning()
+    ask_is_distro_updated()
+    ask_add_home_local_bin()
 
     get_environment_info()
 
@@ -1283,8 +1326,9 @@ def main(cnfg: InstallerSettings):
             # pass
         else:
             print()
-            info(f"RECOMMENDATION: Install 'AppIndicator' GNOME extension\n"
-                "Easiest method: 'flatpak install extensionmanager', search for 'appindicator'\n")
+            debug(f"RECOMMENDATION: Install 'AppIndicator' GNOME extension\n"
+                "Easiest method: 'flatpak install extensionmanager', search for 'appindicator'\n",
+                ctx="!!")
 
     if cnfg.should_reboot or os.path.exists(cnfg.reboot_tmp_file):
         cnfg.should_reboot = True
