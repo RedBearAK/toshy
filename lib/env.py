@@ -235,7 +235,7 @@ def get_env_info():
             break
 
     if not DESKTOP_ENV:
-        error(f'Desktop Environment not in de_names list! Should fix this.\n\t{_desktop_env = }')
+        error(f'Desktop Environment not in de_names list! Should fix this.\n\t{_desktop_env}')
         DESKTOP_ENV = _desktop_env
 
     # do this only if DESKTOP_ENV is still None after the above step
