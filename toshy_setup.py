@@ -421,7 +421,7 @@ def verify_user_groups():
 
 
 distro_groups_map = {
-    'redhat-based':    ["fedora", "fedoralinux", "almalinux", "rocky", "rhel"],
+    'redhat-based':    ["fedora", "fedoralinux", "ultramarine", "almalinux", "rocky", "rhel"],
     'opensuse-based':  ["opensuse-tumbleweed"],
     'ubuntu-based':    ["ubuntu", "mint", "popos", "eos", "neon", "zorin"],
     'debian-based':    ["lmde", "debian"],
@@ -456,7 +456,8 @@ extra_pkgs_map = {
     # Add a distro name and its additional packages here as needed
     # 'distro_name': ["pkg1", "pkg2", ...],
     'fedora':          ["evtest"],
-    'fedoralinux':     ["evtest"]
+    'fedoralinux':     ["evtest"],
+    'ultramarina':     ["evtest"],
 }
 
 
@@ -500,7 +501,8 @@ def install_distro_pkgs():
 
     elif cnfg.DISTRO_NAME in dnf_distros:
         # do extra stuff only if distro is a RHEL type (not Fedora)
-        if cnfg.DISTRO_NAME not in ['fedora', 'fedoralinux']:
+        # TODO: reverse this to name RHELs instead of non-RHELs? 
+        if cnfg.DISTRO_NAME not in ['fedora', 'fedoralinux', 'ultramarine']:
             call_attention_to_password_prompt()
             # for gobject-introspection-devel: sudo dnf config-manager --set-enabled crb
             subprocess.run(['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb'])
