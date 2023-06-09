@@ -94,39 +94,41 @@ if [ -f "$path_fix_tmp_path" ]; then
 fi
 
 
+if [[ $toshy_installer_says_fix_path -eq 1 ]]; then
+    echo -e "\nFixing path because Toshy installer said so..."
+    echo -e "Appending the export path line to '$shell_rc'..."
+    echo -e "\n$path_line\n" >> "${shell_rc}"
+    echo -e "Done. Restart your shell or run 'source $shell_rc' to apply the changes."
+    exit 0
+fi
+
+
 # Check if ~/.local/bin is in the user's PATH
-# shellcheck disable=SC2016
-if ! echo "$PATH" | grep -q -E "(^|:)$HOME/.local/bin(:|$)" || [ -f "$path_fix_tmp_path" ]; then
+if ! echo "$PATH" | grep -q -E "(^|:)$HOME/.local/bin(:|$)"; then
+    echo -e "\nIt looks like '${HOME}/.local/bin' is not in your PATH."
+    echo -e "To add it permanently, append the following line to your shell RC file:"
 
-    if [[ ! $toshy_installer_says_fix_path -eq 1 ]]; then
-
-        echo -e "\nIt looks like '${HOME}/.local/bin' is not in your PATH."
-        echo -e "To add it permanently, append the following line to your shell RC file:"
-
-        case "$SHELL" in
-            */bash)
-                shell_rc="$HOME/.bashrc"
-                echo "export PATH=\"$HOME/.local/bin:\$PATH\""
-                ;;
-            */zsh)
-                shell_rc="$HOME/.zshrc"
-                echo "export PATH=\"$HOME/.local/bin:\$PATH\""
-                ;;
-            */fish)
-                shell_rc="$HOME/.config/fish/config.fish"
-                echo "set -U fish_user_paths $HOME/.local/bin \$fish_user_paths"
-                ;;
-            *)
-                echo "ALERT: Shell not recognized."
-                echo "Please add the appropriate line to your shell's RC file yourself."
-                shell_rc=""
-                ;;
-        esac
-
-    fi
+    case "$SHELL" in
+        */bash)
+            shell_rc="$HOME/.bashrc"
+            echo "export PATH=\"$HOME/.local/bin:\$PATH\""
+            ;;
+        */zsh)
+            shell_rc="$HOME/.zshrc"
+            echo "export PATH=\"$HOME/.local/bin:\$PATH\""
+            ;;
+        */fish)
+            shell_rc="$HOME/.config/fish/config.fish"
+            echo "set -U fish_user_paths $HOME/.local/bin \$fish_user_paths"
+            ;;
+        *)
+            echo "ALERT: Shell not recognized."
+            echo "Please add the appropriate line to your shell's RC file yourself."
+            shell_rc=""
+            ;;
+    esac
 
     if [[ -n "${shell_rc}" ]]; then
-
         if [[ "${SHELL}" == */fish ]]; then
             path_line="set -U fish_user_paths $HOME/.local/bin \$fish_user_paths"
         else
@@ -134,19 +136,9 @@ if ! echo "$PATH" | grep -q -E "(^|:)$HOME/.local/bin(:|$)" || [ -f "$path_fix_t
         fi
 
         # Check if the line already exists in the RC file
-        if grep -Fxq "$path_line" "${shell_rc}"
-        then
+        if grep -Fxq "$path_line" "${shell_rc}"; then
             echo "The line is already in your $shell_rc file."
         else
-
-            if [[ $toshy_installer_says_fix_path -eq 1 ]]; then
-                echo -e "\nFixing path because installer said so..."
-                echo -e "Appending the export path line to \'$shell_rc\'..."
-                echo -e "\n$path_line\n" >> "${shell_rc}"
-                echo -e "Done. Restart your shell or run 'source $shell_rc' to apply the changes."
-                exit 0
-            fi
-
             read -r -p "Do you want to append the line to your $shell_rc file now? [Y/n] " yn
 
             case $yn in
@@ -159,9 +151,6 @@ if ! echo "$PATH" | grep -q -E "(^|:)$HOME/.local/bin(:|$)" || [ -f "$path_fix_t
                     echo -e "Done. Restart your shell or run 'source $shell_rc' to apply the changes."
                     ;;
             esac
-
         fi
-
     fi
-
 fi
