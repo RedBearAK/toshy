@@ -178,13 +178,12 @@ def get_environment_info():
     cnfg.DISTRO_VER     = str(cnfg.env_info_dct.get('DISTRO_VER',   'keymissing')).casefold()
     cnfg.SESSION_TYPE   = str(cnfg.env_info_dct.get('SESSION_TYPE', 'keymissing')).casefold()
     cnfg.DESKTOP_ENV    = str(cnfg.env_info_dct.get('DESKTOP_ENV',  'keymissing')).casefold()
-    # This syntax fails on anything older than Python 3.8
-    debug(  f'Toshy installer sees this environment:'
-            f'\n\t{cnfg.DISTRO_NAME     = }'
-            f'\n\t{cnfg.DISTRO_VER      = }'
-            f'\n\t{cnfg.SESSION_TYPE    = }'
-            f'\n\t{cnfg.DESKTOP_ENV     = }'
-            f'\n', ctx='EV')
+    debug('Toshy installer sees this environment:'
+        f"\n\t DISTRO_NAME  = '{cnfg.DISTRO_NAME}'"
+        f"\n\t DISTRO_VER   = '{cnfg.DISTRO_VER}'"
+        f"\n\t SESSION_TYPE = '{cnfg.SESSION_TYPE}'"
+        f"\n\t DESKTOP_ENV  = '{cnfg.DESKTOP_ENV}'"
+        '\n', ctx='EV')
 
 
 def call_attention_to_password_prompt():

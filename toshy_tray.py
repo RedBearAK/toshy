@@ -34,6 +34,7 @@ if not str(sys.platform) == "linux":
 
 # Add paths to avoid errors like ModuleNotFoundError or ImportError
 home_dir = os.path.expanduser("~")
+home_local_bin = os.path.join(home_dir, '.local', 'bin')
 local_site_packages_dir = os.path.join(home_dir, f".local/lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages")
 # parent_folder_path  = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 current_folder_path = os.path.abspath(os.path.dirname(__file__))
@@ -43,6 +44,7 @@ sys.path.insert(0, current_folder_path)
 
 existing_path = os.environ.get('PYTHONPATH', '')
 os.environ['PYTHONPATH'] = f'{current_folder_path}:{local_site_packages_dir}:{existing_path}'
+os.environ['PATH'] = f"{home_local_bin}:{os.environ['PATH']}"
 
 
 #########################################################################
