@@ -179,10 +179,10 @@ def get_environment_info():
     cnfg.SESSION_TYPE   = str(cnfg.env_info_dct.get('SESSION_TYPE', 'keymissing')).casefold()
     cnfg.DESKTOP_ENV    = str(cnfg.env_info_dct.get('DESKTOP_ENV',  'keymissing')).casefold()
     debug('Toshy installer sees this environment:'
-        f'\n\t DISTRO_NAME  = {cnfg.DISTRO_NAME}'
-        f'\n\t DISTRO_VER   = {cnfg.DISTRO_VER}'
-        f'\n\t SESSION_TYPE = {cnfg.SESSION_TYPE}'
-        f'\n\t DESKTOP_ENV  = {cnfg.DESKTOP_ENV}'
+        f"\n\t DISTRO_NAME  = '{cnfg.DISTRO_NAME}'"
+        f"\n\t DISTRO_VER   = '{cnfg.DISTRO_VER}'"
+        f"\n\t SESSION_TYPE = '{cnfg.SESSION_TYPE}'"
+        f"\n\t DESKTOP_ENV  = '{cnfg.DESKTOP_ENV}'"
         '\n', ctx='EV')
 
 
