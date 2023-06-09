@@ -1367,10 +1367,10 @@ def main(cnfg: InstallerSettings):
                 f'{cnfg.separator}\n'
         )
         if cnfg.SESSION_TYPE == 'wayland' and cnfg.DESKTOP_ENV == 'kde':
-            print(f'SWITCH TO A DIFFERENT WINDOW ONCE TO GET KWIN SCRIPT TO START WORKING!')
+            print(f'Switch to a different window ONCE to get KWin script to start working!')
 
     if cnfg.remind_extensions or (cnfg.DESKTOP_ENV == 'gnome' and cnfg.SESSION_TYPE == 'wayland'):
-        print(f'You MUST install GNOME EXTENSIONS if using Wayland+GNOME. See Toshy README.')
+        print(f'You MUST install GNOME EXTENSIONS if using Wayland+GNOME! See Toshy README.')
 
     print()   # blank line to avoid crowding the prompt after install is done
 
