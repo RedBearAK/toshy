@@ -86,7 +86,7 @@ fi
 path_fix_tmp_file="toshy_installer_says_fix_path"
 path_fix_tmp_path="$run_tmp_dir/$path_fix_tmp_file"
 
-echo "path_fix_tmp_path: $path_fix_tmp_path"
+# echo "path_fix_tmp_path: $path_fix_tmp_path"
 
 toshy_installer_says_fix_path=0
 if [ -f "$path_fix_tmp_path" ]; then
