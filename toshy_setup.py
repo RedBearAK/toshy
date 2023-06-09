@@ -1370,7 +1370,8 @@ def main(cnfg: InstallerSettings):
             print(f'SWITCH TO A DIFFERENT WINDOW ONCE TO GET KWIN SCRIPT TO START WORKING!')
 
     if cnfg.remind_extensions or (cnfg.DESKTOP_ENV == 'gnome' and cnfg.SESSION_TYPE == 'wayland'):
-        print(f'You MUST install GNOME EXTENSIONS if using WAYLAND SESSION. See README.')
+        print(f'You MUST install GNOME EXTENSIONS if using Wayland+GNOME. See README.')
+        print(f"Or, check the output of the 'toshy-config-start-verbose' command.")
 
     print()   # blank line to avoid crowding the prompt after install is done
 
