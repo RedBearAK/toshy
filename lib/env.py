@@ -107,6 +107,7 @@ def get_env_info():
         'Red Hat.*':            'rhel',
         'Rocky.*':              'rocky',
         'Ubuntu':               'ubuntu',
+        'Ultramarine Linux':    'ultramarine',
         'Zorin.*':              'zorin',
     }
 

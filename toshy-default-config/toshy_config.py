@@ -204,28 +204,36 @@ def isKBtype(kbtype: str, map=None):
 
     # guard against failure to give valid type arg
     if kbtype not in ['IBM', 'Chromebook', 'Windows', 'Apple']:
-        error(  f"ERROR: Invalid type given to isKBtype() function: '{kbtype}'"
-                f'\n\t Valid types: IBM | Chromebook | Windows | Apple')
+        raise ValueError(  f"Invalid type given to isKBtype() function: '{kbtype}'"
+                f'\n\t Valid keyboard types (case sensitive): IBM | Chromebook | Windows | Apple')
         return False
     
     # Create a "UserCustom" keyboard dictionary with casefolded keys
     kbds_UserCustom_lower_dct   = {k.casefold(): v for k, v in keyboards_UserCustom_dct.items()}
     kbtype_cf                   = kbtype.casefold()
-    # pattern_lst                 = kbtype_lists.get(kbtype, [])
-    # regex_lst                   = [re.compile(pattern, re.I) for pattern in pattern_lst]
     regex_lst                   = kbtype_lists_rgx.get(kbtype, [])
     not_win_type_rgx            = re.compile("IBM|Chromebook|Apple", re.I)
-    # all_kbds_rgx                = re.compile(toRgxStr(all_keyboards), re.I)
+    all_kbds_rgx                = re.compile(toRgxStr(all_keyboards), re.I)
 
     def _isKBtype(ctx: KeyContext):
         logging_enabled = True
         kb_dev_name = ctx.device_name.casefold()
 
-        custom_kbtype = str(kbds_UserCustom_lower_dct.get(kb_dev_name, '')).casefold()
-        if custom_kbtype == kbtype_cf:
+        # get custom type for device, if there is one
+        custom_kbtype   = str(kbds_UserCustom_lower_dct.get(kb_dev_name, ''))
+        cust_kbtype_cf  = custom_kbtype.casefold()
+        # check that a valid type is being given in custom dict
+        if custom_kbtype and custom_kbtype not in ['IBM', 'Chromebook', 'Windows', 'Apple']:
+            raise ValueError(  f"Invalid custom keyboard type: '{custom_kbtype}'"
+                    f'\n\t Valid keyboard types (case sensitive): IBM | Chromebook | Windows | Apple')
+            return False
+        # check for type match/mismatch only if custom type is truthy (no regex, literal string)
+        if cust_kbtype_cf and cust_kbtype_cf == kbtype_cf:
             if logging_enabled:
-                debug(f"KB_TYPE: '{custom_kbtype}' | Custom type given for device: '{ctx.device_name}'")
+                debug(f"KB_TYPE: '{kbtype}' | Type override given for device: '{ctx.device_name}'")
             return True
+        elif cust_kbtype_cf and cust_kbtype_cf != kbtype_cf:
+            return False
 
         for rgx in regex_lst:
             match = rgx.search(kb_dev_name)
@@ -246,8 +254,11 @@ def isKBtype(kbtype: str, map=None):
 
         if kbtype_cf == 'windows':
             # check there are no non-Windows type keywords in the device name
-            if not not_win_type_rgx.search(kb_dev_name):
-                # if not all_kbds_rgx.search(kb_dev_name):
+            if not_win_type_rgx.search(kb_dev_name):
+                return False
+            # check device name is not in any existing default list
+            # this seems unnecessary and redundant if regex matching is working...
+            if not all_kbds_rgx.search(kb_dev_name):
                 if logging_enabled:
                     debug(f"KB_TYPE: '{kbtype}' | Device given default type: '{ctx.device_name}'")
                 return True
@@ -258,8 +269,28 @@ def isKBtype(kbtype: str, map=None):
 
 def isDoubleTap(dt_combo):
     """
-    Simplistic detection of double-tap of a key. BLOCKS single-tap function.
-    Only cares about the 'real' key in a combo of Mods+key.
+    VERY EXPERIMENTAL!!!
+    
+    Simplistic detection of double-tap of a key or combo.
+    
+    BLOCKS single-tap function, if used with a single key as the input, but the
+    'normal' (non-modifier) key of a combo will still be usable when used by 
+    itself as a non-double-tapped key press.
+    
+    Example: 'RC-CapsLock' will respond when "Cmd" key (under Toshy remapping)
+    is held and CapsLock key is double-tapped. Nothing will happen if 
+    Cmd+CapsLock is pressed without double-tapping CapsLock key within the
+    configured time interval. But the CapsLock key will still work by itself.
+    
+    If double-tap input "combo" is just 'CapsLock', the functioning of a single-tap
+    CapsLock key press will be BLOCKED. Nothing will happen unless the key is 
+    double-tapped within the configured time interval.
+    
+    Only cares about the 'real' key in a combo of Mods+key, like in the example
+    above with 'RC-CapsLock'. 
+    
+    The proper way to do this would be inside the keymapper, in the async event loop
+    that deals with input/output functions. 
     """
     def _isDoubleTap():
         global tapTime1
@@ -477,6 +508,22 @@ def negRgx(rgx_str):
     return neg_rgx_str
 
 
+def macro_tester():
+    def _macro_tester(ctx: KeyContext):
+        return [
+                    C("Enter"),
+                    ST(f'WM_CLASS: "{ctx.wm_class}"'),C("Enter"),
+                    ST(f'WM_NAME:  "{ctx.wm_name}"'),C("Enter"),
+                    ST(f'Device:   "{ctx.device_name}"'),C("Enter"),
+                    ST(f'CapsLock: "{ctx.capslock_on}"'),C("Enter"),
+                    ST(f'NumLock:  "{ctx.numlock_on}"'),C("Enter"),
+                    ST("Next test should come out on ONE LINE!"),C("Enter"),
+                    ST("Unicode and Shift test: 🌹—€—\u2021—ÿ—\U00002021 12345 !@#$% |\ !!!!!!"),C("Enter"),
+                    C("Enter")
+        ]
+    return _macro_tester
+
+
 
 ######################  LISTS  #######################
 ###                                                ###
@@ -585,6 +632,11 @@ sublimes = [
 ]
 sublimes = [x.casefold() for x in sublimes]
 sublimeStr = toRgxStr(sublimes)
+
+JDownloader_lod = [
+    {clas: "^.*jdownloader.*$"},
+    {clas: "^java-lang-Thread$", name: "^JDownloader.*$"}   # Happens after auto-update of app
+]
 
 # Add remote desktop clients & VM software here
 # Ideally we'd only exclude the client window,
@@ -2669,36 +2721,35 @@ keymap("Thunderbird email client", {
     # Enable Cmd+Option+Left/Right for tab navigation
     C("RC-Alt-Left"):           C("C-Page_Up"),                 # Go to prior tab (macOS Thunderbird tab nav shortcut)
     C("RC-Alt-Right"):          C("C-Page_Down"),               # Go to next tab (macOS Thunderbird tab nav shortcut)
-}, when = matchProps(clas="^thunderbird.*$"))
+}, when = matchProps(clas="^thunderbird.*$") )
 
 keymap("Angry IP Scanner", {
     C("RC-comma"):              C("Shift-RC-P"),                # Open preferences
-}, when = matchProps(clas="^Angry.*IP.*Scanner$"))
+}, when = matchProps(clas="^Angry.*IP.*Scanner$") )
 
 keymap("Transmission bittorrent client", {
     C("RC-i"):                  C("Alt-Enter"),                 # Open properties (Get Info) dialog
     C("RC-comma"):             [C("Alt-e"),C("p")],             # Open preferences (settings) dialog
-}, when = matchProps(clas="^transmission-gtk$|^com.transmissionbt.Transmission.*$"))
+}, when = matchProps(clas="^transmission-gtk$|^com.transmissionbt.Transmission.*$") )
 
-JDownloader_lod = [
-    {clas: "^.*jdownloader.*$"},
-    {clas: "^java-lang-Thread$", name: "^JDownloader.*$"}       # Happens after auto-update of app
-]
 keymap("JDownloader", {
+    # Fixes for tab navigation in the "Tab Nav" section
     C("RC-i"):                  C("Alt-Enter"),                 # Open properties
     C("RC-Backspace"):          C("Delete"),                    # Remove download from list
     C("RC-Comma"):              C("C-P"),                       # Open preferences (settings)
-# }, when = matchProps(clas="^.*jdownloader.*$"))
-}, when = matchProps(lst=JDownloader_lod))
+}, when = matchProps(lst=JDownloader_lod) )
 
 keymap("Totem video player", {
     C("RC-dot"):                C("C-q"),                       # Stop (quit player, there is no "Stop" function)
-}, when = matchProps(clas="^totem$"))
+}, when = matchProps(clas="^totem$") )
 
 keymap("GNOME image viewer", {
     C("RC-i"):                  C("Alt-Enter"),                 # Image properties
-}, when = matchProps(clas="^eog$"))
+}, when = matchProps(clas="^eog$") )
 
+keymap("LibreOffice Writer", {
+    C("RC-comma"):              C("Alt-F12"),                   # Tools > Options (preferences dialog)
+}, when = matchProps(clas="^libreoffice-writer$") )
 
 
 
@@ -3330,7 +3381,9 @@ keymap("Cmd+W dialog fix - Alt+F4", {
 tab_UI_fix_CtrlShiftTab = [
     {clas:"^org.gnome.Console$|^Console$"},
     {clas:"^deepin-terminal$"},
-    {clas:"^.*jDownloader.*$"},
+    {lst:JDownloader_lod},
+    # {clas:"^.*jDownloader.*$"},
+    # {clas:"^java-lang-Thread$", name:"^JDownloader.*$"},
     {clas:"^kitty$"},
     {clas:"^Kgx$"},
 ]

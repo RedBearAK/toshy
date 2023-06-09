@@ -20,20 +20,10 @@ from subprocess import DEVNULL
 from typing import Dict
 # local import
 import lib.env as env
-from lib.logger import debug, error
-
-trash_dir   = os.path.expanduser("~/.local/share/Trash")
-file_path   = os.path.abspath(__file__)
-if trash_dir in file_path or '/trash/' in file_path.lower():
-    error(f"Path to this file: {file_path}")
-    error(f"You probably did not intend to run this from the TRASH, but you are. Exiting.")
-    sys.exit(1)
-
-# set a standard path for commands to avoid issues with user customized paths
-os.environ['PATH'] = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+from lib.logger import debug, error, warn, info
 
 if os.name == 'posix' and os.geteuid() == 0:
-    print("This app should not be run as root/superuser.")
+    error("This app should not be run as root/superuser.")
     sys.exit(1)
 
 def signal_handler(sig, frame):
@@ -41,8 +31,9 @@ def signal_handler(sig, frame):
     if sig in (signal.SIGINT, signal.SIGQUIT):
         # Perform any cleanup code here before exiting
         # traceback.print_stack(frame)
-        print(f'\n\nSIGINT or SIGQUIT received. Exiting.\n')
-        sys.exit(0)
+        print('\n')
+        debug(f'SIGINT or SIGQUIT received. Exiting.\n')
+        sys.exit(1)
 
 if platform.system() != 'Windows':
     signal.signal(signal.SIGINT,    signal_handler)
@@ -52,9 +43,41 @@ if platform.system() != 'Windows':
     signal.signal(signal.SIGUSR2,   signal_handler)
 else:
     signal.signal(signal.SIGINT,    signal_handler)
-    print(f'This is only meant to run on Linux. Exiting.')
+    error(f'This is only meant to run on Linux. Exiting.')
     sys.exit(1)
 
+trash_dir   = os.path.expanduser("~/.local/share/Trash")
+file_path   = os.path.abspath(__file__)
+if trash_dir in file_path or '/trash/' in file_path.lower():
+    print()
+    error(f"Path to this file: {file_path}")
+    error(f"You probably did not intend to run this from the TRASH. See path. Exiting.")
+    print()
+    sys.exit(1)
+
+orig_PATH_str       = os.environ['PATH']
+home_local_bin      = os.path.join(os.path.expanduser('~'), '.local', 'bin')
+run_tmp_dir         = os.environ.get('XDG_RUNTIME_DIR') or '/tmp'
+
+path_good_tmp_file  = 'toshy_installer_says_path_is_good'
+path_good_tmp_path  = os.path.join(run_tmp_dir, path_good_tmp_file)
+
+path_fix_tmp_file   = 'toshy_installer_says_fix_path'
+path_fix_tmp_path   = os.path.join(run_tmp_dir, path_fix_tmp_file)
+
+# set a standard path for duration of script run, to avoid issues with user customized paths
+os.environ['PATH'] = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+
+do_not_ask_about_path = None
+
+if home_local_bin in orig_PATH_str:
+    with open(path_good_tmp_path, 'a') as file:
+        file.write('Nothing to see here.')
+    # subprocess.run(['touch', path_good_tmp_path])
+    do_not_ask_about_path = True
+else:
+    debug("Home user local bin not part of PATH string.")
+# do the 'else' of creating 'path_fix_tmp_path' later in function that prompts user
 
 
 class InstallerSettings:
@@ -102,7 +125,7 @@ class InstallerSettings:
         self.remind_extensions      = None
 
         self.should_reboot          = None
-        self.run_tmp_dir            = os.environ.get('XDG_RUNTIME_DIR') or '/tmp'
+        self.run_tmp_dir            = run_tmp_dir
         self.reboot_tmp_file        = f"{self.run_tmp_dir}/toshy_installer_says_reboot"
         self.reboot_ascii_art       = textwrap.dedent("""
                 ██████      ███████     ██████       ██████       ██████      ████████     ██ 
@@ -142,7 +165,7 @@ def get_environment_info():
     else:
         error("ERROR: Init system (process 1) could not be determined. (See above error.)")
 
-    print('')   # blank line after init system message
+    print()   # blank line after init system message
 
     cnfg.env_info_dct   = env.get_env_info()
 
@@ -156,12 +179,12 @@ def get_environment_info():
     cnfg.SESSION_TYPE   = str(cnfg.env_info_dct.get('SESSION_TYPE', 'keymissing')).casefold()
     cnfg.DESKTOP_ENV    = str(cnfg.env_info_dct.get('DESKTOP_ENV',  'keymissing')).casefold()
     # This syntax fails on anything older than Python 3.8
-    print(  f'Toshy installer sees this environment:'
+    debug(  f'Toshy installer sees this environment:'
             f'\n\t{cnfg.DISTRO_NAME     = }'
             f'\n\t{cnfg.DISTRO_VER      = }'
             f'\n\t{cnfg.SESSION_TYPE    = }'
             f'\n\t{cnfg.DESKTOP_ENV     = }'
-            f'\n')
+            f'\n', ctx='EV')
 
 
 def call_attention_to_password_prompt():
@@ -170,9 +193,9 @@ def call_attention_to_password_prompt():
         subprocess.run( ['sudo', '-n', 'true'], stdout=DEVNULL, stderr=DEVNULL, check=True)
     except subprocess.CalledProcessError:
         # sudo requires a password
-        print('')
-        print('-- PASSWORD REQUIRED TO CONTINUE WITH INSTALL --')
-        print('')
+        print()
+        print('  -- PASSWORD REQUIRED TO CONTINUE WITH INSTALL --  ')
+        print()
 
 
 def prompt_for_reboot():
@@ -186,17 +209,20 @@ def dot_Xmodmap_warning():
     """Check for '.Xmodmap' file in user's home folder, show warning about mod key remaps"""
     xmodmap_file_path = os.path.realpath(os.path.join(os.path.expanduser('~'), '.Xmodmap'))
     if os.path.isfile(xmodmap_file_path):
-        print(f'\n{cnfg.separator}')
+        print()
         print(f'{cnfg.separator}')
+        print(f'{cnfg.separator}')
+        warn_str    = "\t WARNING: You have an '.Xmodmap' file in your home folder!!!"
         if os.environ['COLORTERM']:
             # Terminal supports ANSI escape sequences
-            print("\033[1;31m\t WARNING: You have an '.Xmodmap' file in your home folder!!!\033[0m")
+            print(f"\033[1;31m{warn_str}\033[0m \n")
         else:
             # Terminal might not support ANSI escape sequences
-            print(f"\t WARNING: You have an '.Xmodmap' file in your home folder!!! \n")
+            print(f"{warn_str} \n")
         print(f'   This can cause confusing PROBLEMS if you are remapping any modifier keys!')
         print(f'{cnfg.separator}')
-        print(f'{cnfg.separator}\n')
+        print(f'{cnfg.separator}')
+        print()
         
         secret_code = ''.join(random.choice(string.ascii_letters) for _ in range(4))
         
@@ -206,10 +232,44 @@ def dot_Xmodmap_warning():
         )
         
         if response == secret_code:
-            print(f"\nGood code. User has taken responsibility for '.Xmodmap' file. Proceeding...\n")
+            print()
+            info("Good code. User has taken responsibility for '.Xmodmap' file. Proceeding...\n")
         else:
-            print(f"\nCode does not match! Try the installer again after dealing with '.Xmodmap'.\n")
+            print()
+            error("Code does not match! Try the installer again after dealing with '.Xmodmap'.\n")
             sys.exit(1)
+
+
+def ask_is_distro_updated():
+    """Ask user if the distro has recently been updated"""
+    print()
+    debug('NOTICE: It is ESSENTIAL to have your system completely updated.', ctx="!!")
+    print()
+    response = input('Have you updated your system recently? [y/N]: ')
+
+    if response not in ['y', 'Y']:
+        print()
+        error("Try the installer again after you've done a full system update. Exiting.")
+        print()
+        sys.exit(1)
+
+
+def ask_add_home_local_bin():
+    """
+    Check if `~/.local/bin` is in original PATH. Done earlier in script.
+    Ask user if it is OK to add the `~/.local/bin` folder to the PATH permanently.
+    Create temp file to allow bincommands script to bypass question.
+    """
+    if do_not_ask_about_path:
+        pass
+    else:
+        print()
+        response = input('The "~/.local/bin" folder is not in PATH. OK to add it? [Y/n]: ') or 'y'
+        if response in ['y', 'Y']:
+            # create temp file that will get script to add local bin to path without asking
+            # subprocess.run(['touch', path_fix_tmp_path])
+            with open(path_fix_tmp_path, 'a') as file:
+                file.write('Nothing to see here.')
 
 
 def elevate_privileges():
@@ -251,8 +311,8 @@ def load_uinput_module():
                 command = "echo 'uinput' | sudo tee /etc/modules-load.d/uinput.conf >/dev/null"
                 subprocess.run(command, shell=True, check=True)
             except subprocess.CalledProcessError as proc_error:
-                print(f"Failed to create /etc/modules-load.d/uinput.conf: {proc_error}")
-                print(f'\nERROR: Install failed.')
+                error(f"Failed to create /etc/modules-load.d/uinput.conf:\n\t{proc_error}")
+                error(f'ERROR: Install failed.')
                 sys.exit(1)
 
     else:
@@ -267,10 +327,9 @@ def load_uinput_module():
                         command = "echo 'uinput' | sudo tee -a /etc/modules >/dev/null"
                         subprocess.run(command, shell=True, check=True)
                     except subprocess.CalledProcessError as proc_error:
-                        print(f"ERROR: Failed to append 'uinput' to /etc/modules: {proc_error}")
-                        print(f'\nERROR: Install failed.')
+                        error(f"ERROR: Failed to append 'uinput' to /etc/modules:\n\t{proc_error}")
+                        error(f'ERROR: Install failed.')
                         sys.exit(1)
-
 
 
 def reload_udev_rules():
@@ -302,11 +361,13 @@ def install_udev_rules():
             print(f'"udev" rules file successfully installed.')
             reload_udev_rules()
         except subprocess.CalledProcessError as proc_error:
-            print(f'\nERROR: Problem while installing "udev" rules file for keymapper.\n')
+            print()
+            error(f'ERROR: Problem while installing "udev" rules file for keymapper.\n')
             err_output: bytes = proc_error.output  # Type hinting the error_output variable
             # Deal with possible 'NoneType' error output
-            print(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
-            print(f'\nERROR: Install failed.')
+            error(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
+            print()
+            error(f'ERROR: Install failed.')
             sys.exit(1)
     else:
         print(f'Correct "udev" rules already in place.')
@@ -324,11 +385,13 @@ def verify_user_groups():
             call_attention_to_password_prompt()
             subprocess.run(['sudo', 'groupadd', cnfg.input_group_name], check=True)
         except subprocess.CalledProcessError as proc_error:
-            print(f'\nERROR: Problem when trying to create "input" group.\n')
+            print()
+            error(f'ERROR: Problem when trying to create "input" group.\n')
             err_output: bytes = proc_error.output  # Type hinting the error_output variable
             # Deal with possible 'NoneType' error output
-            print(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
-            print(f'\nERROR: Install failed.')
+            error(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
+            print()
+            error(f'ERROR: Install failed.')
             sys.exit(1)
 
     # Check if the user is already in the `input` group
@@ -343,12 +406,14 @@ def verify_user_groups():
             subprocess.run(
                 ['sudo', 'usermod', '-aG', cnfg.input_group_name, cnfg.user_name], check=True)
         except subprocess.CalledProcessError as proc_error:
-            print(f'\nERROR: Problem when trying to add user "{cnfg.user_name}" to '
+            print()
+            error(f'ERROR: Problem when trying to add user "{cnfg.user_name}" to '
                     f'group "{cnfg.input_group_name}".\n')
             err_output: bytes = proc_error.output  # Type hinting the error_output variable
             # Deal with possible 'NoneType' error output
-            print(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
-            print(f'\nERROR: Install failed.')
+            error(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
+            print()
+            error(f'ERROR: Install failed.')
             sys.exit(1)
 
         print(f'User "{cnfg.user_name}" added to group "{cnfg.input_group_name}".')
@@ -356,7 +421,7 @@ def verify_user_groups():
 
 
 distro_groups_map = {
-    'redhat-based':    ["fedora", "fedoralinux", "almalinux", "rocky", "rhel"],
+    'redhat-based':    ["fedora", "fedoralinux", "ultramarine", "almalinux", "rocky", "rhel"],
     'opensuse-based':  ["opensuse-tumbleweed"],
     'ubuntu-based':    ["ubuntu", "mint", "popos", "eos", "neon", "zorin"],
     'debian-based':    ["lmde", "debian"],
@@ -391,13 +456,14 @@ extra_pkgs_map = {
     # Add a distro name and its additional packages here as needed
     # 'distro_name': ["pkg1", "pkg2", ...],
     'fedora':          ["evtest"],
-    'fedoralinux':     ["evtest"]
+    'fedoralinux':     ["evtest"],
+    'ultramarina':     ["evtest"],
 }
 
 
 def install_distro_pkgs():
     """Install needed packages from list for distro type"""
-    print(f'\n\n§  Installing native packages...\n{cnfg.separator}')
+    print(f'\n\n§  Installing native packages for this distro type...\n{cnfg.separator}')
 
     pkg_group = None
     for group, distros in distro_groups_map.items():
@@ -406,7 +472,8 @@ def install_distro_pkgs():
             break
 
     if pkg_group is None:
-        print(f"\nERROR: No list of packages found for this distro: '{cnfg.DISTRO_NAME}'")
+        print()
+        print(f"ERROR: No list of packages found for this distro: '{cnfg.DISTRO_NAME}'")
         print(f'Installation cannot proceed without a list of packages. Sorry.')
         print(f'Try some options in "./toshy_setup.py --help"\n')
         sys.exit(1)
@@ -434,7 +501,8 @@ def install_distro_pkgs():
 
     elif cnfg.DISTRO_NAME in dnf_distros:
         # do extra stuff only if distro is a RHEL type (not Fedora)
-        if cnfg.DISTRO_NAME not in ['fedora', 'fedoralinux']:
+        # TODO: reverse this to name RHELs instead of non-RHELs? 
+        if cnfg.DISTRO_NAME not in ['fedora', 'fedoralinux', 'ultramarine']:
             call_attention_to_password_prompt()
             # for gobject-introspection-devel: sudo dnf config-manager --set-enabled crb
             subprocess.run(['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb'])
@@ -445,33 +513,35 @@ def install_distro_pkgs():
         subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro)
 
     elif cnfg.DISTRO_NAME in pacman_distros:
-        print(f'\n\nNOTICE: It is ESSENTIAL to have an Arch-based system completely updated.')
-        response = input('Have you run "sudo pacman -Syu" recently? [y/N]: ')
+        # print('\n') # double blank line
+        # debug(f'NOTICE: It is ESSENTIAL to have an Arch-based system completely updated.\n', ctx="!!")
+        # response = input('Have you run "sudo pacman -Syu" recently? [y/N]: ')
 
-        if response in ['y', 'Y']:
-            def is_package_installed(package):
-                result = subprocess.run(['pacman', '-Q', package], stdout=DEVNULL, stderr=DEVNULL)
-                return result.returncode == 0
+        # if response in ['y', 'Y']:
+        def is_package_installed(package):
+            result = subprocess.run(['pacman', '-Q', package], stdout=DEVNULL, stderr=DEVNULL)
+            return result.returncode == 0
 
-            pkgs_to_install = [
-                pkg
-                for pkg in cnfg.pkgs_for_distro
-                if not is_package_installed(pkg)
-            ]
-            if pkgs_to_install:
-                call_attention_to_password_prompt()
-                subprocess.run(['sudo', 'pacman', '-S', '--noconfirm'] + pkgs_to_install)
+        pkgs_to_install = [
+            pkg
+            for pkg in cnfg.pkgs_for_distro
+            if not is_package_installed(pkg)
+        ]
+        if pkgs_to_install:
+            call_attention_to_password_prompt()
+            subprocess.run(['sudo', 'pacman', '-S', '--noconfirm'] + pkgs_to_install)
 
-        else:
-            print('Installer will fail with version mismatches if you have not updated recently.')
-            print('Update your Arch-based system and try the Toshy installer again. Exiting.')
-            sys.exit(1)
+        # else:
+        #     print('Installer will fail with version mismatches if you have not updated recently.')
+        #     print('Update your Arch-based system and try the Toshy installer again. Exiting.')
+        #     sys.exit(1)
 
     elif cnfg.DISTRO_NAME in zypper_distros:
         subprocess.run(['sudo', 'zypper', '--non-interactive', 'install'] + cnfg.pkgs_for_distro)
 
     else:
-        print(f"\nERROR: Installer does not know how to handle distro: {cnfg.DISTRO_NAME}\n")
+        print()
+        error(f"ERROR: Installer does not know how to handle distro: {cnfg.DISTRO_NAME}\n")
         sys.exit(1)
 
 
@@ -1217,12 +1287,15 @@ def main(cnfg: InstallerSettings):
     """Main installer function to call specific functions in proper sequence"""
 
     dot_Xmodmap_warning()
+    ask_is_distro_updated()
+    ask_add_home_local_bin()
 
     get_environment_info()
 
     valid_distro_names = get_distro_names()
     if cnfg.DISTRO_NAME not in valid_distro_names:
-        print(f"\nInstaller does not know how to deal with distro '{cnfg.DISTRO_NAME}'\n")
+        print()
+        print(f"Installer does not know how to deal with distro '{cnfg.DISTRO_NAME}'\n")
         print(f'Maybe try one of these with "--override-distro" option:\n\t{valid_distro_names}')
         sys.exit(1)
 
@@ -1265,8 +1338,10 @@ def main(cnfg: InstallerSettings):
             print("AppIndicator extension is enabled. Tray icon should work.")
             # pass
         else:
-            print(f"\nRECOMMENDATION: Install 'AppIndicator' GNOME extension\n"
-                "Easiest method: 'flatpak install extensionmanager', search for 'appindicator'\n")
+            print()
+            debug(f"RECOMMENDATION: Install 'AppIndicator' GNOME extension\n"
+                "Easiest method: 'flatpak install extensionmanager', search for 'appindicator'\n",
+                ctx="!!")
 
     if cnfg.should_reboot or os.path.exists(cnfg.reboot_tmp_file):
         cnfg.should_reboot = True
@@ -1294,17 +1369,17 @@ def main(cnfg: InstallerSettings):
                 f'{cnfg.separator}\n'
         )
         if cnfg.SESSION_TYPE == 'wayland' and cnfg.DESKTOP_ENV == 'kde':
-            print(f'SWITCH TO A DIFFERENT WINDOW ONCE TO GET KWIN SCRIPT TO START WORKING!')
+            print(f'Switch to a different window ONCE to get KWin script to start working!')
 
     if cnfg.remind_extensions or (cnfg.DESKTOP_ENV == 'gnome' and cnfg.SESSION_TYPE == 'wayland'):
-        print(f'You MUST install GNOME EXTENSIONS if using WAYLAND SESSION. See README.')
+        print(f'You MUST install GNOME EXTENSIONS if using Wayland+GNOME! See Toshy README.')
 
-    print('')   # blank line to avoid crowding the prompt after install is done
+    print()   # blank line to avoid crowding the prompt after install is done
 
 
 if __name__ == '__main__':
 
-    print('')   # blank line in terminal to start things off
+    print()   # blank line in terminal to start things off
 
     # Check if 'sudo' command is available to user
     if not shutil.which('sudo'):
