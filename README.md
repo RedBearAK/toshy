@@ -229,6 +229,10 @@ This is a list of Linux distributions and desktop variants I've been able to tes
     - KDE variant tested (X11/Xorg or Wayland+KDE session)
     - Fedora 37 not directly tested, but should work since F36/F38 work
 
+- Ultramarine Linux 38 (Fedora-based)
+
+    - Ultramarine GNOME tested (Wayland session requires extensions)
+
 - AlmaLinux 9.2 and/or Rocky Linux 9.2 (RHEL clones)
 
     - Tested with "Workstation" installer choice, not "Server with GUI"
