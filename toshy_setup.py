@@ -1277,6 +1277,9 @@ def uninstall_toshy():
     print()
     print(cnfg.separator)
     print(f'Toshy uninstall complete. Reboot should not be necessary.')
+    print(f"The '~/.config/toshy' folder with your settings has NOT been removed.")
+    print(f'Please report any problems or leftover files on the GitHub repo:')
+    print(f'https://github.com/RedBearAK/toshy')
     print(cnfg.separator)
     print()
 
