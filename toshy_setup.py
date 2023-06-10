@@ -1186,11 +1186,13 @@ def uninstall_toshy():
     remove_desktop_tweaks()
     
     # stop Toshy manual script if it is running
-    subprocess.run(['toshy-config-stop'])
+    toshy_cfg_stop_cmd = os.path.join(home_local_bin, 'toshy-config-stop')
+    subprocess.run([toshy_cfg_stop_cmd])
     
     if cnfg.systemctl_present and cnfg.init_system == 'systemd':
         # stop Toshy systemd services if they are running
-        subprocess.run(['toshy-services-stop'])
+        toshy_svcs_stop_cmd = os.path.join(home_local_bin, 'toshy-services-stop')
+        subprocess.run([toshy_svcs_stop_cmd])
         # run the systemd-remove script
         sysd_rm_cmd = os.path.join(cnfg.toshy_dir_path, 'scripts', 'bin', 'toshy-systemd-remove.sh')
         subprocess.run([sysd_rm_cmd])
