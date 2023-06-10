@@ -198,7 +198,7 @@ def call_attention_to_password_prompt():
     except subprocess.CalledProcessError:
         # sudo requires a password
         print()
-        print('  -- PASSWORD REQUIRED TO CONTINUE WITH INSTALL --  ')
+        print('  -- PASSWORD REQUIRED TO CONTINUE --  ')
         print()
 
 
