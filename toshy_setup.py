@@ -914,9 +914,10 @@ def setup_kde_dbus_service():
 def setup_systemd_services():
     """Invoke the systemd setup script to install the systemd service units"""
     print(f'\n\n§  Setting up the Toshy systemd services...\n{cnfg.separator}')
-    if cnfg.systemctl_present:
+    if cnfg.systemctl_present and cnfg.init_system == 'systemd':
         script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'bin', 'toshy-systemd-setup.sh')
         subprocess.run([script_path])
+        print(f'Finished setting up Toshy "systemd" services.')
     else:
         print(f'System does not seem to be using "systemd"')
 
@@ -1180,10 +1181,13 @@ def uninstall_toshy():
     
     get_environment_info()
     
+    # stop toshy services and/or manual script if it is running
+    
+    
     remove_desktop_tweaks()
     
     # run the systemd-remove script
-    if cnfg.systemctl_present:
+    if cnfg.systemctl_present and cnfg.init_system == 'systemd':
         sysd_rm_cmd = os.path.join(cnfg.toshy_dir_path, 'scripts', 'bin', 'toshy-systemd-remove.sh')
         subprocess.run([sysd_rm_cmd])
     else:
