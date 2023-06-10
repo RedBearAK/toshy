@@ -68,6 +68,11 @@ path_fix_tmp_path   = os.path.join(run_tmp_dir, path_fix_tmp_file)
 # set a standard path for duration of script run, to avoid issues with user customized paths
 os.environ['PATH'] = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 
+# Check if 'sudo' command is available to user
+if not shutil.which('sudo'):
+    print("Error: 'sudo' not found. Installer will fail without it. Exiting.")
+    sys.exit(1)
+
 do_not_ask_about_path = None
 
 if home_local_bin in orig_PATH_str:
@@ -901,7 +906,7 @@ def setup_kde_dbus_service():
     shutil.copy(dbus_svc_desktop_file, autostart_dir_path)
     print(f'Toshy KDE D-Bus service should autostart at login.')
 
-    subprocess.run(['pkill', '-f', 'toshy_kde_dbus_service'])
+    subprocess.run(['pkill', '-u', cnfg.user_name, '-f', 'toshy_kde_dbus_service'])
     subprocess.Popen([start_dbus_svc_cmd], stdout=DEVNULL, stderr=DEVNULL)
     print(f'Toshy KDE D-Bus service should be running now.')
 
@@ -1057,6 +1062,7 @@ def remove_tweaks_KDE():
     # Run reconfigure command
     do_kwin_reconfigure()
     print(f'Re-enabled Meta key opening application menu.')
+    print(f'Disabled "Only one window per application" task switcher option.')
 
 
 ###################################################################################################
@@ -1171,35 +1177,89 @@ def remove_desktop_tweaks():
 
 def uninstall_toshy():
     print(f'\n\n§  Uninstalling Toshy...\n{cnfg.separator}')
+    
+    get_environment_info()
+    
     remove_desktop_tweaks()
     
-    # TODO: do more uninstaller stuff:
-
     # run the systemd-remove script
     if cnfg.systemctl_present:
-        script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'bin', 'toshy-systemd-remove.sh')
-        subprocess.run([script_path])
+        sysd_rm_cmd = os.path.join(cnfg.toshy_dir_path, 'scripts', 'bin', 'toshy-systemd-remove.sh')
+        subprocess.run([sysd_rm_cmd])
     else:
-        print(f'System does not seem to be using "systemd"')
+        print(f'System does not seem to be using "systemd". Skipping removal of services.')
 
-    # unload/uninstall/remove KWin script(s)
+    if cnfg.DESKTOP_ENV in ['kde', 'plasma']:
+        # unload/uninstall/remove KWin script(s)
+        kwin_script_name = 'toshy-dbus-notifyactivewindow'
+        try:
+            subprocess.run(['kpackagetool5', '-t', 'KWin/Script', '-r', kwin_script_name], check=True)
+            print("Successfully removed the KWin script.")
+        except subprocess.CalledProcessError as proc_err:
+            error(f'Problem removing Toshy KWin script {kwin_script_name}:\n\t{proc_err}')
 
+        # kill the KDE D-Bus service script
+        try:
+            subprocess.run(['pkill', '-u', cnfg.user_name, '-f', 'toshy_kde_dbus_service'], check=True)
+        except subprocess.CalledProcessError as proc_err:
+            error(f'Problem terminating Toshy KDE D-Bus service script:\n\t{proc_err}')
 
-    # kill the KDE D-Bus service script
+    # try to remove the KDE D-Bus service autostart file
+    user_path           = os.path.expanduser('~')
+    autostart_dir_path  = os.path.join(user_path, '.config', 'autostart')
+    dbus_svc_dt_file    = os.path.join(autostart_dir_path, 'Toshy_KDE_DBus_Service.desktop')
+
+    dbus_svc_rm_cmd = ['rm', '-f', dbus_svc_dt_file]
     try:
-        subprocess.run(['pkill', '-f', 'toshy_kde_dbus_service'], check=True)
+        # do not pass as list (brackets) since it is already a list
+        subprocess.run(dbus_svc_rm_cmd, check=True)
     except subprocess.CalledProcessError as proc_err:
-        error(f'Problem terminating KDE D-Bus service script:\n\t{proc_err}')
-    # remove the KDE D-Bus service autostart file
-    
+        error(f'Problem removing Toshy KDE D-Bus service autostart:\n\t{proc_err}')
+
+    # terminate the tray icon process
+    stop_tray_cmd = ['pkill', '-u', cnfg.user_name, '-f', 'toshy_tray']
+    try:
+        # do not pass as list (brackets) since it is already a list
+        subprocess.run(stop_tray_cmd, check=True)
+    except subprocess.CalledProcessError as proc_err:
+        print(f'Problem stopping the tray icon process:\n\t{proc_err}')
 
     # run the desktopapps-remove script
+    apps_rm_cmd = os.path.join(cnfg.toshy_dir_path, 'scripts', 'toshy-desktopapps-remove.sh')
+    try:
+        subprocess.run([apps_rm_cmd], check=True)
+    except subprocess.CalledProcessError as proc_err:
+        error(f'Problem removing Toshy desktop apps:\n\t{proc_err}')
+
     # run the bincommands-remove script
+    bin_rm_cmd = os.path.join(cnfg.toshy_dir_path, 'scripts', 'toshy-bincommands-remove.sh')
+    try:
+        subprocess.run([bin_rm_cmd], check=True)
+    except subprocess.CalledProcessError as proc_err:
+        error(f'Problem removing Toshy bin commands apps:\n\t{proc_err}')
 
-    # elevate_privileges()
+    response_rm_udev_rules = input('Remove the Toshy "udev/uinput" rules file? [y/N]: ')
+    if response_rm_udev_rules.lower() == 'y':
+        elevate_privileges()
+        # define the udev rules file path
+        udev_rules_file = '/etc/udev/rules.d/90-toshy-keymapper-input.rules'
+        # remove the 'udev' rules file
+        try:
+            subprocess.run(['sudo', 'rm', '-f', udev_rules_file], check=True)
+        except subprocess.CalledProcessError as proc_err:
+            error(f'Problem removing Toshy udev rules file:\n\t{proc_err}')
+        # refresh the active 'udev' rules
+        try:
+            subprocess.run(['sudo', 'udevadm', 'control', '--reload-rules'], check=True)
+            subprocess.run(['sudo', 'udevadm', 'trigger'], check=True)
+        except subprocess.CalledProcessError as proc_err:
+            error(f'Problem refreshing udev rules:\n\t{proc_err}')
 
-    # remove the 'udev' rules file
-    # refresh the active 'udev' rules
+    print()
+    print(cnfg.separator)
+    print(f'Toshy uninstall complete. Reboot should not be necessary.')
+    print(cnfg.separator)
+    print()
 
 
 def handle_cli_arguments():
@@ -1227,7 +1287,7 @@ def handle_cli_arguments():
     parser.add_argument(
         '--uninstall',
         action='store_true',
-        help='Uninstall Toshy (NOT IMPLEMENTED YET)'
+        help='Uninstall Toshy'
     )
     parser.add_argument(
         '--show-env',
@@ -1272,7 +1332,7 @@ def handle_cli_arguments():
         remove_desktop_tweaks()
         sys.exit(0)
     elif args.uninstall:
-        raise NotImplementedError
+        # raise NotImplementedError
         uninstall_toshy()
     elif args.fancy_pants:
         cnfg.fancy_pants = True
@@ -1380,17 +1440,12 @@ if __name__ == '__main__':
 
     print()   # blank line in terminal to start things off
 
-    # Check if 'sudo' command is available to user
-    if not shutil.which('sudo'):
-        print("Error: 'sudo' not found. Installer will fail without it. Exiting.")
-        sys.exit(1)
-
     # Invalidate any `sudo` ticket that might be hanging around, to maximize 
     # the length of time before `sudo` might demand the password again
     try:
         subprocess.run(['sudo', '-k'], check=True)
-    except subprocess.CalledProcessError:
-        print(f"ERROR: 'sudo' found, but 'sudo -k' did not work. Very strange.")
+    except subprocess.CalledProcessError as proc_err:
+        error(f"ERROR: 'sudo' found, but 'sudo -k' did not work. Very strange.\n\t{proc_err}")
 
     cnfg = InstallerSettings()
 
