@@ -18,14 +18,14 @@ fi
 
 
 
-echo -e "\nRemoving Toshy GUI and Tray app launchers..."
+echo -e "\nRemoving Toshy Preferences and Tray Icon app launchers..."
 
 /usr/bin/rm -f "$HOME/.local/share/applications/Toshy_GUI.desktop"
 /usr/bin/rm -f "$HOME/.local/share/applications/Toshy_Tray.desktop"
 /usr/bin/rm -f "$HOME/.local/share/icons/toshy_app_icon_rainbow.svg"
 
 echo ""
-echo "Finished removing Toshy GUI and Tray app launchers:"
+echo "Finished removing Toshy Preferences and Tray Icon app launchers:"
 echo ""
 echo "- Toshy_GUI.desktop"
 echo "- Toshy_Tray.desktop"

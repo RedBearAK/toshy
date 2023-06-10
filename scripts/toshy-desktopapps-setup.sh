@@ -20,7 +20,7 @@ LOCAL_SHARE="$HOME/.local/share"
 TOSHY_CFG="$HOME/.config/toshy"
 
 
-echo -e "\nInstalling Toshy GUI and Tray app launchers..."
+echo -e "\nInstalling Toshy Preferences and Tray Icon app launchers..."
 
 mkdir -p "$LOCAL_SHARE/applications"
 mkdir -p "$LOCAL_SHARE/icons"
@@ -30,7 +30,7 @@ cp -f "$TOSHY_CFG/desktop/Toshy_Tray.desktop"           "$LOCAL_SHARE/applicatio
 cp -f "$TOSHY_CFG/assets/toshy_app_icon_rainbow.svg"    "$LOCAL_SHARE/icons"
 
 
-echo -e "\nFinished installing Toshy GUI and Tray app launchers:"
+echo -e "\nFinished installing Toshy Preferences and Tray Icon app launchers:"
 echo ""
 echo "- Toshy Preferences"
 echo "- Toshy Tray Icon"
