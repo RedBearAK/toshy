@@ -1223,6 +1223,15 @@ def uninstall_toshy():
         subprocess.run(stop_tray_cmd, check=True)
     except subprocess.CalledProcessError as proc_err:
         print(f'Problem stopping the tray icon process:\n\t{proc_err}')
+    # remove the tray icon autostart file
+    tray_autostart_file = os.path.join(autostart_dir_path, 'Toshy_Tray.desktop')
+
+    tray_autostart_rm_cmd = ['rm', '-f', tray_autostart_file]
+    try:
+        # do not pass as list (brackets) since it is already a list
+        subprocess.run(tray_autostart_rm_cmd, check=True)
+    except subprocess.CalledProcessError as proc_err:
+        error(f'Problem removing Toshy tray icon autostart:\n\t{proc_err}')
 
     # run the desktopapps-remove script
     apps_rm_cmd = os.path.join(cnfg.toshy_dir_path, 'scripts', 'toshy-desktopapps-remove.sh')
