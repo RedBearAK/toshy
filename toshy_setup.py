@@ -1174,6 +1174,8 @@ def remove_desktop_tweaks():
 
     if cnfg.DESKTOP_ENV == 'kde':
         remove_tweaks_KDE()
+        
+    print('Removed known desktop tweaks applied by installer.')
 
 
 def uninstall_toshy():
@@ -1181,13 +1183,15 @@ def uninstall_toshy():
     
     get_environment_info()
     
-    # stop toshy services and/or manual script if it is running
-    
-    
     remove_desktop_tweaks()
     
-    # run the systemd-remove script
+    # stop Toshy manual script if it is running
+    subprocess.run(['toshy-config-stop'])
+    
     if cnfg.systemctl_present and cnfg.init_system == 'systemd':
+        # stop Toshy systemd services if they are running
+        subprocess.run(['toshy-services-stop'])
+        # run the systemd-remove script
         sysd_rm_cmd = os.path.join(cnfg.toshy_dir_path, 'scripts', 'bin', 'toshy-systemd-remove.sh')
         subprocess.run([sysd_rm_cmd])
     else:
