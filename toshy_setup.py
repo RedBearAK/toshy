@@ -339,12 +339,11 @@ def load_uinput_module():
 def reload_udev_rules():
     try:
         call_attention_to_password_prompt()
-        subprocess.run(
-            "sudo udevadm control --reload-rules && sudo udevadm trigger",
-            shell=True, check=True)
-        print('"udev" rules reloaded successfully.')
+        subprocess.run(['sudo', 'udevadm', 'control', '--reload-rules'], check=True)
+        subprocess.run(['sudo', 'udevadm', 'trigger'], check=True)
+        print('Reloaded the "udev" rules successfully.')
     except subprocess.CalledProcessError as proc_error:
-        print(f'Failed to reload "udev" rules: {proc_error}')
+        print(f'Failed to reload "udev" rules:\n\t{proc_error}')
         prompt_for_reboot()
 
 
@@ -1268,18 +1267,14 @@ def uninstall_toshy():
         except subprocess.CalledProcessError as proc_err:
             error(f'Problem removing Toshy udev rules file:\n\t{proc_err}')
         # refresh the active 'udev' rules
-        try:
-            subprocess.run(['sudo', 'udevadm', 'control', '--reload-rules'], check=True)
-            subprocess.run(['sudo', 'udevadm', 'trigger'], check=True)
-        except subprocess.CalledProcessError as proc_err:
-            error(f'Problem refreshing udev rules:\n\t{proc_err}')
+        reload_udev_rules()
 
     print()
     print(cnfg.separator)
-    print(f'Toshy uninstall complete. Reboot should not be necessary.')
+    print(f'Toshy uninstall complete. Reboot if indicated above with ASCII banner.')
     print(f"The '~/.config/toshy' folder with your settings has NOT been removed.")
-    print(f'Please report any problems or leftover files on the GitHub repo:')
-    print(f'https://github.com/RedBearAK/toshy')
+    print(f'Please report any problems or leftover files/commands on the GitHub repo:')
+    print(f'https://github.com/RedBearAK/toshy/issues/')
     print(cnfg.separator)
     print()
 
