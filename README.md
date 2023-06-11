@@ -223,11 +223,10 @@ This is a list of Linux distributions and desktop variants I've been able to tes
 
 ### Red Hat and similar distros
 
-- Fedora 36/[37*]/38 (from Red Hat)
+- Fedora 36/37/38 (from Red Hat)
 
     - Standard GNOME variant tested (Wayland session requires extensions)
     - KDE variant tested (X11/Xorg or Wayland+KDE session)
-    - Fedora 37 not directly tested, but should work since F36/F38 work
 
 - Ultramarine Linux 38 (Fedora-based)
 
@@ -250,25 +249,27 @@ This is a list of Linux distributions and desktop variants I've been able to tes
 
 - openSUSE Tumbleweed (rolling release)
 
-    - GNOME desktop works (Wayland session needs shell extensions, see Requirements)
+    - GNOME desktop works (Wayland session needs extensions, see Requirements)
     - KDE desktop works (X11/Xorg or Wayland)
     - Other desktop choices should work, if session is X11/Xorg
 
-- openSUSE Leap is currently UNSUPPORTED
+- openSUSE Leap 15.4/15.5 (fixed release) **_UNSUPPORTED!_**
 
-    - Leap still comes with Python version 3.6.x
-    - Current Python version on most distros is 3.9/3.10/3.11
+    - Leap 15.4/15.5 system Python version is 3.6.x
+    - Package list for Tumbleweed doesn't work for Leap
 
 ### Ubuntu variants and Ubuntu-based distros
 
 - Ubuntu official variants tested:
 
-    - Ubuntu 22.04/23.04
-    - Xubuntu 23.04
+    - Ubuntu 22.04/23.04 (X11/Xorg or Wayland+GNOME, requires extensions)
     - Kubuntu 22.04/23.04 (X11/Xorg or Wayland+KDE)
-    - Lubuntu 23.04
+    - Xubuntu 23.04 (X11/Xorg only)
+    - Lubuntu 23.04 (X11/Xorg only)
 
 - Pop!_OS 22.04 LTS (Ubuntu-based)
+
+    - X11/Xorg or Wayland+GNOME (requires extensions)
 
 - KDE Neon (based on Ubuntu LTS releases)
 

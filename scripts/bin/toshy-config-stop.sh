@@ -19,3 +19,4 @@ echo -e "Stopping Toshy manual config script...\n"
 
 pkill -f "/bin/keyszer"
 pkill -f "toshy-config-start"
+pkill -f "toshy_config"
