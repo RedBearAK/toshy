@@ -1273,6 +1273,7 @@ def uninstall_toshy():
         reload_udev_rules()
 
     print()
+    print()
     print(cnfg.separator)
     print(f'Toshy uninstall complete. Reboot if indicated above with ASCII banner.')
     print(f"The '~/.config/toshy' folder with your settings has NOT been removed.")
@@ -1428,6 +1429,8 @@ def main(cnfg: InstallerSettings):
         if not os.path.exists(cnfg.reboot_tmp_file):
             os.mknod(cnfg.reboot_tmp_file)
         print()
+        print()
+        print()
         print(cnfg.separator)
         print(cnfg.separator)
         print(cnfg.reboot_ascii_art)
@@ -1446,6 +1449,8 @@ def main(cnfg: InstallerSettings):
         # Try to launch the tray icon in a separate process not linked to current shell
         # Also, suppress output that might confuse the user
         subprocess.Popen(tray_icon_cmd, close_fds=True, stdout=DEVNULL, stderr=DEVNULL)
+        print()
+        print()
         print()
         print(cnfg.separator)
         print(cnfg.separator)
