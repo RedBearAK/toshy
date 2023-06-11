@@ -2796,8 +2796,8 @@ def is_Enter_F2(combo_if_true, combo_if_false):
 # Keybindings overrides for Caja
 # (overrides some bindings from general file manager code block below)
 keymap("Overrides for Caja - Finder Mods", {
-    # C("RC-Super-o"):            C("Shift-RC-Enter"),            # Open in new tab
-    C("RC-Super-o"):            C("Shift-RC-W"),                # Open in new window
+    C("RC-Super-o"):            C("Shift-RC-Enter"),            # Open in new tab
+    # C("RC-Super-o"):            C("Shift-RC-W"),                # Open in new window
 }, when = matchProps(clas="^caja$"))
 
 # Keybindings overrides for DDE (Deepin) File Manager
@@ -2829,7 +2829,7 @@ keymap("Overrides for Dolphin - Finder Mods", {
 # Keybindings overrides for elementary OS Files (Pantheon)
 # (overrides some bindings from general file manager code block below)
 keymap("Overrides for Pantheon - Finder Mods", {
-    # C("RC-Super-o"):            C("Shift-Enter"),               # Open folder in new tab
+    C("RC-Super-o"):            C("Shift-Enter"),               # Open folder in new tab
     C("RC-comma"):              None,                           # Disable preferences shortcut since none available
 }, when = matchProps(clas="^io.elementary.files$"))
 
@@ -2846,8 +2846,8 @@ keymap("Overrides for Nautilus - Finder Mods", {
     # Settings app in GNOME to run command: "nautilus --new-window /home/USER" [ replace "USER" ]
     C("RC-KEY_1"):              C("C-KEY_2"),                   # View as Icons
     C("RC-KEY_2"):              C("C-KEY_1"),                   # View as List (Detailed)
-    C("RC-Super-o"):            C("Shift-Enter"),               # Open in new window (disable line below)
-    # C("RC-Super-o"):            C("RC-Enter"),                  # Open in new tab (disable line above)
+    # C("RC-Super-o"):            C("Shift-Enter"),               # Open in new window (disable line below)
+    C("RC-Super-o"):            C("RC-Enter"),                  # Open in new tab (disable line above)
     C("RC-comma"):              C("RC-comma"),                  # Overrides "Open preferences dialog" shortcut below
     C("RC-F"):                  C("RC-F"),                      # Don't toggle Enter key, pass Cmd+F
 }, when = matchProps(clas="^org.gnome.nautilus$|^nautilus$"))
