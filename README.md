@@ -8,7 +8,7 @@
 
 - May cause the keyboard in some odd circumstances after install/reboot to have no output (default emergency bail out key is F16, which can be changed in the config file before rebooting). If you don't have F16 on your keyboard, you may need to stop and restart the Toshy services from the tray icon menu, or by opening the "Preferences" app from a menu with the mouse.  
 
-- The Wayland+KDE (Plasma) solution works but is still a bit "fragile" due to multiple separate components needing to work together. Also, if you have multiple desktop environments installed and one is KDE, you'll need to run the installer once while you are logged into a KDE session, so the necessary components get set up. After that you should be able to log into other DEs and choose either X11/Xorg or Wayland (only GNOME or KDE for now) sessions with no issue.  
+- The Wayland+KDE (Plasma) solution works but is still a bit "fragile" due to multiple separate components needing to work together. Also, if you have multiple desktop environments installed and one is KDE, you'll need to run the installer once while you are actually logged into a KDE session, so the necessary components get set up. After that you should be able to log into KDE and other DEs and choose either X11/Xorg or Wayland (only GNOME or KDE for now) sessions with no issue.  
 
 - Some distros have no `journal` output for the user services, for unknown reasons. I've seen this on Arcolinux, the RHEL clones.  
 
@@ -188,13 +188,13 @@ Other options for the installer:
 ./toshy_setup.py --apply-tweaks
 ```
 
-Just apply the "desktop tweaks" for the environment, don't do the full install.  
+Just applies the "desktop tweaks" for the environment, does not do the full install. Might be handy if you have a system with multiple desktop environments.  
 
 ```sh
 ./toshy_setup.py --remove-tweaks
 ```
 
-Removes the "desktop tweaks" the installer applied.  
+Just removes the "desktop tweaks" the installer applied.  
 
 And finally:  
 
@@ -217,9 +217,19 @@ At the moment this installer option will do the following:
 - KDE: Sets the task switcher to "Large Icons" (like macOS/GNOME task switcher)
 - KDE: Enables task switcher option "Only one window per application" (makes the task switcher dialog show only a single icon for each application, like macOS/GNOME)
 
+## How to Uninstall
+
+This should work now:  
+
+```sh
+./toshy_setup.py --uninstall
+``` 
+
 ## Currently working/tested Linux distros:
 
 This is a list of Linux distributions and desktop variants I've been able to test so far. For those with release versions provided, that is just what I happened to download and test. Older or newer versions of the same distro, within reason, may also work.  
+
+As noted elsewhere in the README, there is no Windows version of Toshy, unlike Kinto.  
 
 ### Red Hat and similar distros
 
@@ -765,4 +775,4 @@ Something strange is happening in Manjaro KDE and Arcolinux KDE desktops with th
 
 ### More Will Follow...
 
-I'll add to this as more testing happens and more reports come in.  
+I'll add to this as more testing happens and more reports/questions come in.  
