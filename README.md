@@ -808,12 +808,3 @@ This type of project takes extraordinary amounts of time and effort to work arou
 Thanks for checking out Toshy!  
 
 §
-<script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
-<script>
-  kofiWidgetOverlay.draw('redbearak', {
-    'type': 'floating-chat',
-    'floating-chat.donateButton.text': 'Donate',
-    'floating-chat.donateButton.background-color': '#ff38b8',
-    'floating-chat.donateButton.text-color': '#fff'
-  });
-</script> 
