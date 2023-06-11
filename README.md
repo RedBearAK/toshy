@@ -16,6 +16,8 @@
 
 # Toshy README
 
+<div style="text-align: center;">
+
 • • • 
 ![Toshy app icon inverse grayscale](./assets/toshy_app_icon_rainbow_inverse_grayscale.svg "Toshy app icon inverse grayscale")
 • • •
@@ -23,6 +25,8 @@
 • • •
 ![Toshy app icon](./assets/toshy_app_icon_rainbow.svg "Toshy app icon")
 • • •
+
+</div>
 
 ## Make your Linux keyboard act like a 'Tosh! (or, What the Heck is This?!?)
 
