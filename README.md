@@ -16,6 +16,14 @@
 
 # Toshy README
 
+• • • 
+![Toshy app icon inverse grayscale](./assets/toshy_app_icon_rainbow_inverse_grayscale.svg "Toshy app icon inverse grayscale")
+• • •
+![Toshy app icon inverted](./assets/toshy_app_icon_rainbow_inverse.svg "Toshy app icon inverse")
+• • •
+![Toshy app icon](./assets/toshy_app_icon_rainbow.svg "Toshy app icon")
+• • •
+
 ## Make your Linux keyboard act like a 'Tosh! (or, What the Heck is This?!?)
 
 Toshy is a config file for the `keyszer` Python-based keymapper for Linux (which was forked from `xkeysnail`). The Toshy config is not strictly a fork of Kinto, but was based in the beginning entirely on the config file for Kinto.sh by Ben Reaves (https://github.com/rbreaves/kinto or https://kinto.sh). Without Kinto, Toshy would not exist.  Using Toshy will feel basically the same as using Kinto, just with some new features and some problems solved.  
@@ -780,3 +788,13 @@ Something strange is happening in Manjaro KDE and Arcolinux KDE desktops with th
 ### More Will Follow...
 
 I'll add to this as more testing happens and more reports/questions come in.  
+
+### Sponsor Me / Donate
+
+This type of project takes extraordinary amounts of time and effort to work around weird problems in different distros. If you feel like I did something useful by creating this, and you'd like me to be able to spend time maintaining and improving it, buy me a coffee:  
+
+http://ko-fi.com/redbearak  
+
+Thanks for checking out Toshy!  
+
+§
