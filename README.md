@@ -78,13 +78,15 @@ There's no simple way around this, since the keymapper is only designed to send 
 
  1. Multi-user support: I believe some changes I've made will facilitate proper multi-user support on the same system. Even in the case of the user invoking a "Switch User" feature in their desktop environment, where the first user's desktop is still running in the background while another user is logged into their own desktop and using the screen (and physical keyboard). This is a very convenient feature even if you aren't actually sharing your computer with another person. There are many reasons why you might want to log into a different user's desktop to test something. Currently this absolutely requires `systemd` and `loginctl`.  
 
+ 1. Certain Linux distros, outside the most popular group of Ubuntus, Arches and Red Hat/Fedora related distros, really did not like the way the Kinto installer messes with the `sudoers` file. The Kinto installer does this to provide the user easier access to certain commands used to control the `xkeysnail` service. Some of these Linux distros would get b0rked quite badly if you ran the Kinto installer on them. A couple I ran into that had this problem were antiX and Gentoo. Strangely, the close relative of antiX, the very popular MX Linux, did not have the same problem with Kinto that antiX had. The Toshy installer does nothing with `sudoers` and uses "user" `systemd` services, or a manual script, and sets up `udev` rules so that the user doesn't need to run anything with `sudo` to make the keymapping work. I've already tested Toshy successfully on antiX. Still looking for a user-friendly Gentoo ISO to use for testing, but I have no reason to believe it won't work just as well, once I figure out the native packages needed.  
+
  1. A start on Wayland support. Two Wayland+[desktop environment] types are working now: Wayland+GNOME (needs shell extension installed) and Wayland+KDE (Plasma, installs a KWin script that needs to see a window activation event to start functioning). Wayland+sway and Wayland+Hyprland support is theoretically possible. More on that further down.  
 
- 1. The Option-key special characters, as described above. Two different layouts are available.  
+ 1. The Option-key special characters, as described above. Two different layouts are available. Or it can be completely disabled.  
 
  1. Automatic categorizing of the keyboard type of the current keyboard device. No more switching of keyboard types from the tray icon menu, or re-running the installer, or being asked to press a certain key on the keyboard during install. Some keyboard devices will need to be added to a Python list in the config to be recognized as the correct type. This will evolve over time from user feedback.  
 
- 1. Changing of settings on-the-fly, without restarting the keymapper process. The tray icon menu and GUI preferences app will allow quickly enabling or disabling certain features, or changing the special characters layout. The change takes effect right away. (Adding or changing shortcuts in the config file will still require restarting the keymapper.)  
+ 1. Changing of settings on-the-fly, without restarting the keymapper process. The tray icon menu and GUI preferences app will allow quickly enabling or disabling certain features, or changing the special characters layout. The change takes effect right away. (Adding or changing shortcuts in the config file will still require restarting the keymapper, which I've tried to make as easy as possible.)  
 
  1. Modmaps with `keyszer` are now concurrent/cascading rather than mutually exclusive. This enables some of the interesting fixes described in the following items.  
 
@@ -96,15 +98,15 @@ There's no simple way around this, since the keymapper is only designed to send 
 
  1. Sections of the config file are labeled with ASCII art designed to be readable on a "minimap" or "overview" sidebar view found in many text editors and code editors, to make finding certain parts of the config file a little easier. There's also a "tag" on each section that can be located easily with a `Find` search in any text editor.  
 
- 1. Custom function to make the `Enter` key behave pretty much like it does in the Finder, in most Linux file managers. Mainly what this enables is using the `Enter` key to quickly rename files, while still leaving it usable in text fields like `Find` and the location bar. Not perfect, but works OK in most cases. [NOTE: If you've never actually used the keyboard to "open" or "run" files/applications from the Finder, you may not realize that the keyboard shortcut for this is just the same keyboard shortcut for opening (or, "drilling down") into folders. It's `Cmd+Down` arrow. The `Enter` key has never "opened" things in the Finder in the history of macOS, as far as I know, unlike the way the `Enter` key has always been used in Windows and Linux file managers.]  
+ 1. Custom function to make the `Enter` key behave pretty much like it does in the Finder, in most Linux file managers. Mainly what this enables is using the `Enter` key to quickly rename files/folders, while still leaving it usable in text fields like `Find` and the location bar. Not perfect, but works OK in most cases. [NOTE: If you've never actually used the keyboard to "open" or "run" files/applications from the Finder, you may not realize that the keyboard shortcut for this is just the same keyboard shortcut for opening (or, "drilling down") into folders. It's `Cmd+Down` arrow. The `Enter` key has never "opened" things in the Finder in the history of macOS, as far as I know, unlike the way the `Enter` key has always been used in Windows and Linux file managers.]  
 
  1. Evolving fix for the problem of `Cmd+W` unexpectedly failing to close a lot of Linux "child" windows and "dialog" windows (that have no binding to `Ctrl+W` and want either `Escape` or `Alt+F4/Ctrl+Q` to close). This can lead to a bad unconscious habit of hitting `Cmd+W` followed immediately by `Cmd+Q` (which becomes a problem when you're actually using macOS). The list of windows targeted by this pair of keymaps will grow over time, with input from users encountering the issue.  
 
- 1. Fix for shortcut behavior in file save/open dialogs in apps like Firefox, now that WM_NAME is available. This is an addition to the "Finder Mods" that I contributed to Kinto, which are intended to mimic Finder keyboard behavior in most common Linux file manager apps.  
+ 1. Fix for shortcut behavior in file save/open dialogs in apps like Firefox, now that WM_NAME (window name/title) is available. This is an addition to the "Finder Mods" that I contributed to Kinto, which are intended to mimic Finder keyboard behavior in most common Linux file manager apps.  
 
  1. A collection of tab navigation fixes for various apps with a tabbed UI that don't use the mostly standard Ctrl+PgUp/PgDn shortcuts. The goal is to allow `Shift+Cmd+Braces` (the left/right square bracket keys) to perform tab navigation in as many Linux applications (with tabbed UIs) as possible, as it does in most Mac applications with a tabbed UI (Finder, web browsers, and so on). Let me know if you use a Linux app where `Shift+Cmd+Braces` shortcuts are not working for tab navigation while Toshy is enabled. Use `xprop WM_CLASS _NET_WM_NAME` to obtain the window attributes for matching (if you use X11/Xorg).  
 
- 1. Another growing collection of enhancements to various Linux apps to enable shortcuts like Cmd+comma (preferences) and Cmd+I (get info/properties) to work in more apps.  
+ 1. Another growing collection of enhancements to various Linux apps to enable shortcuts like `Cmd+comma` (preferences) and `Cmd+I` (get info/properties) to work in more apps.  
 
  1. A function (`matchProps`) that enables very powerful and complex (or simple) matching on multiple properties at the same time. Application class, window name/title, device name, NumLock and CapsLock LED state can all be combined in any way, and lists can be made of specific combinations of one or more of those properties to match on.  
 
@@ -148,17 +150,21 @@ There's no simple way around this, since the keymapper is only designed to send 
 flatpak install com.mattjakeman.ExtensionManager
 ```
 
-... or:
+... or just:
 
 ```sh
 flatpak install extensionmanager
 ```
 
-You can just use the "Browse" tab in this application to search for the extensions by name and quickly install them.  
+If it's not found you may need to enable the Flathub repo on your machine. Go to Flathub.org for instructions for your distro.  
+
+When you get it installed, you can just use the "Browse" tab in this application to search for the extensions by name and quickly install them.  
 
 There will be no issue when installing more than one of the compatible extensions. Which might be advisable, to reduce the risk of not having a working extension for a while the next time you upgrade your system in-place and wind up with a newer, temporarily unsupported version of GNOME. I expect at least one of the extensions will always be updated quickly to support the latest GNOME. The branch of `keyszer` installed by Toshy will seamlessly jump to trying the other extensions in case one fails or is disabled/uninstalled for any reason. You just need to have at least one from the list installed and enabled, and when it responds over D-Bus to the query from `keyszer` it will be marked as the "good" one and used from then on, unless it stops responding. Lather, rinse, repeat.  
 
 The `Xremap` GNOME shell extension is the only one that supports older GNOME versions, so it's the only one that will show up when browsing the extensions list from an environment like Zorin OS (GNOME 3.38.x) or the distros based on Red Hat Enterprise Linux (clones like AlmaLinux, Rocky Linux, EuroLinux, etc.) which are still using GNOME 40.x.  
+
+There is a weird bug with searching for the `Xremap` extension on newer versions of GNOME like GNOME 44, where you actually have to use the option "Show Unsupported" from the hamburger menu in order to get it to show up.  
 
 ## How to Install
 
@@ -236,6 +242,8 @@ This should work now:
 ```sh
 ./toshy_setup.py --uninstall
 ``` 
+
+Please file an issue if you have some sort of trouble with the uninstall option. If you have a multi-desktop system you may need to run the uninstall procedure while logged into KDE if you ran the installer in KDE, due to the KDE-specific components that get installed for Wayland support.  
 
 ## Currently working/tested Linux distros:
 
