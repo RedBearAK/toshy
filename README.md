@@ -1,6 +1,8 @@
-# Current status: Early Beta (Please Read)
+# Current status: Stable-ish Beta (Please Read)
 
 - PRIMARY ISSUE you may run into at this point: The Toshy config file tries to automatically identify the "type" of your keyboard based on some pre-existing lists of keyboard device names, which do not have many entries yet. So your keyboard may be misidentified, leading to modifier keys in the "wrong" place. BE PREPARED to identify the name of your keyboard device (try `toshy-devices` in a terminal) and enter it into the correct list in the config file to fix this problem. There is an editable "custom" list where the entry should be retained even if you reinstall later. Please take the time to FILE AN ISSUE if you encounter this, whether or not you are able to fix it on your own. Include your device name and what type it should be. The goal is to populate the default keyboard name lists so that this becomes a very unusual problem going forward. The bigger goal of Toshy has been to allow a mixed-type environment where you can use any combination of Apple, Windows (PC), IBM or Chromebook keyboards together without thinking about switching types.  
+
+- Uninstall option has been implemented and tested on a few distros. Submit an issue if it doesn't work in some way.  
 
 - May have issues installing on distros not on the "tested" list below. Try the `--list-distros` and `--override-distro` options (separately) with the installer, if you think your distro is closely related to one on the list.  
 
@@ -33,6 +35,8 @@ xprop WM_CLASS _NET_WM_NAME
 ```
 
 The mouse cursor will change to a cross shape. Click on the window in question and the attributes will appear in the terminal.  
+
+If you're in one of the compatible Wayland environments (GNOME or KDE, so far), you'll have to rely on other tools, or the verbose logging output from `toshy-config-start-verbose`. When a window has the focus and you use a keyboard shortcut that gets remapped by the keymapper config file, you will see additional output in the terminal showing the window's class and name/title. A good shortcut to use for this that usually won't do anything unless the app has a tabbed UI is `Shift+Cmd+Left_Brace` or `Shift+Cmd+Right_Brace` (those are the defined names of the square bracket keys). Utilities like `xprop` will generally have no output in a Wayland session.  
 
 ## Windows Support
 
