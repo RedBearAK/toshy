@@ -534,7 +534,7 @@ There is an `include()` function in `keyszer` that theoretically allows separate
 
 #### UPDATE: There is now a way to override the keyboard type
 
-Use the verbose manual config command below, and look for lines with `KB_TYPE:` to see your keyboard device name, as seen by the keymapper and the function that tries to identify the keyboard type. You can also find it in the list output by the command `toshy-devices`.  
+Use the verbose manual config command below, and look for lines with `KB_TYPE:` to see your keyboard device name, as seen by the keymapper and the function that tries to identify the keyboard type. You can also find it in the list output from the terminal command `toshy-devices`.  
 
 You can then take the device name and add it to this Python dictionary between special markers in the config file that will ensure the change will get retained when re-installing or upgrading Toshy:  
 
@@ -803,8 +803,17 @@ I'll add to this as more testing happens and more reports/questions come in.
 
 This type of project takes extraordinary amounts of time and effort to work around weird problems in different distros. If you feel like I did something useful by creating this, and you'd like me to be able to spend time maintaining and improving it, buy me a coffee:  
 
-http://ko-fi.com/redbearak  
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/G2G34VVZW)
 
 Thanks for checking out Toshy!  
 
 §
+<script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
+<script>
+  kofiWidgetOverlay.draw('redbearak', {
+    'type': 'floating-chat',
+    'floating-chat.donateButton.text': 'Donate',
+    'floating-chat.donateButton.background-color': '#ff38b8',
+    'floating-chat.donateButton.text-color': '#fff'
+  });
+</script> 
