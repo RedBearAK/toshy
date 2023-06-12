@@ -343,6 +343,24 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
     - antiX & MX Linux are based on Debian 11 Bullseye and identify as `debian`.
 
+- Debian 12 tested and can be made to work:
+
+    - Add your user to `sudo` group (and reboot!)
+        - `su -`
+        - `usermod -aG sudo yourusername`
+        - Seriously, reboot!
+    - Then, for Wayland+GNOME:
+        - Install `flatpak` and the Flathub repo. Instructions here:
+            - https://flatpak.org/setup/Debian
+        - Do `flatpak install com.mattjakeman.ExtensionManager` (and reboot!)
+        - Install any compatible shell extension with Extension Manager:
+            - Xremap
+            - Window Calls Extended
+            - Focused Window D-Bus
+        - Recommended extensions:
+            - AppIndicator and KStatusNotifier (for tray icon)
+            - Logo Menu (enable power options in settings)
+
 ### Arch, Arch-based and related distros
 
 - Arcolinux (Arch-based)
