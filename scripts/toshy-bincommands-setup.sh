@@ -100,15 +100,19 @@ fi
 case "$SHELL" in
     */bash)
         shell_rc="$HOME/.bashrc"
+        path_line="export PATH=\"$HOME/.local/bin:\$PATH\""
         ;;
     */zsh)
         shell_rc="$HOME/.zshrc"
+        path_line="export PATH=\"$HOME/.local/bin:\$PATH\""
         ;;
     */fish)
         shell_rc="$HOME/.config/fish/config.fish"
+        path_line="set -U fish_user_paths $HOME/.local/bin \$fish_user_paths"
         ;;
     *)
         shell_rc=""
+        path_line=""
         ;;
 esac
 
@@ -152,12 +156,6 @@ if ! echo "$PATH" | grep -q -E "(^|:)$HOME/.local/bin(:|$)"; then
     esac
 
     if [[ -n "${shell_rc}" ]]; then
-
-        if [[ "${SHELL}" == */fish ]]; then
-            path_line="set -U fish_user_paths $HOME/.local/bin \$fish_user_paths"
-        else
-            path_line="export PATH=\"$HOME/.local/bin:\$PATH\""
-        fi
 
         # Check if the line already exists in the RC file
         if grep -Fxq "$path_line" "${shell_rc}"; then
