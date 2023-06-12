@@ -74,6 +74,9 @@ else
     run_tmp_dir="/tmp"
 fi
 
+path_line=""
+shell_rc=""
+
 path_good_tmp_file="toshy_installer_says_path_is_good"
 path_good_tmp_path="$run_tmp_dir/$path_good_tmp_file"
 
@@ -94,12 +97,36 @@ if [ -f "$path_fix_tmp_path" ]; then
 fi
 
 
+case "$SHELL" in
+    */bash)
+        shell_rc="$HOME/.bashrc"
+        ;;
+    */zsh)
+        shell_rc="$HOME/.zshrc"
+        ;;
+    */fish)
+        shell_rc="$HOME/.config/fish/config.fish"
+        ;;
+    *)
+        shell_rc=""
+        ;;
+esac
+
+
 if [[ $toshy_installer_says_fix_path -eq 1 ]]; then
-    echo -e "\nFixing path because Toshy installer said so..."
-    echo -e "Appending the export path line to '$shell_rc'..."
-    echo -e "\n$path_line\n" >> "${shell_rc}"
-    echo -e "Done. Restart your shell or run 'source $shell_rc' to apply the changes."
-    exit 0
+
+    if [[ -n "${shell_rc}" ]]; then
+        echo -e "\nFixing path because Toshy installer said so..."
+        echo -e "Appending the export path line to '$shell_rc'..."
+        echo -e "\n$path_line\n" >> "${shell_rc}"
+        echo -e "Done. Restart your shell or run 'source $shell_rc' to apply the changes."
+        exit 0
+    else
+        echo -e "\nALERT: Toshy Installer said to fix path but shell not recognized."
+        echo "Please add the appropriate line to your shell's RC file yourself."
+        exit 0
+    fi
+
 fi
 
 
@@ -110,25 +137,22 @@ if ! echo "$PATH" | grep -q -E "(^|:)$HOME/.local/bin(:|$)"; then
 
     case "$SHELL" in
         */bash)
-            shell_rc="$HOME/.bashrc"
             echo "export PATH=\"$HOME/.local/bin:\$PATH\""
             ;;
         */zsh)
-            shell_rc="$HOME/.zshrc"
             echo "export PATH=\"$HOME/.local/bin:\$PATH\""
             ;;
         */fish)
-            shell_rc="$HOME/.config/fish/config.fish"
             echo "set -U fish_user_paths $HOME/.local/bin \$fish_user_paths"
             ;;
         *)
             echo "ALERT: Shell not recognized."
             echo "Please add the appropriate line to your shell's RC file yourself."
-            shell_rc=""
             ;;
     esac
 
     if [[ -n "${shell_rc}" ]]; then
+
         if [[ "${SHELL}" == */fish ]]; then
             path_line="set -U fish_user_paths $HOME/.local/bin \$fish_user_paths"
         else
@@ -140,7 +164,6 @@ if ! echo "$PATH" | grep -q -E "(^|:)$HOME/.local/bin(:|$)"; then
             echo "The line is already in your $shell_rc file."
         else
             read -r -p "Do you want to append the line to your $shell_rc file now? [Y/n] " yn
-
             case $yn in
                 [Nn]* )
                     echo -e "Skipping. Please add the line to your shell RC file manually."
@@ -152,5 +175,7 @@ if ! echo "$PATH" | grep -q -E "(^|:)$HOME/.local/bin(:|$)"; then
                     ;;
             esac
         fi
+
     fi
+
 fi
