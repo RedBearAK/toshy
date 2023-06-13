@@ -14,7 +14,7 @@ fi
 #     exit 1
 # fi
 
-sleep 3
+sleep 1
 
 message="Kickstarting the Toshy KWin script..."
 timeout_s=2
