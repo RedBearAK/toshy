@@ -21,9 +21,9 @@ timeout_s=2
 
 
 if command -v zenity &> /dev/null; then
-    zenity --info --text="${message}" --timeout=${timeout_s}
+    zenity --info --text="${message}" --timeout=${timeout_s} >/dev/null 2>&1
 elif command -v xmessage &> /dev/null; then
-    xmessage "${message}" -timeout ${timeout_s}
+    xmessage "${message}" -timeout ${timeout_s} >/dev/null 2>&1
 else
     echo "ERROR: The 'zenity' and 'xmessage' commands are not available."
     echo "ERROR: Toshy cannot kickstart the KWin script."
