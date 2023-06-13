@@ -116,8 +116,8 @@ class InstallerSettings:
 
         self.keyszer_tmp_path       = os.path.join('.', 'keyszer-temp')
 
-        # keyszer_branch              = 'env_and_adapt_to_capslock'
-        # keyszer_branch              = 'environ_api'
+        # experimental branch with support for repeating key filter, touchpad events
+        # self.keyszer_branch         = 'env_api_kde_repeatkeys_touchpad'
         self.keyszer_branch         = 'environ_api_kde'
         self.keyszer_url            = 'https://github.com/RedBearAK/keyszer.git'
         self.keyszer_clone_cmd      = f'git clone -b {self.keyszer_branch} {self.keyszer_url}'
@@ -435,6 +435,8 @@ distro_groups_map = {
     # Add more as needed...
 }
 
+# TODO: On openSUSE, check version of system Python to adapt Python package name
+# openSUSE package is python310-* now but will probably be python311-* soon
 pkg_groups_map = {
     'redhat-based':    ["gcc", "git", "cairo-devel", "cairo-gobject-devel", "dbus-devel",
                         "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
@@ -463,7 +465,7 @@ extra_pkgs_map = {
     # 'distro_name': ["pkg1", "pkg2", ...],
     'fedora':          ["evtest"],
     'fedoralinux':     ["evtest"],
-    'ultramarina':     ["evtest"],
+    'ultramarine':     ["evtest"],
 }
 
 
@@ -862,7 +864,7 @@ def setup_kwin2dbus_script():
         ['kpackagetool5', '-t', 'KWin/Script', '-i', kwin_tmp_file_path], capture_output=True, text=True)
 
     if result.returncode != 0:
-        print(f"Error installing the KWin script. The error was:\n\t{result.stderr}")
+        error(f"Error installing the KWin script. The error was:\n\t{result.stderr}")
     else:
         print("Successfully installed the KWin script.")
 
@@ -878,26 +880,41 @@ def setup_kwin2dbus_script():
         capture_output=True, text=True)
     
     if result.returncode != 0:
-        print(f"Error enabling the KWin script. The error was:\n\t{result.stderr}")
+        error(f"Error enabling the KWin script. The error was:\n\t{result.stderr}")
     else:
         print("Successfully enabled the KWin script.")
 
     # Try to get KWin to notice and activate the script on its own, now that it's in RC file
     do_kwin_reconfigure()
+    
+    # Try to kickstart the KWin script so that it can start sending focused window info
+    kickstart_script    = 'toshy-kwin-script-kickstart.sh'
+    kickstart_cmd       = os.path.join(cnfg.toshy_dir_path, 'scripts', kickstart_script)
+    subprocess.Popen([kickstart_cmd])
 
 
 def setup_kde_dbus_service():
     """Install the D-Bus service initialization script to receive window focus
-    change notifications from the KWin script on KDE desktops (Wayland)"""
+    change notifications from the KWin script on KDE desktops (needed for Wayland)"""
     print(f'\n\n§  Setting up the Toshy KDE D-Bus service...\n{cnfg.separator}')
 
     # need to autostart "$HOME/.local/bin/toshy-kde-dbus-service"
     user_path               = os.path.expanduser('~')
     autostart_dir_path      = os.path.join(user_path, '.config', 'autostart')
-    dbus_svc_desktop_path   = os.path.join(cnfg.toshy_dir_path, 'desktop')
-    dbus_svc_desktop_file   = os.path.join(dbus_svc_desktop_path, 'Toshy_KDE_DBus_Service.desktop')
+    dbus_svc_dt_file_path   = os.path.join(cnfg.toshy_dir_path, 'desktop')
+    dbus_svc_desktop_file   = os.path.join(dbus_svc_dt_file_path, 'Toshy_KDE_DBus_Service.desktop')
     start_dbus_svc_cmd      = os.path.join(user_path, '.local', 'bin', 'toshy-kde-dbus-service')
     replace_home_in_file(dbus_svc_desktop_file)
+
+    # TODO: integrate D-Bus service file and systemd service file for KDE D-Bus service
+    
+    # This command probably not necessary after installing the file:
+    # dbus-daemon --session --fork --print-address
+    
+    # Where to put the new D-Bus service file:
+    # ~/.local/share/dbus-1/services/org.toshy.Toshy.service
+    
+    
 
     # ensure autostart directory exists
     try:
@@ -910,6 +927,8 @@ def setup_kde_dbus_service():
 
     subprocess.run(['pkill', '-u', cnfg.user_name, '-f', 'toshy_kde_dbus_service'])
     subprocess.Popen([start_dbus_svc_cmd], stdout=DEVNULL, stderr=DEVNULL)
+    
+    # TODO: use the kickstart script here >>>
     print(f'Toshy KDE D-Bus service should be running now.')
 
 
