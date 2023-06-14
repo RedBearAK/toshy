@@ -512,17 +512,30 @@ def macro_tester():
     def _macro_tester(ctx: KeyContext):
         return [
                     C("Enter"),
-                    ST(f'WM_CLASS: "{ctx.wm_class}"'),C("Enter"),
-                    ST(f'WM_NAME:  "{ctx.wm_name}"'),C("Enter"),
-                    ST(f'Device:   "{ctx.device_name}"'),C("Enter"),
-                    ST(f'CapsLock: "{ctx.capslock_on}"'),C("Enter"),
-                    ST(f'NumLock:  "{ctx.numlock_on}"'),C("Enter"),
-                    ST("Next test should come out on ONE LINE!"),C("Enter"),
-                    ST("Unicode and Shift test: 🌹—€—\u2021—ÿ—\U00002021 12345 !@#$% |\ !!!!!!"),C("Enter"),
+                    ST(f"Appl. Class: '{ctx.wm_class}'"), C("Enter"),
+                    ST(f"Wind. Title: '{ctx.wm_name}'"), C("Enter"),
+                    ST(f"Kbd. Device: '{ctx.device_name}'"), C("Enter"),
+                    ST("Next test should come out on ONE LINE!"), C("Enter"),
+                    ST("Unicode and Shift Test: 🌹—€—\u2021—ÿ—\U00002021 12345 !@#$% |\ !!!!!!"),
                     C("Enter")
         ]
     return _macro_tester
 
+
+def notify_context():
+    def _notify_context(ctx: KeyContext):
+        """pop up a notification with context info"""
+        zenity_cmd = [  'zenity', '--info', '--no-wrap',
+                        (
+                        '--text='
+                        f"\nAppl. Class: '{ctx.wm_class}'"
+                        f"\nWind. Title: '{ctx.wm_name}'"
+                        f"\nKbd. Device: '{ctx.device_name}'"
+                        )
+        ]
+        notify_cmd = ['notify-send', 'Toshy Context', f"Appl. Class: '{ctx.wm_class}'"]
+        subprocess.run(zenity_cmd)
+    return _notify_context
 
 
 ######################  LISTS  #######################
@@ -3753,3 +3766,9 @@ keymap("General GUI", {
 # }, when = lambda ctx: ctx.wm_class.casefold() not in remotes) # original conditional
 # }, when = matchProps(not_clas=remoteStr))                      # matchProps with regex string
 }, when = matchProps(not_lst=remotes_lod))                      # matchProps with list-of-dicts
+
+
+keymap("Macro Tester", {
+    C("RC-Shift-Alt-i"):        isDoubleTap(notify_context),
+    C("RC-Shift-Alt-t"):        isDoubleTap(macro_tester),
+}, when = lambda ctx: ctx is ctx )
