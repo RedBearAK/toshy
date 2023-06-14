@@ -18,7 +18,7 @@ fi
 LOCAL_BIN="$HOME/.local/bin"
 
 
-echo -e "\nRemoving Toshy bin commands..."
+echo -e "\nRemoving Toshy terminal commands..."
 
 /usr/bin/rm -f "$LOCAL_BIN/toshy-systemd-setup"
 /usr/bin/rm -f "$LOCAL_BIN/toshy-systemd-remove"
@@ -40,7 +40,7 @@ echo -e "\nRemoving Toshy bin commands..."
 
 
 echo ""
-echo "Finished removing Toshy bin commands:"
+echo "Finished removing Toshy terminal commands:"
 echo ""
 echo "- toshy-systemd-setup"
 echo "- toshy-systemd-remove"
