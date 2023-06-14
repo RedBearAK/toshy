@@ -923,10 +923,12 @@ def setup_kde_dbus_service():
     subprocess.run(['pkill', '-u', cnfg.user_name, '-f', 'toshy_kde_dbus_service'])
     subprocess.Popen([start_dbus_svc_cmd], stdout=DEVNULL, stderr=DEVNULL)
     
-    # Try to kickstart the KWin script so that it can start sending focused window info
-    kickstart_script    = 'toshy-kwin-script-kickstart.sh'
-    kickstart_cmd       = os.path.join(cnfg.toshy_dir_path, 'scripts', kickstart_script)
-    subprocess.Popen([kickstart_cmd])
+    # # DON'T DO THIS HERE, IT'S IN THE KDE D-BUS SERVICE LAUNCHER SCRIPT NOW
+    # # Try to kickstart the KWin script so that it can start sending focused window info
+    # kickstart_script    = 'toshy-kwin-script-kickstart.sh'
+    # kickstart_cmd       = os.path.join(cnfg.toshy_dir_path, 'scripts', kickstart_script)
+    # subprocess.Popen([kickstart_cmd])
+
     print(f'Toshy KDE D-Bus service should be running now.')
 
 
