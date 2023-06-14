@@ -28,8 +28,8 @@ timeouts(
 
 # Delays often needed for Wayland (at least in GNOME using shell extensions)
 throttle_delays(
-    key_pre_delay_ms    = 8,      # default: 0 ms, range: 0-150 ms, suggested: 1-50 ms
-    key_post_delay_ms   = 12,      # default: 0 ms, range: 0-150 ms, suggested: 1-100 ms
+    key_pre_delay_ms    = 10,      # default: 0 ms, range: 0-150 ms, suggested: 1-50 ms
+    key_post_delay_ms   = 15,      # default: 0 ms, range: 0-150 ms, suggested: 1-100 ms
 )
 
 ###  SLICE_MARK_END: keyszer_api  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
