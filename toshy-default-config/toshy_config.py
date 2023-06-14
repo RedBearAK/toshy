@@ -3593,6 +3593,7 @@ keymap("GenGUI overrides: Ubuntu", {
 
 # Overrides to General GUI shortcuts for specific desktop environments
 keymap("GenGUI overrides: Budgie", {
+    C("RC-Space"):              Key.LEFT_META,                  # Open panel-main-menu (Budgie menu)
     C("Super-Right"):           C("C-Alt-Right"),               # Default SL - Change workspace (budgie)
     C("Super-Left"):            C("C-Alt-Left"),                # Default SL - Change workspace (budgie)
     C("RC-H"):                  C("Super-h"),                   # Default SL - Minimize app (gnome/budgie/popos/fedora) not-deepin
