@@ -528,9 +528,9 @@ def notify_context():
         zenity_cmd = [  'zenity', '--info', '--no-wrap',
                         (
                         '--text='
-                        f"\nAppl. Class: '{ctx.wm_class}'"
-                        f"\nWind. Title: '{ctx.wm_name}'"
-                        f"\nKbd. Device: '{ctx.device_name}'"
+                        f"Application Class: \n'{ctx.wm_class}'"
+                        f"\n\nWindow Title: \n'{ctx.wm_name}'"
+                        f"\n\nKeyboard Device: \n'{ctx.device_name}'"
                         )
         ]
         notify_cmd = ['notify-send', 'Toshy Context', f"Appl. Class: '{ctx.wm_class}'"]
