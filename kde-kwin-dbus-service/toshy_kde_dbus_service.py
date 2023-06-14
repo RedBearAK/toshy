@@ -14,8 +14,21 @@ from dbus.exceptions import DBusException
 from typing import Dict, List, Union
 from keyszer.lib.logger import debug, error, warn, info, log
 
+# Add paths to avoid errors like ModuleNotFoundError or ImportError
+home_dir = os.path.expanduser("~")
+# local_site_packages_dir = os.path.join(home_dir, f".local/lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages")
+parent_folder_path  = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+current_folder_path = os.path.abspath(os.path.dirname(__file__))
+
+sys.path.insert(0, current_folder_path)
+sys.path.insert(0, parent_folder_path)
+
+existing_path = os.environ.get('PYTHONPATH', '')
+os.environ['PYTHONPATH'] = f'{parent_folder_path}:{current_folder_path}:{existing_path}'
+
 # local imports
-from ..lib.env import get_env_info
+# from ..lib.env import get_env_info
+import lib.env as env
 
 # Independent module/script to create a D-Bus window context
 # service in a KDE Plasma environment, which will be notified
@@ -47,7 +60,7 @@ DISTRO_VER      = None
 SESSION_TYPE    = None
 DESKTOP_ENV     = None
 
-env_info: Dict[str, str] = get_env_info()   # Returns a dict
+env_info: Dict[str, str] = env.get_env_info()   # Returns a dict
 
 DISTRO_NAME     = env_info.get('DISTRO_NAME')
 DISTRO_VER      = env_info.get('DISTRO_VER')
