@@ -2802,6 +2802,12 @@ keymap("Overrides for Nautilus - Finder Mods", {
     C("RC-F"):                  C("RC-F"),                      # Don't toggle Enter key, pass Cmd+F
 }, when = matchProps(clas="^org.gnome.nautilus$|^nautilus$"))
 
+# Keybindings overrides for Nemo
+# (overrides some bindings from general file manager code block below)
+keymap("Overrides for Nemo - Finder Mods", {
+    C("RC-Backspace"):          is_Enter_F2(C("Delete"), False),  # Set Enter to Enter for Cmd+Delete confirmation
+}, when = matchProps(clas="^nemo$"))
+
 # Keybindings overrides for PCManFM and PCManFM-Qt
 # (overrides some bindings from general file manager code block below)
 keymap("Overrides for PCManFM-Qt - Finder Mods", {
@@ -2914,6 +2920,7 @@ keymap("General File Managers - Finder Mods", {
     C("RC-L"):                  is_Enter_F2(C("RC-L"), False),          # Set Enter to Enter for Location field
     C("RC-F"):                  is_Enter_F2(C("RC-F"), False),          # Set Enter to Enter for Find field
     C("Esc"):                   is_Enter_F2(C("Esc"), True),            # Send Escape, make sure Enter is back to F2
+    C("Tab"):                   is_Enter_F2(C("Tab"), False),           # Set Enter to Enter after using Tab key
     C("Shift-RC-Enter"):        C("Enter"),                             # alternative "Enter" key for unusual cases
 }, when = matchProps(clas=filemanagerStr))
 
