@@ -15,8 +15,7 @@ from typing import Dict, List, Union
 from keyszer.lib.logger import debug, error, warn, info, log
 
 # local imports
-# from lib.env import get_env_info
-import lib.env
+from ..lib.env import get_env_info
 
 # Independent module/script to create a D-Bus window context
 # service in a KDE Plasma environment, which will be notified
@@ -48,7 +47,7 @@ DISTRO_VER      = None
 SESSION_TYPE    = None
 DESKTOP_ENV     = None
 
-env_info: Dict[str, str] = lib.env.get_env_info()   # Returns a dict
+env_info: Dict[str, str] = get_env_info()   # Returns a dict
 
 DISTRO_NAME     = env_info.get('DISTRO_NAME')
 DISTRO_VER      = env_info.get('DISTRO_VER')
