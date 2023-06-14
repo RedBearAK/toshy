@@ -7,16 +7,23 @@ import signal
 import platform
 import dbus.service
 import dbus.mainloop.glib
+
 from gi.repository import GLib
 from dbus.exceptions import DBusException
-from dbus.service import method
+# from dbus.service import method
+from typing import Dict, List, Union
+from keyszer.lib.logger import debug, error, warn, info, log
+
+# local imports
+# from lib.env import get_env_info
+import lib.env
 
 # Independent module/script to create a D-Bus window context
 # service in a KDE Plasma environment, which will be notified
 # of window focus changes by KWin
 
 if os.name == 'posix' and os.geteuid() == 0:
-    print("This app should not be run as root/superuser.")
+    error("This app should not be run as root/superuser.")
     sys.exit(1)
 
 def signal_handler(sig, frame):
@@ -24,15 +31,37 @@ def signal_handler(sig, frame):
     if sig in (signal.SIGINT, signal.SIGQUIT):
         # Perform any cleanup code here before exiting
         # traceback.print_stack(frame)
-        print(f'\nSIGINT or SIGQUIT received. Exiting.\n')
+        debug(f'\nSIGINT or SIGQUIT received. Exiting.\n')
         sys.exit(0)
 
 if platform.system() != 'Windows':
     signal.signal(signal.SIGINT,    signal_handler)
     signal.signal(signal.SIGQUIT,   signal_handler)
 else:
-    print(f'This is only meant to run on Linux. Exiting...')
+    error(f'This is only meant to run on Linux. Exiting...')
     sys.exit(1)
+
+
+# leave all of this alone!
+DISTRO_NAME     = None
+DISTRO_VER      = None
+SESSION_TYPE    = None
+DESKTOP_ENV     = None
+
+env_info: Dict[str, str] = lib.env.get_env_info()   # Returns a dict
+
+DISTRO_NAME     = env_info.get('DISTRO_NAME')
+DISTRO_VER      = env_info.get('DISTRO_VER')
+SESSION_TYPE    = env_info.get('SESSION_TYPE')
+DESKTOP_ENV     = env_info.get('DESKTOP_ENV')
+
+debug("")
+debug(  f'Toshy KDE D-Bus service script sees this environment:'
+        f'\n\t{DISTRO_NAME      = }'
+        f'\n\t{DISTRO_VER       = }'
+        f'\n\t{SESSION_TYPE     = }'
+        f'\n\t{DESKTOP_ENV      = }\n', ctx="CG")
+
 
 TOSHY_KDE_DBUS_SVC_PATH         = '/org/toshy/Toshy'
 TOSHY_KDE_DBUS_SVC_IFACE        = 'org.toshy.Toshy'
