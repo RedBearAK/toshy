@@ -526,6 +526,7 @@ def notify_context():
     def _notify_context(ctx: KeyContext):
         """pop up a notification with context info"""
         zenity_cmd = [  'zenity', '--info', '--no-wrap',
+                        '--title=Toshy Context Info',
                         (
                         '--text='
                         f"Application Class: \n'{ctx.wm_class}'"
@@ -534,7 +535,7 @@ def notify_context():
                         )
         ]
         notify_cmd = ['notify-send', 'Toshy Context', f"Appl. Class: '{ctx.wm_class}'"]
-        subprocess.run(zenity_cmd)
+        subprocess.Popen(zenity_cmd)
     return _notify_context
 
 
@@ -1164,15 +1165,15 @@ modmap("Cond modmap - Terms - Mac kbd", {
 def forced_numpad_alert():
     """Show notification of state of Forced Numpad feature"""
     if cnfg.forced_numpad:
-        subprocess.run('notify-send -u critical ALERT \
+        subprocess.Popen('notify-send -u critical ALERT \
             "Forced Numpad feature is now ENABLED.\
             \rNumlock becomes "Clear" key (Escape).\
-            \rDisable with Option+Numlock."', shell=True)
+            \rDisable with Option+Numlock."')
         debug("Forced Numpad feature is now ENABLED.")
     if not cnfg.forced_numpad:
-        subprocess.run('notify-send -u critical ALERT \
+        subprocess.Popen('notify-send -u critical ALERT \
             "Forced Numpad feature is now DISABLED.\
-            \rRe-enable with Option+Numlock."', shell=True)
+            \rRe-enable with Option+Numlock."')
         debug("Forced Numpad feature is now DISABLED.")
 
 
@@ -1212,78 +1213,14 @@ def isNumlockClearKey():
 applelogoalert_enabled = True   # Default: True
 
 
-# def toggle_optspec_US():
-#     """Toggle the value of the _optspecialchars_US variable"""
-#     # Needs "from subprocess import run" somewhere
-#     def _toggle_optspec_US():
-#         global optspec_US
-#         global optspec_ABC
-#         if optspec_ABC:
-#             optspec_ABC = False                        # Disable the other layout, if active
-#         optspec_US = not optspec_US
-#         if optspec_US:
-#             subprocess.run('notify-send -u critical ALERT "Kinto OptSpecialChars-US is now ENABLED.\
-#                 \rWill interfere with Alt & Shift+Alt shortcuts!\
-#                 \rDisable with Shift+Opt+Cmd+U."', shell=True)
-#             print("(DD) OptSpecialChars-US is now ENABLED.", flush=True)
-#         else:
-#             subprocess.run('notify-send -u critical ALERT "Kinto OptSpecialChars-US is now DISABLED.\
-#                 \rRe-enable with Shift+Opt+Cmd+U"', shell=True)
-#             print("(DD) OptSpecialChars-US is now DISABLED.", flush=True)
-#     return _toggle_optspec_US
-
-
-# def toggle_optspec_ABC():
-#     """Toggle the value of the _optspecialchars_ABC variable"""
-#     # Needs "from subprocess import run" somewhere
-#     def _toggle_optspec_ABC():
-#         global optspec_ABC
-#         global optspec_US
-#         if optspec_US:
-#             optspec_US = False                         # Disable the other layout, if active
-#         optspec_ABC = not optspec_ABC
-#         if optspec_ABC:
-#             subprocess.run('notify-send -u critical ALERT "Kinto OptSpecialChars-ABC is now ENABLED.\
-#                 \rWill interfere with Alt & Shift+Alt shortcuts!\
-#                 \rDisable with Shift+Opt+Cmd+X."', shell=True)
-#             print("(DD) OptSpecialChars-ABC is now ENABLED.", flush=True)
-#         else:
-#             subprocess.run('notify-send -u critical ALERT "Kinto OptSpecialChars-ABC is now DISABLED.\
-#                 \rRe-enable with Shift+Opt+Cmd+X."', shell=True)
-#             print("(DD) OptSpecialChars-ABC is now DISABLED.", flush=True)
-#     return _toggle_optspec_ABC
-
-
-# def disable_optspec():
-#     """Disable both Option key special character entry scheme layouts"""
-#     # Needs "from subprocess import run" somewhere
-#     def _disable_optspec():
-#         global optspec_ABC
-#         global optspec_US
-#         optspec_ABC = False
-#         optspec_US = False
-#         subprocess.run('notify-send -u critical ALERT "Kinto OptSpecialChars (US/ABC) is now DISABLED.\
-#             \rTo re-enable ABC Extended: Shift+Opt+Cmd+X\
-#             \rTo re-enable Standard US: Shift+Opt+Cmd+U"', shell=True)
-#         print("(DD) OptSpecialChars (US/ABC) is now DISABLED.", flush=True)
-#     return _disable_optspec
-
-
-# keymap("OptSpecialChars toggles", {
-#     C("Shift-Alt-RC-o"):        disable_optspec(),      # Disable all layouts
-#     C("Shift-Alt-RC-u"):        toggle_optspec_US(),    # Toggle the US layout
-#     C("Shift-Alt-RC-x"):        toggle_optspec_ABC(),   # Toggle the ABC Extended layout
-# }, when = lambda ctx: ctx.wm_class.casefold() not in terminals)
-
-
 def apple_logo_alert():
     """Show a notification about needing Baskerville Old Face 
     font for displaying Apple logo"""
     def _apple_logo_alert():
         global applelogoalert_enabled
         if applelogoalert_enabled:
-            subprocess.run( 'notify-send -u critical ALERT "Apple logo requires '
-                            'Baskerville Old Face font."', shell=True)
+            subprocess.Popen( 'notify-send -u critical ALERT "Apple logo requires '
+                            'Baskerville Old Face font."')
     return _apple_logo_alert
 
 
