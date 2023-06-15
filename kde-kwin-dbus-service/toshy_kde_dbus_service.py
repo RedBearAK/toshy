@@ -92,9 +92,9 @@ class DBUS_Object(dbus.service.Object):
     @dbus.service.method(TOSHY_KDE_DBUS_SVC_IFACE, in_signature='sss')
     def NotifyActiveWindow(self, caption, resource_class, resource_name):
         print(f'DBUS_SVC: NotifyActiveWindow() called...')
-        self.caption            = caption
-        self.resource_class     = resource_class
-        self.resource_name      = resource_name
+        self.caption            = str(caption)
+        self.resource_class     = str(resource_class)
+        self.resource_name      = str(resource_name)
         print(f'DBUS_SVC: Active window attributes:'
                 f"\n\t'{caption = }'"
                 f"\n\t'{resource_class = }'"
