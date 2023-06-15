@@ -30,4 +30,5 @@ sleep 1
 source "$TOSHY_CFG/.venv/bin/activate"
 
 # run the Python interpreter from within the virtual environment
-python3 "$TOSHY_CFG/kde-kwin-dbus-service/toshy_kde_dbus_service.py"
+# and make sure it stays running when terminal is closed
+nohup python3 "$TOSHY_CFG/kde-kwin-dbus-service/toshy_kde_dbus_service.py" >/dev/null 2>&1 &
