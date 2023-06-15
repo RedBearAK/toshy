@@ -7,6 +7,7 @@ import time
 import inspect
 import subprocess
 
+from subprocess import DEVNULL
 from typing import Callable, List, Dict, Union
 
 from keyszer.lib.logger import debug, error
@@ -52,6 +53,9 @@ throttle_delays(
 ###      (http://github.com/joshgoebel/keyszer)
 ###  
 ###############################################################################
+
+home_dir = os.path.expanduser('~')
+icons_dir = os.path.join(home_dir, '.local', 'share', 'icons')
 
 # get the path of this file (not the main module loading it)
 config_globals = inspect.stack()[1][0].f_globals
@@ -606,16 +610,17 @@ def notify_context():
     def _notify_context(ctx: KeyContext):
         """pop up a notification with context info"""
         zenity_cmd = [  'zenity', '--info', '--no-wrap',
+                        '--icon=toshy_app_icon_rainbow.svg',
                         '--title=Toshy Context Info',
                         (
                         '--text='
-                        f"Application Class: \n'{ctx.wm_class}'"
-                        f"\n\nWindow Title: \n'{ctx.wm_name}'"
-                        f"\n\nKeyboard Device: \n'{ctx.device_name}'"
+                        f"Appl. Class   = '{ctx.wm_class}'"
+                        f"\nWndw. Title = '{ctx.wm_name}'"
+                        f"\nKbd. Device  = '{ctx.device_name}'"
                         )
         ]
         notify_cmd = ['notify-send', 'Toshy Context', f"Appl. Class: '{ctx.wm_class}'"]
-        subprocess.Popen(zenity_cmd, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+        subprocess.Popen(zenity_cmd, cwd=icons_dir, stderr=DEVNULL, stdout=DEVNULL)
     return _notify_context
 
 
