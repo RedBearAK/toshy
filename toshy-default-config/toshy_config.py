@@ -141,6 +141,9 @@ except NameError:
 ##################################################
 # Establish important variables here
 
+# Variable to hold the keyboard type
+KBTYPE = None
+
 # Short names for the `keyszer` string and Unicode processing helper functions
 ST = to_US_keystrokes           # was 'to_keystrokes' originally
 UC = unicode_keystrokes
@@ -185,7 +188,8 @@ last_dt_combo = None
 ###########################################################################################
 
 
-def isKBtype(kbtype: str, map=None):
+# DEPRECATED: old form of isKBtype()
+def XisKBtype(kbtype: str, map=None):
     """
     ### Match on the keyboard type for conditional modmaps and keymaps
     
@@ -206,8 +210,7 @@ def isKBtype(kbtype: str, map=None):
     if kbtype not in ['IBM', 'Chromebook', 'Windows', 'Apple']:
         raise ValueError(  f"Invalid type given to isKBtype() function: '{kbtype}'"
                 f'\n\t Valid keyboard types (case sensitive): IBM | Chromebook | Windows | Apple')
-        return False
-    
+
     # Create a "UserCustom" keyboard dictionary with casefolded keys
     kbds_UserCustom_lower_dct   = {k.casefold(): v for k, v in keyboards_UserCustom_dct.items()}
     kbtype_cf                   = kbtype.casefold()
@@ -265,6 +268,83 @@ def isKBtype(kbtype: str, map=None):
         return False
 
     return _isKBtype    # return the inner function
+
+
+def isKBtype(kbtype: str, map=None):
+    # guard against failure to give valid type arg
+    if kbtype not in ['IBM', 'Chromebook', 'Windows', 'Apple']:
+        raise ValueError(f"Invalid type given to isKBtype() function: '{kbtype}'"
+                f'\n\t Valid keyboard types (case sensitive): IBM | Chromebook | Windows | Apple')
+    kbtype_cf = kbtype.casefold()
+    KBTYPE_cf = KBTYPE.casefold() if isinstance(KBTYPE, str) else None
+
+    def _isKBtype(ctx):
+        # debug(f"KBTYPE: '{KBTYPE}' | isKBtype check from map: '{map}'")
+        return kbtype_cf == KBTYPE_cf
+    return _isKBtype
+
+
+def getKBtype():
+    """
+    ### Get the keyboard type string for the current device
+    
+    #### Valid Types
+    
+    - IBM | Chromebook | Windows | Apple
+    
+    #### Hierarchy of validations:
+    
+    1. Check if the device name is in the keyboards_UserCustom_dct dictionary.
+    2. Check if the device name matches any keyboard type list.
+    3. Check if any keyboard type string is found in the device name string.
+    4. Check if the device name indicates a "Windows" keyboard by excluding other types.
+    """
+
+    # Create a "UserCustom" keyboard dictionary with casefolded keys
+    kbds_UserCustom_dct_cf = {k.casefold(): v for k, v in keyboards_UserCustom_dct.items()}
+    def _getKBtype(ctx: KeyContext):
+        global KBTYPE
+        kbd_dev_name    = ctx.device_name
+        kbd_dev_name_cf = ctx.device_name.casefold()
+
+        def log_kbtype(msg=None):
+            debug(f"KBTYPE: '{KBTYPE}' | {msg}: '{kbd_dev_name}'")
+
+        # Check if there is a custom type for the device
+        custom_kbtype = kbds_UserCustom_dct_cf.get(kbd_dev_name_cf, '')
+        if custom_kbtype and custom_kbtype in ['IBM', 'Chromebook', 'Windows', 'Apple']:
+            KBTYPE = custom_kbtype
+            log_kbtype('Custom type given for device')
+            return
+
+        # Check against the keyboard type lists
+        for kbtype, regex_lst in kbtype_lists_rgx.items():
+            for rgx in regex_lst:
+                if rgx.search(kbd_dev_name_cf):
+                    KBTYPE = kbtype
+                    log_kbtype('Regex matched for device')
+                    return
+
+        # Check if any keyboard type string is found in the device name
+        for kbtype in ['IBM', 'Chromebook', 'Windows', 'Apple']:
+            if kbtype.casefold() in kbd_dev_name_cf:
+                KBTYPE = kbtype
+                log_kbtype('Type found in device name')
+                return
+
+        # Check if the device name indicates a "Windows" keyboard
+        if ('windows' not in kbd_dev_name_cf 
+            and not not_win_type_rgx.search(kbd_dev_name_cf) 
+            and not all_kbds_rgx.search(kbd_dev_name_cf) ):
+            KBTYPE = 'Windows'
+            log_kbtype('Device defaulted to Windows')
+            return
+
+        # Default to None if no matching keyboard type is found
+        KBTYPE = 'unidentified'
+        error(f"KBTYPE: '{KBTYPE}' | Device fell through all checks: '{kbd_dev_name}'")
+
+    return _getKBtype  # Return the inner function
 
 
 def isDoubleTap(dt_combo):
@@ -839,7 +919,8 @@ kbtype_lists_rgx    = {
 }
 
 # List of all known keyboard devices from all lists
-# all_kbds_rgx        = re.compile(toRgxStr(all_keyboards), re.I)
+all_kbds_rgx        = re.compile(toRgxStr(all_keyboards), re.I)
+
 not_win_type_rgx    = re.compile("IBM|Chromebook|Apple", re.I)
 
 
@@ -857,6 +938,31 @@ not_win_type_rgx    = re.compile("IBM|Chromebook|Apple", re.I)
 ################################################################################
 ### Modmaps turn a key into a different key as long as the modmap is active
 ### The modified key can be used in shortcut combos as the new key
+
+
+# DO NOT REMOVE THIS MODMAP AND KEYMAP!
+# Special modmap to trigger the evaluation of the keyboard type when 
+# any modifier key is pressed
+modmap("Keyboard Type Trigger Modmap", {
+    # This modmap must have all modifier keys inside it, so they will 
+    # all trigger the re-evaluation of the keyboard type.
+    # The accompanying keymap can be empty and still accomplish
+    # the same purpose of triggering a re-evaluation of the
+    # keyboard type when any non-modifier key is pressed.
+    Key.LEFT_META: Key.LEFT_META,
+    Key.RIGHT_META: Key.RIGHT_META,
+    Key.LEFT_ALT: Key.LEFT_ALT,
+    Key.RIGHT_ALT: Key.RIGHT_ALT,
+    Key.LEFT_CTRL: Key.LEFT_CTRL,
+    Key.RIGHT_CTRL: Key.RIGHT_CTRL,
+    Key.LEFT_SHIFT: Key.LEFT_SHIFT,
+    Key.RIGHT_SHIFT: Key.RIGHT_SHIFT,
+}, when = lambda ctx: getKBtype()(ctx) )
+# Special keymap to trigger the evaluation of the keyboard type when 
+# any non-modifier key is pressed
+keymap("Keyboard Type Trigger Keymap", {
+    # Nothing needed here.
+}, when = lambda ctx: getKBtype()(ctx) )
 
 
 modmap("Cond modmap - Media Arrows Fix",{
@@ -2299,7 +2405,7 @@ keymap("Escape actions for dead keys", {
 }, when = lambda _: ac_Chr_main in deadkeys_list)
 # }, when = lambda _: ac_Chr in deadkeys_US or ac_Chr in deadkeys_ABC)
 
-keymap("Disable Dead Keys",{
+keymap("Disable Dead Keys Tripwire",{
     # Nothing needs to be here. Tripwire keymap to disable active dead keys keymap(s)
 }, when = lambda _: setDK(None)())
 
@@ -3117,26 +3223,29 @@ keymap("VSCodes overrides for Chromebook/IBM - Sublime", {
     C("C-Alt-g"):               C("C-f2"),                      # Chromebook/IBM - Sublime - find_all_under
 }, when = lambda ctx:
     matchProps(clas=vscodeStr)(ctx) and 
-    ( isKBtype('Chromebook')(ctx) or isKBtype('IBM')(ctx) ) and 
+    (   isKBtype('Chromebook', map="vscodes ovr cbook - sublime")(ctx) or 
+        isKBtype('IBM', map="vscodes ovr ibm - sublime")(ctx) ) and 
     cnfg.ST3_in_VSCode)
 keymap("VSCodes overrides for not Chromebook/IBM - Sublime", {
     C("Super-C-g"):             C("C-f2"),                      # Default - Sublime - find_all_under
 }, when = lambda ctx:
     matchProps(clas=vscodeStr)(ctx) and 
-    not ( isKBtype('Chromebook')(ctx) or 
-    isKBtype('IBM')(ctx) ) and cnfg.ST3_in_VSCode)
+    not ( isKBtype('Chromebook', map="vscodes ovr not cbook - sublime")(ctx) or 
+    isKBtype('IBM', map="vscodes ovr not ibm - sublime")(ctx) ) and cnfg.ST3_in_VSCode)
 keymap("VSCodes overrides for Chromebook/IBM", {
     C("Alt-c"):                 C("LC-c"),                      #  Chromebook/IBM - Terminal - Sigint
     C("Alt-x"):                 C("LC-x"),                      #  Chromebook/IBM - Terminal - Exit nano
 }, when = lambda ctx:
     matchProps(clas=vscodeStr)(ctx) and 
-    ( isKBtype('Chromebook')(ctx) or isKBtype('IBM')(ctx) ) )
+    (   isKBtype('Chromebook', map="vscodes ovr cbook")(ctx) or 
+        isKBtype('IBM', map="vscodes ovr ibm")(ctx) ) )
 keymap("VSCodes overrides for not Chromebook/IBM", {
     C("Super-c"):               C("LC-c"),                      # Default - Terminal - Sigint
     C("Super-x"):               C("LC-x"),                      # Default - Terminal - Exit nano
 }, when = lambda ctx:
     matchProps(clas=vscodeStr)(ctx) and 
-    not ( isKBtype('Chromebook')(ctx) or isKBtype('IBM')(ctx) ) )
+    not (   isKBtype('Chromebook', map="vscodes ovr not cbook")(ctx) or 
+            isKBtype('IBM', map="vscodes ovr not ibm")(ctx) ) )
 keymap("VSCodes", {
     # C("Super-Space"):           C("LC-Space"),                  # Basic code completion (conflicts with input switching)
 
@@ -3197,7 +3306,8 @@ keymap("Sublime Text overrides for Chromebook/IBM", {
     C("Alt-C-g"):               C("Alt-Refresh"),               # Chromebook/IBM - find_all_under
 }, when = lambda ctx:
     matchProps(clas=sublimeStr)(ctx) and 
-    ( isKBtype('Chromebook')(ctx) or isKBtype('IBM')(ctx) ) )
+    (   isKBtype('Chromebook', map="sublime ovr cbook")(ctx) or 
+        isKBtype('IBM', map="sublime ovr ibm")(ctx) ) )
 keymap("Sublime Text overrides for not Chromebook/IBM", {
     # C("Super-c"):               C("LC-c"),                      # Default - Terminal - Sigint
     # C("Super-x"):               C("LC-x"),                      # Default - Terminal - Exit nano
@@ -3205,7 +3315,8 @@ keymap("Sublime Text overrides for not Chromebook/IBM", {
     C("Super-C-g"):             C("Alt-f3"),                    # Default - find_all_under
 }, when = lambda ctx:
     matchProps(clas=sublimeStr)(ctx) and 
-    not ( isKBtype('Chromebook')(ctx) or isKBtype('IBM')(ctx) ) )
+    not (   isKBtype('Chromebook', map="sublime ovr not cbook")(ctx) or 
+            isKBtype('IBM', map="sublime ovr not ibm")(ctx) ) )
 keymap("Sublime Text", {
     # C("Super-c"):               C("LC-c"),                      # Default - Terminal - Sigint
     # C("Super-x"):               C("LC-x"),                      # Default - Terminal - Exit nano
@@ -3547,13 +3658,18 @@ keymap("GenGUI overrides: Chromebook/IBM", {
     C("Alt-Grave") :           [bind,C("C-Shift-Tab")],         # Chromebook/IBM - In-App Tab switching
     C("RAlt-Backspace"):        C("Delete"),                    # Chromebook/IBM - Delete
     C("LAlt-Backspace"):        C("C-Backspace"),               # Chromebook/IBM - Delete Left Word of Cursor
-}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and ( isKBtype('Chromebook')(ctx) or isKBtype('IBM')(ctx) ) )
+}, when = lambda ctx:
+    matchProps(not_lst=remotes_lod)(ctx) and 
+    (   isKBtype('Chromebook', map="gengui ovr cbook")(ctx) or 
+        isKBtype('IBM', map="gengui ovr ibm")(ctx) ) )
 keymap("GenGUI overrides: not Chromebook", {
     # In-App Tab switching
     C("Super-Tab"):            [bind,C("LC-Tab")],              # Default not-chromebook
     C("Super-Shift-Tab"):      [bind,C("Shift-LC-Tab")],        # Default not-chromebook
     C("Alt-Backspace"):         C("C-Backspace"),               # Default not-chromebook
-}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and not isKBtype('Chromebook')(ctx) )
+}, when = lambda ctx:
+    matchProps(not_lst=remotes_lod)(ctx) and 
+    not isKBtype('Chromebook', map="gengui ovr not cbook")(ctx) )
 
 
 # Overrides to General GUI shortcuts for specific distros
