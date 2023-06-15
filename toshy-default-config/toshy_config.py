@@ -616,10 +616,9 @@ def notify_context():
                         '--text='
                         f"Appl. Class   = '{ctx.wm_class}'"
                         f"\nWndw. Title = '{ctx.wm_name}'"
-                        f"\nKbd. Device  = '{ctx.device_name}'"
+                        f"\nKbd. Device = '{ctx.device_name}'"
                         )
         ]
-        notify_cmd = ['notify-send', 'Toshy Context', f"Appl. Class: '{ctx.wm_class}'"]
         subprocess.Popen(zenity_cmd, cwd=icons_dir, stderr=DEVNULL, stdout=DEVNULL)
     return _notify_context
 
