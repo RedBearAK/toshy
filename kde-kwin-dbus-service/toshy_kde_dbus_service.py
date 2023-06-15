@@ -54,7 +54,6 @@ else:
     sys.exit(1)
 
 
-# leave all of this alone!
 DISTRO_NAME     = None
 DISTRO_VER      = None
 SESSION_TYPE    = None
@@ -78,6 +77,8 @@ debug(  f'Toshy KDE D-Bus service script sees this environment:'
 TOSHY_KDE_DBUS_SVC_PATH         = '/org/toshy/Toshy'
 TOSHY_KDE_DBUS_SVC_IFACE        = 'org.toshy.Toshy'
 
+LOG_PFX = 'TOSHY_KDE_DBUS_SVC'
+
 
 class DBUS_Object(dbus.service.Object):
     """Class to handle D-Bus interactions"""
@@ -91,11 +92,11 @@ class DBUS_Object(dbus.service.Object):
 
     @dbus.service.method(TOSHY_KDE_DBUS_SVC_IFACE, in_signature='sss')
     def NotifyActiveWindow(self, caption, resource_class, resource_name):
-        print(f'DBUS_SVC: NotifyActiveWindow() called...')
+        debug(f'{LOG_PFX}: NotifyActiveWindow() called...')
         self.caption            = str(caption)
         self.resource_class     = str(resource_class)
         self.resource_name      = str(resource_name)
-        print(f'DBUS_SVC: Active window attributes:'
+        debug(f'{LOG_PFX}: Active window attributes:'
                 f"\n\t caption        = '{self.caption}'"
                 f"\n\t resource_class = '{self.resource_class}'"
                 f"\n\t resource_name  = '{self.resource_name}'"
@@ -103,7 +104,7 @@ class DBUS_Object(dbus.service.Object):
 
     @dbus.service.method(TOSHY_KDE_DBUS_SVC_IFACE, out_signature='a{sv}')
     def GetActiveWindow(self):
-        print(f'DBUS_SVC: GetActiveWindow() called...')
+        debug(f'{LOG_PFX}: GetActiveWindow() called...')
         return {    'caption':          self.caption,
                     'resource_class':   self.resource_class,
                     'resource_name':    self.resource_name }
@@ -120,7 +121,7 @@ def main():
     try:
         DBUS_Object(session_bus, TOSHY_KDE_DBUS_SVC_PATH, TOSHY_KDE_DBUS_SVC_IFACE)
     except DBusException as dbus_error:
-        print(f"DBUS_SVC: Error occurred while creating D-Bus service object:\n\t{dbus_error}")
+        error(f"{LOG_PFX}: Error occurred while creating D-Bus service object:\n\t{dbus_error}")
         sys.exit(1)
 
     # Run the main loop
