@@ -8,15 +8,16 @@ if [[ $EUID -eq 0 ]]; then
     exit 1
 fi
 
-# # Check if $USER and $HOME environment variables are not empty
-# if [[ -z $USER ]] || [[ -z $HOME ]]; then
-#     echo "\$USER and/or \$HOME environment variables are not set. We need them."
-#     exit 1
-# fi
+# Check if $USER and $HOME environment variables are not empty
+if [[ -z $USER ]] || [[ -z $HOME ]]; then
+    echo "\$USER and/or \$HOME environment variables are not set. We need them."
+    exit 1
+fi
 
 sleep 2
 
 title="Toshy"
+icon_file="${HOME}/.local/share/icons/toshy_app_icon_rainbow.svg"
 time1_s=2
 time2_s=3
 message="Kickstarting the Toshy KWin script."
@@ -29,11 +30,12 @@ else
 fi
 
 if command -v zenity &> /dev/null; then
-    ${timeout_cmd} zenity --info --no-wrap --title="${title}" \
+    ${timeout_cmd} zenity --info --no-wrap --title="${title}" --icon="${icon_file}" \
         --text="${message}" --timeout=${time2_s} >/dev/null 2>&1
     exit 0
 elif command -v kdialog &> /dev/null; then
-    ${timeout_cmd} kdialog --title="${title}" --msgbox "${message}" >/dev/null 2>&1
+    ${timeout_cmd} kdialog --title="${title}" --icon "${icon_file}" \
+        --msgbox "${message}" >/dev/null 2>&1
     exit 0
 elif command -v xmessage &> /dev/null; then
     ${timeout_cmd} xmessage "${message}" -timeout ${time2_s} >/dev/null 2>&1
