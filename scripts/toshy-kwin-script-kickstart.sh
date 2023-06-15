@@ -14,19 +14,30 @@ fi
 #     exit 1
 # fi
 
-sleep 1
+sleep 2
 
 title="Toshy"
-message="Kickstarting the Toshy KWin script..."
-timeout_s=2
+time1_s=2
+time2_s=3
+message="Kickstarting the Toshy KWin script."
 
+
+if command -v timeout &> /dev/null; then
+    timeout_cmd="timeout -k ${time2_s}s -s SIGTERM ${time1_s}s "
+else
+    timeout_cmd=""
+fi
 
 if command -v zenity &> /dev/null; then
-    zenity --info --title="${title}" --text="${message}" --timeout=${timeout_s} >/dev/null 2>&1
+    ${timeout_cmd} zenity --info --no-wrap --title="${title}" \
+        --text="${message}" --timeout=${time2_s} >/dev/null 2>&1
+    exit 0
 elif command -v kdialog &> /dev/null; then
-    kdialog --title="${title}" --msgbox "${message}" >/dev/null 2>&1
+    ${timeout_cmd} kdialog --title="${title}" --msgbox "${message}" >/dev/null 2>&1
+    exit 0
 elif command -v xmessage &> /dev/null; then
-    xmessage "${message}" -timeout ${timeout_s} >/dev/null 2>&1
+    ${timeout_cmd} xmessage "${message}" -timeout ${time2_s} >/dev/null 2>&1
+    exit 0
 else
     echo "ERROR: Toshy cannot kickstart the KWin script. Dialog commands unavailable."
 fi
