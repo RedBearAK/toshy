@@ -96,9 +96,9 @@ class DBUS_Object(dbus.service.Object):
         self.resource_class     = str(resource_class)
         self.resource_name      = str(resource_name)
         print(f'DBUS_SVC: Active window attributes:'
-                f"\n\t'{self.caption = }'"
-                f"\n\t'{self.resource_class = }'"
-                f"\n\t'{self.resource_name = }'"
+                f"\n\t caption        = '{self.caption}'"
+                f"\n\t resource_class = '{self.resource_class}'"
+                f"\n\t resource_name  = '{self.resource_name}'"
         )
 
     @dbus.service.method(TOSHY_KDE_DBUS_SVC_IFACE, out_signature='a{sv}')
