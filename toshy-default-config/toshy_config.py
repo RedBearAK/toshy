@@ -2775,6 +2775,7 @@ keymap("User hardware keys", {
 ###                                                                             ###
 ###                                                                             ###
 ###################################################################################
+# Miscellaneous apps that need a few fixes
 
 keymap("Thunderbird email client", {
     C("Alt-RC-I"):              C("Shift-RC-I"),                # Dev tools
@@ -3393,6 +3394,10 @@ keymap("Sublime Text", {
 keymap("Linux Mint xed text editor", {
     C("RC-T"):                  C("C-N"),                       # Open new tab (new file)
 }, when = matchProps(clas="^xed$") )
+
+keymap("KWrite text editor", {
+    C("RC-comma"):              C("Shift-C-comma"),             # Open preferences dialog
+}, when = matchProps(clas="^org.kde.Kwrite$") )
 
 
 
