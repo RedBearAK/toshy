@@ -16,7 +16,6 @@ from keyszer.lib.logger import debug, error, warn, info, log
 
 # Add paths to avoid errors like ModuleNotFoundError or ImportError
 home_dir = os.path.expanduser("~")
-# local_site_packages_dir = os.path.join(home_dir, f".local/lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages")
 parent_folder_path  = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 current_folder_path = os.path.abspath(os.path.dirname(__file__))
 
@@ -32,7 +31,7 @@ import lib.env as env
 
 # Independent module/script to create a D-Bus window context
 # service in a KDE Plasma environment, which will be notified
-# of window focus changes by KWin
+# of window focus changes by the Toshy KWin script
 
 if os.name == 'posix' and os.geteuid() == 0:
     error("This app should not be run as root/superuser.")
