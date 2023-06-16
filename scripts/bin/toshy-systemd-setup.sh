@@ -40,9 +40,9 @@ mkdir -p "$USER_SYSD_PATH"
 mkdir -p "$HOME/.config/autostart"
 
 # Stop, disable, and remove existing unit files
-# eval "$(which toshy-systemd-remove)"
 eval "$LOCAL_BIN_PATH/toshy-systemd-remove"
 
+cp -f "$SYSD_UNIT_PATH/toshy-kde-dbus.service"              "$USER_SYSD_PATH/"
 cp -f "$SYSD_UNIT_PATH/toshy-config.service"                "$USER_SYSD_PATH/"
 cp -f "$SYSD_UNIT_PATH/toshy-session-monitor.service"       "$USER_SYSD_PATH/"
 
@@ -55,7 +55,9 @@ sleep $DELAY
 # XDG_SESSION_TYPE XDG_SESSION_DESKTOP XDG_CURRENT_DESKTOP
 # Do this BEFORE daemon-reload? Maybe not necessary. 
 # But silence errors (e.g., "XDG_SESSION_DESKTOP not set, ignoring")
-/usr/bin/systemctl --user import-environment XDG_SESSION_TYPE XDG_SESSION_DESKTOP XDG_CURRENT_DESKTOP >/dev/null 2>&1
+vars_to_import="XDG_SESSION_TYPE XDG_SESSION_DESKTOP XDG_CURRENT_DESKTOP"
+# shellcheck disable=SC2086
+/usr/bin/systemctl --user import-environment $vars_to_import >/dev/null 2>&1
 
 echo -e "\nIssuing systemctl daemon-reload..."
 
@@ -65,17 +67,32 @@ sleep $DELAY
 
 echo -e "\nStarting Toshy systemd services..."
 
-/usr/bin/systemctl --user reenable toshy-config.service
-# /usr/bin/systemctl --user enable toshy-config.service
-/usr/bin/systemctl --user start toshy-config.service
+service_names=(
+    "toshy-kde-dbus.service"
+    "toshy-config.service"
+    "toshy-session-monitor.service"
+)
 
-sleep $DELAY
+for service_name in "${service_names[@]}"; do
+    /usr/bin/systemctl --user reenable "$service_name"
+    /usr/bin/systemctl --user start "$service_name"
+    sleep "$DELAY"
+done
 
-/usr/bin/systemctl --user reenable toshy-session-monitor.service
-# /usr/bin/systemctl --user enable toshy-session-monitor.service
-/usr/bin/systemctl --user start toshy-session-monitor.service
+# /usr/bin/systemctl --user reenable toshy-kde-dbus.service
+# /usr/bin/systemctl --user start toshy-kde-dbus.service
 
-sleep $DELAY
+# sleep $DELAY
+
+# /usr/bin/systemctl --user reenable toshy-config.service
+# /usr/bin/systemctl --user start toshy-config.service
+
+# sleep $DELAY
+
+# /usr/bin/systemctl --user reenable toshy-session-monitor.service
+# /usr/bin/systemctl --user start toshy-session-monitor.service
+
+# sleep $DELAY
 
 export SYSTEMD_PAGER=""
 
