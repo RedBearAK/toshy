@@ -98,6 +98,11 @@ export SYSTEMD_PAGER=""
 
 echo -e "\nDisplaying status of Toshy systemd services...\n"
 
+/usr/bin/systemctl --user status toshy-kde-dbus.service
+echo ""
+
+sleep $DELAY
+
 /usr/bin/systemctl --user status toshy-session-monitor.service
 echo ""
 
