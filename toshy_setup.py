@@ -1456,15 +1456,14 @@ def main(cnfg: InstallerSettings):
         print(cnfg.reboot_ascii_art)
         print(cnfg.separator)
         print(cnfg.separator)
-        print('Toshy install complete. Report issues on the GitHub repo.')
-        print('https://github.com/RedBearAK/toshy/issues/')
-        print('>>>  ALERT: Permissions changed. You MUST reboot for Toshy to work.')
+        print(f'{cnfg.sep_char * 2}  Toshy install complete. Report issues on the GitHub repo.')
+        print(f'{cnfg.sep_char * 2}  https://github.com/RedBearAK/toshy/issues/')
+        print(f'{cnfg.sep_char * 2}  >>  ALERT: Permissions changed. You MUST reboot for Toshy to work.')
         print(cnfg.separator)
         print(cnfg.separator)
         print()
     else:
         # Try to start the tray icon immediately, if reboot is not indicated
-        # tray_command        = ['gtk-launch', 'Toshy_Tray']
         tray_icon_cmd = [os.path.join(cnfg.home_dir_path, '.local', 'bin', 'toshy-tray')]
         # Try to launch the tray icon in a separate process not linked to current shell
         # Also, suppress output that might confuse the user
@@ -1474,9 +1473,9 @@ def main(cnfg: InstallerSettings):
         print()
         print(cnfg.separator)
         print(cnfg.separator)
-        print('Toshy install complete. Rebooting should not be necessary.')
-        print('Report issues on the GitHub repo.')
-        print('https://github.com/RedBearAK/toshy/issues/')
+        print(f'{cnfg.sep_char * 2}  Toshy install complete. Rebooting should not be necessary.')
+        print(f'{cnfg.sep_char * 2}  Report issues on the GitHub repo.')
+        print(f'{cnfg.sep_char * 2}  https://github.com/RedBearAK/toshy/issues/')
         print(cnfg.separator)
         print(cnfg.separator)
         print()
