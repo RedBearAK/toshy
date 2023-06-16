@@ -30,8 +30,14 @@ else
 fi
 
 if command -v zenity &> /dev/null; then
-    ${timeout_cmd} zenity --info --no-wrap --title="${title}" --icon="${icon_file}" \
-        --text="${message}" --timeout=${time2_s} >/dev/null 2>&1
+    zenity --info --icon="" &>/dev/null
+    if [ $? -eq 0 ]; then
+        ${timeout_cmd} zenity --info --no-wrap --title="${title}" --icon="${icon_file}" \
+            --text="${message}" --timeout=${time2_s} >/dev/null 2>&1
+    else
+        ${timeout_cmd} zenity --info --no-wrap --title="${title}" \
+            --text="${message}" --timeout=${time2_s} >/dev/null 2>&1
+    fi
     exit 0
 elif command -v kdialog &> /dev/null; then
     ${timeout_cmd} kdialog --title="${title}" --icon "${icon_file}" \
