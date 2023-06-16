@@ -457,7 +457,7 @@ pkg_groups_map = {
                         "gir1.2-ayatanaappindicator3-0.1"],
     'arch-based':      ["cairo", "dbus", "evtest", "git", "gobject-introspection", "tk",
                         "libappindicator-gtk3", "pkg-config", "python-dbus", "python-pip",
-                        "python", "systemd"],
+                        "python", "systemd", "zenity"],
 }
 
 extra_pkgs_map = {
