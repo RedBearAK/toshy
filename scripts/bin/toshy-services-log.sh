@@ -40,4 +40,4 @@ fi
 echo "Showing systemd journal messages for Toshy services (since last boot):"
 
 # -b flag to only show messages since last boot
-/usr/bin/journalctl --user -n300 -b -f -u toshy-config -u toshy-session-monitor
+/usr/bin/journalctl --user -n100 -b -f -u toshy-config -u toshy-session-monitor -u toshy-kde-dbus
