@@ -24,11 +24,11 @@ pkill -f "toshy_kde_dbus_service"
 sleep 1
 
 # start the kickstart script to get KWin to give immediate update on focused window
-"${TOSHY_CFG}/scripts/toshy-kwin-script-kickstart.sh" &
+nohup "${TOSHY_CFG}/scripts/toshy-kwin-script-kickstart.sh" &
 
 # shellcheck disable=SC1091
 source "$TOSHY_CFG/.venv/bin/activate"
 
 # run the Python interpreter from within the virtual environment
 # and make sure it stays running when terminal is closed
-nohup python3 "$TOSHY_CFG/kde-kwin-dbus-service/toshy_kde_dbus_service.py" >/dev/null 2>&1 &
+python3 "$TOSHY_CFG/kde-kwin-dbus-service/toshy_kde_dbus_service.py"
