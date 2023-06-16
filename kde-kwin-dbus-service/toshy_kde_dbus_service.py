@@ -66,6 +66,12 @@ DISTRO_VER      = env_info.get('DISTRO_VER')
 SESSION_TYPE    = env_info.get('SESSION_TYPE')
 DESKTOP_ENV     = env_info.get('DESKTOP_ENV')
 
+# use env info to exit script if not a KDE environment
+if DESKTOP_ENV not in ['kde', 'plasma']:
+    error(f'Not a KDE Plasma desktop environment. Exiting.')
+    sys.exit(0)
+
+
 debug("")
 debug(  f'Toshy KDE D-Bus service script sees this environment:'
         f'\n\t{DISTRO_NAME      = }'
