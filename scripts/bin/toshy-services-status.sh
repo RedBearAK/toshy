@@ -42,6 +42,10 @@ export SYSTEMD_PAGER=""
 echo -e "\nCurrent status of Toshy systemd services..."
 echo "--------------------------------------------------------------------------------"
 
+/usr/bin/systemctl --user status toshy-kde-dbus.service
+
+echo "--------------------------------------------------------------------------------"
+
 /usr/bin/systemctl --user status toshy-session-monitor.service
 
 echo "--------------------------------------------------------------------------------"
