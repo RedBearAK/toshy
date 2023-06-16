@@ -1,6 +1,9 @@
 [Unit]
 Description=Toshy KDE D-Bus Service
-After=shutdown.target
+# After=shutdown.target
 
 [Service]
 ExecStart=/usr/bin/bash -c 'env TERM=xterm $HOME/.config/toshy/scripts/bin/toshy-kde-dbus-service.sh'
+
+[Install]
+WantedBy=shutdown.target
