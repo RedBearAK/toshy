@@ -147,6 +147,16 @@ class InstallerSettings:
                 """)
 
 
+def safe_shutdown(exit_code=0):
+    """do some stuff on the way out"""
+
+    # good place to do some file cleanup?
+
+    # invalidate the sudo ticket, don't leave system in "superuser" state
+    subprocess.run(['sudo', '-k'])
+    sys.exit(exit_code)
+
+
 def get_environment_info():
     """Get back the distro name, distro version, session type and 
         desktop environment from `env.py` module"""
@@ -247,7 +257,7 @@ def dot_Xmodmap_warning():
         else:
             print()
             error("Code does not match! Try the installer again after dealing with '.Xmodmap'.\n")
-            sys.exit(1)
+            safe_shutdown(1)
 
 
 def ask_is_distro_updated():
@@ -261,7 +271,7 @@ def ask_is_distro_updated():
         print()
         error("Try the installer again after you've done a full system update. Exiting.")
         print()
-        sys.exit(1)
+        safe_shutdown(1)
 
 
 def ask_add_home_local_bin():
@@ -323,7 +333,7 @@ def load_uinput_module():
             except subprocess.CalledProcessError as proc_error:
                 error(f"Failed to create /etc/modules-load.d/uinput.conf:\n\t{proc_error}")
                 error(f'ERROR: Install failed.')
-                sys.exit(1)
+                safe_shutdown(1)
 
     else:
         # Check if /etc/modules file exists
@@ -339,7 +349,7 @@ def load_uinput_module():
                     except subprocess.CalledProcessError as proc_error:
                         error(f"ERROR: Failed to append 'uinput' to /etc/modules:\n\t{proc_error}")
                         error(f'ERROR: Install failed.')
-                        sys.exit(1)
+                        safe_shutdown(1)
 
 
 def reload_udev_rules():
@@ -380,7 +390,7 @@ def install_udev_rules():
             error(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
             print()
             error(f'ERROR: Install failed.')
-            sys.exit(1)
+            safe_shutdown(1)
     else:
         print(f'Correct "udev" rules already in place.')
 
@@ -404,7 +414,7 @@ def verify_user_groups():
             error(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
             print()
             error(f'ERROR: Install failed.')
-            sys.exit(1)
+            safe_shutdown(1)
 
     # Check if the user is already in the `input` group
     group_info = grp.getgrnam(cnfg.input_group_name)
@@ -426,7 +436,7 @@ def verify_user_groups():
             error(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
             print()
             error(f'ERROR: Install failed.')
-            sys.exit(1)
+            safe_shutdown(1)
 
         print(f'User "{cnfg.user_name}" added to group "{cnfg.input_group_name}".')
         prompt_for_reboot()
@@ -490,7 +500,7 @@ def install_distro_pkgs():
         print(f"ERROR: No list of packages found for this distro: '{cnfg.DISTRO_NAME}'")
         print(f'Installation cannot proceed without a list of packages. Sorry.')
         print(f'Try some options in "./toshy_setup.py --help"\n')
-        sys.exit(1)
+        safe_shutdown(1)
 
     cnfg.pkgs_for_distro = pkg_groups_map[pkg_group]
 
@@ -547,7 +557,7 @@ def install_distro_pkgs():
     else:
         print()
         error(f"ERROR: Installer does not know how to handle distro: {cnfg.DISTRO_NAME}\n")
-        sys.exit(1)
+        safe_shutdown(1)
 
     # Have something come out even if package list is empty (like Arch after initial run)
     print(f'All necessary native distro packages are installed.')
@@ -573,7 +583,7 @@ def clone_keyszer_branch():
     has_git = shutil.which('git')
     if not has_git:
         print(f'ERROR: "git" is not installed, for some reason. Cannot continue.')
-        sys.exit(1)
+        safe_shutdown(1)
 
     if os.path.exists(cnfg.keyszer_tmp_path):
         # force a fresh copy of keyszer every time script is run
@@ -732,7 +742,7 @@ def install_toshy_files():
                 new_cfg_data = file.read()
         except (FileNotFoundError, PermissionError, OSError) as file_err:
             error(f'Problem reading new config file:\n\t{file_err}')
-            sys.exit(1)
+            safe_shutdown(1)
         merged_cfg_data = None
         try:
             merged_cfg_data = merge_slices(new_cfg_data, cnfg.existing_cfg_slices)
@@ -744,7 +754,7 @@ def install_toshy_files():
                     file.write(merged_cfg_data)
             except (FileNotFoundError, PermissionError, OSError) as file_err:
                 error(f'Problem writing to new config file:\n\t{file_err}')
-                sys.exit(1)
+                safe_shutdown(1)
             print(f"Existing user customizations applied to the new config file.")
 
 
@@ -795,15 +805,15 @@ def install_pip_packages():
         result = subprocess.run(command)
         if result.returncode != 0:
             print(f'Error installing/upgrading Python packages. Installer exiting.')
-            sys.exit(1)
+            safe_shutdown(1)
     if os.path.exists('./keyszer-temp'):
         result = subprocess.run([venv_pip_cmd, 'install', '--upgrade', './keyszer-temp'])
         if result.returncode != 0:
             print(f'Error installing/upgrading "keyszer".')
-            sys.exit(1)
+            safe_shutdown(1)
     else:
         print(f'"keyszer-temp" folder missing. Unable to install "keyszer".')
-        sys.exit(1)
+        safe_shutdown(1)
 
 
 def install_bin_commands():
@@ -923,7 +933,7 @@ def setup_kde_dbus_service():
         os.makedirs(autostart_dir_path, exist_ok=True)
     except (PermissionError, NotADirectoryError, FileExistsError) as file_err:
         error(f"Problem trying to make sure '{autostart_dir_path}' is directory.\n\t{file_err}")
-        sys.exit(1)
+        safe_shutdown(1)
     shutil.copy(dbus_svc_desktop_file, autostart_dir_path)
     print(f'Toshy KDE D-Bus service should autostart at login.')
 
@@ -964,7 +974,7 @@ def autostart_tray_icon():
         os.makedirs(autostart_dir_path, exist_ok=True)
     except (PermissionError, NotADirectoryError, FileExistsError) as file_err:
         error(f"Problem trying to make sure '{autostart_dir_path}' is directory.\n\t{file_err}")
-        sys.exit(1)
+        safe_shutdown(1)
     subprocess.run(['ln', '-sf', tray_desktop_file, dest_link_file])
 
     print(f'Toshy tray icon should appear in system tray at each login.')
@@ -1366,20 +1376,20 @@ def handle_cli_arguments():
         cnfg.override_distro = args.override_distro
         # proceed with normal install sequence
         main(cnfg)
-        sys.exit(0)
+        safe_shutdown(0)
     elif args.list_distros:
         print(  f'Distro names known to the Toshy installer (to use with --override-distro):'
                 f'\n\n\t{get_distro_names()}\n')
-        sys.exit(0)
+        safe_shutdown(0)
     elif args.show_env:
         get_environment_info()
-        sys.exit(0)
+        safe_shutdown(0)
     elif args.apply_tweaks:
         apply_desktop_tweaks()
-        sys.exit(0)
+        safe_shutdown(0)
     elif args.remove_tweaks:
         remove_desktop_tweaks()
-        sys.exit(0)
+        safe_shutdown(0)
     elif args.uninstall:
         # raise NotImplementedError
         uninstall_toshy()
@@ -1405,7 +1415,7 @@ def main(cnfg: InstallerSettings):
         print()
         print(f"Installer does not know how to deal with distro '{cnfg.DISTRO_NAME}'\n")
         print(f'Maybe try one of these with "--override-distro" option:\n\t{valid_distro_names}')
-        sys.exit(1)
+        safe_shutdown(1)
 
     elevate_privileges()
 
