@@ -1224,8 +1224,10 @@ def uninstall_toshy():
     # confirm if user really wants to uninstall
     response = input("\nThis will completely uninstall Toshy. Are you sure? [y/N]: ")
     if response not in ['y', 'Y']:
+        print(f"\nToshy uninstall cancelled.\n")
         safe_shutdown()
-    else: pass
+    else:
+        print(f'\nToshy uninstall proceeding...\n')
     
     get_environment_info()
     
