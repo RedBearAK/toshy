@@ -427,11 +427,14 @@ def fn_monitor_toshy_services():
 #     except NameError: pass
 
 def fn_restart_toshy_services(widget):
-    """(Re)Start config service first, then session monitor"""
-    os.system(f'{sysctl_cmd} --user restart {toshy_svc_config}')
-    time.sleep(0.2)
-    os.system(f'{sysctl_cmd} --user restart {toshy_svc_session_monitor}')
-    time.sleep(0.2)
+    """(Re)Start Toshy services with CLI command"""
+    toshy_svcs_restart_cmd = os.path.join(home_local_bin, 'toshy-services-restart')
+    subprocess.Popen([toshy_svcs_restart_cmd], stdout=DEVNULL, stderr=DEVNULL)
+    time.sleep(2)
+    # os.system(f'{sysctl_cmd} --user restart {toshy_svc_config}')
+    # time.sleep(0.2)
+    # os.system(f'{sysctl_cmd} --user restart {toshy_svc_session_monitor}')
+    # time.sleep(0.2)
     _ntfy_icon = f'--icon={icon_file_active}'
     _ntfy_msg = 'Toshy systemd services (re)started.\nTap any modifier key before trying shortcuts.'
 
@@ -445,11 +448,14 @@ def fn_restart_toshy_services(widget):
         subprocess.run([ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg])
 
 def fn_stop_toshy_services(widget):
-    """Stop session monitor, then config service"""
-    os.system(f'{sysctl_cmd} --user stop {toshy_svc_session_monitor}')
-    time.sleep(0.2)
-    os.system(f'{sysctl_cmd} --user stop {toshy_svc_config}')
-    time.sleep(0.2)
+    """Stop Toshy services with CLI command"""
+    toshy_svcs_stop_cmd = os.path.join(home_local_bin, 'toshy-services-stop')
+    subprocess.Popen([toshy_svcs_stop_cmd], stdout=DEVNULL, stderr=DEVNULL)
+    time.sleep(2)
+    # os.system(f'{sysctl_cmd} --user stop {toshy_svc_session_monitor}')
+    # time.sleep(0.2)
+    # os.system(f'{sysctl_cmd} --user stop {toshy_svc_config}')
+    # time.sleep(0.2)
     _ntfy_icon = f'--icon={icon_file_inverse}'
     _ntfy_msg = 'Toshy systemd services stopped.'
 
