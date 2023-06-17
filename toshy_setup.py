@@ -1221,6 +1221,12 @@ def remove_desktop_tweaks():
 def uninstall_toshy():
     print(f'\n\n§  Uninstalling Toshy...\n{cnfg.separator}')
     
+    # confirm if user really wants to uninstall
+    response = input("\nThis will completely uninstall Toshy. Are you sure? [y/N]: ")
+    if response not in ['y', 'Y']:
+        safe_shutdown()
+    else: pass
+    
     get_environment_info()
     
     remove_desktop_tweaks()
