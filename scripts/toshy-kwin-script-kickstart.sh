@@ -14,7 +14,11 @@ if [[ -z $USER ]] || [[ -z $HOME ]]; then
     exit 1
 fi
 
-sleep 2
+sleep 3
+# check that there is a valid display, otherwise wait a bit before showing dialog
+if [[ -z "${DISPLAY}" && -z "${WAYLAND_DISPLAY}" ]]; then
+    sleep 6
+fi
 
 title="Toshy"
 icon_file="${HOME}/.local/share/icons/toshy_app_icon_rainbow.svg"
