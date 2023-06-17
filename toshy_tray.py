@@ -4,7 +4,7 @@
 # Indicator tray icon menu app for Toshy, using pygobject/gi
 TOSHY_PART      = 'tray'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Tray Icon app'
-APP_VERSION     = '2023.0417'
+APP_VERSION     = '2023.0617'
 
 # -------- COMMON COMPONENTS --------------------------------------------------
 
@@ -430,7 +430,7 @@ def fn_restart_toshy_services(widget):
     """(Re)Start Toshy services with CLI command"""
     toshy_svcs_restart_cmd = os.path.join(home_local_bin, 'toshy-services-restart')
     subprocess.Popen([toshy_svcs_restart_cmd], stdout=DEVNULL, stderr=DEVNULL)
-    time.sleep(2)
+    time.sleep(3)
     # os.system(f'{sysctl_cmd} --user restart {toshy_svc_config}')
     # time.sleep(0.2)
     # os.system(f'{sysctl_cmd} --user restart {toshy_svc_session_monitor}')
@@ -451,7 +451,7 @@ def fn_stop_toshy_services(widget):
     """Stop Toshy services with CLI command"""
     toshy_svcs_stop_cmd = os.path.join(home_local_bin, 'toshy-services-stop')
     subprocess.Popen([toshy_svcs_stop_cmd], stdout=DEVNULL, stderr=DEVNULL)
-    time.sleep(2)
+    time.sleep(3)
     # os.system(f'{sysctl_cmd} --user stop {toshy_svc_session_monitor}')
     # time.sleep(0.2)
     # os.system(f'{sysctl_cmd} --user stop {toshy_svc_config}')
