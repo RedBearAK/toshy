@@ -3,6 +3,7 @@
 import os
 import sys
 import dbus
+import time
 import signal
 import platform
 import dbus.service
@@ -53,36 +54,49 @@ else:
     sys.exit(1)
 
 
+LOG_PFX = 'TOSHY_KDE_DBUS_SVC'
+
 DISTRO_NAME     = None
 DISTRO_VER      = None
 SESSION_TYPE    = None
 DESKTOP_ENV     = None
 
-env_info: Dict[str, str] = env.get_env_info()   # Returns a dict
 
-DISTRO_NAME     = env_info.get('DISTRO_NAME')
-DISTRO_VER      = env_info.get('DISTRO_VER')
-SESSION_TYPE    = env_info.get('SESSION_TYPE')
-DESKTOP_ENV     = env_info.get('DESKTOP_ENV')
-
-# use env info to exit script if not a KDE environment
-if DESKTOP_ENV not in ['kde', 'plasma']:
-    error(f'Not a KDE Plasma desktop environment. Exiting.')
-    sys.exit(0)
+def check_environment():
+    """Retrieve the current environment from env module"""
+    env_info: Dict[str, str] = env.get_env_info()   # Returns a dict
+    global DISTRO_NAME, DISTRO_VER, SESSION_TYPE, DESKTOP_ENV
+    DISTRO_NAME     = env_info.get('DISTRO_NAME')
+    DISTRO_VER      = env_info.get('DISTRO_VER')
+    SESSION_TYPE    = env_info.get('SESSION_TYPE')
+    DESKTOP_ENV     = env_info.get('DESKTOP_ENV')
 
 
-debug("")
-debug(  f'Toshy KDE D-Bus service script sees this environment:'
-        f'\n\t{DISTRO_NAME      = }'
-        f'\n\t{DISTRO_VER       = }'
-        f'\n\t{SESSION_TYPE     = }'
-        f'\n\t{DESKTOP_ENV      = }\n', ctx="CG")
+check_environment()
+
+loop_delay = 2
+while True:
+    if loop_delay > 8:
+        error(f'{LOG_PFX}: Not a Wayland+KDE environment. Exiting.')
+        sys.exit(0)
+    if DESKTOP_ENV in ['kde', 'plasma'] and SESSION_TYPE == 'wayland':
+        break
+    else:
+        time.sleep(loop_delay)
+        loop_delay += 2
+        check_environment()
+
+
+# debug("")
+# debug(  f'Toshy KDE D-Bus service script sees this environment:'
+#         f'\n\t{DISTRO_NAME      = }'
+#         f'\n\t{DISTRO_VER       = }'
+#         f'\n\t{SESSION_TYPE     = }'
+#         f'\n\t{DESKTOP_ENV      = }\n', ctx="CG")
 
 
 TOSHY_KDE_DBUS_SVC_PATH         = '/org/toshy/Toshy'
 TOSHY_KDE_DBUS_SVC_IFACE        = 'org.toshy.Toshy'
-
-LOG_PFX = 'TOSHY_KDE_DBUS_SVC'
 
 
 class DBUS_Object(dbus.service.Object):
