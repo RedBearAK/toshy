@@ -1033,6 +1033,8 @@ def apply_tweaks_KDE():
     print(f'Disabled Meta key opening application menu.')
     
     if cnfg.fancy_pants:
+
+        print(f'Installing "Application Switcher" KWin script...')
         # How to install nclarius grouped "Application Switcher" KWin script:
         # git clone https://github.com/nclarius/kwin-application-switcher.git
         # cd kwin-application-switcher
