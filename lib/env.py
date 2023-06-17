@@ -2,6 +2,7 @@
 
 import re
 import os
+import time
 import subprocess
 
 # ENV module version: 2023-05-22
@@ -153,8 +154,10 @@ def get_env_info():
     ########################################################################
     ##  Get session type
     SESSION_TYPE = os.environ.get("XDG_SESSION_TYPE") or None
+
     if not SESSION_TYPE:  # Why isn't XDG_SESSION_TYPE set? This shouldn't happen.
         error(f'ENV: XDG_SESSION_TYPE should really be set. Are you in a graphical environment?')
+        time.sleep(3)
 
         # Deal with archaic distros like antiX that fail to set XDG_SESSION_TYPE
         xorg_check_p1 = subprocess.Popen(['ps', 'ax'], stdout=subprocess.PIPE)
@@ -235,7 +238,8 @@ def get_env_info():
         if DESKTOP_ENV:
             break
 
-    if not DESKTOP_ENV:
+    # say DE should be added to list only if it it isn't None
+    if not DESKTOP_ENV and _desktop_env is not None:
         error(f'Desktop Environment not in de_names list! Should fix this.\n\t{_desktop_env}')
         DESKTOP_ENV = _desktop_env
 
