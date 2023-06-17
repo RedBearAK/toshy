@@ -229,6 +229,7 @@ def get_env_info():
 
     for k, v in desktop_env_names.items():
         # debug(f'{k = :<10} {v = :<10}')
+        if _desktop_env is None: break  # watch out for NoneType here
         if re.search(k, _desktop_env, re.I):
             DESKTOP_ENV = v
         if DESKTOP_ENV:
