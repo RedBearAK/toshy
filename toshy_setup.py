@@ -68,6 +68,12 @@ path_fix_tmp_path   = os.path.join(run_tmp_dir, path_fix_tmp_file)
 # set a standard path for duration of script run, to avoid issues with user customized paths
 os.environ['PATH'] = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 
+# deactivate Python virtual environment, if one is active, to avoid issues with sys.executable
+if sys.prefix != sys.base_prefix:
+    os.environ["VIRTUAL_ENV"] = ""
+    sys.path = [p for p in sys.path if not p.startswith(sys.prefix)]
+    sys.prefix = sys.base_prefix
+
 # Check if 'sudo' command is available to user
 if not shutil.which('sudo'):
     print("Error: 'sudo' not found. Installer will fail without it. Exiting.")
@@ -521,11 +527,7 @@ def install_distro_pkgs():
         subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro)
 
     elif cnfg.DISTRO_NAME in pacman_distros:
-        # print('\n') # double blank line
-        # debug(f'NOTICE: It is ESSENTIAL to have an Arch-based system completely updated.\n', ctx="!!")
-        # response = input('Have you run "sudo pacman -Syu" recently? [y/N]: ')
 
-        # if response in ['y', 'Y']:
         def is_package_installed(package):
             result = subprocess.run(['pacman', '-Q', package], stdout=DEVNULL, stderr=DEVNULL)
             return result.returncode == 0
@@ -539,11 +541,6 @@ def install_distro_pkgs():
             call_attention_to_password_prompt()
             subprocess.run(['sudo', 'pacman', '-S', '--noconfirm'] + pkgs_to_install)
 
-        # else:
-        #     print('Installer will fail with version mismatches if you have not updated recently.')
-        #     print('Update your Arch-based system and try the Toshy installer again. Exiting.')
-        #     sys.exit(1)
-
     elif cnfg.DISTRO_NAME in zypper_distros:
         subprocess.run(['sudo', 'zypper', '--non-interactive', 'install'] + cnfg.pkgs_for_distro)
 
@@ -551,6 +548,9 @@ def install_distro_pkgs():
         print()
         error(f"ERROR: Installer does not know how to handle distro: {cnfg.DISTRO_NAME}\n")
         sys.exit(1)
+
+    # Have something come out even if package list is empty (like Arch after initial run)
+    print(f'All necessary native distro packages are installed.')
 
 
 def get_distro_names():
@@ -754,7 +754,14 @@ def setup_python_virt_env():
 
     # Create the virtual environment if it doesn't exist
     if not os.path.exists(cnfg.venv_path):
-        subprocess.run([sys.executable, '-m', 'venv', cnfg.venv_path])
+        # 'sys.executable' changes if a venv is active! do something else here:
+        # subprocess.run([sys.executable, '-m', 'venv', cnfg.venv_path])
+        
+        # Get the path to the Python interpreter (not the one inside the venv)
+        sys_python3 = shutil.which('python3')
+        subprocess.run([sys_python3, '-m', 'venv', cnfg.venv_path])
+
+
     # We do not need to "activate" the venv right now, just create it
     print(f'Python virtual environment setup complete.')
 
