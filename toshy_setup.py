@@ -1077,7 +1077,7 @@ def apply_tweaks_KDE():
 
         # Run reconfigure command
         do_kwin_reconfigure()
-        print(f'Set task switcher to Large Icons, disabled show window.')
+        print(f'Set task switcher to "Large Icons", disabled show window option.')
 
 
 def remove_tweaks_KDE():
