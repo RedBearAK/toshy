@@ -3398,7 +3398,7 @@ keymap("Linux Mint xed text editor", {
 
 keymap("KWrite text editor", {
     C("RC-comma"):              C("Shift-C-comma"),             # Open preferences dialog
-}, when = matchProps(clas="^org.kde.Kwrite$") )
+}, when = matchProps(clas="^kwrite$|^org.kde.Kwrite$") )
 
 
 
