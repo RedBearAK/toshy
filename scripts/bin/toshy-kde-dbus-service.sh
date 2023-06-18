@@ -23,8 +23,9 @@ pkill -f "toshy_kde_dbus_service"
 
 sleep 1
 
+# MOVING THIS TO THE PYTHON SCRIPT
 # start the kickstart script to get KWin to give immediate update on focused window
-nohup "${TOSHY_CFG}/scripts/toshy-kwin-script-kickstart.sh" &
+# nohup "${TOSHY_CFG}/scripts/toshy-kwin-script-kickstart.sh" &
 
 # shellcheck disable=SC1091
 source "$TOSHY_CFG/.venv/bin/activate"

@@ -6,11 +6,13 @@ import dbus
 import time
 import signal
 import platform
+import subprocess
 import dbus.service
 import dbus.mainloop.glib
 
 from gi.repository import GLib
 from dbus.exceptions import DBusException
+from subprocess import DEVNULL
 # from dbus.service import method
 from typing import Dict, List, Union
 from keyszer.lib.logger import debug, error, warn, info, log
@@ -86,6 +88,10 @@ while True:
         loop_delay += 2
         check_environment()
 
+# loop breaks if environment is suitable, so run the kickstart script here
+kickstart_script    = 'toshy-kwin-script-kickstart.sh'
+kickstart_cmd       = os.path.join(home_dir, '.config', 'toshy', 'scripts', kickstart_script)
+subprocess.Popen([kickstart_cmd], stderr=DEVNULL, stdout=DEVNULL)
 
 # debug("")
 # debug(  f'Toshy KDE D-Bus service script sees this environment:'
