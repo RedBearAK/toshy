@@ -918,35 +918,56 @@ def setup_kde_dbus_service():
     start_dbus_svc_cmd      = os.path.join(user_path, '.local', 'bin', 'toshy-kde-dbus-service')
     replace_home_in_file(dbus_svc_desktop_file)
 
-    # TODO: integrate D-Bus service file and systemd service file for KDE D-Bus service
-    
-    # This command probably not necessary after installing the file:
-    # dbus-daemon --session --fork --print-address
-    
     # Where to put the new D-Bus service file:
     # ~/.local/share/dbus-1/services/org.toshy.Toshy.service
-    
-    
+    dbus_svcs_path          = os.path.join(user_path, '.local', 'share', 'dbus-1', 'services')
+    toshy_kde_dbus_svc_path = os.path.join(cnfg.toshy_dir_path, 'kde-kwin-dbus-service')
+    kde_dbus_svc_file       = os.path.join(toshy_kde_dbus_svc_path, 'org.toshy.Toshy.service')
+
+    if not os.path.isdir(dbus_svcs_path):
+        try:
+            os.makedirs(dbus_svcs_path, exist_ok=True)
+        except (PermissionError, NotADirectoryError) as file_err:
+            error(f"Problem trying to make sure '{dbus_svcs_path}' is a directory:\n\t{file_err}")
+            safe_shutdown(1)
+
+    if os.path.isdir(dbus_svcs_path):
+        shutil.copy(kde_dbus_svc_file, dbus_svcs_path)
+        print(f"Installed '{kde_dbus_svc_file}' file at path:\n\t'{dbus_svcs_path}'.")
+    else:
+        error(f"Path '{dbus_svcs_path}' is not a directory. Cannot continue.")
+        safe_shutdown(1)
 
     # ensure autostart directory exists
-    try:
-        os.makedirs(autostart_dir_path, exist_ok=True)
-    except (PermissionError, NotADirectoryError, FileExistsError) as file_err:
-        error(f"Problem trying to make sure '{autostart_dir_path}' is directory.\n\t{file_err}")
-        safe_shutdown(1)
-    shutil.copy(dbus_svc_desktop_file, autostart_dir_path)
-    print(f'Toshy KDE D-Bus service should autostart at login.')
+    if not os.path.isdir(autostart_dir_path):
+        try:
+            os.makedirs(autostart_dir_path, exist_ok=True)
+        except (PermissionError, NotADirectoryError) as file_err:
+            error(f"Problem trying to make sure '{autostart_dir_path}' is directory.\n\t{file_err}")
+            safe_shutdown(1)
 
-    subprocess.run(['pkill', '-u', cnfg.user_name, '-f', 'toshy_kde_dbus_service'])
-    subprocess.Popen([start_dbus_svc_cmd], stdout=DEVNULL, stderr=DEVNULL)
+    # try to delete old desktop entry file that would have been installed by code below
+    autostart_dbus_dt_file = os.path.join(autostart_dir_path, 'Toshy_KDE_DBus_Service.desktop')
+    if os.path.isfile(autostart_dbus_dt_file):
+        try:
+            os.unlink(autostart_dbus_dt_file)
+            print(f'Removed older KDE D-Bus desktop entry autostart.')
+        except subprocess.CalledProcessError as proc_err:
+            debug(f'Problem removing old D-Bus service desktop entry autostart:\n\t{proc_err}')
+
+    # # STOP DOING THIS, IN FAVOR OF SYSTEMD SERVICE, INSTALLED BY BASH SCRIPT
+    # shutil.copy(dbus_svc_desktop_file, autostart_dir_path)
+    # print(f'Toshy KDE D-Bus service should autostart at login.')
+    # subprocess.run(['pkill', '-u', cnfg.user_name, '-f', 'toshy_kde_dbus_service'])
+    # subprocess.Popen([start_dbus_svc_cmd], stdout=DEVNULL, stderr=DEVNULL)
     
-    # # DON'T DO THIS HERE, IT'S IN THE KDE D-BUS SERVICE LAUNCHER SCRIPT NOW
+    # # DON'T DO THIS HERE, IT'S IN THE KDE D-BUS SERVICE PYTHON SCRIPT NOW
     # # Try to kickstart the KWin script so that it can start sending focused window info
     # kickstart_script    = 'toshy-kwin-script-kickstart.sh'
     # kickstart_cmd       = os.path.join(cnfg.toshy_dir_path, 'scripts', kickstart_script)
     # subprocess.Popen([kickstart_cmd])
 
-    print(f'Toshy KDE D-Bus service should be running now.')
+    print(f'Toshy KDE D-Bus service should automatically start when needed.')
 
 
 def setup_systemd_services():
@@ -972,7 +993,7 @@ def autostart_tray_icon():
     # Need to create autostart folder if necessary
     try:
         os.makedirs(autostart_dir_path, exist_ok=True)
-    except (PermissionError, NotADirectoryError, FileExistsError) as file_err:
+    except (PermissionError, NotADirectoryError) as file_err:
         error(f"Problem trying to make sure '{autostart_dir_path}' is directory.\n\t{file_err}")
         safe_shutdown(1)
     subprocess.run(['ln', '-sf', tray_desktop_file, dest_link_file])
