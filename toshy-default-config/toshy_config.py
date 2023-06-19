@@ -3839,7 +3839,7 @@ keymap("General GUI", {
 }, when = matchProps(not_lst=remotes_lod))                      # matchProps with list-of-dicts
 
 
-keymap("Macro Tester", {
+keymap("Diagnostics", {
     C("RC-Shift-Alt-i"):        isDoubleTap(notify_context),
     C("RC-Shift-Alt-t"):        isDoubleTap(macro_tester),
 }, when = lambda ctx: ctx is ctx )
