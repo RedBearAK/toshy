@@ -4,6 +4,7 @@ import os
 import sys
 import dbus
 import time
+import shutil
 import signal
 import platform
 import subprocess
@@ -87,6 +88,39 @@ while True:
         time.sleep(loop_delay)
         loop_delay += 2
         check_environment()
+
+
+toshy_kwin_script_name = 'toshy-dbus-notifyactivewindow'
+qdbus_cmd = 'qdbus-qt5' if shutil.which('qdbus-qt5') else 'qdbus'
+kwin_scripting_obj = 'org.kde.KWin'
+kwin_scripting_path = '/Scripting'
+kwin_scripting_iface = 'org.kde.kwin.Scripting'
+methods = [
+    'isScriptLoaded',
+    'loadScript',
+    'start',
+    'unloadScript'
+]
+
+if shutil.which(qdbus_cmd):
+
+    def is_script_loaded():
+        try:
+            output = subprocess.check_output([  qdbus_cmd,
+                                                kwin_scripting_obj,
+                                                '/Scripting',
+                                                'org.kde.kwin.Scripting.isScriptLoaded',
+                                                toshy_kwin_script_name    ])
+            return output.strip() == 'true'
+        except subprocess.CalledProcessError as e:
+            print(f"Error checking if KWin script is loaded: {e}")
+            return False
+
+    print(f"Script {toshy_kwin_script_name} loaded: {is_script_loaded()}")
+else:
+    print(f"Cannot find '{qdbus_cmd}'. Please install it to check KWin script status.")
+
+
 
 # loop breaks if environment is suitable, so run the kickstart script here
 kickstart_script    = 'toshy-kwin-script-kickstart.sh'
