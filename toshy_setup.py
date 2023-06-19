@@ -1467,8 +1467,7 @@ def main(cnfg: InstallerSettings):
 
     if cnfg.DESKTOP_ENV in ['kde', 'plasma']:
         setup_kwin2dbus_script()
-        # commenting out in favor of the systemd service unit:
-        # setup_kde_dbus_service()
+        setup_kde_dbus_service()
 
     setup_systemd_services()
 
