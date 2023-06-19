@@ -34,8 +34,11 @@ else
 fi
 
 if command -v zenity &> /dev/null; then
-    if zenity --help | grep -q -- '--icon'; then
+    if zenity --help-info | grep -q -- '--icon='; then
         ${timeout_cmd} zenity --info --no-wrap --title="${title}" --icon="${icon_file}" \
+            --text="${message}" --timeout=${time2_s} >/dev/null 2>&1
+    elif zenity --help-info | grep -q -- '--icon-name='; then
+        ${timeout_cmd} zenity --info --no-wrap --title="${title}" --icon-name="${icon_file}" \
             --text="${message}" --timeout=${time2_s} >/dev/null 2>&1
     else
         ${timeout_cmd} zenity --info --no-wrap --title="${title}" \
