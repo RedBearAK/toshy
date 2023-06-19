@@ -22,6 +22,7 @@ fi
 
 title="Toshy"
 icon_file="${HOME}/.local/share/icons/toshy_app_icon_rainbow.svg"
+icon_name="toshy_app_icon_rainbow"
 time1_s=2
 time2_s=3
 message="Kickstarting the Toshy KWin script."
@@ -35,10 +36,10 @@ fi
 
 if command -v zenity &> /dev/null; then
     if zenity --help-info | grep -q -- '--icon='; then
-        ${timeout_cmd} zenity --info --no-wrap --title="${title}" --icon="${icon_file}" \
+        ${timeout_cmd} zenity --info --no-wrap --title="${title}" --icon="${icon_name}" \
             --text="${message}" --timeout=${time2_s} >/dev/null 2>&1
     elif zenity --help-info | grep -q -- '--icon-name='; then
-        ${timeout_cmd} zenity --info --no-wrap --title="${title}" --icon-name="${icon_file}" \
+        ${timeout_cmd} zenity --info --no-wrap --title="${title}" --icon-name="${icon_name}" \
             --text="${message}" --timeout=${time2_s} >/dev/null 2>&1
     else
         ${timeout_cmd} zenity --info --no-wrap --title="${title}" \
