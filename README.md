@@ -138,7 +138,7 @@ There's no simple way around this, since the keymapper is only designed to send 
         - UUID: `focused-window-dbus@flexagoon.com`
         - URL: https://extensions.gnome.org/extension/5592/focused-window-d-bus/
 
-    - Wayland+KDE has a small glitch where you have to change the focused window once after the KWin script it installed, to get the app-specific remapping to start working. 
+    - Wayland+KDE has a small glitch where you have to change the focused window once after the KWin script is installed, to get the app-specific remapping to start working. I am trying a solution that uses a pop-up dialog to create a KWin event.
 
 - `systemd` (but you can just manually run the config from terminal, shell script, or tray indicator menu)
 
@@ -509,6 +509,14 @@ To get back to using the background Toshy services if you've run any of the "man
 toshy-services-restart
 ```
 
+### Repeating Keys
+
+If you have an issue with keys that seem to continue repeating for too long after you release the key, the issue is probably that your keyboard repeat rate is set too high. This can cause repeating keystrokes to "buffer" somehow and lead to deleting way too many characters or similar issues. Slowing down the repeat rate should keep this from happening. How you do this kind of depends on the distro and desktop environment.  
+
+Some DEs have a nice control panel interface for setting the repeat rate, in a way that will work with both X11/Xorg and Wayland. Many how-tos online mention using `xset`, but I believe this only works in X11/Xorg environments. On my Fedora system, the `kbdrate` command seems to work, even in Wayland. If you're using GNOME, there is a control panel for this at `Universal Access > Typing` that will let you disable repeating keys or set the repeat rate (and delay).  
+
+A good repeat rate that should keep the input system from overwhelming the keymapper with repeating keystrokes is around 10 to 20 characters per second (cps).  
+
 ### What happened to my customizations of the config?!
 
 #### UPDATE: This shouldn't be a problem in the future
@@ -762,9 +770,9 @@ In the Xfce variant of Mint, they use the Whisker Menu applet, and the shortcut 
 
 ### GNOME and the Meta/Super/Win/Cmd key (`overlay-key`)
 
-By default GNOME desktops seem to want to use the Meta/Super/Win/Cmd key to open the "overview". This is not a shortcut that is exposed in the usual `Settings >> Keyboard` control panel. The Toshy installer will disable the binding if GNOME is detected, since it's weird/unexpected in macOS for a modifier key to perform an action by itself.  
+By default GNOME desktops seem to want to use the Meta/Super/Win/Cmd key to open the "overview". This is not a shortcut that is exposed in the usual `Settings >> Keyboard` control panel. The Toshy installer will disable the keybinding if GNOME is detected, since it's weird/unexpected in macOS for a modifier key to perform an action by itself.  
 
-Here are the commands to disable and re-enable the `overlay-key` binding:  
+Here are the commands to disable and re-enable the `overlay-key` keybinding:  
 
 Disable:  
 
