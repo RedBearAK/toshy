@@ -611,9 +611,9 @@ try:
     zenity_help_output = subprocess.check_output(['zenity', '--help-info'])
     help_text = str(zenity_help_output)
     if '--icon=' in help_text:
-        zenity_icon_option = '--icon=toshy_app_icon_rainbow.svg'
+        zenity_icon_option = '--icon=toshy_app_icon_rainbow'
     elif '--icon-name=' in help_text:
-        zenity_icon_option = '--icon-name=toshy_app_icon_rainbow.svg'
+        zenity_icon_option = '--icon-name=toshy_app_icon_rainbow'
 except subprocess.CalledProcessError:
     pass  # zenity --help-info failed, assume icon is not supported
 
