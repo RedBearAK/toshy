@@ -856,10 +856,10 @@ def setup_kwin2dbus_script():
     kwin_script_name    = 'toshy-dbus-notifyactivewindow'
     kwin_script_path    = os.path.join( cnfg.toshy_dir_path,
                                         'kde-kwin-dbus-service', kwin_script_name)
-    kwin_tmp_file_path  = f'{cnfg.run_tmp_dir}/toshy-dbus-notifyactivewindow.kwinscript'
+    script_tmp_file     = f'{cnfg.run_tmp_dir}/{kwin_script_name}.kwinscript'
 
     # Create a zip file (overwrite if it exists)
-    with zipfile.ZipFile(kwin_tmp_file_path, 'w') as zipf:
+    with zipfile.ZipFile(script_tmp_file, 'w') as zipf:
         # Add main.js to the kwinscript package
         zipf.write(os.path.join(kwin_script_path, 'contents', 'code', 'main.js'),
                                 arcname='contents/code/main.js')
@@ -874,11 +874,11 @@ def setup_kwin2dbus_script():
     if result.returncode != 0:
         pass
     else:
-        print("Successfully removed the KWin script.")
+        print("Successfully removed existing KWin script.")
 
     # Install the KWin script
     result = subprocess.run(
-        ['kpackagetool5', '-t', 'KWin/Script', '-i', kwin_tmp_file_path], capture_output=True, text=True)
+        ['kpackagetool5', '-t', 'KWin/Script', '-i', script_tmp_file], capture_output=True, text=True)
 
     if result.returncode != 0:
         error(f"Error installing the KWin script. The error was:\n\t{result.stderr}")
@@ -887,7 +887,7 @@ def setup_kwin2dbus_script():
 
     # Remove the temporary kwinscript file
     try:
-        os.remove(kwin_tmp_file_path)
+        os.remove(script_tmp_file)
     except (FileNotFoundError, PermissionError): pass
 
     # Enable the script using kwriteconfig5
@@ -1465,9 +1465,11 @@ def main(cnfg: InstallerSettings):
     install_bin_commands()
     install_desktop_apps()
 
-    if cnfg.DESKTOP_ENV in ['kde', 'plasma']:
-        setup_kwin2dbus_script()
-        setup_kde_dbus_service()
+    # TESTING DOING THIS INSIDE THE D-BUS SERVICE PYTHON SCRIPT
+    # if cnfg.DESKTOP_ENV in ['kde', 'plasma']:
+    #     setup_kwin2dbus_script()
+
+    setup_kde_dbus_service()
 
     setup_systemd_services()
 
