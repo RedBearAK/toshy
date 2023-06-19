@@ -475,6 +475,32 @@ One of the best simple tests, if you have Firefox installed, is if using the `Cm
 
 If you think app-specific remaps are working in general, but for some reason they aren't working in a specific app, the app's "class" may be different than expected by the config file. Try to identify it, and let us know what the "class" and "name" attributes are.  
 
+UPDATE: There are now a couple of "diagnostic" functions in the config file that should reveal the window attributes (and the keyboard device name) more easily in both X11/Xorg and Wayland environments, when you use one of these shortcuts:  
+
+Safe to do in any application window:  
+
+```
+Shift+Opt+Cmd+I,I (double-tap the "I" key while holding the mods)
+```
+
+This should display a pop-up dialog box with the application class, window name/title, and the name of the keyboard device.  
+
+ONLY DO THE SHORTCUT BELOW IN A TEXT AREA OR TEXT EDITOR APPLICATION:  
+
+```
+Shift+Opt+Cmd+T,T (double-tap the "T" key while holding the mods)
+```
+
+This shortcut will initiate a "macro" that will type out the same kind of information found in the pop-up dialog option, but also does a quick Unicode character test that should come out looking like this, on a single line:  
+
+```
+Unicode and Shift Test: 🌹—€—‡—ÿ—‡ 12345 !@#$% |\ !!!!!!
+```
+
+Previous advice below the line still works too:  
+
+* * *
+
 In X11/Xorg environments, run this in a terminal, then click with the "cross" mouse cursor on the window you're trying to identify:  
 
 ```sh
