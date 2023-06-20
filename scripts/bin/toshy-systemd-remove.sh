@@ -40,27 +40,59 @@ echo -e "\nRemoving Toshy systemd services...\n"
 
 # systemctl "disable" automatically deletes all symlinks (might be bug)
 
-if [ -f "$HOME/.config/systemd/user/toshy-session-monitor.service" ]; then
-    if /usr/bin/systemctl --user --quiet is-active toshy-session-monitor.service; then
-        /usr/bin/systemctl --user stop toshy-session-monitor.service
-    fi
-    if /usr/bin/systemctl --user --quiet is-enabled toshy-session-monitor.service; then
-        /usr/bin/systemctl --user disable toshy-session-monitor.service
-    fi
-    sleep $DELAY
-    rm -f "$USER_SYSD_PATH/toshy-session-monitor.service"
-fi
 
-if [ -f "$HOME/.config/systemd/user/toshy-config.service" ]; then
-    if /usr/bin/systemctl --user --quiet is-active toshy-config.service; then
-        /usr/bin/systemctl --user stop toshy-config.service
+service_names=(
+    "toshy-kde-dbus.service"
+    "toshy-session-monitor.service"
+    "toshy-config.service"
+)
+
+for service_name in "${service_names[@]}"; do
+    if [ -f "$USER_SYSD_PATH/$service_name" ]; then
+        if /usr/bin/systemctl --user --quiet is-active "$service_name"; then
+            /usr/bin/systemctl --user stop "$service_name"
+        fi
+        if /usr/bin/systemctl --user --quiet is-enabled "$service_name"; then
+            /usr/bin/systemctl --user disable "$service_name"
+        fi
+        sleep "$DELAY"
+        rm -f "$USER_SYSD_PATH/$service_name"
     fi
-    if /usr/bin/systemctl --user --quiet is-enabled toshy-config.service; then
-        /usr/bin/systemctl --user disable toshy-config.service
-    fi
-    sleep $DELAY
-    rm -f "$USER_SYSD_PATH/toshy-config.service"
-fi
+done
+
+
+# if [ -f "$USER_SYSD_PATH/toshy-kde-dbus.service" ]; then
+#     if /usr/bin/systemctl --user --quiet is-active toshy-kde-dbus.service; then
+#         /usr/bin/systemctl --user stop toshy-kde-dbus.service
+#     fi
+#     if /usr/bin/systemctl --user --quiet is-enabled toshy-kde-dbus.service; then
+#         /usr/bin/systemctl --user disable toshy-kde-dbus.service
+#     fi
+#     sleep $DELAY
+#     rm -f "$USER_SYSD_PATH/toshy-kde-dbus.service"
+# fi
+
+# if [ -f "$USER_SYSD_PATH/toshy-session-monitor.service" ]; then
+#     if /usr/bin/systemctl --user --quiet is-active toshy-session-monitor.service; then
+#         /usr/bin/systemctl --user stop toshy-session-monitor.service
+#     fi
+#     if /usr/bin/systemctl --user --quiet is-enabled toshy-session-monitor.service; then
+#         /usr/bin/systemctl --user disable toshy-session-monitor.service
+#     fi
+#     sleep $DELAY
+#     rm -f "$USER_SYSD_PATH/toshy-session-monitor.service"
+# fi
+
+# if [ -f "$USER_SYSD_PATH/toshy-config.service" ]; then
+#     if /usr/bin/systemctl --user --quiet is-active toshy-config.service; then
+#         /usr/bin/systemctl --user stop toshy-config.service
+#     fi
+#     if /usr/bin/systemctl --user --quiet is-enabled toshy-config.service; then
+#         /usr/bin/systemctl --user disable toshy-config.service
+#     fi
+#     sleep $DELAY
+#     rm -f "$USER_SYSD_PATH/toshy-config.service"
+# fi
 
 if [ -f "$HOME/.config/autostart/Toshy_Import_Vars.desktop" ]; then
     rm -f "$HOME/.config/autostart/Toshy_Import_Vars.desktop"

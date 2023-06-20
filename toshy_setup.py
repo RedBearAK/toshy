@@ -68,6 +68,12 @@ path_fix_tmp_path   = os.path.join(run_tmp_dir, path_fix_tmp_file)
 # set a standard path for duration of script run, to avoid issues with user customized paths
 os.environ['PATH'] = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 
+# deactivate Python virtual environment, if one is active, to avoid issues with sys.executable
+if sys.prefix != sys.base_prefix:
+    os.environ["VIRTUAL_ENV"] = ""
+    sys.path = [p for p in sys.path if not p.startswith(sys.prefix)]
+    sys.prefix = sys.base_prefix
+
 # Check if 'sudo' command is available to user
 if not shutil.which('sudo'):
     print("Error: 'sudo' not found. Installer will fail without it. Exiting.")
@@ -116,8 +122,8 @@ class InstallerSettings:
 
         self.keyszer_tmp_path       = os.path.join('.', 'keyszer-temp')
 
-        # keyszer_branch              = 'env_and_adapt_to_capslock'
-        # keyszer_branch              = 'environ_api'
+        # experimental branch with support for repeating key filter, touchpad events
+        # self.keyszer_branch         = 'env_api_kde_repeatkeys_touchpad'
         self.keyszer_branch         = 'environ_api_kde'
         self.keyszer_url            = 'https://github.com/RedBearAK/keyszer.git'
         self.keyszer_clone_cmd      = f'git clone -b {self.keyszer_branch} {self.keyszer_url}'
@@ -139,6 +145,16 @@ class InstallerSettings:
                 ██   ██     ██          ██   ██     ██    ██     ██    ██        ██           
                 ██   ██     ███████     ██████       ██████       ██████         ██        ██ 
                 """)
+
+
+def safe_shutdown(exit_code=0):
+    """do some stuff on the way out"""
+
+    # good place to do some file cleanup?
+
+    # invalidate the sudo ticket, don't leave system in "superuser" state
+    subprocess.run(['sudo', '-k'])
+    sys.exit(exit_code)
 
 
 def get_environment_info():
@@ -241,7 +257,7 @@ def dot_Xmodmap_warning():
         else:
             print()
             error("Code does not match! Try the installer again after dealing with '.Xmodmap'.\n")
-            sys.exit(1)
+            safe_shutdown(1)
 
 
 def ask_is_distro_updated():
@@ -255,7 +271,7 @@ def ask_is_distro_updated():
         print()
         error("Try the installer again after you've done a full system update. Exiting.")
         print()
-        sys.exit(1)
+        safe_shutdown(1)
 
 
 def ask_add_home_local_bin():
@@ -317,7 +333,7 @@ def load_uinput_module():
             except subprocess.CalledProcessError as proc_error:
                 error(f"Failed to create /etc/modules-load.d/uinput.conf:\n\t{proc_error}")
                 error(f'ERROR: Install failed.')
-                sys.exit(1)
+                safe_shutdown(1)
 
     else:
         # Check if /etc/modules file exists
@@ -333,7 +349,7 @@ def load_uinput_module():
                     except subprocess.CalledProcessError as proc_error:
                         error(f"ERROR: Failed to append 'uinput' to /etc/modules:\n\t{proc_error}")
                         error(f'ERROR: Install failed.')
-                        sys.exit(1)
+                        safe_shutdown(1)
 
 
 def reload_udev_rules():
@@ -374,7 +390,7 @@ def install_udev_rules():
             error(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
             print()
             error(f'ERROR: Install failed.')
-            sys.exit(1)
+            safe_shutdown(1)
     else:
         print(f'Correct "udev" rules already in place.')
 
@@ -398,7 +414,7 @@ def verify_user_groups():
             error(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
             print()
             error(f'ERROR: Install failed.')
-            sys.exit(1)
+            safe_shutdown(1)
 
     # Check if the user is already in the `input` group
     group_info = grp.getgrnam(cnfg.input_group_name)
@@ -420,7 +436,7 @@ def verify_user_groups():
             error(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
             print()
             error(f'ERROR: Install failed.')
-            sys.exit(1)
+            safe_shutdown(1)
 
         print(f'User "{cnfg.user_name}" added to group "{cnfg.input_group_name}".')
         prompt_for_reboot()
@@ -435,27 +451,29 @@ distro_groups_map = {
     # Add more as needed...
 }
 
+# TODO: On openSUSE, check version of system Python to adapt Python package name
+# openSUSE package is python310-* now but will probably be python311-* soon
 pkg_groups_map = {
     'redhat-based':    ["gcc", "git", "cairo-devel", "cairo-gobject-devel", "dbus-devel",
                         "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
                         "gobject-introspection-devel", "libappindicator-gtk3", "xset",
-                        "systemd-devel"],
+                        "systemd-devel", "zenity"],
     'opensuse-based':  ["gcc", "git", "cairo-devel",  "dbus-1-devel",
                         "python310-tk", "python310-dbus-python-devel", "python-devel",
                         "gobject-introspection-devel", "libappindicator3-devel", "tk",
                         "libnotify-tools", "typelib-1_0-AyatanaAppIndicator3-0_1",
-                        "systemd-devel"],
+                        "systemd-devel", "zenity"],
     'ubuntu-based':    ["curl", "git", "input-utils", "libcairo2-dev", "libnotify-bin",
                         "python3-dbus", "python3-dev", "python3-pip", "python3-venv",
                         "python3-tk", "libdbus-1-dev", "libgirepository1.0-dev",
-                        "gir1.2-appindicator3-0.1", "libsystemd-dev"],
+                        "gir1.2-appindicator3-0.1", "libsystemd-dev", "zenity"],
     'debian-based':    ["curl", "git", "input-utils", "libcairo2-dev", "libdbus-1-dev",
                         "python3-dbus", "python3-dev", "python3-venv", "python3-tk",
-                        "libgirepository1.0-dev", "libsystemd-dev",
+                        "libgirepository1.0-dev", "libsystemd-dev", "zenity",
                         "gir1.2-ayatanaappindicator3-0.1"],
     'arch-based':      ["cairo", "dbus", "evtest", "git", "gobject-introspection", "tk",
                         "libappindicator-gtk3", "pkg-config", "python-dbus", "python-pip",
-                        "python", "systemd"],
+                        "python", "systemd", "zenity"],
 }
 
 extra_pkgs_map = {
@@ -463,7 +481,7 @@ extra_pkgs_map = {
     # 'distro_name': ["pkg1", "pkg2", ...],
     'fedora':          ["evtest"],
     'fedoralinux':     ["evtest"],
-    'ultramarina':     ["evtest"],
+    'ultramarine':     ["evtest"],
 }
 
 
@@ -482,7 +500,7 @@ def install_distro_pkgs():
         print(f"ERROR: No list of packages found for this distro: '{cnfg.DISTRO_NAME}'")
         print(f'Installation cannot proceed without a list of packages. Sorry.')
         print(f'Try some options in "./toshy_setup.py --help"\n')
-        sys.exit(1)
+        safe_shutdown(1)
 
     cnfg.pkgs_for_distro = pkg_groups_map[pkg_group]
 
@@ -519,11 +537,7 @@ def install_distro_pkgs():
         subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro)
 
     elif cnfg.DISTRO_NAME in pacman_distros:
-        # print('\n') # double blank line
-        # debug(f'NOTICE: It is ESSENTIAL to have an Arch-based system completely updated.\n', ctx="!!")
-        # response = input('Have you run "sudo pacman -Syu" recently? [y/N]: ')
 
-        # if response in ['y', 'Y']:
         def is_package_installed(package):
             result = subprocess.run(['pacman', '-Q', package], stdout=DEVNULL, stderr=DEVNULL)
             return result.returncode == 0
@@ -537,18 +551,16 @@ def install_distro_pkgs():
             call_attention_to_password_prompt()
             subprocess.run(['sudo', 'pacman', '-S', '--noconfirm'] + pkgs_to_install)
 
-        # else:
-        #     print('Installer will fail with version mismatches if you have not updated recently.')
-        #     print('Update your Arch-based system and try the Toshy installer again. Exiting.')
-        #     sys.exit(1)
-
     elif cnfg.DISTRO_NAME in zypper_distros:
         subprocess.run(['sudo', 'zypper', '--non-interactive', 'install'] + cnfg.pkgs_for_distro)
 
     else:
         print()
         error(f"ERROR: Installer does not know how to handle distro: {cnfg.DISTRO_NAME}\n")
-        sys.exit(1)
+        safe_shutdown(1)
+
+    # Have something come out even if package list is empty (like Arch after initial run)
+    print(f'All necessary native distro packages are installed.')
 
 
 def get_distro_names():
@@ -571,7 +583,7 @@ def clone_keyszer_branch():
     has_git = shutil.which('git')
     if not has_git:
         print(f'ERROR: "git" is not installed, for some reason. Cannot continue.')
-        sys.exit(1)
+        safe_shutdown(1)
 
     if os.path.exists(cnfg.keyszer_tmp_path):
         # force a fresh copy of keyszer every time script is run
@@ -730,7 +742,7 @@ def install_toshy_files():
                 new_cfg_data = file.read()
         except (FileNotFoundError, PermissionError, OSError) as file_err:
             error(f'Problem reading new config file:\n\t{file_err}')
-            sys.exit(1)
+            safe_shutdown(1)
         merged_cfg_data = None
         try:
             merged_cfg_data = merge_slices(new_cfg_data, cnfg.existing_cfg_slices)
@@ -742,7 +754,7 @@ def install_toshy_files():
                     file.write(merged_cfg_data)
             except (FileNotFoundError, PermissionError, OSError) as file_err:
                 error(f'Problem writing to new config file:\n\t{file_err}')
-                sys.exit(1)
+                safe_shutdown(1)
             print(f"Existing user customizations applied to the new config file.")
 
 
@@ -752,7 +764,14 @@ def setup_python_virt_env():
 
     # Create the virtual environment if it doesn't exist
     if not os.path.exists(cnfg.venv_path):
-        subprocess.run([sys.executable, '-m', 'venv', cnfg.venv_path])
+        # 'sys.executable' changes if a venv is active! do something else here:
+        # subprocess.run([sys.executable, '-m', 'venv', cnfg.venv_path])
+        
+        # Get the path to the Python interpreter (not the one inside the venv)
+        sys_python3 = shutil.which('python3')
+        subprocess.run([sys_python3, '-m', 'venv', cnfg.venv_path])
+
+
     # We do not need to "activate" the venv right now, just create it
     print(f'Python virtual environment setup complete.')
 
@@ -786,15 +805,15 @@ def install_pip_packages():
         result = subprocess.run(command)
         if result.returncode != 0:
             print(f'Error installing/upgrading Python packages. Installer exiting.')
-            sys.exit(1)
+            safe_shutdown(1)
     if os.path.exists('./keyszer-temp'):
         result = subprocess.run([venv_pip_cmd, 'install', '--upgrade', './keyszer-temp'])
         if result.returncode != 0:
             print(f'Error installing/upgrading "keyszer".')
-            sys.exit(1)
+            safe_shutdown(1)
     else:
         print(f'"keyszer-temp" folder missing. Unable to install "keyszer".')
-        sys.exit(1)
+        safe_shutdown(1)
 
 
 def install_bin_commands():
@@ -837,10 +856,10 @@ def setup_kwin2dbus_script():
     kwin_script_name    = 'toshy-dbus-notifyactivewindow'
     kwin_script_path    = os.path.join( cnfg.toshy_dir_path,
                                         'kde-kwin-dbus-service', kwin_script_name)
-    kwin_tmp_file_path  = f'{cnfg.run_tmp_dir}/toshy-dbus-notifyactivewindow.kwinscript'
+    script_tmp_file     = f'{cnfg.run_tmp_dir}/{kwin_script_name}.kwinscript'
 
     # Create a zip file (overwrite if it exists)
-    with zipfile.ZipFile(kwin_tmp_file_path, 'w') as zipf:
+    with zipfile.ZipFile(script_tmp_file, 'w') as zipf:
         # Add main.js to the kwinscript package
         zipf.write(os.path.join(kwin_script_path, 'contents', 'code', 'main.js'),
                                 arcname='contents/code/main.js')
@@ -855,20 +874,20 @@ def setup_kwin2dbus_script():
     if result.returncode != 0:
         pass
     else:
-        print("Successfully removed the KWin script.")
+        print("Successfully removed existing KWin script.")
 
     # Install the KWin script
     result = subprocess.run(
-        ['kpackagetool5', '-t', 'KWin/Script', '-i', kwin_tmp_file_path], capture_output=True, text=True)
+        ['kpackagetool5', '-t', 'KWin/Script', '-i', script_tmp_file], capture_output=True, text=True)
 
     if result.returncode != 0:
-        print(f"Error installing the KWin script. The error was:\n\t{result.stderr}")
+        error(f"Error installing the KWin script. The error was:\n\t{result.stderr}")
     else:
         print("Successfully installed the KWin script.")
 
     # Remove the temporary kwinscript file
     try:
-        os.remove(kwin_tmp_file_path)
+        os.remove(script_tmp_file)
     except (FileNotFoundError, PermissionError): pass
 
     # Enable the script using kwriteconfig5
@@ -878,7 +897,7 @@ def setup_kwin2dbus_script():
         capture_output=True, text=True)
     
     if result.returncode != 0:
-        print(f"Error enabling the KWin script. The error was:\n\t{result.stderr}")
+        error(f"Error enabling the KWin script. The error was:\n\t{result.stderr}")
     else:
         print("Successfully enabled the KWin script.")
 
@@ -888,29 +907,68 @@ def setup_kwin2dbus_script():
 
 def setup_kde_dbus_service():
     """Install the D-Bus service initialization script to receive window focus
-    change notifications from the KWin script on KDE desktops (Wayland)"""
+    change notifications from the KWin script on KDE desktops (needed for Wayland)"""
     print(f'\n\n§  Setting up the Toshy KDE D-Bus service...\n{cnfg.separator}')
 
     # need to autostart "$HOME/.local/bin/toshy-kde-dbus-service"
     user_path               = os.path.expanduser('~')
     autostart_dir_path      = os.path.join(user_path, '.config', 'autostart')
-    dbus_svc_desktop_path   = os.path.join(cnfg.toshy_dir_path, 'desktop')
-    dbus_svc_desktop_file   = os.path.join(dbus_svc_desktop_path, 'Toshy_KDE_DBus_Service.desktop')
+    dbus_svc_dt_file_path   = os.path.join(cnfg.toshy_dir_path, 'desktop')
+    dbus_svc_desktop_file   = os.path.join(dbus_svc_dt_file_path, 'Toshy_KDE_DBus_Service.desktop')
     start_dbus_svc_cmd      = os.path.join(user_path, '.local', 'bin', 'toshy-kde-dbus-service')
     replace_home_in_file(dbus_svc_desktop_file)
 
-    # ensure autostart directory exists
-    try:
-        os.makedirs(autostart_dir_path, exist_ok=True)
-    except (PermissionError, NotADirectoryError, FileExistsError) as file_err:
-        error(f"Problem trying to make sure '{autostart_dir_path}' is directory.\n\t{file_err}")
-        sys.exit(1)
-    shutil.copy(dbus_svc_desktop_file, autostart_dir_path)
-    print(f'Toshy KDE D-Bus service should autostart at login.')
+    # Where to put the new D-Bus service file:
+    # ~/.local/share/dbus-1/services/org.toshy.Toshy.service
+    dbus_svcs_path          = os.path.join(user_path, '.local', 'share', 'dbus-1', 'services')
+    toshy_kde_dbus_svc_path = os.path.join(cnfg.toshy_dir_path, 'kde-kwin-dbus-service')
+    kde_dbus_svc_file       = os.path.join(toshy_kde_dbus_svc_path, 'org.toshy.Toshy.service')
 
-    subprocess.run(['pkill', '-u', cnfg.user_name, '-f', 'toshy_kde_dbus_service'])
-    subprocess.Popen([start_dbus_svc_cmd], stdout=DEVNULL, stderr=DEVNULL)
-    print(f'Toshy KDE D-Bus service should be running now.')
+    if not os.path.isdir(dbus_svcs_path):
+        try:
+            os.makedirs(dbus_svcs_path, exist_ok=True)
+        except (PermissionError, NotADirectoryError) as file_err:
+            error(f"Problem trying to make sure '{dbus_svcs_path}' is a directory:\n\t{file_err}")
+            safe_shutdown(1)
+
+    # STOP INSTALLING THIS, IT'S NOT HELPFUL
+    # if os.path.isdir(dbus_svcs_path):
+    #     shutil.copy(kde_dbus_svc_file, dbus_svcs_path)
+    #     print(f"Installed '{kde_dbus_svc_file}' file at path:\n\t'{dbus_svcs_path}'.")
+    # else:
+    #     error(f"Path '{dbus_svcs_path}' is not a directory. Cannot continue.")
+    #     safe_shutdown(1)
+
+    # ensure autostart directory exists
+    if not os.path.isdir(autostart_dir_path):
+        try:
+            os.makedirs(autostart_dir_path, exist_ok=True)
+        except (PermissionError, NotADirectoryError) as file_err:
+            error(f"Problem trying to make sure '{autostart_dir_path}' is directory.\n\t{file_err}")
+            safe_shutdown(1)
+
+    # try to delete old desktop entry file that would have been installed by code below
+    autostart_dbus_dt_file = os.path.join(autostart_dir_path, 'Toshy_KDE_DBus_Service.desktop')
+    if os.path.isfile(autostart_dbus_dt_file):
+        try:
+            os.unlink(autostart_dbus_dt_file)
+            print(f'Removed older KDE D-Bus desktop entry autostart.')
+        except subprocess.CalledProcessError as proc_err:
+            debug(f'Problem removing old D-Bus service desktop entry autostart:\n\t{proc_err}')
+
+    # # STOP DOING THIS, IN FAVOR OF SYSTEMD SERVICE, INSTALLED BY BASH SCRIPT
+    # shutil.copy(dbus_svc_desktop_file, autostart_dir_path)
+    # print(f'Toshy KDE D-Bus service should autostart at login.')
+    # subprocess.run(['pkill', '-u', cnfg.user_name, '-f', 'toshy_kde_dbus_service'])
+    # subprocess.Popen([start_dbus_svc_cmd], stdout=DEVNULL, stderr=DEVNULL)
+    
+    # # DON'T DO THIS HERE, IT'S IN THE KDE D-BUS SERVICE PYTHON SCRIPT NOW
+    # # Try to kickstart the KWin script so that it can start sending focused window info
+    # kickstart_script    = 'toshy-kwin-script-kickstart.sh'
+    # kickstart_cmd       = os.path.join(cnfg.toshy_dir_path, 'scripts', kickstart_script)
+    # subprocess.Popen([kickstart_cmd])
+
+    print(f'Toshy KDE D-Bus service should automatically start when needed.')
 
 
 def setup_systemd_services():
@@ -936,9 +994,9 @@ def autostart_tray_icon():
     # Need to create autostart folder if necessary
     try:
         os.makedirs(autostart_dir_path, exist_ok=True)
-    except (PermissionError, NotADirectoryError, FileExistsError) as file_err:
+    except (PermissionError, NotADirectoryError) as file_err:
         error(f"Problem trying to make sure '{autostart_dir_path}' is directory.\n\t{file_err}")
-        sys.exit(1)
+        safe_shutdown(1)
     subprocess.run(['ln', '-sf', tray_desktop_file, dest_link_file])
 
     print(f'Toshy tray icon should appear in system tray at each login.')
@@ -1007,6 +1065,8 @@ def apply_tweaks_KDE():
     print(f'Disabled Meta key opening application menu.')
     
     if cnfg.fancy_pants:
+
+        print(f'Installing "Application Switcher" KWin script...')
         # How to install nclarius grouped "Application Switcher" KWin script:
         # git clone https://github.com/nclarius/kwin-application-switcher.git
         # cd kwin-application-switcher
@@ -1049,7 +1109,7 @@ def apply_tweaks_KDE():
 
         # Run reconfigure command
         do_kwin_reconfigure()
-        print(f'Set task switcher to Large Icons, disabled show window.')
+        print(f'Set task switcher to "Large Icons", disabled show window option.')
 
 
 def remove_tweaks_KDE():
@@ -1182,6 +1242,14 @@ def remove_desktop_tweaks():
 
 def uninstall_toshy():
     print(f'\n\n§  Uninstalling Toshy...\n{cnfg.separator}')
+    
+    # confirm if user really wants to uninstall
+    response = input("\nThis will completely uninstall Toshy. Are you sure? [y/N]: ")
+    if response not in ['y', 'Y']:
+        print(f"\nToshy uninstall cancelled.\n")
+        safe_shutdown()
+    else:
+        print(f'\nToshy uninstall proceeding...\n')
     
     get_environment_info()
     
@@ -1338,20 +1406,20 @@ def handle_cli_arguments():
         cnfg.override_distro = args.override_distro
         # proceed with normal install sequence
         main(cnfg)
-        sys.exit(0)
+        safe_shutdown(0)
     elif args.list_distros:
         print(  f'Distro names known to the Toshy installer (to use with --override-distro):'
                 f'\n\n\t{get_distro_names()}\n')
-        sys.exit(0)
+        safe_shutdown(0)
     elif args.show_env:
         get_environment_info()
-        sys.exit(0)
+        safe_shutdown(0)
     elif args.apply_tweaks:
         apply_desktop_tweaks()
-        sys.exit(0)
+        safe_shutdown(0)
     elif args.remove_tweaks:
         remove_desktop_tweaks()
-        sys.exit(0)
+        safe_shutdown(0)
     elif args.uninstall:
         # raise NotImplementedError
         uninstall_toshy()
@@ -1377,7 +1445,7 @@ def main(cnfg: InstallerSettings):
         print()
         print(f"Installer does not know how to deal with distro '{cnfg.DISTRO_NAME}'\n")
         print(f'Maybe try one of these with "--override-distro" option:\n\t{valid_distro_names}')
-        sys.exit(1)
+        safe_shutdown(1)
 
     elevate_privileges()
 
@@ -1398,9 +1466,11 @@ def main(cnfg: InstallerSettings):
     install_bin_commands()
     install_desktop_apps()
 
-    if cnfg.DESKTOP_ENV in ['kde', 'plasma']:
-        setup_kwin2dbus_script()
-        setup_kde_dbus_service()
+    # TESTING DOING THIS INSIDE THE D-BUS SERVICE PYTHON SCRIPT
+    # if cnfg.DESKTOP_ENV in ['kde', 'plasma']:
+    #     setup_kwin2dbus_script()
+
+    setup_kde_dbus_service()
 
     setup_systemd_services()
 
@@ -1436,15 +1506,14 @@ def main(cnfg: InstallerSettings):
         print(cnfg.reboot_ascii_art)
         print(cnfg.separator)
         print(cnfg.separator)
-        print('Toshy install complete. Report issues on the GitHub repo.')
-        print('https://github.com/RedBearAK/toshy/issues/')
-        print('>>>  ALERT: Permissions changed. You MUST reboot for Toshy to work.')
+        print(f'{cnfg.sep_char * 2}  Toshy install complete. Report issues on the GitHub repo.')
+        print(f'{cnfg.sep_char * 2}  https://github.com/RedBearAK/toshy/issues/')
+        print(f'{cnfg.sep_char * 2}  >>  ALERT: Permissions changed. You MUST reboot for Toshy to work.')
         print(cnfg.separator)
         print(cnfg.separator)
         print()
     else:
         # Try to start the tray icon immediately, if reboot is not indicated
-        # tray_command        = ['gtk-launch', 'Toshy_Tray']
         tray_icon_cmd = [os.path.join(cnfg.home_dir_path, '.local', 'bin', 'toshy-tray')]
         # Try to launch the tray icon in a separate process not linked to current shell
         # Also, suppress output that might confuse the user
@@ -1454,9 +1523,9 @@ def main(cnfg: InstallerSettings):
         print()
         print(cnfg.separator)
         print(cnfg.separator)
-        print('Toshy install complete. Rebooting should not be necessary.')
-        print('Report issues on the GitHub repo.')
-        print('https://github.com/RedBearAK/toshy/issues/')
+        print(f'{cnfg.sep_char * 2}  Toshy install complete. Rebooting should not be necessary.')
+        print(f'{cnfg.sep_char * 2}  Report issues on the GitHub repo.')
+        print(f'{cnfg.sep_char * 2}  https://github.com/RedBearAK/toshy/issues/')
         print(cnfg.separator)
         print(cnfg.separator)
         print()

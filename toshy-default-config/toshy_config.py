@@ -7,6 +7,7 @@ import time
 import inspect
 import subprocess
 
+from subprocess import DEVNULL
 from typing import Callable, List, Dict, Union
 
 from keyszer.lib.logger import debug, error
@@ -28,8 +29,8 @@ timeouts(
 
 # Delays often needed for Wayland (at least in GNOME using shell extensions)
 throttle_delays(
-    key_pre_delay_ms    = 8,      # default: 0 ms, range: 0-150 ms, suggested: 1-50 ms
-    key_post_delay_ms   = 12,      # default: 0 ms, range: 0-150 ms, suggested: 1-100 ms
+    key_pre_delay_ms    = 10,      # default: 0 ms, range: 0-150 ms, suggested: 1-50 ms
+    key_post_delay_ms   = 15,      # default: 0 ms, range: 0-150 ms, suggested: 1-100 ms
 )
 
 ###  SLICE_MARK_END: keyszer_api  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
@@ -52,6 +53,9 @@ throttle_delays(
 ###      (http://github.com/joshgoebel/keyszer)
 ###  
 ###############################################################################
+
+home_dir = os.path.expanduser('~')
+icons_dir = os.path.join(home_dir, '.local', 'share', 'icons')
 
 # get the path of this file (not the main module loading it)
 config_globals = inspect.stack()[1][0].f_globals
@@ -141,6 +145,9 @@ except NameError:
 ##################################################
 # Establish important variables here
 
+# Variable to hold the keyboard type
+KBTYPE = None
+
 # Short names for the `keyszer` string and Unicode processing helper functions
 ST = to_US_keystrokes           # was 'to_keystrokes' originally
 UC = unicode_keystrokes
@@ -185,7 +192,8 @@ last_dt_combo = None
 ###########################################################################################
 
 
-def isKBtype(kbtype: str, map=None):
+# DEPRECATED: old form of isKBtype()
+def XisKBtype(kbtype: str, map=None):
     """
     ### Match on the keyboard type for conditional modmaps and keymaps
     
@@ -206,8 +214,7 @@ def isKBtype(kbtype: str, map=None):
     if kbtype not in ['IBM', 'Chromebook', 'Windows', 'Apple']:
         raise ValueError(  f"Invalid type given to isKBtype() function: '{kbtype}'"
                 f'\n\t Valid keyboard types (case sensitive): IBM | Chromebook | Windows | Apple')
-        return False
-    
+
     # Create a "UserCustom" keyboard dictionary with casefolded keys
     kbds_UserCustom_lower_dct   = {k.casefold(): v for k, v in keyboards_UserCustom_dct.items()}
     kbtype_cf                   = kbtype.casefold()
@@ -265,6 +272,83 @@ def isKBtype(kbtype: str, map=None):
         return False
 
     return _isKBtype    # return the inner function
+
+
+def isKBtype(kbtype: str, map=None):
+    # guard against failure to give valid type arg
+    if kbtype not in ['IBM', 'Chromebook', 'Windows', 'Apple']:
+        raise ValueError(f"Invalid type given to isKBtype() function: '{kbtype}'"
+                f'\n\t Valid keyboard types (case sensitive): IBM | Chromebook | Windows | Apple')
+    kbtype_cf = kbtype.casefold()
+    KBTYPE_cf = KBTYPE.casefold() if isinstance(KBTYPE, str) else None
+
+    def _isKBtype(ctx):
+        # debug(f"KBTYPE: '{KBTYPE}' | isKBtype check from map: '{map}'")
+        return kbtype_cf == KBTYPE_cf
+    return _isKBtype
+
+
+def getKBtype():
+    """
+    ### Get the keyboard type string for the current device
+    
+    #### Valid Types
+    
+    - IBM | Chromebook | Windows | Apple
+    
+    #### Hierarchy of validations:
+    
+    1. Check if the device name is in the keyboards_UserCustom_dct dictionary.
+    2. Check if the device name matches any keyboard type list.
+    3. Check if any keyboard type string is found in the device name string.
+    4. Check if the device name indicates a "Windows" keyboard by excluding other types.
+    """
+
+    # Create a "UserCustom" keyboard dictionary with casefolded keys
+    kbds_UserCustom_dct_cf = {k.casefold(): v for k, v in keyboards_UserCustom_dct.items()}
+    def _getKBtype(ctx: KeyContext):
+        global KBTYPE
+        kbd_dev_name    = ctx.device_name
+        kbd_dev_name_cf = ctx.device_name.casefold()
+
+        def log_kbtype(msg=None):
+            debug(f"KBTYPE: '{KBTYPE}' | {msg}: '{kbd_dev_name}'")
+
+        # Check if there is a custom type for the device
+        custom_kbtype = kbds_UserCustom_dct_cf.get(kbd_dev_name_cf, '')
+        if custom_kbtype and custom_kbtype in ['IBM', 'Chromebook', 'Windows', 'Apple']:
+            KBTYPE = custom_kbtype
+            log_kbtype('Custom type given for device')
+            return
+
+        # Check against the keyboard type lists
+        for kbtype, regex_lst in kbtype_lists_rgx.items():
+            for rgx in regex_lst:
+                if rgx.search(kbd_dev_name_cf):
+                    KBTYPE = kbtype
+                    log_kbtype('Regex matched for device')
+                    return
+
+        # Check if any keyboard type string is found in the device name
+        for kbtype in ['IBM', 'Chromebook', 'Windows', 'Apple']:
+            if kbtype.casefold() in kbd_dev_name_cf:
+                KBTYPE = kbtype
+                log_kbtype('Type found in device name')
+                return
+
+        # Check if the device name indicates a "Windows" keyboard
+        if ('windows' not in kbd_dev_name_cf 
+            and not not_win_type_rgx.search(kbd_dev_name_cf) 
+            and not all_kbds_rgx.search(kbd_dev_name_cf) ):
+            KBTYPE = 'Windows'
+            log_kbtype('Device defaulted to Windows')
+            return
+
+        # Default to None if no matching keyboard type is found
+        KBTYPE = 'unidentified'
+        error(f"KBTYPE: '{KBTYPE}' | Device fell through all checks: '{kbd_dev_name}'")
+
+    return _getKBtype  # Return the inner function
 
 
 def isDoubleTap(dt_combo):
@@ -512,16 +596,44 @@ def macro_tester():
     def _macro_tester(ctx: KeyContext):
         return [
                     C("Enter"),
-                    ST(f'WM_CLASS: "{ctx.wm_class}"'),C("Enter"),
-                    ST(f'WM_NAME:  "{ctx.wm_name}"'),C("Enter"),
-                    ST(f'Device:   "{ctx.device_name}"'),C("Enter"),
-                    ST(f'CapsLock: "{ctx.capslock_on}"'),C("Enter"),
-                    ST(f'NumLock:  "{ctx.numlock_on}"'),C("Enter"),
-                    ST("Next test should come out on ONE LINE!"),C("Enter"),
-                    ST("Unicode and Shift test: 🌹—€—\u2021—ÿ—\U00002021 12345 !@#$% |\ !!!!!!"),C("Enter"),
+                    ST(f"Appl. Class: '{ctx.wm_class}'"), C("Enter"),
+                    ST(f"Wind. Title: '{ctx.wm_name}'"), C("Enter"),
+                    ST(f"Kbd. Device: '{ctx.device_name}'"), C("Enter"),
+                    ST("Next test should come out on ONE LINE!"), C("Enter"),
+                    ST("Unicode and Shift Test: 🌹—€—\u2021—ÿ—\U00002021 12345 !@#$% |\ !!!!!!"),
                     C("Enter")
         ]
     return _macro_tester
+
+
+zenity_icon_option = None
+try:
+    zenity_help_output = subprocess.check_output(['zenity', '--help-info'])
+    help_text = str(zenity_help_output)
+    if '--icon=' in help_text:
+        zenity_icon_option = '--icon=toshy_app_icon_rainbow'
+    elif '--icon-name=' in help_text:
+        zenity_icon_option = '--icon-name=toshy_app_icon_rainbow'
+except subprocess.CalledProcessError:
+    pass  # zenity --help-info failed, assume icon is not supported
+
+def notify_context():
+    """pop up a notification with context info"""
+    def _notify_context(ctx: KeyContext):
+        global zenity_icon_option
+        zenity_cmd = [  'zenity', '--info', '--no-wrap', 
+                        '--title=Toshy Context Info',
+                        (
+                        '--text='
+                        f"Appl. Class   = '{ctx.wm_class}'"
+                        f"\nWndw. Title = '{ctx.wm_name}'"
+                        f"\nKbd. Device = '{ctx.device_name}'"
+                        )]
+        # insert the icon argument if it's supported
+        if zenity_icon_option is not None:
+            zenity_cmd.insert(3, zenity_icon_option)
+        subprocess.Popen(zenity_cmd, cwd=icons_dir, stderr=DEVNULL, stdout=DEVNULL)
+    return _notify_context
 
 
 
@@ -744,12 +856,13 @@ filemanagerStr = "|".join(str('^'+x+'$') for x in filemanagers)
 
 ### dialogs_Escape_lod = send these windows the Escape key for Cmd+W
 dialogs_Escape_lod = [
-    {clas:"^.*nautilus$",                name:"^.*Properties$|^Preferences$|^Create Archive$"},
+    {clas:"^.*nautilus$",                   name:"^.*Properties$|^Preferences$|^Create Archive$"},
     {clas:"^Transmission-gtk$|^com.transmissionbt.Transmission.*$", not_name:"^Transmission$"},
-    {clas:"^org.gnome.Software$",        not_name:"^Software$"},
+    {clas:"^org.gnome.Software$",           not_name:"^Software$"},
     {clas:"^gnome-text-editor$|^org.gnome.TextEditor$", name:"^Preferences$"},
     {clas:"^org.gnome.Shell.Extensions$"},
-    {clas:"^konsole$|^org.kde.konsole$", name:"^Configure.*Konsole$|^Edit Profile.*Konsole$"},
+    {clas:"^konsole$|^org.kde.konsole$",    name:"^Configure.*Konsole$|^Edit Profile.*Konsole$"},
+    {clas:"^org.kde.KWrite$",               name:"^Configure.*KWrite$"},
 ]
 
 ### dialogs_CloseWin_lod = send these windows the "Close window" combo for Cmd+W
@@ -825,7 +938,8 @@ kbtype_lists_rgx    = {
 }
 
 # List of all known keyboard devices from all lists
-# all_kbds_rgx        = re.compile(toRgxStr(all_keyboards), re.I)
+all_kbds_rgx        = re.compile(toRgxStr(all_keyboards), re.I)
+
 not_win_type_rgx    = re.compile("IBM|Chromebook|Apple", re.I)
 
 
@@ -843,6 +957,31 @@ not_win_type_rgx    = re.compile("IBM|Chromebook|Apple", re.I)
 ################################################################################
 ### Modmaps turn a key into a different key as long as the modmap is active
 ### The modified key can be used in shortcut combos as the new key
+
+
+# DO NOT REMOVE THIS MODMAP AND KEYMAP!
+# Special modmap to trigger the evaluation of the keyboard type when 
+# any modifier key is pressed
+modmap("Keyboard Type Trigger Modmap", {
+    # This modmap must have all modifier keys inside it, so they will 
+    # all trigger the re-evaluation of the keyboard type.
+    # The accompanying keymap can be empty and still accomplish
+    # the same purpose of triggering a re-evaluation of the
+    # keyboard type when any non-modifier key is pressed.
+    Key.LEFT_META: Key.LEFT_META,
+    Key.RIGHT_META: Key.RIGHT_META,
+    Key.LEFT_ALT: Key.LEFT_ALT,
+    Key.RIGHT_ALT: Key.RIGHT_ALT,
+    Key.LEFT_CTRL: Key.LEFT_CTRL,
+    Key.RIGHT_CTRL: Key.RIGHT_CTRL,
+    Key.LEFT_SHIFT: Key.LEFT_SHIFT,
+    Key.RIGHT_SHIFT: Key.RIGHT_SHIFT,
+}, when = lambda ctx: getKBtype()(ctx) )
+# Special keymap to trigger the evaluation of the keyboard type when 
+# any non-modifier key is pressed
+keymap("Keyboard Type Trigger Keymap", {
+    # Nothing needed here.
+}, when = lambda ctx: getKBtype()(ctx) )
 
 
 modmap("Cond modmap - Media Arrows Fix",{
@@ -1151,15 +1290,15 @@ modmap("Cond modmap - Terms - Mac kbd", {
 def forced_numpad_alert():
     """Show notification of state of Forced Numpad feature"""
     if cnfg.forced_numpad:
-        subprocess.run('notify-send -u critical ALERT \
+        subprocess.Popen('notify-send -u critical ALERT \
             "Forced Numpad feature is now ENABLED.\
             \rNumlock becomes "Clear" key (Escape).\
-            \rDisable with Option+Numlock."', shell=True)
+            \rDisable with Option+Numlock."')
         debug("Forced Numpad feature is now ENABLED.")
     if not cnfg.forced_numpad:
-        subprocess.run('notify-send -u critical ALERT \
+        subprocess.Popen('notify-send -u critical ALERT \
             "Forced Numpad feature is now DISABLED.\
-            \rRe-enable with Option+Numlock."', shell=True)
+            \rRe-enable with Option+Numlock."')
         debug("Forced Numpad feature is now DISABLED.")
 
 
@@ -1199,78 +1338,14 @@ def isNumlockClearKey():
 applelogoalert_enabled = True   # Default: True
 
 
-# def toggle_optspec_US():
-#     """Toggle the value of the _optspecialchars_US variable"""
-#     # Needs "from subprocess import run" somewhere
-#     def _toggle_optspec_US():
-#         global optspec_US
-#         global optspec_ABC
-#         if optspec_ABC:
-#             optspec_ABC = False                        # Disable the other layout, if active
-#         optspec_US = not optspec_US
-#         if optspec_US:
-#             subprocess.run('notify-send -u critical ALERT "Kinto OptSpecialChars-US is now ENABLED.\
-#                 \rWill interfere with Alt & Shift+Alt shortcuts!\
-#                 \rDisable with Shift+Opt+Cmd+U."', shell=True)
-#             print("(DD) OptSpecialChars-US is now ENABLED.", flush=True)
-#         else:
-#             subprocess.run('notify-send -u critical ALERT "Kinto OptSpecialChars-US is now DISABLED.\
-#                 \rRe-enable with Shift+Opt+Cmd+U"', shell=True)
-#             print("(DD) OptSpecialChars-US is now DISABLED.", flush=True)
-#     return _toggle_optspec_US
-
-
-# def toggle_optspec_ABC():
-#     """Toggle the value of the _optspecialchars_ABC variable"""
-#     # Needs "from subprocess import run" somewhere
-#     def _toggle_optspec_ABC():
-#         global optspec_ABC
-#         global optspec_US
-#         if optspec_US:
-#             optspec_US = False                         # Disable the other layout, if active
-#         optspec_ABC = not optspec_ABC
-#         if optspec_ABC:
-#             subprocess.run('notify-send -u critical ALERT "Kinto OptSpecialChars-ABC is now ENABLED.\
-#                 \rWill interfere with Alt & Shift+Alt shortcuts!\
-#                 \rDisable with Shift+Opt+Cmd+X."', shell=True)
-#             print("(DD) OptSpecialChars-ABC is now ENABLED.", flush=True)
-#         else:
-#             subprocess.run('notify-send -u critical ALERT "Kinto OptSpecialChars-ABC is now DISABLED.\
-#                 \rRe-enable with Shift+Opt+Cmd+X."', shell=True)
-#             print("(DD) OptSpecialChars-ABC is now DISABLED.", flush=True)
-#     return _toggle_optspec_ABC
-
-
-# def disable_optspec():
-#     """Disable both Option key special character entry scheme layouts"""
-#     # Needs "from subprocess import run" somewhere
-#     def _disable_optspec():
-#         global optspec_ABC
-#         global optspec_US
-#         optspec_ABC = False
-#         optspec_US = False
-#         subprocess.run('notify-send -u critical ALERT "Kinto OptSpecialChars (US/ABC) is now DISABLED.\
-#             \rTo re-enable ABC Extended: Shift+Opt+Cmd+X\
-#             \rTo re-enable Standard US: Shift+Opt+Cmd+U"', shell=True)
-#         print("(DD) OptSpecialChars (US/ABC) is now DISABLED.", flush=True)
-#     return _disable_optspec
-
-
-# keymap("OptSpecialChars toggles", {
-#     C("Shift-Alt-RC-o"):        disable_optspec(),      # Disable all layouts
-#     C("Shift-Alt-RC-u"):        toggle_optspec_US(),    # Toggle the US layout
-#     C("Shift-Alt-RC-x"):        toggle_optspec_ABC(),   # Toggle the ABC Extended layout
-# }, when = lambda ctx: ctx.wm_class.casefold() not in terminals)
-
-
 def apple_logo_alert():
     """Show a notification about needing Baskerville Old Face 
     font for displaying Apple logo"""
     def _apple_logo_alert():
         global applelogoalert_enabled
         if applelogoalert_enabled:
-            subprocess.run( 'notify-send -u critical ALERT "Apple logo requires '
-                            'Baskerville Old Face font."', shell=True)
+            subprocess.Popen( 'notify-send -u critical ALERT "Apple logo requires '
+                            'Baskerville Old Face font."')
     return _apple_logo_alert
 
 
@@ -2349,7 +2424,7 @@ keymap("Escape actions for dead keys", {
 }, when = lambda _: ac_Chr_main in deadkeys_list)
 # }, when = lambda _: ac_Chr in deadkeys_US or ac_Chr in deadkeys_ABC)
 
-keymap("Disable Dead Keys",{
+keymap("Disable Dead Keys Tripwire",{
     # Nothing needs to be here. Tripwire keymap to disable active dead keys keymap(s)
 }, when = lambda _: setDK(None)())
 
@@ -2715,6 +2790,7 @@ keymap("User hardware keys", {
 ###                                                                             ###
 ###                                                                             ###
 ###################################################################################
+# Miscellaneous apps that need a few fixes
 
 keymap("Thunderbird email client", {
     C("Alt-RC-I"):              C("Shift-RC-I"),                # Dev tools
@@ -2852,6 +2928,12 @@ keymap("Overrides for Nautilus - Finder Mods", {
     C("RC-F"):                  C("RC-F"),                      # Don't toggle Enter key, pass Cmd+F
 }, when = matchProps(clas="^org.gnome.nautilus$|^nautilus$"))
 
+# Keybindings overrides for Nemo
+# (overrides some bindings from general file manager code block below)
+keymap("Overrides for Nemo - Finder Mods", {
+    C("RC-Backspace"):          is_Enter_F2(C("Delete"), False),  # Set Enter to Enter for Cmd+Delete confirmation
+}, when = matchProps(clas="^nemo$"))
+
 # Keybindings overrides for PCManFM and PCManFM-Qt
 # (overrides some bindings from general file manager code block below)
 keymap("Overrides for PCManFM-Qt - Finder Mods", {
@@ -2964,6 +3046,7 @@ keymap("General File Managers - Finder Mods", {
     C("RC-L"):                  is_Enter_F2(C("RC-L"), False),          # Set Enter to Enter for Location field
     C("RC-F"):                  is_Enter_F2(C("RC-F"), False),          # Set Enter to Enter for Find field
     C("Esc"):                   is_Enter_F2(C("Esc"), True),            # Send Escape, make sure Enter is back to F2
+    C("Tab"):                   is_Enter_F2(C("Tab"), False),           # Set Enter to Enter after using Tab key
     C("Shift-RC-Enter"):        C("Enter"),                             # alternative "Enter" key for unusual cases
 }, when = matchProps(clas=filemanagerStr))
 
@@ -3160,26 +3243,29 @@ keymap("VSCodes overrides for Chromebook/IBM - Sublime", {
     C("C-Alt-g"):               C("C-f2"),                      # Chromebook/IBM - Sublime - find_all_under
 }, when = lambda ctx:
     matchProps(clas=vscodeStr)(ctx) and 
-    ( isKBtype('Chromebook')(ctx) or isKBtype('IBM')(ctx) ) and 
+    (   isKBtype('Chromebook', map="vscodes ovr cbook - sublime")(ctx) or 
+        isKBtype('IBM', map="vscodes ovr ibm - sublime")(ctx) ) and 
     cnfg.ST3_in_VSCode)
 keymap("VSCodes overrides for not Chromebook/IBM - Sublime", {
     C("Super-C-g"):             C("C-f2"),                      # Default - Sublime - find_all_under
 }, when = lambda ctx:
     matchProps(clas=vscodeStr)(ctx) and 
-    not ( isKBtype('Chromebook')(ctx) or 
-    isKBtype('IBM')(ctx) ) and cnfg.ST3_in_VSCode)
+    not ( isKBtype('Chromebook', map="vscodes ovr not cbook - sublime")(ctx) or 
+    isKBtype('IBM', map="vscodes ovr not ibm - sublime")(ctx) ) and cnfg.ST3_in_VSCode)
 keymap("VSCodes overrides for Chromebook/IBM", {
     C("Alt-c"):                 C("LC-c"),                      #  Chromebook/IBM - Terminal - Sigint
     C("Alt-x"):                 C("LC-x"),                      #  Chromebook/IBM - Terminal - Exit nano
 }, when = lambda ctx:
     matchProps(clas=vscodeStr)(ctx) and 
-    ( isKBtype('Chromebook')(ctx) or isKBtype('IBM')(ctx) ) )
+    (   isKBtype('Chromebook', map="vscodes ovr cbook")(ctx) or 
+        isKBtype('IBM', map="vscodes ovr ibm")(ctx) ) )
 keymap("VSCodes overrides for not Chromebook/IBM", {
     C("Super-c"):               C("LC-c"),                      # Default - Terminal - Sigint
     C("Super-x"):               C("LC-x"),                      # Default - Terminal - Exit nano
 }, when = lambda ctx:
     matchProps(clas=vscodeStr)(ctx) and 
-    not ( isKBtype('Chromebook')(ctx) or isKBtype('IBM')(ctx) ) )
+    not (   isKBtype('Chromebook', map="vscodes ovr not cbook")(ctx) or 
+            isKBtype('IBM', map="vscodes ovr not ibm")(ctx) ) )
 keymap("VSCodes", {
     # C("Super-Space"):           C("LC-Space"),                  # Basic code completion (conflicts with input switching)
 
@@ -3240,7 +3326,8 @@ keymap("Sublime Text overrides for Chromebook/IBM", {
     C("Alt-C-g"):               C("Alt-Refresh"),               # Chromebook/IBM - find_all_under
 }, when = lambda ctx:
     matchProps(clas=sublimeStr)(ctx) and 
-    ( isKBtype('Chromebook')(ctx) or isKBtype('IBM')(ctx) ) )
+    (   isKBtype('Chromebook', map="sublime ovr cbook")(ctx) or 
+        isKBtype('IBM', map="sublime ovr ibm")(ctx) ) )
 keymap("Sublime Text overrides for not Chromebook/IBM", {
     # C("Super-c"):               C("LC-c"),                      # Default - Terminal - Sigint
     # C("Super-x"):               C("LC-x"),                      # Default - Terminal - Exit nano
@@ -3248,7 +3335,8 @@ keymap("Sublime Text overrides for not Chromebook/IBM", {
     C("Super-C-g"):             C("Alt-f3"),                    # Default - find_all_under
 }, when = lambda ctx:
     matchProps(clas=sublimeStr)(ctx) and 
-    not ( isKBtype('Chromebook')(ctx) or isKBtype('IBM')(ctx) ) )
+    not (   isKBtype('Chromebook', map="sublime ovr not cbook")(ctx) or 
+            isKBtype('IBM', map="sublime ovr not ibm")(ctx) ) )
 keymap("Sublime Text", {
     # C("Super-c"):               C("LC-c"),                      # Default - Terminal - Sigint
     # C("Super-x"):               C("LC-x"),                      # Default - Terminal - Exit nano
@@ -3321,6 +3409,10 @@ keymap("Sublime Text", {
 keymap("Linux Mint xed text editor", {
     C("RC-T"):                  C("C-N"),                       # Open new tab (new file)
 }, when = matchProps(clas="^xed$") )
+
+keymap("KWrite text editor", {
+    C("RC-comma"):              C("Shift-C-comma"),             # Open preferences dialog
+}, when = matchProps(clas="^kwrite$|^org.kde.Kwrite$") )
 
 
 
@@ -3590,13 +3682,18 @@ keymap("GenGUI overrides: Chromebook/IBM", {
     C("Alt-Grave") :           [bind,C("C-Shift-Tab")],         # Chromebook/IBM - In-App Tab switching
     C("RAlt-Backspace"):        C("Delete"),                    # Chromebook/IBM - Delete
     C("LAlt-Backspace"):        C("C-Backspace"),               # Chromebook/IBM - Delete Left Word of Cursor
-}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and ( isKBtype('Chromebook')(ctx) or isKBtype('IBM')(ctx) ) )
+}, when = lambda ctx:
+    matchProps(not_lst=remotes_lod)(ctx) and 
+    (   isKBtype('Chromebook', map="gengui ovr cbook")(ctx) or 
+        isKBtype('IBM', map="gengui ovr ibm")(ctx) ) )
 keymap("GenGUI overrides: not Chromebook", {
     # In-App Tab switching
     C("Super-Tab"):            [bind,C("LC-Tab")],              # Default not-chromebook
     C("Super-Shift-Tab"):      [bind,C("Shift-LC-Tab")],        # Default not-chromebook
     C("Alt-Backspace"):         C("C-Backspace"),               # Default not-chromebook
-}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and not isKBtype('Chromebook')(ctx) )
+}, when = lambda ctx:
+    matchProps(not_lst=remotes_lod)(ctx) and 
+    not isKBtype('Chromebook', map="gengui ovr not cbook")(ctx) )
 
 
 # Overrides to General GUI shortcuts for specific distros
@@ -3643,6 +3740,7 @@ keymap("GenGUI overrides: Ubuntu", {
 
 # Overrides to General GUI shortcuts for specific desktop environments
 keymap("GenGUI overrides: Budgie", {
+    C("RC-Space"):              Key.LEFT_META,                  # Open panel-main-menu (Budgie menu)
     C("Super-Right"):           C("C-Alt-Right"),               # Default SL - Change workspace (budgie)
     C("Super-Left"):            C("C-Alt-Left"),                # Default SL - Change workspace (budgie)
     C("RC-H"):                  C("Super-h"),                   # Default SL - Minimize app (gnome/budgie/popos/fedora) not-deepin
@@ -3753,3 +3851,9 @@ keymap("General GUI", {
 # }, when = lambda ctx: ctx.wm_class.casefold() not in remotes) # original conditional
 # }, when = matchProps(not_clas=remoteStr))                      # matchProps with regex string
 }, when = matchProps(not_lst=remotes_lod))                      # matchProps with list-of-dicts
+
+
+keymap("Diagnostics", {
+    C("RC-Shift-Alt-i"):        isDoubleTap(notify_context),
+    C("RC-Shift-Alt-t"):        isDoubleTap(macro_tester),
+}, when = lambda ctx: ctx is ctx )

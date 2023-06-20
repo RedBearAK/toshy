@@ -40,6 +40,8 @@ fi
 
 echo -e "\nStopping Toshy systemd services..."
 
+/usr/bin/systemctl --user stop toshy-kde-dbus.service
+sleep 0.5
 /usr/bin/systemctl --user stop toshy-session-monitor.service
 sleep 0.5
 /usr/bin/systemctl --user stop toshy-config.service

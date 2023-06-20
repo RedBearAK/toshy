@@ -19,7 +19,7 @@ fi
 TOSHY_BIN="$HOME/.config/toshy/scripts/bin"
 LOCAL_BIN="$HOME/.local/bin"
 
-echo -e "\nInstalling Toshy bin commands..."
+echo -e "\nInstalling Toshy terminal commands..."
 
 mkdir -p "$HOME/.local/bin"
 
@@ -43,7 +43,7 @@ ln -sf "$TOSHY_BIN/toshy-kde-dbus-service.sh"      "$LOCAL_BIN/toshy-kde-dbus-se
 
 
 echo ""
-echo "Finished installing Toshy bin commands:"
+echo "Finished installing Toshy terminal commands:"
 echo ""
 echo "- toshy-systemd-setup"
 echo "- toshy-systemd-remove"

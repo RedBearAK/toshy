@@ -138,7 +138,7 @@ There's no simple way around this, since the keymapper is only designed to send 
         - UUID: `focused-window-dbus@flexagoon.com`
         - URL: https://extensions.gnome.org/extension/5592/focused-window-d-bus/
 
-    - Wayland+KDE has a small glitch where you have to change the focused window once after the KWin script it installed, to get the app-specific remapping to start working. 
+    - Wayland+KDE has a small glitch where you have to change the focused window once after the KWin script is installed, to get the app-specific remapping to start working. I am trying a solution that uses a pop-up dialog to create a KWin event.
 
 - `systemd` (but you can just manually run the config from terminal, shell script, or tray indicator menu)
 
@@ -265,7 +265,8 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 - AlmaLinux 9.2 and/or Rocky Linux 9.2 (RHEL clones)
 
     - Tested with "Workstation" installer choice, not "Server with GUI"
-    - Default GNOME desktop tested
+    - Default GNOME desktop tested (Wayland session requires extensions)
+    - KDE Plasma desktop tested (Wayland+KDE supported)
     - Some non-default (but official) repos like CRB will be enabled
     - NB: There is no journal for "user" services, for some reason
 
@@ -475,6 +476,32 @@ One of the best simple tests, if you have Firefox installed, is if using the `Cm
 
 If you think app-specific remaps are working in general, but for some reason they aren't working in a specific app, the app's "class" may be different than expected by the config file. Try to identify it, and let us know what the "class" and "name" attributes are.  
 
+UPDATE: There are now a couple of "diagnostic" functions in the config file that should reveal the window attributes (and the keyboard device name) more easily in both X11/Xorg and Wayland environments, when you use one of these shortcuts:  
+
+Safe to do in any application window:  
+
+```
+Shift+Opt+Cmd+I,I (double-tap the "I" key while holding the mods)
+```
+
+This should display a pop-up dialog box with the application class, window name/title, and the name of the keyboard device.  
+
+ONLY DO THE SHORTCUT BELOW IN A TEXT AREA OR TEXT EDITOR APPLICATION:  
+
+```
+Shift+Opt+Cmd+T,T (double-tap the "T" key while holding the mods)
+```
+
+This shortcut will initiate a "macro" that will type out the same kind of information found in the pop-up dialog option, but also does a quick Unicode character test that should come out looking like this, on a single line:  
+
+```
+Unicode and Shift Test: 🌹—€—‡—ÿ—‡ 12345 !@#$% |\ !!!!!!
+```
+
+Previous advice below the line still works too:  
+
+* * *
+
 In X11/Xorg environments, run this in a terminal, then click with the "cross" mouse cursor on the window you're trying to identify:  
 
 ```sh
@@ -508,6 +535,14 @@ To get back to using the background Toshy services if you've run any of the "man
 ```sh
 toshy-services-restart
 ```
+
+### Repeating Keys
+
+If you have an issue with keys that seem to continue repeating for too long after you release the key, the issue is probably that your keyboard repeat rate is set too high. This can cause repeating keystrokes to "buffer" somehow and lead to deleting way too many characters or similar issues. Slowing down the repeat rate should keep this from happening. How you do this kind of depends on the distro and desktop environment.  
+
+Some DEs have a nice control panel interface for setting the repeat rate, in a way that will work with both X11/Xorg and Wayland. Many how-tos online mention using `xset`, but I believe this only works in X11/Xorg environments. On my Fedora system, the `kbdrate` command seems to work, even in Wayland. If you're using GNOME, there is a control panel for this at `Universal Access > Typing` that will let you disable repeating keys or set the repeat rate (and delay).  
+
+A good repeat rate that should keep the input system from overwhelming the keymapper with repeating keystrokes is around 10 to 20 characters per second (cps).  
 
 ### What happened to my customizations of the config?!
 
@@ -762,9 +797,9 @@ In the Xfce variant of Mint, they use the Whisker Menu applet, and the shortcut 
 
 ### GNOME and the Meta/Super/Win/Cmd key (`overlay-key`)
 
-By default GNOME desktops seem to want to use the Meta/Super/Win/Cmd key to open the "overview". This is not a shortcut that is exposed in the usual `Settings >> Keyboard` control panel. The Toshy installer will disable the binding if GNOME is detected, since it's weird/unexpected in macOS for a modifier key to perform an action by itself.  
+By default GNOME desktops seem to want to use the Meta/Super/Win/Cmd key to open the "overview". This is not a shortcut that is exposed in the usual `Settings >> Keyboard` control panel. The Toshy installer will disable the keybinding if GNOME is detected, since it's weird/unexpected in macOS for a modifier key to perform an action by itself.  
 
-Here are the commands to disable and re-enable the `overlay-key` binding:  
+Here are the commands to disable and re-enable the `overlay-key` keybinding:  
 
 Disable:  
 

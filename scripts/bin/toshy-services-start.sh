@@ -39,6 +39,8 @@ fi
 
 echo -e "\nStarting Toshy systemd services..."
 
+/usr/bin/systemctl --user start toshy-kde-dbus.service
+sleep 0.5
 /usr/bin/systemctl --user start toshy-config.service
 sleep 0.5
 /usr/bin/systemctl --user start toshy-session-monitor.service
