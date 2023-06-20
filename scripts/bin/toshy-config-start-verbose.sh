@@ -23,6 +23,8 @@ pkill -f "bin/xkeysnail"
 
 # start KDE D-Bus service in case we are in Wayland+KDE (it will stop itself if not)
 nohup "${HOME}/.local/bin/toshy-kde-dbus-service" >/dev/null 2>&1 &
+# pause to let D-Bus service start up
+sleep 2
 
 # shellcheck disable=SC1091
 source "$HOME/.config/toshy/.venv/bin/activate"
