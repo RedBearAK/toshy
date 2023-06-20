@@ -931,12 +931,13 @@ def setup_kde_dbus_service():
             error(f"Problem trying to make sure '{dbus_svcs_path}' is a directory:\n\t{file_err}")
             safe_shutdown(1)
 
-    if os.path.isdir(dbus_svcs_path):
-        shutil.copy(kde_dbus_svc_file, dbus_svcs_path)
-        print(f"Installed '{kde_dbus_svc_file}' file at path:\n\t'{dbus_svcs_path}'.")
-    else:
-        error(f"Path '{dbus_svcs_path}' is not a directory. Cannot continue.")
-        safe_shutdown(1)
+    # STOP INSTALLING THIS, IT'S NOT HELPFUL
+    # if os.path.isdir(dbus_svcs_path):
+    #     shutil.copy(kde_dbus_svc_file, dbus_svcs_path)
+    #     print(f"Installed '{kde_dbus_svc_file}' file at path:\n\t'{dbus_svcs_path}'.")
+    # else:
+    #     error(f"Path '{dbus_svcs_path}' is not a directory. Cannot continue.")
+    #     safe_shutdown(1)
 
     # ensure autostart directory exists
     if not os.path.isdir(autostart_dir_path):
