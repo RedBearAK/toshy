@@ -45,9 +45,9 @@ function notifyActiveWindow(client){
     );
 }
 
-if (workspace.activeClient) {
-    notifyActiveWindow(workspace.activeClient);
-}
+// if (workspace.activeClient) {
+//     notifyActiveWindow(workspace.activeClient);
+// }
 
 workspace.clientActivated.connect(function(client){
     notifyActiveWindow(client);
