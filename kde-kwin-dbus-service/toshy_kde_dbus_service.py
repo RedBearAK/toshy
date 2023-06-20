@@ -19,6 +19,10 @@ from subprocess import DEVNULL
 from typing import Dict, List, Union
 from keyszer.lib.logger import debug, error, warn, info, log
 
+# Independent module/script to create a D-Bus window context
+# service in a KDE Plasma environment, which will be notified
+# of window focus changes by the Toshy KWin script
+
 # Add paths to avoid errors like ModuleNotFoundError or ImportError
 home_dir            = os.path.expanduser("~")
 run_tmp_dir         = os.environ.get('XDG_RUNTIME_DIR') or '/tmp'
@@ -34,10 +38,6 @@ os.environ['PYTHONPATH'] = f'{parent_folder_path}:{current_folder_path}:{existin
 # local imports
 # from ..lib.env import get_env_info
 import lib.env as env
-
-# Independent module/script to create a D-Bus window context
-# service in a KDE Plasma environment, which will be notified
-# of window focus changes by the Toshy KWin script
 
 if os.name == 'posix' and os.geteuid() == 0:
     error("This app should not be run as root/superuser.")
@@ -85,7 +85,7 @@ check_environment()
 loop_delay = 2
 while True:
     if loop_delay > 8:
-        error(f'{LOG_PFX}: Not a Wayland+KDE environment. Exiting.')
+        debug(f'{LOG_PFX}: Not a Wayland+KDE environment. Exiting.')
         sys.exit(0)
     if DESKTOP_ENV in ['kde', 'plasma'] and SESSION_TYPE == 'wayland':
         break
