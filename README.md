@@ -265,7 +265,8 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 - AlmaLinux 9.2 and/or Rocky Linux 9.2 (RHEL clones)
 
     - Tested with "Workstation" installer choice, not "Server with GUI"
-    - Default GNOME desktop tested
+    - Default GNOME desktop tested (Wayland session requires extensions)
+    - KDE Plasma desktop tested (Wayland+KDE supported)
     - Some non-default (but official) repos like CRB will be enabled
     - NB: There is no journal for "user" services, for some reason
 
