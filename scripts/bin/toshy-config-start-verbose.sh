@@ -22,7 +22,7 @@ pkill -f "bin/keyszer"
 pkill -f "bin/xkeysnail"
 
 # start KDE D-Bus service in case we are in Wayland+KDE (it will stop itself if not)
-nohup "${HOME}/.local/bin/toshy-kde-dbus-service" &
+nohup "${HOME}/.local/bin/toshy-kde-dbus-service" >/dev/null 2>&1 &
 
 # shellcheck disable=SC1091
 source "$HOME/.config/toshy/.venv/bin/activate"
