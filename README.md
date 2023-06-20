@@ -10,9 +10,11 @@
 
 - May cause the keyboard in some odd circumstances after install/reboot to have no output (default emergency bail out key is F16, which can be changed in the config file before rebooting). If you don't have F16 on your keyboard, you may need to stop and restart the Toshy services from the tray icon menu, or by opening the "Preferences" app from a menu with the mouse.  
 
-- The Wayland+KDE (Plasma) solution works but is still a bit "fragile" due to multiple separate components needing to work together. Also, if you have multiple desktop environments installed and one is KDE, you'll need to run the installer once while you are actually logged into a KDE session, so the necessary components get set up. After that you should be able to log into KDE and other DEs and choose either X11/Xorg or Wayland (only GNOME or KDE for now) sessions with no issue.  
+- The Wayland+KDE (Plasma) solution is better now. It should be possible to install under some desktop that is not KDE, then log into KDE and have Toshy working.  
 
 - Some distros have no `journal` output for the user services, for unknown reasons. I've seen this on Arcolinux, the RHEL clones.  
+
+- On a dual-init distro like MX Linux, if you install Toshy when using SysVinit it will avoid installing the `systemd` packages and services. If you then switch to `systemd` at the boot screen you'll need to re-run the Toshy installer once under `systemd` to make it work automatically like it does on other distros using `systemd`.  
 
 # Toshy README
 
@@ -22,7 +24,7 @@
 ![Toshy app icon inverted](./assets/toshy_app_icon_rainbow_inverse.svg "Toshy app icon inverse")
 • • •
 ![Toshy app icon](./assets/toshy_app_icon_rainbow.svg "Toshy app icon")
-• • •
+
 
 ## Make your Linux keyboard act like a 'Tosh! (or, What the Heck is This?!?)
 
