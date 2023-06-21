@@ -87,7 +87,7 @@ if DESKTOP_ENV in ['kde', 'plasma'] and SESSION_TYPE == 'wayland':
 else:
     debug(f'{LOG_PFX}: Not a Wayland+KDE environment. Exiting.')
     time.sleep(2)
-    sys.exit(0)
+    sys.exit(1)
 
 # loop_delay = 2
 # while True:
