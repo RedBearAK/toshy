@@ -119,6 +119,7 @@ def do_kwin_reconfigure():
     try:
         subprocess.run([qdbus_cmd, 'org.kde.KWin', '/KWin', 'reconfigure'],
                         check=True, stderr=DEVNULL, stdout=DEVNULL)
+        time.sleep(1)
     except subprocess.CalledProcessError as proc_error:
         error(f'Error while running KWin reconfigure.\n\t{proc_error}')
 
@@ -140,11 +141,14 @@ def is_kwin_script_loaded():
 
 def load_kwin_script():
     try:
-        subprocess.run([    qdbus_cmd,
-                            kwin_scripting_obj,
-                            kwin_scripting_path,
-                            f'{kwin_scripting_iface}.loadScript',
-                            toshy_kwin_script_name    ])
+        subprocess.run([qdbus_cmd,
+                        kwin_scripting_obj,
+                        kwin_scripting_path,
+                        f'{kwin_scripting_iface}.loadScript',
+                        toshy_kwin_script_name    ],
+                        check=True,
+                        stderr=DEVNULL,
+                        stdout=DEVNULL)
         print(f'Successfully loaded KWin script.')
     except subprocess.CalledProcessError as e:
         print(f"Error checking if KWin script is loaded:\n\t{e}")
@@ -200,9 +204,10 @@ def setup_kwin2dbus_script():
         os.remove(script_tmp_file)
     except (FileNotFoundError, PermissionError): pass
 
-    # Load the script using qdbus_cmd
-    load_kwin_script()
-    
+    # # Load the script using qdbus_cmd
+    # load_kwin_script()
+
+    # Try to get KWin to load the script (probably won't activate until enabled later)
     do_kwin_reconfigure()
 
     # Keep the script enabled the script using kwriteconfig5
@@ -210,13 +215,12 @@ def setup_kwin2dbus_script():
         [   'kwriteconfig5', '--file', 'kwinrc', '--group', 'Plugins', '--key',
             f'{kwin_script_name}Enabled', 'true'],
         capture_output=True, text=True)
-    
     if result.returncode != 0:
         error(f"Error enabling the KWin script. The error was:\n\t{result.stderr}")
     else:
         print("Successfully enabled the KWin script.")
 
-    # Try to get KWin to notice and activate the script on its own, now that it's in RC file
+    # Try to get KWin to activate the script
     do_kwin_reconfigure()
 
 if toshy_kwin_script_is_loaded is not True:
