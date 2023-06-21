@@ -5,6 +5,7 @@ import re
 import sys
 import pwd
 import grp
+import time
 import random
 import string
 import signal
@@ -901,8 +902,10 @@ def setup_kwin2dbus_script():
     else:
         print("Successfully enabled the KWin script.")
 
+    time.sleep(1)
     # Try to get KWin to notice and activate the script on its own, now that it's in RC file
     do_kwin_reconfigure()
+    time.sleep(2)
 
 
 def setup_kde_dbus_service():
@@ -1466,9 +1469,9 @@ def main(cnfg: InstallerSettings):
     install_bin_commands()
     install_desktop_apps()
 
-    # TESTING DOING THIS INSIDE THE D-BUS SERVICE PYTHON SCRIPT
-    # if cnfg.DESKTOP_ENV in ['kde', 'plasma']:
-    #     setup_kwin2dbus_script()
+    # Python D-Bus service script also does this, but this will refresh if script changes
+    if cnfg.DESKTOP_ENV in ['kde', 'plasma']:
+        setup_kwin2dbus_script()
 
     setup_kde_dbus_service()
 
