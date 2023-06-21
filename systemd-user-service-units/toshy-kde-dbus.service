@@ -1,7 +1,7 @@
 [Unit]
 Description=Toshy KDE D-Bus Service
 StartLimitBurst=5
-StartLimitIntervalSec=120
+StartLimitIntervalSec=60
 
 [Service]
 ExecStartPre=/bin/bash -c 'if [ -z "$XDG_SESSION_TYPE" ]; then sleep 3; exit 1; fi'
