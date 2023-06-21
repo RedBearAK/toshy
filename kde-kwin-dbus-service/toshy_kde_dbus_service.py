@@ -82,17 +82,24 @@ def check_environment():
 
 check_environment()
 
-loop_delay = 2
-while True:
-    if loop_delay > 8:
-        debug(f'{LOG_PFX}: Not a Wayland+KDE environment. Exiting.')
-        sys.exit(0)
-    if DESKTOP_ENV in ['kde', 'plasma'] and SESSION_TYPE == 'wayland':
-        break
-    else:
-        time.sleep(loop_delay)
-        loop_delay += 2
-        check_environment()
+if DESKTOP_ENV in ['kde', 'plasma'] and SESSION_TYPE == 'wayland':
+    pass
+else:
+    debug(f'{LOG_PFX}: Not a Wayland+KDE environment. Exiting.')
+    time.sleep(2)
+    sys.exit(0)
+
+# loop_delay = 2
+# while True:
+#     if loop_delay > 8:
+#         debug(f'{LOG_PFX}: Not a Wayland+KDE environment. Exiting.')
+#         sys.exit(0)
+#     if DESKTOP_ENV in ['kde', 'plasma'] and SESSION_TYPE == 'wayland':
+#         break
+#     else:
+#         time.sleep(loop_delay)
+#         loop_delay += 2
+#         check_environment()
 
 qdbus_cmd = None
 
