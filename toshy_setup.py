@@ -459,7 +459,7 @@ pkg_groups_map = {
                         "gobject-introspection-devel", "libappindicator-gtk3", "xset",
                         "systemd-devel", "zenity"],
     'opensuse-based':  ["gcc", "git", "cairo-devel",  "dbus-1-devel",
-                        "python310-tk", "python310-dbus-python-devel", "python-devel",
+                        "python311-tk", "python311-dbus-python-devel", "python-devel",
                         "gobject-introspection-devel", "libappindicator3-devel", "tk",
                         "libnotify-tools", "typelib-1_0-AyatanaAppIndicator3-0_1",
                         "systemd-devel", "zenity"],
