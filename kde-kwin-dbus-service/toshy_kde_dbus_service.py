@@ -130,7 +130,8 @@ def is_kwin_script_loaded():
                                             kwin_scripting_path,
                                             f'{kwin_scripting_iface}.isScriptLoaded',
                                             toshy_kwin_script_name    ])
-        return output.strip() == 'true'
+        # output is bytes object, not string!
+        return output.decode().strip() == 'true'
     except subprocess.CalledProcessError as e:
         print(f"Error checking if KWin script is loaded:\n\t{e}")
         return False
