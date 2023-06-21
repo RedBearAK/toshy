@@ -902,10 +902,8 @@ def setup_kwin2dbus_script():
     else:
         print("Successfully enabled the KWin script.")
 
-    time.sleep(1)
     # Try to get KWin to notice and activate the script on its own, now that it's in RC file
     do_kwin_reconfigure()
-    time.sleep(2)
 
 
 def setup_kde_dbus_service():
