@@ -131,10 +131,25 @@ def is_kwin_script_loaded():
                                             f'{kwin_scripting_iface}.isScriptLoaded',
                                             toshy_kwin_script_name    ])
         # output is bytes object, not string!
+        output: bytes
         return output.decode().strip() == 'true'
     except subprocess.CalledProcessError as e:
         print(f"Error checking if KWin script is loaded:\n\t{e}")
         return False
+
+
+def load_kwin_script():
+    try:
+        subprocess.run([    qdbus_cmd,
+                            kwin_scripting_obj,
+                            kwin_scripting_path,
+                            f'{kwin_scripting_iface}.loadScript',
+                            toshy_kwin_script_name    ])
+        print(f'Successfully loaded KWin script.')
+    except subprocess.CalledProcessError as e:
+        print(f"Error checking if KWin script is loaded:\n\t{e}")
+        return False
+
 
 if qdbus_cmd is not None:
     toshy_kwin_script_is_loaded = is_kwin_script_loaded()
@@ -178,12 +193,19 @@ def setup_kwin2dbus_script():
     else:
         print("Successfully installed the KWin script.")
 
+    do_kwin_reconfigure()
+    
     # Remove the temporary kwinscript file
     try:
         os.remove(script_tmp_file)
     except (FileNotFoundError, PermissionError): pass
 
-    # Enable the script using kwriteconfig5
+    # Load the script using qdbus_cmd
+    load_kwin_script()
+    
+    do_kwin_reconfigure()
+
+    # Keep the script enabled the script using kwriteconfig5
     result = subprocess.run(
         [   'kwriteconfig5', '--file', 'kwinrc', '--group', 'Plugins', '--key',
             f'{kwin_script_name}Enabled', 'true'],
