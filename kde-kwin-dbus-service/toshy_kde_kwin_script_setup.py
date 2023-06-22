@@ -114,10 +114,10 @@ def main():
                                                 toshy_kwin_script_name    ])
             # output is bytes object, not string!
             output_str = output.decode().strip()
-            print(f"Script '{toshy_kwin_script_name}' loaded: {output_str}")
+            print(f"{LOG_PFX}: Script '{toshy_kwin_script_name}' loaded: {output_str}", flush=True)
             return output_str == 'true'
         except subprocess.CalledProcessError as e:
-            print(f"{LOG_PFX}: Error checking if KWin script is loaded:\n\t{e}")
+            print(f"{LOG_PFX}: Error checking if KWin script is loaded:\n\t{e}", flush=True)
             return False
 
 
@@ -160,7 +160,7 @@ def main():
         if result.returncode != 0:
             pass
         else:
-            print("Successfully removed existing KWin script.")
+            print(f"{LOG_PFX}: Removed existing KWin script.", flush=True)
 
         # Install the KWin script
         try:
@@ -182,7 +182,7 @@ def main():
                 ['kwriteconfig5', '--file', 'kwinrc', '--group', 'Plugins', '--key',
                 f'{kwin_script_name}Enabled', 'true'],
                 check=True, capture_output=True, text=True)
-            print(f"{LOG_PFX}: Enabled the KWin script.")
+            print(f"{LOG_PFX}: Enabled the KWin script.", flush=True)
         except subprocess.CalledProcessError as proc_err:
             error(f"{LOG_PFX}: Error enabling the KWin script. The error was:\n\t{proc_err.stderr}")
 
@@ -191,7 +191,7 @@ def main():
         
         # Keep checking for a while to see if it loads
         setup_loop_ct = 0
-        while not is_kwin_script_loaded() and setup_loop_ct <= 6:
+        while not is_kwin_script_loaded() and setup_loop_ct <= 12:
             time.sleep(2)
             setup_loop_ct += 1
 
@@ -200,7 +200,7 @@ def main():
     while not is_kwin_script_loaded() and is_loaded_loop_ct <= is_loaded_loop_max:
         is_loaded_loop_ct += 1
         if is_loaded_loop_ct == is_loaded_loop_max:
-            print(f'{LOG_PFX}: ERROR! Unable to install the KWin script successfully.')
+            print(f'{LOG_PFX}: ERROR! Unable to install the KWin script successfully.', flush=True)
             sys.exit(1)
         setup_kwin2dbus_script()
         time.sleep(1)
