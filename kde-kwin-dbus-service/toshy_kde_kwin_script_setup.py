@@ -80,17 +80,16 @@ def main():
                             check=True, stderr=DEVNULL, stdout=DEVNULL)
             # time.sleep(1)
         except subprocess.CalledProcessError as proc_error:
-            error(f'Error while running KWin reconfigure.\n\t{proc_error}')
+            error(f'{LOG_PFX}: Error while running KWin reconfigure.\n\t{proc_error}')
 
 
     def kwin_responding():
         # Use qdbus to send a simple command to KWin and check the response
         try:
-            output = subprocess.check_output([  qdbus_cmd,
+            output: bytes = subprocess.check_output([  qdbus_cmd,
                                                 kwin_dbus_obj,
                                                 kwin_kwin_path,
                                                 'org.kde.KWin.currentDesktop'])
-            output: bytes   # type hint that output is a bytes object, not a string
             return output.decode().strip() != ""
         except subprocess.CalledProcessError:
             return False
@@ -118,7 +117,7 @@ def main():
             print(f"Script '{toshy_kwin_script_name}' loaded: {output_str}")
             return output_str == 'true'
         except subprocess.CalledProcessError as e:
-            print(f"Error checking if KWin script is loaded:\n\t{e}")
+            print(f"{LOG_PFX}: Error checking if KWin script is loaded:\n\t{e}")
             return False
 
 
@@ -132,15 +131,15 @@ def main():
                             check=True) #,
                             # stderr=DEVNULL,
                             # stdout=DEVNULL)
-            print(f'Successfully loaded KWin script.')
+            print(f'{LOG_PFX}: Loaded KWin script.')
         except subprocess.CalledProcessError as e:
-            print(f"Error loading KWin script:\n\t{e}")
+            print(f"{LOG_PFX}: Error loading KWin script:\n\t{e}")
             return False
 
 
     def setup_kwin2dbus_script():
         """Install the KWin script to notify D-Bus service about window focus changes"""
-        print(f'\n\n§  Setting up the Toshy KWin script...\n{separator}')
+        # print(f'\n\n§  Setting up the Toshy KWin script...\n{separator}')
         kwin_script_name    = 'toshy-dbus-notifyactivewindow'
         kwin_script_path    = os.path.join( parent_folder_path,
                                             'kde-kwin-dbus-service', kwin_script_name)
@@ -154,23 +153,23 @@ def main():
             # Add metadata.desktop to the kwinscript package
             zipf.write(os.path.join(kwin_script_path, 'metadata.json'), arcname='metadata.json')
 
-        # Try to remove any installed KWin script entirely
-        result = subprocess.run(
-            ['kpackagetool5', '-t', 'KWin/Script', '-r', kwin_script_name],
-            capture_output=True, text=True)
-        if result.returncode != 0:
-            pass
-        else:
-            print("Successfully removed existing KWin script.")
+        # # Try to remove any installed KWin script entirely
+        # result = subprocess.run(
+        #     ['kpackagetool5', '-t', 'KWin/Script', '-r', kwin_script_name],
+        #     capture_output=True, text=True)
+        # if result.returncode != 0:
+        #     pass
+        # else:
+        #     print("Successfully removed existing KWin script.")
 
         # Install the KWin script
         try:
             subprocess.run(
                 ['kpackagetool5', '-t', 'KWin/Script', '-i', script_tmp_file],
                 check=True, capture_output=True, text=True)
-            print("Successfully installed the KWin script.")
+            print(f"{LOG_PFX}: Installed the KWin script.")
         except subprocess.CalledProcessError as proc_err:
-            error(f"Error installing the KWin script. The error was:\n\t{proc_err.stderr}")
+            error(f"{LOG_PFX}: Error installing the KWin script. The error was:\n\t{proc_err.stderr}")
 
         # Remove the temporary kwinscript file
         try:
@@ -183,23 +182,22 @@ def main():
                 ['kwriteconfig5', '--file', 'kwinrc', '--group', 'Plugins', '--key',
                 f'{kwin_script_name}Enabled', 'true'],
                 check=True, capture_output=True, text=True)
-            print(f"Successfully enabled the KWin script.")
+            print(f"{LOG_PFX}: Enabled the KWin script.")
         except subprocess.CalledProcessError as proc_err:
-            error(f"Error enabling the KWin script. The error was:\n\t{proc_err.stderr}")
-
+            error(f"{LOG_PFX}: Error enabling the KWin script. The error was:\n\t{proc_err.stderr}")
 
         # Try to get KWin to activate the script
         do_kwin_reconfigure()
-        time.sleep(3)
 
+    loop_max = 30
     is_loaded_loop_ct = 0
-    while not is_kwin_script_loaded() and is_loaded_loop_ct < 5:
+    while not is_kwin_script_loaded() and is_loaded_loop_ct <= loop_max:
         is_loaded_loop_ct += 1
-        if is_loaded_loop_ct > 3:
-            print(f'ERROR: Unable to install the KWin script successfully.')
+        if is_loaded_loop_ct == loop_max:
+            print(f'{LOG_PFX}: ERROR! Unable to install the KWin script successfully.')
             sys.exit(1)
         setup_kwin2dbus_script()
-        time.sleep(1)
+        time.sleep(3)
 
     # run the kickstart script here to generate a KWin event (hopefully)
     kickstart_script    = 'toshy-kwin-script-kickstart.sh'
