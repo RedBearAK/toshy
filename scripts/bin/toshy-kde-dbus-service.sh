@@ -16,16 +16,20 @@ if [[ -z $USER ]] || [[ -z $HOME ]]; then
     exit 1
 fi
 
-TOSHY_CFG="$HOME/.config/toshy"
+TOSHY_CFG="${HOME}/.config/toshy"
+TOSHY_KDE="${TOSHY_CFG}/kde-kwin-dbus-service"
 
 
 pkill -f "toshy_kde_dbus_service"
 
 sleep 1
 
-# shellcheck disable=SC1091
-source "$TOSHY_CFG/.venv/bin/activate"
-
 # run the Python interpreter from within the virtual environment
-# and make sure it stays running when terminal is closed
-python3 "$TOSHY_CFG/kde-kwin-dbus-service/toshy_kde_dbus_service.py"
+# shellcheck disable=SC1091
+source "${TOSHY_CFG}/.venv/bin/activate"
+
+# start the script (unattached) that will deal with KWin script setup and kickstart
+nohup python3 "${TOSHY_KDE}/toshy_kde_kwin_script_setup.py" &
+
+# start the script that will create the D-Bus object/interface
+python3 "${TOSHY_KDE}/toshy_kde_dbus_service.py"
