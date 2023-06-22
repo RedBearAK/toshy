@@ -62,6 +62,10 @@ def main():
     elif shutil.which('qdbus-qt5'):
         qdbus_cmd = 'qdbus-qt5'
 
+    if qdbus_cmd is None:
+        error(f"Cannot find 'qdbus' or 'qdbus-qt5'. Cannot check KWin script status.")
+        sys.exit(1)
+
     toshy_kwin_script_name          = 'toshy-dbus-notifyactivewindow'
     toshy_kwin_script_is_loaded     = False
     kwin_dbus_obj                   = 'org.kde.KWin'
@@ -104,14 +108,15 @@ def main():
 
     def is_kwin_script_loaded():
         try:
-            output = subprocess.check_output([  qdbus_cmd,
+            output: bytes = subprocess.check_output([  qdbus_cmd,
                                                 kwin_dbus_obj,
                                                 kwin_scripting_path,
                                                 f'{kwin_scripting_iface}.isScriptLoaded',
                                                 toshy_kwin_script_name    ])
             # output is bytes object, not string!
-            output: bytes       # type hinting for bytes object
-            return output.decode().strip() == 'true'
+            output_str = output.decode().strip()
+            print(f"Script '{toshy_kwin_script_name}' loaded: {output_str}")
+            return output_str == 'true'
         except subprocess.CalledProcessError as e:
             print(f"Error checking if KWin script is loaded:\n\t{e}")
             return False
@@ -124,20 +129,13 @@ def main():
                             kwin_scripting_path,
                             f'{kwin_scripting_iface}.loadScript',
                             toshy_kwin_script_name    ],
-                            check=True,
-                            stderr=DEVNULL,
-                            stdout=DEVNULL)
+                            check=True) #,
+                            # stderr=DEVNULL,
+                            # stdout=DEVNULL)
             print(f'Successfully loaded KWin script.')
         except subprocess.CalledProcessError as e:
-            print(f"Error checking if KWin script is loaded:\n\t{e}")
+            print(f"Error loading KWin script:\n\t{e}")
             return False
-
-
-    if qdbus_cmd is not None:
-        toshy_kwin_script_is_loaded = is_kwin_script_loaded()
-        print(f"Script '{toshy_kwin_script_name}' loaded: {toshy_kwin_script_is_loaded}")
-    else:
-        error(f"Cannot find 'qdbus' or 'qdbus-qt5'. Cannot check KWin script status.")
 
 
     def setup_kwin2dbus_script():
@@ -182,8 +180,8 @@ def main():
             os.remove(script_tmp_file)
         except (FileNotFoundError, PermissionError): pass
 
-        # # Load the script using qdbus_cmd
-        # load_kwin_script()
+        # Load the script using qdbus_cmd
+        load_kwin_script()
 
         # Try to get KWin to load the script (probably won't activate until enabled later)
         do_kwin_reconfigure()
@@ -201,8 +199,14 @@ def main():
         # Try to get KWin to activate the script
         do_kwin_reconfigure()
 
-    if toshy_kwin_script_is_loaded is not True:
+    is_loaded_loop_ct = 0
+    while not is_kwin_script_loaded() and is_loaded_loop_ct < 5:
+        is_loaded_loop_ct += 1
+        if is_loaded_loop_ct > 3:
+            print(f'ERROR: Unable to install the KWin script successfully.')
+            sys.exit(1)
         setup_kwin2dbus_script()
+        time.sleep(1)
 
     # run the kickstart script here to generate a KWin event (hopefully)
     kickstart_script    = 'toshy-kwin-script-kickstart.sh'
