@@ -108,26 +108,50 @@ if shutil.which('qdbus'):
 elif shutil.which('qdbus-qt5'):
     qdbus_cmd = 'qdbus-qt5'
 
-toshy_kwin_script_name = 'toshy-dbus-notifyactivewindow'
-toshy_kwin_script_is_loaded = False
-kwin_scripting_obj = 'org.kde.KWin'
-kwin_scripting_path = '/Scripting'
-kwin_scripting_iface = 'org.kde.kwin.Scripting'
+toshy_kwin_script_name          = 'toshy-dbus-notifyactivewindow'
+toshy_kwin_script_is_loaded     = False
+kwin_dbus_obj                   = 'org.kde.KWin'
+kwin_kwin_path                  = '/KWin'
+kwin_scripting_path             = '/Scripting'
+kwin_scripting_iface            = 'org.kde.kwin.Scripting'
 
 def do_kwin_reconfigure():
     """Utility function to run the KWin reconfigure command"""
     try:
-        subprocess.run([qdbus_cmd, 'org.kde.KWin', '/KWin', 'reconfigure'],
+        subprocess.run([qdbus_cmd, kwin_dbus_obj, kwin_kwin_path, 'reconfigure'],
                         check=True, stderr=DEVNULL, stdout=DEVNULL)
         time.sleep(1)
     except subprocess.CalledProcessError as proc_error:
         error(f'Error while running KWin reconfigure.\n\t{proc_error}')
 
 
+def kwin_responding():
+    # Use qdbus to send a simple command to KWin and check the response
+    try:
+        output = subprocess.check_output([  qdbus_cmd,
+                                            kwin_dbus_obj,
+                                            kwin_kwin_path,
+                                            'org.kde.KWin.currentDesktop'])
+        output: bytes   # type hint that output is a bytes object, not a string
+        return output.decode().strip() != ""
+    except subprocess.CalledProcessError:
+        return False
+
+
+# Wait for KWin to be ready for a D-Bus conversation about the KWin script
+loop_ct = 0
+while True and loop_ct < 9:
+    loop_ct += 1
+    if kwin_responding():
+        break
+    else:
+        time.sleep(1)
+
+
 def is_kwin_script_loaded():
     try:
         output = subprocess.check_output([  qdbus_cmd,
-                                            kwin_scripting_obj,
+                                            kwin_dbus_obj,
                                             kwin_scripting_path,
                                             f'{kwin_scripting_iface}.isScriptLoaded',
                                             toshy_kwin_script_name    ])
@@ -142,7 +166,7 @@ def is_kwin_script_loaded():
 def load_kwin_script():
     try:
         subprocess.run([qdbus_cmd,
-                        kwin_scripting_obj,
+                        kwin_dbus_obj,
                         kwin_scripting_path,
                         f'{kwin_scripting_iface}.loadScript',
                         toshy_kwin_script_name    ],
