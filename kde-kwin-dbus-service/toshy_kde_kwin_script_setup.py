@@ -9,6 +9,7 @@ import zipfile
 import platform
 import subprocess
 
+from typing import Dict, List, Union
 from subprocess import DEVNULL
 from keyszer.lib.logger import debug, error
 
@@ -26,6 +27,9 @@ sys.path.insert(0, parent_folder_path)
 
 existing_path = os.environ.get('PYTHONPATH', '')
 os.environ['PYTHONPATH'] = f'{parent_folder_path}:{current_folder_path}:{existing_path}'
+
+# local imports now that path is prepped
+import lib.env as env
 
 if os.name == 'posix' and os.geteuid() == 0:
     error("This app should not be run as root/superuser.")
@@ -54,6 +58,32 @@ separator       = sep_char * sep_reps
 LOG_PFX = 'TOSHY_KWIN_SETUP'
 
 
+DISTRO_NAME     = None
+DISTRO_VER      = None
+SESSION_TYPE    = None
+DESKTOP_ENV     = None
+
+
+def check_environment():
+    """Retrieve the current environment from env module"""
+    env_info: Dict[str, str] = env.get_env_info()   # Returns a dict
+    global DISTRO_NAME, DISTRO_VER, SESSION_TYPE, DESKTOP_ENV
+    DISTRO_NAME     = env_info.get('DISTRO_NAME')
+    DISTRO_VER      = env_info.get('DISTRO_VER')
+    SESSION_TYPE    = env_info.get('SESSION_TYPE')
+    DESKTOP_ENV     = env_info.get('DESKTOP_ENV')
+
+
+check_environment()
+
+if DESKTOP_ENV in ['kde', 'plasma'] and SESSION_TYPE == 'wayland':
+    pass
+else:
+    debug(f'{LOG_PFX}: Not a Wayland+KDE environment. Exiting.')
+    time.sleep(2)
+    sys.exit(0)
+
+
 def main():
     qdbus_cmd = None
 
@@ -67,7 +97,6 @@ def main():
         sys.exit(1)
 
     toshy_kwin_script_name          = 'toshy-dbus-notifyactivewindow'
-    toshy_kwin_script_is_loaded     = False
     kwin_dbus_obj                   = 'org.kde.KWin'
     kwin_kwin_path                  = '/KWin'
     kwin_scripting_path             = '/Scripting'
@@ -78,31 +107,31 @@ def main():
         try:
             subprocess.run([qdbus_cmd, kwin_dbus_obj, kwin_kwin_path, 'reconfigure'],
                             check=True, stderr=DEVNULL, stdout=DEVNULL)
-            # time.sleep(1)
+            time.sleep(1)
         except subprocess.CalledProcessError as proc_error:
             error(f'{LOG_PFX}: Error while running KWin reconfigure.\n\t{proc_error}')
 
 
-    def kwin_responding():
-        # Use qdbus to send a simple command to KWin and check the response
-        try:
-            output: bytes = subprocess.check_output([  qdbus_cmd,
-                                                kwin_dbus_obj,
-                                                kwin_kwin_path,
-                                                'org.kde.KWin.currentDesktop'])
-            return output.decode().strip() != ""
-        except subprocess.CalledProcessError:
-            return False
+    # def kwin_responding():
+    #     # Use qdbus to send a simple command to KWin and check the response
+    #     try:
+    #         output: bytes = subprocess.check_output([  qdbus_cmd,
+    #                                             kwin_dbus_obj,
+    #                                             kwin_kwin_path,
+    #                                             'org.kde.KWin.currentDesktop'])
+    #         return output.decode().strip() != ""
+    #     except subprocess.CalledProcessError:
+    #         return False
 
 
-    # Wait for KWin to be ready for a D-Bus conversation about the KWin script
-    loop_ct = 0
-    while True and loop_ct < 9:
-        loop_ct += 1
-        if kwin_responding():
-            break
-        else:
-            time.sleep(1)
+    # # Wait for KWin to be ready for a D-Bus conversation about the KWin script
+    # loop_ct = 0
+    # while True and loop_ct < 9:
+    #     loop_ct += 1
+    #     if kwin_responding():
+    #         break
+    #     else:
+    #         time.sleep(1)
 
 
     def is_kwin_script_loaded():
@@ -114,7 +143,7 @@ def main():
                                                 toshy_kwin_script_name    ])
             # output is bytes object, not string!
             output_str = output.decode().strip()
-            print(f"{LOG_PFX}: Script '{toshy_kwin_script_name}' loaded: {output_str}", flush=True)
+            print(f"{LOG_PFX}: Is '{toshy_kwin_script_name}' KWin script loaded: {output_str}", flush=True)
             return output_str == 'true'
         except subprocess.CalledProcessError as e:
             print(f"{LOG_PFX}: Error checking if KWin script is loaded:\n\t{e}", flush=True)
@@ -127,6 +156,22 @@ def main():
                             kwin_dbus_obj,
                             kwin_scripting_path,
                             f'{kwin_scripting_iface}.loadScript',
+                            toshy_kwin_script_name    ],
+                            check=True) #,
+                            # stderr=DEVNULL,
+                            # stdout=DEVNULL)
+            print(f'{LOG_PFX}: Loaded KWin script.')
+        except subprocess.CalledProcessError as e:
+            print(f"{LOG_PFX}: Error loading KWin script:\n\t{e}")
+            return False
+
+
+    def unload_kwin_script():
+        try:
+            subprocess.run([qdbus_cmd,
+                            kwin_dbus_obj,
+                            kwin_scripting_path,
+                            f'{kwin_scripting_iface}.unloadScript',
                             toshy_kwin_script_name    ],
                             check=True) #,
                             # stderr=DEVNULL,
@@ -193,7 +238,7 @@ def main():
         setup_loop_ct = 0
         while not is_kwin_script_loaded() and setup_loop_ct <= 13:
             time.sleep(2)
-            do_kwin_reconfigure()
+            # do_kwin_reconfigure()
             setup_loop_ct += 1
 
     is_loaded_loop_max = 6
