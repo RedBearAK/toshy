@@ -188,19 +188,20 @@ def main():
 
         # Try to get KWin to activate the script
         do_kwin_reconfigure()
-        
+
         # Keep checking for a while to see if it loads
         setup_loop_ct = 0
-        while not is_kwin_script_loaded() and setup_loop_ct <= 12:
+        while not is_kwin_script_loaded() and setup_loop_ct <= 13:
             time.sleep(2)
+            do_kwin_reconfigure()
             setup_loop_ct += 1
 
-    is_loaded_loop_max = 30
+    is_loaded_loop_max = 6
     is_loaded_loop_ct = 0
     while not is_kwin_script_loaded() and is_loaded_loop_ct <= is_loaded_loop_max:
         is_loaded_loop_ct += 1
         if is_loaded_loop_ct == is_loaded_loop_max:
-            print(f'{LOG_PFX}: ERROR! Unable to install the KWin script successfully.', flush=True)
+            print(f'{LOG_PFX}: ERROR! Unable to activate the KWin script.', flush=True)
             sys.exit(1)
         setup_kwin2dbus_script()
         time.sleep(1)
