@@ -153,14 +153,14 @@ def main():
             # Add metadata.desktop to the kwinscript package
             zipf.write(os.path.join(kwin_script_path, 'metadata.json'), arcname='metadata.json')
 
-        # # Try to remove any installed KWin script entirely
-        # result = subprocess.run(
-        #     ['kpackagetool5', '-t', 'KWin/Script', '-r', kwin_script_name],
-        #     capture_output=True, text=True)
-        # if result.returncode != 0:
-        #     pass
-        # else:
-        #     print("Successfully removed existing KWin script.")
+        # Try to remove any installed KWin script entirely
+        result = subprocess.run(
+            ['kpackagetool5', '-t', 'KWin/Script', '-r', kwin_script_name],
+            capture_output=True, text=True)
+        if result.returncode != 0:
+            pass
+        else:
+            print("Successfully removed existing KWin script.")
 
         # Install the KWin script
         try:
@@ -188,16 +188,22 @@ def main():
 
         # Try to get KWin to activate the script
         do_kwin_reconfigure()
+        
+        # Keep checking for a while to see if it loads
+        setup_loop_ct = 0
+        while not is_kwin_script_loaded() and setup_loop_ct <= 6:
+            time.sleep(2)
+            setup_loop_ct += 1
 
-    loop_max = 30
+    is_loaded_loop_max = 30
     is_loaded_loop_ct = 0
-    while not is_kwin_script_loaded() and is_loaded_loop_ct <= loop_max:
+    while not is_kwin_script_loaded() and is_loaded_loop_ct <= is_loaded_loop_max:
         is_loaded_loop_ct += 1
-        if is_loaded_loop_ct == loop_max:
+        if is_loaded_loop_ct == is_loaded_loop_max:
             print(f'{LOG_PFX}: ERROR! Unable to install the KWin script successfully.')
             sys.exit(1)
         setup_kwin2dbus_script()
-        time.sleep(3)
+        time.sleep(1)
 
     # run the kickstart script here to generate a KWin event (hopefully)
     kickstart_script    = 'toshy-kwin-script-kickstart.sh'
