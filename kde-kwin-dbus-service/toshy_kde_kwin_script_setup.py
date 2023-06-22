@@ -158,46 +158,39 @@ def main():
         result = subprocess.run(
             ['kpackagetool5', '-t', 'KWin/Script', '-r', kwin_script_name],
             capture_output=True, text=True)
-
         if result.returncode != 0:
             pass
         else:
             print("Successfully removed existing KWin script.")
 
         # Install the KWin script
-        result = subprocess.run(
-            ['kpackagetool5', '-t', 'KWin/Script', '-i', script_tmp_file], capture_output=True, text=True)
-
-        if result.returncode != 0:
-            error(f"Error installing the KWin script. The error was:\n\t{result.stderr}")
-        else:
+        try:
+            subprocess.run(
+                ['kpackagetool5', '-t', 'KWin/Script', '-i', script_tmp_file],
+                check=True, capture_output=True, text=True)
             print("Successfully installed the KWin script.")
+        except subprocess.CalledProcessError as proc_err:
+            error(f"Error installing the KWin script. The error was:\n\t{proc_err.stderr}")
 
-        do_kwin_reconfigure()
-        
         # Remove the temporary kwinscript file
         try:
             os.remove(script_tmp_file)
         except (FileNotFoundError, PermissionError): pass
 
-        # Load the script using qdbus_cmd
-        load_kwin_script()
-
-        # Try to get KWin to load the script (probably won't activate until enabled later)
-        do_kwin_reconfigure()
-
-        # Keep the script enabled the script using kwriteconfig5
-        result = subprocess.run(
-            [   'kwriteconfig5', '--file', 'kwinrc', '--group', 'Plugins', '--key',
+        # Keep the script enabled after restart using kwriteconfig5 to kwinrc file
+        try:
+            subprocess.run(
+                ['kwriteconfig5', '--file', 'kwinrc', '--group', 'Plugins', '--key',
                 f'{kwin_script_name}Enabled', 'true'],
-            capture_output=True, text=True)
-        if result.returncode != 0:
-            error(f"Error enabling the KWin script. The error was:\n\t{result.stderr}")
-        else:
-            print("Successfully enabled the KWin script.")
+                check=True, capture_output=True, text=True)
+            print(f"Successfully enabled the KWin script.")
+        except subprocess.CalledProcessError as proc_err:
+            error(f"Error enabling the KWin script. The error was:\n\t{proc_err.stderr}")
+
 
         # Try to get KWin to activate the script
         do_kwin_reconfigure()
+        time.sleep(3)
 
     is_loaded_loop_ct = 0
     while not is_kwin_script_loaded() and is_loaded_loop_ct < 5:
