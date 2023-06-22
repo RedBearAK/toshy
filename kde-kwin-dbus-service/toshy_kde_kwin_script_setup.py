@@ -233,14 +233,19 @@ def main():
 
         # Try to get KWin to activate the script
         do_kwin_reconfigure()
+        time.sleep(5)
 
         # Keep checking for a while to see if it loads
         setup_loop_ct = 0
-        while not is_kwin_script_loaded() and setup_loop_ct <= 13:
-            time.sleep(2)
-            # do_kwin_reconfigure()
+        while not is_kwin_script_loaded() and setup_loop_ct <= 6:
+            # repeat KWin reconfigure, seems to help push KWin to activate the script after login
+            do_kwin_reconfigure()
+            time.sleep(5)
             setup_loop_ct += 1
 
+    # this loop and the one above is to help deal with the fact that it is 
+    # really, really hard to start the KWin script right after login i 
+    # it was just installed
     is_loaded_loop_max = 6
     is_loaded_loop_ct = 0
     while not is_kwin_script_loaded() and is_loaded_loop_ct <= is_loaded_loop_max:
