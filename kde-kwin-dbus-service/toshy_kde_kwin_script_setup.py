@@ -244,7 +244,7 @@ def main():
             setup_loop_ct += 1
 
     # this loop and the one above is to help deal with the fact that it is 
-    # really, really hard to start the KWin script right after login i 
+    # really, really hard to start the KWin script right after login if 
     # it was just installed
     is_loaded_loop_max = 6
     is_loaded_loop_ct = 0
