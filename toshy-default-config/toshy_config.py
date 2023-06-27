@@ -3270,6 +3270,9 @@ keymap("VSCodes overrides for not Chromebook/IBM", {
 keymap("VSCodes", {
     # C("Super-Space"):           C("LC-Space"),                  # Basic code completion (conflicts with input switching)
 
+    # Override the global Cmd+Dot (Escape/cancel) shortcut for QuickFix in VSCode(s)
+    C("RC-Dot"):                C("RC-Dot"),                    # QuickFix, overriding global shortcut
+
     # Find dialog options
     C("Alt-RC-C"):              C("Alt-C"),                     # Find: toggle "Match Case"
     C("Alt-RC-W"):              C("Alt-W"),                     # Find: toggle "Match Whole Word"
