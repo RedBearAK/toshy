@@ -36,6 +36,7 @@ fn_show_help() {
     echo "Changes the function keys mode of Apple keyboards that use the"
     echo "'hid_apple' device driver. Interactive prompts will be shown"
     echo "if no options or arguments are provided."
+    echo "Requires superuser privileges to modify the mode."
     echo ""
     echo "Options:"
     echo "  -P, --permanent  Make the mode change permanent across reboots."
@@ -55,7 +56,13 @@ fn_update_initramfs() {
         debian|ubuntu)
             ${sudo_cmd} update-initramfs -u
             ;;
-        fedora|centos)
+        fedora|centos|ultramarine|almalinux|rocky)
+            dracut_conf_dir="/etc/dracut.conf.d"
+            dracut_conf_file="${dracut_conf_dir}/hid_apple.conf"
+            if [[ ! -d "$dracut_conf_dir" ]]; then
+                mkdir -p "$dracut_conf_dir"
+            fi
+            echo 'install_items+="/etc/modprobe.d/hid_apple.conf"' | ${sudo_cmd} tee "$dracut_conf_file" > /dev/null
             ${sudo_cmd} dracut --force
             ;;
         arch|archlinux)
@@ -111,7 +118,7 @@ fn_update_fnmode() {
     if [[ $new_fnmode_arg =~ ^[0-3]$ ]]; then
         if echo "${new_fnmode_arg}" | ${sudo_cmd} tee "${fnmode_file}" > /dev/null; then
             echo -e "\nFunction keys mode for 'hid_apple' has been updated to: '${new_fnmode_arg}'"
-            # Make change permanent if necessary
+            # Make change permanent if desired
             fn_make_fnmode_permanent "${new_fnmode_arg}"
         else
             echo -e "\nFailed to update function keys mode for 'hid_apple'."
@@ -198,7 +205,7 @@ fn_show_valid_choices
 read -rp "Enter your desired mode: " response_to_fnmode_prompt
 fn_update_fnmode "$response_to_fnmode_prompt"
 echo ""
-read -rp "Make the mode change permanent? [y/N] " response_to_permanent_prompt
+read -rp "Make the mode change permanent? [y/N]: " response_to_permanent_prompt
 if [[ "$response_to_permanent_prompt" =~ ^[yY]$ ]]; then
     var_make_permanent="true"
     fn_make_fnmode_permanent "$response_to_fnmode_prompt"
