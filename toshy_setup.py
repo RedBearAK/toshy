@@ -1537,6 +1537,7 @@ def main(cnfg: InstallerSettings):
         print(f'You MUST install GNOME EXTENSIONS if using Wayland+GNOME! See Toshy README.')
 
     print()   # blank line to avoid crowding the prompt after install is done
+    safe_shutdown()
 
 
 if __name__ == '__main__':
