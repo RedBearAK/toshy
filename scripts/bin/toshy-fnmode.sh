@@ -62,7 +62,8 @@ fn_update_initramfs() {
             if [[ ! -d "$dracut_conf_dir" ]]; then
                 mkdir -p "$dracut_conf_dir"
             fi
-            echo 'install_items+="/etc/modprobe.d/hid_apple.conf"' | ${sudo_cmd} tee "$dracut_conf_file" > /dev/null
+            # dracut wants spaces inserted around the " <value> " in 'install_items'
+            echo 'install_items+=" /etc/modprobe.d/hid_apple.conf "' | ${sudo_cmd} tee "$dracut_conf_file" > /dev/null
             ${sudo_cmd} dracut --force
             ;;
         arch|archlinux)
