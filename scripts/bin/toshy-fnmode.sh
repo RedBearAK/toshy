@@ -52,8 +52,10 @@ fn_update_initramfs() {
     # Get the distribution id
     local dist_id
     dist_id=$(awk -F= '/^ID=/ {print tolower($2)}' /etc/os-release)
+    wait_msg="\nPlease WAIT (this can take some time to complete)..."
     case "$dist_id" in
         debian|ubuntu)
+            echo -e "$wait_msg"
             ${sudo_cmd} update-initramfs -u
             ;;
         fedora|centos|ultramarine|almalinux|rocky)
@@ -63,13 +65,17 @@ fn_update_initramfs() {
                 mkdir -p "$dracut_conf_dir"
             fi
             # dracut wants spaces inserted around the " <value> " in 'install_items'
-            echo 'install_items+=" /etc/modprobe.d/hid_apple.conf "' | ${sudo_cmd} tee "$dracut_conf_file" > /dev/null
+            echo 'install_items+=" /etc/modprobe.d/hid_apple.conf "' | \
+              ${sudo_cmd} tee "$dracut_conf_file" > /dev/null
+            echo -e "$wait_msg"
             ${sudo_cmd} dracut --force
             ;;
         arch|archlinux)
+            echo -e "$wait_msg"
             ${sudo_cmd} mkinitcpio -P
             ;;
         opensuse*)
+            echo -e "$wait_msg"
             ${sudo_cmd} mkinitrd
             ;;
         *)
@@ -96,17 +102,21 @@ fn_make_fnmode_permanent() {
             # Look for the options hid_apple fnmode=X line in the file
             if grep -q "^options hid_apple fnmode=[0-3]$" "$conf_file"; then
                 # If found, modify the X to match the new fnmode
-                $sudo_cmd sed -ri "s/^options hid_apple fnmode=[0-3]$/options hid_apple fnmode=$new_fnmode_arg/" "$conf_file"
+                $sudo_cmd sed -ri \
+                  "s/^options hid_apple fnmode=[0-3]$/options hid_apple fnmode=$new_fnmode_arg/" \
+                  "$conf_file"
             else
                 # If not found, append the whole line to the file
-                echo "options hid_apple fnmode=$new_fnmode_arg" | $sudo_cmd tee -a "$conf_file" > /dev/null
+                echo "options hid_apple fnmode=$new_fnmode_arg" | \
+                  $sudo_cmd tee -a "$conf_file" > /dev/null
             fi
             fn_update_initramfs
             echo ""
             echo "The change has been made permanent. It will persist after reboot."
         else
             echo ""
-            echo "WARNING: Could not make the change permanent because the $modprobe_dir directory does not exist."
+            echo "WARNING: Could not make the change permanent."
+            echo "The '$modprobe_dir' directory does not exist."
         fi
     else
         echo ""
