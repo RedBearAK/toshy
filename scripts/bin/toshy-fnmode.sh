@@ -7,6 +7,11 @@
 fnmode_file="/sys/module/hid_apple/parameters/fnmode"
 sudo_cmd="sudo"
 
+# function for more convenient shorthand output suppression
+dvnl() {
+    "$@" > /dev/null 2>&1
+}
+
 # Check if the script is being run as root, avoid unnecessary use of 'sudo'
 if [[ $EUID -eq 0 ]]; then
     # echo "Running script as root"
@@ -52,7 +57,7 @@ fn_update_initramfs() {
     # Get the distribution id
     local dist_id
     dist_id=$(awk -F= '/^ID=/ {print tolower($2)}' /etc/os-release)
-    wait_msg="\nPlease WAIT (this can take some time to complete)..."
+    wait_msg="\nPlease WAIT (initramfs update can take some time to complete)..."
     case "$dist_id" in
         debian|ubuntu)
             echo -e "$wait_msg"
@@ -64,9 +69,9 @@ fn_update_initramfs() {
             if [[ ! -d "$dracut_conf_dir" ]]; then
                 mkdir -p "$dracut_conf_dir"
             fi
-            # dracut wants spaces inserted around the " <value> " in 'install_items'
-            echo 'install_items+=" /etc/modprobe.d/hid_apple.conf "' | \
-              ${sudo_cmd} tee "$dracut_conf_file" > /dev/null
+            # dracut parser wants spaces inserted around the " <value> " in 'install_items'
+            drct_ins_str='install_items+=" /etc/modprobe.d/hid_apple.conf "'
+            dvnl echo "${drct_ins_str}" | ${sudo_cmd} tee "$dracut_conf_file"
             echo -e "$wait_msg"
             ${sudo_cmd} dracut --force
             ;;
@@ -97,22 +102,21 @@ fn_make_fnmode_permanent() {
         if [[ -d "$modprobe_dir" ]]; then
             # Check if the /etc/modprobe.d/hid_apple.conf file exists, create it if not
             if [[ ! -f "$conf_file" ]]; then
-                echo "" | $sudo_cmd tee "$conf_file" > /dev/null
+                dvnl echo "" | ${sudo_cmd} tee "$conf_file"
             fi
             # Look for the options hid_apple fnmode=X line in the file
-            if grep -q "^options hid_apple fnmode=[0-3]$" "$conf_file"; then
+            options_rgx="^options hid_apple fnmode=[0-3]$"
+            options_sub="options hid_apple fnmode=$new_fnmode_arg"
+            if grep -q "${options_rgx}" "$conf_file"; then
                 # If found, modify the X to match the new fnmode
-                $sudo_cmd sed -ri \
-                  "s/^options hid_apple fnmode=[0-3]$/options hid_apple fnmode=$new_fnmode_arg/" \
-                  "$conf_file"
+                ${sudo_cmd} sed -ri "s/${options_rgx}/${options_sub}/" "$conf_file"
             else
                 # If not found, append the whole line to the file
-                echo "options hid_apple fnmode=$new_fnmode_arg" | \
-                  $sudo_cmd tee -a "$conf_file" > /dev/null
+                dvnl echo "${options_sub}" | ${sudo_cmd} tee -a "$conf_file"
             fi
             fn_update_initramfs
             echo ""
-            echo "The change has been made permanent. It will persist after reboot."
+            echo "The change has been made permanent. It should persist after reboot."
         else
             echo ""
             echo "WARNING: Could not make the change permanent."
@@ -127,7 +131,7 @@ fn_make_fnmode_permanent() {
 fn_update_fnmode() {
     local new_fnmode_arg="$1"
     if [[ $new_fnmode_arg =~ ^[0-3]$ ]]; then
-        if echo "${new_fnmode_arg}" | ${sudo_cmd} tee "${fnmode_file}" > /dev/null; then
+        if dvnl echo "${new_fnmode_arg}" | ${sudo_cmd} tee "${fnmode_file}"; then
             echo -e "\nFunction keys mode for 'hid_apple' has been updated to: '${new_fnmode_arg}'"
             # Make change permanent if desired
             fn_make_fnmode_permanent "${new_fnmode_arg}"
@@ -209,6 +213,8 @@ elif [[ $curr_fnmode -eq 2 ]]; then
     echo -e "\n${curr_mode_str} 2 (fkeysfirst)"
 elif [[ $curr_fnmode -eq 3 ]]; then
     echo -e "\n${curr_mode_str} 3 (auto)"
+else
+    echo -e "\n${curr_mode_str} Invalid fnmode: ${curr_fnmode}"
 fi
 
 echo ""
