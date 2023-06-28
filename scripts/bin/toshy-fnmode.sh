@@ -5,14 +5,12 @@
 
 
 fnmode_file="/sys/module/hid_apple/parameters/fnmode"
-sudo_tee_cmd="sudo tee"
-sudo_sed_cmd="sudo sed"
+sudo_cmd="sudo"
 
 # Check if the script is being run as root, avoid unnecessary use of 'sudo'
 if [[ $EUID -eq 0 ]]; then
     # echo "Running script as root"
-    sudo_tee_cmd="tee"
-    sudo_sed_cmd="sed"
+    sudo_cmd=""
 fi
 
 curr_fnmode=$(cat ${fnmode_file})
@@ -49,6 +47,32 @@ fn_show_help() {
     fn_show_valid_choices
 }
 
+fn_update_initramfs() {
+    # Get the distribution id
+    local dist_id
+    dist_id=$(awk -F= '/^ID=/ {print tolower($2)}' /etc/os-release)
+    case "$dist_id" in
+        debian|ubuntu)
+            ${sudo_cmd} update-initramfs -u
+            ;;
+        fedora|centos)
+            ${sudo_cmd} dracut --force
+            ;;
+        arch|archlinux)
+            ${sudo_cmd} mkinitcpio -P
+            ;;
+        opensuse*)
+            ${sudo_cmd} mkinitrd
+            ;;
+        *)
+            echo "Unknown distribution ID: '$dist_id'"
+            echo "Please manually update your initramfs image."
+            return 1
+            ;;
+    esac
+    return 0
+}
+
 fn_make_fnmode_permanent() {
     local new_fnmode_arg="$1"
     # If the permanent flag is true, make the change permanent
@@ -59,16 +83,17 @@ fn_make_fnmode_permanent() {
         if [[ -d "$modprobe_dir" ]]; then
             # Check if the /etc/modprobe.d/hid_apple.conf file exists, create it if not
             if [[ ! -f "$conf_file" ]]; then
-                echo "" | $sudo_tee_cmd "$conf_file" > /dev/null
+                echo "" | $sudo_cmd tee "$conf_file" > /dev/null
             fi
             # Look for the options hid_apple fnmode=X line in the file
             if grep -q "^options hid_apple fnmode=[0-3]$" "$conf_file"; then
                 # If found, modify the X to match the new fnmode
-                $sudo_sed_cmd -ri "s/^options hid_apple fnmode=[0-3]$/options hid_apple fnmode=$new_fnmode_arg/" "$conf_file"
+                $sudo_cmd sed -ri "s/^options hid_apple fnmode=[0-3]$/options hid_apple fnmode=$new_fnmode_arg/" "$conf_file"
             else
                 # If not found, append the whole line to the file
-                echo "options hid_apple fnmode=$new_fnmode_arg" | $sudo_tee_cmd -a "$conf_file" > /dev/null
+                echo "options hid_apple fnmode=$new_fnmode_arg" | $sudo_cmd tee -a "$conf_file" > /dev/null
             fi
+            fn_update_initramfs
             echo ""
             echo "The change has been made permanent. It will persist after reboot."
         else
@@ -84,7 +109,7 @@ fn_make_fnmode_permanent() {
 fn_update_fnmode() {
     local new_fnmode_arg="$1"
     if [[ $new_fnmode_arg =~ ^[0-3]$ ]]; then
-        if echo "${new_fnmode_arg}" | ${sudo_tee_cmd} "${fnmode_file}" > /dev/null; then
+        if echo "${new_fnmode_arg}" | ${sudo_cmd} tee "${fnmode_file}" > /dev/null; then
             echo -e "\nFunction keys mode for 'hid_apple' has been updated to: '${new_fnmode_arg}'"
             # Make change permanent if necessary
             fn_make_fnmode_permanent "${new_fnmode_arg}"
@@ -132,9 +157,6 @@ while (( $# )); do
                 new_fnmode="$1"
                 fn_check_preconditions
                 fn_update_fnmode "$new_fnmode"
-                if [[ "$var_make_permanent" == "true" ]]; then
-                    fn_make_fnmode_permanent "$new_fnmode"
-                fi
                 exit
             else
                 echo "Unknown option: $1"
