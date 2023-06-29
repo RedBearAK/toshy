@@ -169,7 +169,7 @@ fn_make_fnmode_persistent() {
                 safe_shutdown 1
             fi
             echo ""
-            echo "The fnmode change should now persist across reboots."
+            echo "Success! The fnmode change should now persist across reboots."
         else
             echo ""
             echo "WARNING: Could not make the change persistent."
