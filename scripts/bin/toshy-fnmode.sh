@@ -4,12 +4,13 @@
 # Script to change the function keys mode of Apple keyboards that use `hid_apple` device driver
 
 
-fnmode_file="/sys/module/hid_apple/parameters/fnmode"
 sudo_cmd="sudo"
 
 # function for more convenient shorthand output suppression
 dvnl() {
     "$@" > /dev/null 2>&1
+    local exit_code=$?
+    return $exit_code
 }
 
 # Check if the script is being run as root, avoid unnecessary use of 'sudo'
@@ -18,9 +19,12 @@ if [[ $EUID -eq 0 ]]; then
     sudo_cmd=""
 fi
 
+modprobe_dir="/etc/modprobe.d"
+conf_file="$modprobe_dir/hid_apple.conf"
+fnmode_file="/sys/module/hid_apple/parameters/fnmode"
 curr_fnmode=$(cat ${fnmode_file})
-curr_mode_str="The current function keys mode for the 'hid_apple' driver is:"
-var_make_permanent="false"
+curr_mode_str="Current function keys mode for the 'hid_apple' driver:"
+var_make_persistent="false"
 new_fnmode=""
 
 # echo valid choices text block to terminal
@@ -29,7 +33,7 @@ fn_show_valid_choices() {
     echo "  0 = disabled   [F-keys are ONLY F-keys, no media/hardware functions]"
     echo "  1 = fkeyslast  [Media/hardware keys first, F-keys when Fn key is held]"
     echo "  2 = fkeysfirst [F-keys first, media/hardware keys when Fn key is held]"
-    echo "  3 = auto*      [Usually defaults to acting like mode 1]"
+    echo "  3 = auto*      [Usually defaults to acting like mode '1' (fkeyslast)]"
     echo ""
 }
 
@@ -41,16 +45,37 @@ fn_show_help() {
     echo "Changes the function keys mode of Apple keyboards that use the"
     echo "'hid_apple' device driver. Interactive prompts will be shown"
     echo "if no options or arguments are provided."
+    echo ""
     echo "Requires superuser privileges to modify the mode."
     echo ""
     echo "Options:"
-    echo "  -P, --permanent  Make the mode change permanent across reboots."
-    echo "  -h, --help       Show this help message and exit."
+    echo "  -P, --persistent    Make the mode change persistent across reboots."
+    echo "  -i, --info          Show current live and persistent state, and exit."
+    echo "  -h, --help          Show this help message and exit."
     echo ""
     echo "Arguments:"
     echo "  mode     Desired function keys mode (see below for valid modes)."
     echo ""
     fn_show_valid_choices
+}
+
+fn_show_info() {
+    if [[ $curr_fnmode -eq 0 ]]; then
+        echo -e "\n${curr_mode_str} '0' (disabled)"
+    elif [[ $curr_fnmode -eq 1 ]]; then
+        echo -e "\n${curr_mode_str} '1' (fkeyslast)"
+    elif [[ $curr_fnmode -eq 2 ]]; then
+        echo -e "\n${curr_mode_str} '2' (fkeysfirst)"
+    elif [[ $curr_fnmode -eq 3 ]]; then
+        echo -e "\n${curr_mode_str} '3' (auto)"
+    else
+        echo -e "\n${curr_mode_str} Invalid fnmode: '${curr_fnmode}'"
+    fi
+    # conf_file_txt="$(grep -v '^[[:space:]]*$' ${conf_file})"
+    conf_file_txt="$(nl -n ln ${conf_file} | awk '{$1=sprintf("  Line %02d:", $1); print $0}')"
+    echo ""
+    echo -e "Current contents of '${conf_file}': \n${conf_file_txt}"
+    echo ""
 }
 
 fn_update_initramfs() {
@@ -92,10 +117,10 @@ fn_update_initramfs() {
     return 0
 }
 
-fn_make_fnmode_permanent() {
+fn_make_fnmode_persistent() {
     local new_fnmode_arg="$1"
-    # If the permanent flag is true, make the change permanent
-    if $var_make_permanent; then
+    # If the persistent flag is true, make the change persistent
+    if $var_make_persistent; then
         modprobe_dir="/etc/modprobe.d"
         conf_file="$modprobe_dir/hid_apple.conf"
         # Check if the /etc/modprobe.d directory exists
@@ -114,27 +139,42 @@ fn_make_fnmode_permanent() {
                 # If not found, append the whole line to the file
                 dvnl echo "${options_sub}" | ${sudo_cmd} tee -a "$conf_file"
             fi
-            fn_update_initramfs
+            if ! fn_update_initramfs; then
+                echo ""
+                echo "ERROR: Non-zero return status from attempt to update initramfs. Exiting."
+                exit 1
+            fi
             echo ""
-            echo "The change has been made permanent. It should persist after reboot."
+            echo "The fnmode change should now persist across reboots."
         else
             echo ""
-            echo "WARNING: Could not make the change permanent."
+            echo "WARNING: Could not make the change persistent."
             echo "The '$modprobe_dir' directory does not exist."
         fi
     else
         echo ""
-        echo "The change has been made on a non-permanent basis. May not persist after reboot."
+        echo "The fnmode change is active, but will not persist across reboots."
+        echo ""
     fi
 }
 
 fn_update_fnmode() {
     local new_fnmode_arg="$1"
     if [[ $new_fnmode_arg =~ ^[0-3]$ ]]; then
-        if dvnl echo "${new_fnmode_arg}" | ${sudo_cmd} tee "${fnmode_file}"; then
-            echo -e "\nFunction keys mode for 'hid_apple' has been updated to: '${new_fnmode_arg}'"
-            # Make change permanent if desired
-            fn_make_fnmode_permanent "${new_fnmode_arg}"
+        if dvnl bash -c "echo \"${new_fnmode_arg}\" | ${sudo_cmd} tee $fnmode_file"; then
+            # Read back the value from the file
+            local post_update_fnmode=""
+            post_update_fnmode=$(cat $fnmode_file)
+            if [[ "$post_update_fnmode" == "$new_fnmode_arg" ]]; then
+                echo -e "\nFunction keys mode for 'hid_apple' updated to: '${new_fnmode_arg}'"
+                # Make change persistent if desired
+                fn_make_fnmode_persistent "${new_fnmode_arg}"
+            else
+                echo -e "\nFailed to update function keys mode for 'hid_apple'."
+                echo "Current value is: '$post_update_fnmode'"
+                echo ""
+                exit 1
+            fi
         else
             echo -e "\nFailed to update function keys mode for 'hid_apple'."
             echo ""
@@ -166,33 +206,41 @@ fn_check_preconditions() {
 
 while (( $# )); do
     case "$1" in
-        -P|--permanent)
-            var_make_permanent="true"
+        -P|--persistent)
+            var_make_persistent="true"
             shift
             ;;
         -h|--help)
             fn_show_help
             exit
             ;;
+        -i|--info)
+            fn_show_info
+            exit
+            ;;
+        [0-3])
+            new_fnmode="$1"
+            shift
+            ;;
         *)
-            if [[ -z "$new_fnmode" && "$1" =~ ^[0-3]$ ]]; then
-                new_fnmode="$1"
-                fn_check_preconditions
-                fn_update_fnmode "$new_fnmode"
-                exit
-            else
-                echo "Unknown option: $1"
-                fn_show_help
-                exit 1
-            fi
+            echo "Unknown option: $1"
+            fn_show_help
+            exit 1
             ;;
     esac
 done
 
-# Check that a mode argument follows the use of permanent option
-if [[ "$var_make_permanent" == "true" && -z "$new_fnmode" ]]; then
+if [[ -n "$new_fnmode" ]]; then
+    fn_check_preconditions
     echo ""
-    echo "ERROR: When the permanent option is used, a mode argument must be provided."
+    fn_update_fnmode "$new_fnmode"
+    exit
+fi
+
+# Check that a mode argument follows the use of persistent option
+if [[ "$var_make_persistent" == "true" && -z "$new_fnmode" ]]; then
+    echo ""
+    echo "ERROR: When the persistent option is used, a mode argument must be provided."
     fn_show_help
     exit 1
 fi
@@ -205,26 +253,28 @@ fn_check_preconditions
 # parm: fnmode: Mode of fn key on Apple keyboards 
 # (0 = disabled, 1 = fkeyslast, 2 = fkeysfirst, [3] = auto) (uint)
 
-if [[ $curr_fnmode -eq 0 ]]; then
-    echo -e "\n${curr_mode_str} 0 (disabled)"
-elif [[ $curr_fnmode -eq 1 ]]; then
-    echo -e "\n${curr_mode_str} 1 (fkeyslast)"
-elif [[ $curr_fnmode -eq 2 ]]; then
-    echo -e "\n${curr_mode_str} 2 (fkeysfirst)"
-elif [[ $curr_fnmode -eq 3 ]]; then
-    echo -e "\n${curr_mode_str} 3 (auto)"
-else
-    echo -e "\n${curr_mode_str} Invalid fnmode: ${curr_fnmode}"
-fi
+# if [[ $curr_fnmode -eq 0 ]]; then
+#     echo -e "\n${curr_mode_str} 0 (disabled)"
+# elif [[ $curr_fnmode -eq 1 ]]; then
+#     echo -e "\n${curr_mode_str} 1 (fkeyslast)"
+# elif [[ $curr_fnmode -eq 2 ]]; then
+#     echo -e "\n${curr_mode_str} 2 (fkeysfirst)"
+# elif [[ $curr_fnmode -eq 3 ]]; then
+#     echo -e "\n${curr_mode_str} 3 (auto)"
+# else
+#     echo -e "\n${curr_mode_str} Invalid fnmode: ${curr_fnmode}"
+# fi
+
+fn_show_info
 
 echo ""
 fn_show_valid_choices
 read -rp "Enter your desired mode: " response_to_fnmode_prompt
 fn_update_fnmode "$response_to_fnmode_prompt"
 echo ""
-read -rp "Make the mode change permanent? [y/N]: " response_to_permanent_prompt
-if [[ "$response_to_permanent_prompt" =~ ^[yY]$ ]]; then
-    var_make_permanent="true"
-    fn_make_fnmode_permanent "$response_to_fnmode_prompt"
+read -rp "Make the mode change persistent? [y/N]: " response_to_persistent_prompt
+if [[ "$response_to_persistent_prompt" =~ ^[yY]$ ]]; then
+    var_make_persistent="true"
+    fn_make_fnmode_persistent "$response_to_fnmode_prompt"
 fi
 echo ""
