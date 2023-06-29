@@ -6,13 +6,6 @@
 
 sudo_cmd="sudo"
 
-# function for more convenient shorthand output suppression
-dvnl() {
-    "$@" > /dev/null 2>&1
-    local exit_code=$?
-    return $exit_code
-}
-
 # Check if the script is being run as root, avoid unnecessary use of 'sudo'
 if [[ $EUID -eq 0 ]]; then
     # echo "Running script as root"
@@ -22,7 +15,11 @@ fi
 modprobe_dir="/etc/modprobe.d"
 conf_file="$modprobe_dir/hid_apple.conf"
 fnmode_file="/sys/module/hid_apple/parameters/fnmode"
-curr_fnmode=$(cat ${fnmode_file})
+if [[ -f "$fnmode_file" ]]; then
+    curr_fnmode=$(cat ${fnmode_file})
+else
+    curr_fnmode="N/A"
+fi
 curr_mode_str="Current function keys mode for the 'hid_apple' driver:"
 var_make_persistent="false"
 new_fnmode=""
@@ -60,13 +57,13 @@ fn_show_help() {
 }
 
 fn_show_info() {
-    if [[ $curr_fnmode -eq 0 ]]; then
+    if [[ "$curr_fnmode" == "0" ]]; then
         echo -e "\n${curr_mode_str} '0' (disabled)"
-    elif [[ $curr_fnmode -eq 1 ]]; then
+    elif [[ "$curr_fnmode" == "1" ]]; then
         echo -e "\n${curr_mode_str} '1' (fkeyslast)"
-    elif [[ $curr_fnmode -eq 2 ]]; then
+    elif [[ "$curr_fnmode" == "2" ]]; then
         echo -e "\n${curr_mode_str} '2' (fkeysfirst)"
-    elif [[ $curr_fnmode -eq 3 ]]; then
+    elif [[ "$curr_fnmode" == "3" ]]; then
         echo -e "\n${curr_mode_str} '3' (auto)"
     else
         echo -e "\n${curr_mode_str} Invalid fnmode: '${curr_fnmode}'"
@@ -82,7 +79,7 @@ fn_update_initramfs() {
     # Get the distribution id
     local dist_id
     dist_id=$(awk -F= '/^ID=/ {print tolower($2)}' /etc/os-release)
-    wait_msg="\nPlease WAIT (initramfs update can take some time to complete)..."
+    wait_msg="\nPlease WAIT (initramfs update can take some time to complete)...\n"
     case "$dist_id" in
         debian|ubuntu)
             echo -e "$wait_msg"
@@ -96,11 +93,11 @@ fn_update_initramfs() {
             fi
             # dracut parser wants spaces inserted around the " <value> " in 'install_items'
             drct_ins_str='install_items+=" /etc/modprobe.d/hid_apple.conf "'
-            dvnl echo "${drct_ins_str}" | ${sudo_cmd} tee "$dracut_conf_file"
+            echo "${drct_ins_str}" | ${sudo_cmd} tee "$dracut_conf_file" > /dev/null
             echo -e "$wait_msg"
             ${sudo_cmd} dracut --force
             ;;
-        arch|archlinux)
+        arch*|arcolinux|manjaro|endeavouros)
             echo -e "$wait_msg"
             ${sudo_cmd} mkinitcpio -P
             ;;
@@ -127,7 +124,7 @@ fn_make_fnmode_persistent() {
         if [[ -d "$modprobe_dir" ]]; then
             # Check if the /etc/modprobe.d/hid_apple.conf file exists, create it if not
             if [[ ! -f "$conf_file" ]]; then
-                dvnl echo "" | ${sudo_cmd} tee "$conf_file"
+                ${sudo_cmd} touch "$conf_file"
             fi
             # Look for the options hid_apple fnmode=X line in the file
             options_rgx="^options hid_apple fnmode=[0-3]$"
@@ -137,19 +134,22 @@ fn_make_fnmode_persistent() {
                 ${sudo_cmd} sed -ri "s/${options_rgx}/${options_sub}/" "$conf_file"
             else
                 # If not found, append the whole line to the file
-                dvnl echo "${options_sub}" | ${sudo_cmd} tee -a "$conf_file"
+                echo "${options_sub}" | ${sudo_cmd} tee -a "$conf_file" > /dev/null
             fi
             if ! fn_update_initramfs; then
                 echo ""
                 echo "ERROR: Non-zero return status from attempt to update initramfs. Exiting."
+                echo ""
                 exit 1
             fi
             echo ""
             echo "The fnmode change should now persist across reboots."
+            echo ""
         else
             echo ""
             echo "WARNING: Could not make the change persistent."
             echo "The '$modprobe_dir' directory does not exist."
+            echo ""
         fi
     else
         echo ""
@@ -161,7 +161,7 @@ fn_make_fnmode_persistent() {
 fn_update_fnmode() {
     local new_fnmode_arg="$1"
     if [[ $new_fnmode_arg =~ ^[0-3]$ ]]; then
-        if dvnl bash -c "echo \"${new_fnmode_arg}\" | ${sudo_cmd} tee $fnmode_file"; then
+        if echo "${new_fnmode_arg}" | ${sudo_cmd} tee "${fnmode_file}" > /dev/null; then
             # Read back the value from the file
             local post_update_fnmode=""
             post_update_fnmode=$(cat $fnmode_file)
@@ -248,22 +248,6 @@ fi
 # Check preconditions here in the case where no arguments were passed and 
 # the script is about to start showing the interactive prompts
 fn_check_preconditions
-
-# For reference, found in output of `modinfo hid_apple`:
-# parm: fnmode: Mode of fn key on Apple keyboards 
-# (0 = disabled, 1 = fkeyslast, 2 = fkeysfirst, [3] = auto) (uint)
-
-# if [[ $curr_fnmode -eq 0 ]]; then
-#     echo -e "\n${curr_mode_str} 0 (disabled)"
-# elif [[ $curr_fnmode -eq 1 ]]; then
-#     echo -e "\n${curr_mode_str} 1 (fkeyslast)"
-# elif [[ $curr_fnmode -eq 2 ]]; then
-#     echo -e "\n${curr_mode_str} 2 (fkeysfirst)"
-# elif [[ $curr_fnmode -eq 3 ]]; then
-#     echo -e "\n${curr_mode_str} 3 (auto)"
-# else
-#     echo -e "\n${curr_mode_str} Invalid fnmode: ${curr_fnmode}"
-# fi
 
 fn_show_info
 
