@@ -109,7 +109,8 @@ fn_update_initramfs() {
     case "$dist_id" in
         debian|ubuntu)
             echo -e "$wait_msg"
-            ${sudo_cmd} update-initramfs -u
+            # redirect stdout but not stderr to quiet this down
+            ${sudo_cmd} update-initramfs -u > /dev/null
             ;;
         fedora|opensuse*|centos|ultramarine|almalinux|rocky)
             dracut_conf_dir="/etc/dracut.conf.d"
@@ -117,11 +118,12 @@ fn_update_initramfs() {
             if [[ ! -d "$dracut_conf_dir" ]]; then
                 mkdir -p "$dracut_conf_dir"
             fi
-            # dracut parser wants spaces inserted around the " <value> " in 'install_items'
+            # dracut parser wants spaces inserted around the " <value> " given to 'install_items+='
             drct_ins_str='install_items+=" /etc/modprobe.d/hid_apple.conf "'
             echo "${drct_ins_str}" | ${sudo_cmd} tee "$dracut_conf_file" > /dev/null
             echo -e "$wait_msg"
-            ${sudo_cmd} dracut --force
+            # dracut log level 3 = show only warnings or errors or worse
+            ${sudo_cmd} dracut -L3 --force
             ;;
         silverblue)
             rpm-ostree initramfs --enable --arg=-I --arg=/etc/modprobe.d/hid_apple.conf
