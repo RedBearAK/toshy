@@ -100,7 +100,7 @@ fn_show_info() {
 fn_update_initramfs() {
     # Get the distribution id
     local dist_id
-    dist_id=$(awk -F= '/^ID=/ {print tolower($2)}' /etc/os-release)
+    dist_id=$(awk -F= '/^ID=/ { gsub(/"/, "", $2); print tolower($2)}' /etc/os-release)
     wait_msg="\nPlease WAIT (initramfs update can take some time to complete)...\n"
     case "$dist_id" in
         debian|ubuntu)
