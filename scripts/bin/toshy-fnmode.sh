@@ -15,11 +15,18 @@ fi
 modprobe_dir="/etc/modprobe.d"
 conf_file="$modprobe_dir/hid_apple.conf"
 fnmode_file="/sys/module/hid_apple/parameters/fnmode"
+
 if [[ -f "$fnmode_file" ]]; then
     curr_fnmode=$(cat ${fnmode_file})
 else
     curr_fnmode="N/A"
+    echo ""
+    echo "ERROR: Unable to read current function keys mode."
+    echo "ERROR: '$fnmode_file' is not a valid file."
+    echo "DEBUG: The 'hid_apple' module may not be loaded."
+    echo ""
 fi
+
 curr_mode_str="Current function keys mode for the 'hid_apple' driver:"
 var_make_persistent="false"
 new_fnmode=""
@@ -27,10 +34,10 @@ new_fnmode=""
 # echo valid choices text block to terminal
 fn_show_valid_choices() {
     echo "Valid choices for function keys mode are (default mode marked with '*'):"
-    echo "  0 = disabled   [F-keys are ONLY F-keys, no media/hardware functions]"
+    echo "  0 = disabled   [F-keys are _ONLY_ F-keys, no media/hardware functions]"
     echo "  1 = fkeyslast  [Media/hardware keys first, F-keys when Fn key is held]"
     echo "  2 = fkeysfirst [F-keys first, media/hardware keys when Fn key is held]"
-    echo "  3 = auto*      [Usually defaults to acting like mode '1' (fkeyslast)]"
+    echo "  3 = auto*      [Usually defaults to acting like mode: '1' (fkeyslast)]"
     echo ""
 }
 
@@ -66,7 +73,7 @@ fn_show_info() {
     elif [[ "$curr_fnmode" == "3" ]]; then
         echo -e "\n${curr_mode_str} '3' (auto)"
     else
-        echo -e "\n${curr_mode_str} Invalid fnmode: '${curr_fnmode}'"
+        echo -e "\n${curr_mode_str} '${curr_fnmode}'"
     fi
     # conf_file_txt="$(grep -v '^[[:space:]]*$' ${conf_file})"
     conf_file_txt="$(nl -n ln ${conf_file} | awk '{$1=sprintf("  Line %02d:", $1); print $0}')"
