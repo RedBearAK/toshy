@@ -1,8 +1,20 @@
 #!/usr/bin/env bash
 
+# Script to change the function keys mode of keyboards that use `hid_apple` device driver
 
-# Script to change the function keys mode of Apple keyboards that use `hid_apple` device driver
 
+safe_shutdown() {
+    local exit_code="$1"
+    # invalidate sudo ticket on the way out
+    sudo -k > /dev/null
+    # give the shell prompt some room after script is done
+    echo ""
+    exit "$exit_code"
+}
+
+trap 'safe_shutdown 130' SIGINT
+trap 'safe_shutdown 143' SIGTERM
+trap 'safe_shutdown $?' EXIT
 
 sudo_cmd="sudo"
 
@@ -17,13 +29,12 @@ conf_file="$modprobe_dir/hid_apple.conf"
 fnmode_file="/sys/module/hid_apple/parameters/fnmode"
 
 if [[ -f "$fnmode_file" ]]; then
-    curr_fnmode=$(cat ${fnmode_file})
+    curr_fnmode=$(<${fnmode_file})
 else
     curr_fnmode="N/A"
     echo ""
-    echo "ERROR: Unable to read current function keys mode."
-    echo "ERROR: '$fnmode_file' is not a valid file."
-    echo "DEBUG: The 'hid_apple' module may not be loaded."
+    echo "ERROR: Unable to read current function keys mode:"
+    echo "          '$fnmode_file' is not a valid file."
     echo ""
 fi
 
@@ -65,25 +76,25 @@ fn_show_help() {
 
 fn_show_info() {
     if [[ "$curr_fnmode" == "0" ]]; then
-        echo -e "\n${curr_mode_str} '0' (disabled)"
+        echo -e "\n${curr_mode_str}\n  '0' (disabled)"
     elif [[ "$curr_fnmode" == "1" ]]; then
-        echo -e "\n${curr_mode_str} '1' (fkeyslast)"
+        echo -e "\n${curr_mode_str}\n  '1' (fkeyslast)"
     elif [[ "$curr_fnmode" == "2" ]]; then
-        echo -e "\n${curr_mode_str} '2' (fkeysfirst)"
+        echo -e "\n${curr_mode_str}\n  '2' (fkeysfirst)"
     elif [[ "$curr_fnmode" == "3" ]]; then
-        echo -e "\n${curr_mode_str} '3' (auto)"
+        echo -e "\n${curr_mode_str}\n  '3' (auto)"
     else
         echo -e "\n${curr_mode_str} '${curr_fnmode}'"
     fi
-    # conf_file_txt="$(grep -v '^[[:space:]]*$' ${conf_file})"
-    if [[ -f "$conf_file" ]]; then
+    if [[ -s "$conf_file" ]]; then
         conf_file_txt="$(nl -n ln ${conf_file} | awk '{$1=sprintf("  Line %02d:", $1); print $0}')"
+    elif [[ -f "$conf_file" ]]; then
+        conf_file_txt="  File is empty."
     else
-        conf_file_txt=""
+        conf_file_txt="  File does not exist."
     fi
     echo ""
-    echo -e "Current contents of '${conf_file}': \n${conf_file_txt}"
-    echo ""
+    echo -e "Current contents of '${conf_file}':\n${conf_file_txt}"
 }
 
 fn_update_initramfs() {
@@ -107,6 +118,9 @@ fn_update_initramfs() {
             echo "${drct_ins_str}" | ${sudo_cmd} tee "$dracut_conf_file" > /dev/null
             echo -e "$wait_msg"
             ${sudo_cmd} dracut --force
+            ;;
+        silverblue)
+            rpm-ostree initramfs --enable --arg=-I --arg=/etc/modprobe.d/hid_apple.conf
             ;;
         arch*|arcolinux|manjaro|endeavouros)
             echo -e "$wait_msg"
@@ -150,17 +164,14 @@ fn_make_fnmode_persistent() {
             if ! fn_update_initramfs; then
                 echo ""
                 echo "ERROR: Non-zero return status from attempt to update initramfs. Exiting."
-                echo ""
-                exit 1
+                safe_shutdown 1
             fi
             echo ""
             echo "The fnmode change should now persist across reboots."
-            echo ""
         else
             echo ""
             echo "WARNING: Could not make the change persistent."
             echo "The '$modprobe_dir' directory does not exist."
-            echo ""
         fi
     else
         echo ""
@@ -175,7 +186,7 @@ fn_update_fnmode() {
         if echo "${new_fnmode_arg}" | ${sudo_cmd} tee "${fnmode_file}" > /dev/null; then
             # Read back the value from the file
             local post_update_fnmode=""
-            post_update_fnmode=$(cat $fnmode_file)
+            post_update_fnmode=$(<$fnmode_file)
             if [[ "$post_update_fnmode" == "$new_fnmode_arg" ]]; then
                 echo -e "\nFunction keys mode for 'hid_apple' updated to: '${new_fnmode_arg}'"
                 # Make change persistent if desired
@@ -183,18 +194,15 @@ fn_update_fnmode() {
             else
                 echo -e "\nFailed to update function keys mode for 'hid_apple'."
                 echo "Current value is: '$post_update_fnmode'"
-                echo ""
-                exit 1
+                safe_shutdown 1
             fi
         else
             echo -e "\nFailed to update function keys mode for 'hid_apple'."
-            echo ""
-            exit 1
+            safe_shutdown 1
         fi
     else
         echo -e "\nInvalid input. Please enter a number from 0 to 3."
-        echo ""
-        exit 1
+        safe_shutdown 1
     fi
 }
 
@@ -203,31 +211,29 @@ fn_check_preconditions() {
     if ! lsmod | grep -q '^hid_apple'; then
         echo ""
         echo "ERROR: 'hid_apple' module is not loaded. The script cannot proceed."
-        echo ""
-        exit 1
+        safe_shutdown 1
     fi
     # Check if the fnmode file exists (unlikely if 'hid_apple' module is loaded)
     if [[ ! -f "$fnmode_file" ]]; then
         echo ""
         echo "ERROR: '$fnmode_file' does not exist. The script cannot proceed."
-        echo ""
-        exit 1
+        safe_shutdown 1
     fi
 }
 
 while (( $# )); do
     case "$1" in
-        -P|--persistent)
-            var_make_persistent="true"
-            shift
-            ;;
         -h|--help)
             fn_show_help
-            exit
+            safe_shutdown
             ;;
         -i|--info)
             fn_show_info
-            exit
+            safe_shutdown
+            ;;
+        -P|--persistent)
+            var_make_persistent="true"
+            shift
             ;;
         [0-3])
             new_fnmode="$1"
@@ -236,7 +242,7 @@ while (( $# )); do
         *)
             echo "Unknown option: $1"
             fn_show_help
-            exit 1
+            safe_shutdown 1
             ;;
     esac
 done
@@ -245,7 +251,7 @@ if [[ -n "$new_fnmode" ]]; then
     fn_check_preconditions
     echo ""
     fn_update_fnmode "$new_fnmode"
-    exit
+    safe_shutdown
 fi
 
 # Check that a mode argument follows the use of persistent option
@@ -253,7 +259,7 @@ if [[ "$var_make_persistent" == "true" && -z "$new_fnmode" ]]; then
     echo ""
     echo "ERROR: When the persistent option is used, a mode argument must be provided."
     fn_show_help
-    exit 1
+    safe_shutdown 1
 fi
 
 # Check preconditions here in the case where no arguments were passed and 
@@ -272,4 +278,4 @@ if [[ "$response_to_persistent_prompt" =~ ^[yY]$ ]]; then
     var_make_persistent="true"
     fn_make_fnmode_persistent "$response_to_fnmode_prompt"
 fi
-echo ""
+safe_shutdown
