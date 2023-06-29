@@ -4,11 +4,15 @@
 
 
 safe_shutdown() {
-    local exit_code="$1"
+    local exit_code=0
+    if [[ -n $1 ]]; then
+        exit_code=$1
+    fi
     # invalidate sudo ticket on the way out
     sudo -k > /dev/null
     # give the shell prompt some room after script is done
     echo ""
+    # shellcheck disable=SC2086
     exit "$exit_code"
 }
 
@@ -107,7 +111,7 @@ fn_update_initramfs() {
             echo -e "$wait_msg"
             ${sudo_cmd} update-initramfs -u
             ;;
-        fedora|centos|ultramarine|almalinux|rocky)
+        fedora|opensuse*|centos|ultramarine|almalinux|rocky)
             dracut_conf_dir="/etc/dracut.conf.d"
             dracut_conf_file="${dracut_conf_dir}/hid_apple.conf"
             if [[ ! -d "$dracut_conf_dir" ]]; then
@@ -125,10 +129,6 @@ fn_update_initramfs() {
         arch*|arcolinux|manjaro|endeavouros)
             echo -e "$wait_msg"
             ${sudo_cmd} mkinitcpio -P
-            ;;
-        opensuse*)
-            echo -e "$wait_msg"
-            ${sudo_cmd} mkinitrd
             ;;
         *)
             echo "Unknown distribution ID: '$dist_id'"
