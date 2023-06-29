@@ -76,7 +76,11 @@ fn_show_info() {
         echo -e "\n${curr_mode_str} '${curr_fnmode}'"
     fi
     # conf_file_txt="$(grep -v '^[[:space:]]*$' ${conf_file})"
-    conf_file_txt="$(nl -n ln ${conf_file} | awk '{$1=sprintf("  Line %02d:", $1); print $0}')"
+    if [[ -f "$conf_file" ]]; then
+        conf_file_txt="$(nl -n ln ${conf_file} | awk '{$1=sprintf("  Line %02d:", $1); print $0}')"
+    else
+        conf_file_txt=""
+    fi
     echo ""
     echo -e "Current contents of '${conf_file}': \n${conf_file_txt}"
     echo ""
