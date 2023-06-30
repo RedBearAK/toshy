@@ -368,9 +368,13 @@ def install_udev_rules():
     """Set up `udev` rules file to give user/keyszer access to uinput"""
     print(f'\n\n§  Installing "udev" rules file for keymapper...\n{cnfg.separator}')
     rules_file_path = '/etc/udev/rules.d/90-toshy-keymapper-input.rules'
+    setfacl_path = shutil.which('setfacl')
+    acl_rule = ''
+    if setfacl_path is not None:
+        acl_rule = f', RUN+="{setfacl_path} -m g::rw /dev/uinput"'
     rule_content = (
         'SUBSYSTEM=="input", GROUP="input"\n'
-        'KERNEL=="uinput", SUBSYSTEM=="misc", GROUP="input", MODE="0660"\n'
+        f'KERNEL=="uinput", SUBSYSTEM=="misc", GROUP="input", MODE="0660"{acl_rule}\n'
     )
     # Only write the file if it doesn't exist or its contents are different
     if not os.path.exists(rules_file_path) or open(rules_file_path).read() != rule_content:
