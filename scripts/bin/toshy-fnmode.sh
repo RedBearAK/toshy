@@ -104,32 +104,46 @@ fn_show_info() {
 fn_update_initramfs() {
     # Get the distribution id
     local dist_id
+    local distro_type
+    local update_type_msg
+    # do not forget to strip any quotes around distro ID, or case match will fail
     dist_id=$(awk -F= '/^ID=/ { gsub(/"/, "", $2); print tolower($2)}' /etc/os-release)
+    distro_type=""
+    update_type_msg="\nTrying ${distro_type} distro type initramfs update commands."
     wait_msg="\nPlease WAIT (initramfs update can take some time to complete)...\n"
     case "$dist_id" in
-        debian|ubuntu)
-            echo -e "$wait_msg"
+        debian|ubuntu|peppermintos)
+            distro_type="Debian/Ubuntu"
+            echo -e "${update_type_msg}"
+            echo -e "${wait_msg}"
             # redirect stdout but not stderr to quiet this down
             ${sudo_cmd} update-initramfs -u > /dev/null
             ;;
         fedora|opensuse*|centos|ultramarine|almalinux|rocky)
             dracut_conf_dir="/etc/dracut.conf.d"
-            dracut_conf_file="${dracut_conf_dir}/hid_apple.conf"
+            drct_hidapple_conf_file="${dracut_conf_dir}/hid_apple.conf"
             if [[ ! -d "$dracut_conf_dir" ]]; then
-                mkdir -p "$dracut_conf_dir"
+                ${sudo_cmd} mkdir -p "$dracut_conf_dir"
             fi
-            # dracut parser wants spaces inserted around the " <value> " given to 'install_items+='
+            # dracut parser wants spaces around the " <value> " given to 'install_items+='
             drct_ins_str='install_items+=" /etc/modprobe.d/hid_apple.conf "'
-            echo "${drct_ins_str}" | ${sudo_cmd} tee "$dracut_conf_file" > /dev/null
-            echo -e "$wait_msg"
-            # dracut log level 3 = show only warnings or errors or worse
+            echo "${drct_ins_str}" | ${sudo_cmd} tee "$drct_hidapple_conf_file" > /dev/null
+            distro_type="Fedora/RHEL/openSUSE"
+            echo -e "${update_type_msg}"
+            echo -e "${wait_msg}"
+            # dracut log level 3 = show only warnings or errors/failures
             ${sudo_cmd} dracut -L3 --force
             ;;
         silverblue)
-            rpm-ostree initramfs --enable --arg=-I --arg=/etc/modprobe.d/hid_apple.conf
+            distro_type="Fedora Silverblue"
+            echo -e "${update_type_msg}"
+            echo -e "${wait_msg}"
+            ${sudo_cmd} rpm-ostree initramfs --enable --arg=-I --arg=/etc/modprobe.d/hid_apple.conf
             ;;
         arch*|arcolinux|manjaro|endeavouros)
-            echo -e "$wait_msg"
+            distro_type="Arch"
+            echo -e "${update_type_msg}"
+            echo -e "${wait_msg}"
             ${sudo_cmd} mkinitcpio -P
             ;;
         *)
