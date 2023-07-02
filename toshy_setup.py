@@ -1018,7 +1018,7 @@ def apply_tweaks_GNOME():
     # Disable GNOME `overlay-key` binding to Meta/Super/Win/Cmd
     # gsettings set org.gnome.mutter overlay-key ''
     subprocess.run(['gsettings', 'set', 'org.gnome.mutter', 'overlay-key', ''])
-    print(f'Disabled Meta/Super/Win/Cmd key opening the GNOME overview.')
+    print(f'Disabled Super key opening the GNOME overview. (Use Cmd+Space instead.)')
 
     # Set the keyboard shortcut for "Switch applications" to "Alt+Tab"
     # gsettings set org.gnome.desktop.wm.keybindings switch-applications "['<Alt>Tab']"
@@ -1069,7 +1069,7 @@ def apply_tweaks_KDE():
 
     # Run reconfigure command
     do_kwin_reconfigure()
-    print(f'Disabled Meta key opening application menu.')
+    print(f'Disabled Meta key opening application menu. (Use Cmd+Space instead.)')
     
     if cnfg.fancy_pants:
 
