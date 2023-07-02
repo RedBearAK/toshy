@@ -643,15 +643,22 @@ def merge_slices(data: str, slices: Dict[str, str]) -> str:
 
     return "".join(data_slices)
 
-
 def backup_toshy_config():
     """Backup existing Toshy config folder"""
     print(f'\n\n§  Backing up existing Toshy config folder...\n{cnfg.separator}')
-    timestamp = datetime.datetime.now().strftime('_%Y%m%d_%H%M%S')
-    toshy_backup_dir_path = os.path.abspath(cnfg.toshy_dir_path + timestamp)
-    if os.path.exists(os.path.join(os.path.expanduser('~'), '.config', 'toshy')):
 
+    timestamp = datetime.datetime.now().strftime('_%Y%m%d_%H%M%S')
+    toshy_cfg_bkups_base_dir  = os.path.join(
+        os.path.expanduser('~'), '.config', 'toshy_config_backups')
+    toshy_cfg_bkup_timestamp_dir  = os.path.abspath(
+        os.path.join(toshy_cfg_bkups_base_dir, 'toshy' + timestamp))
+
+    if not os.path.exists(cnfg.toshy_dir_path):
+        print(f'No existing Toshy folder to backup.')
+        cnfg.backup_succeeded = True
+    else:
         cfg_file_path   = os.path.join(cnfg.toshy_dir_path, 'toshy_config.py')
+
         if os.path.isfile(cfg_file_path):
             try:
                 with open(cfg_file_path, 'r', encoding='UTF-8') as file:
@@ -660,7 +667,6 @@ def backup_toshy_config():
             except (FileNotFoundError, PermissionError, OSError) as file_err:
                 cnfg.existing_cfg_data = None
                 error(f'Problem reading existing config file contents.\n\t{file_err}')
-
             if cnfg.existing_cfg_data is not None:
                 try:
                     cnfg.existing_cfg_slices = extract_slices(cnfg.existing_cfg_data)
@@ -675,23 +681,19 @@ def backup_toshy_config():
                 shutil.copy(cnfg.db_file_path, f'{cnfg.run_tmp_dir}/')
             except (FileNotFoundError, PermissionError, OSError) as file_err:
                 error(f"Problem copying preferences db file to '{cnfg.run_tmp_dir}':\n\t{file_err}")
-
         try:
             # Define the ignore function
             def ignore_venv(dirname, filenames):
                 return ['.venv'] if '.venv' in filenames else []
             # Copy files recursively from source to destination
-            shutil.copytree(cnfg.toshy_dir_path, toshy_backup_dir_path, ignore=ignore_venv)
+            shutil.copytree(cnfg.toshy_dir_path, toshy_cfg_bkup_timestamp_dir, ignore=ignore_venv)
         except shutil.Error as copy_error:
             print(f"Failed to copy directory: {copy_error}")
-            exit(1)
+            safe_shutdown(1)
         except OSError as os_error:
             print(f"Failed to copy directory: {os_error}")
-            exit(1)
-        print(f"Backup completed to '{toshy_backup_dir_path}'")
-        cnfg.backup_succeeded = True
-    else:
-        print(f'No existing Toshy folder to backup.')
+            safe_shutdown(1)
+        print(f"Backup completed to '{toshy_cfg_bkup_timestamp_dir}'")
         cnfg.backup_succeeded = True
 
 
@@ -700,7 +702,7 @@ def install_toshy_files():
     print(f'\n\n§  Installing Toshy files...\n{cnfg.separator}')
     if not cnfg.backup_succeeded:
         print(f'Backup of Toshy config folder failed? Bailing out.')
-        exit(1)
+        safe_shutdown(1)
     script_name = os.path.basename(__file__)
     keyszer_tmp = os.path.basename(cnfg.keyszer_tmp_path)
     try:
