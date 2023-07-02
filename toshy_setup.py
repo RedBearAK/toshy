@@ -451,7 +451,7 @@ distro_groups_map = {
     'redhat-based':    ["fedora", "fedoralinux", "ultramarine", "almalinux", "rocky", "rhel"],
     'opensuse-based':  ["opensuse-tumbleweed"],
     'ubuntu-based':    ["ubuntu", "mint", "popos", "eos", "neon", "zorin"],
-    'debian-based':    ["lmde", "debian"],
+    'debian-based':    ["lmde", "peppermintos", "debian"],
     'arch-based':      ["arch", "arcolinux", "endeavouros", "manjaro"],
     # Add more as needed...
 }
