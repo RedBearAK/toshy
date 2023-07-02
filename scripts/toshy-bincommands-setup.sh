@@ -4,43 +4,44 @@
 # "Install" the bin commands as symlinks in user-local bin location.
 
 # Check if the script is being run as root
-if [[ $EUID -eq 0 ]]; then
+if [[ ${EUID} -eq 0 ]]; then
     echo "This script must not be run as root"
     exit 1
 fi
 
 # Check if $USER and $HOME environment variables are not empty
-if [[ -z $USER ]] || [[ -z $HOME ]]; then
+if [[ -z ${USER} ]] || [[ -z ${HOME} ]]; then
     echo "\$USER and/or \$HOME environment variables are not set. We need them."
     exit 1
 fi
 
 
-TOSHY_BIN="$HOME/.config/toshy/scripts/bin"
-LOCAL_BIN="$HOME/.local/bin"
+TOSHY_BIN="${HOME}/.config/toshy/scripts/bin"
+LOCAL_BIN="${HOME}/.local/bin"
 
 echo -e "\nInstalling Toshy terminal commands..."
 
-mkdir -p "$HOME/.local/bin"
+mkdir -p "${LOCAL_BIN}"
 
-ln -sf "$TOSHY_BIN/toshy-systemd-setup.sh"         "$LOCAL_BIN/toshy-systemd-setup"
-ln -sf "$TOSHY_BIN/toshy-systemd-remove.sh"        "$LOCAL_BIN/toshy-systemd-remove"
-ln -sf "$TOSHY_BIN/toshy-services-status.sh"       "$LOCAL_BIN/toshy-services-status"
-ln -sf "$TOSHY_BIN/toshy-services-restart.sh"      "$LOCAL_BIN/toshy-services-restart"
-ln -sf "$TOSHY_BIN/toshy-services-start.sh"        "$LOCAL_BIN/toshy-services-start"
-ln -sf "$TOSHY_BIN/toshy-services-stop.sh"         "$LOCAL_BIN/toshy-services-stop"
-ln -sf "$TOSHY_BIN/toshy-services-log.sh"          "$LOCAL_BIN/toshy-services-log"
-ln -sf "$TOSHY_BIN/toshy-config-start.sh"          "$LOCAL_BIN/toshy-config-start"
-ln -sf "$TOSHY_BIN/toshy-config-start-verbose.sh"  "$LOCAL_BIN/toshy-config-start-verbose"
-ln -sf "$TOSHY_BIN/toshy-config-restart.sh"        "$LOCAL_BIN/toshy-config-restart"
-ln -sf "$TOSHY_BIN/toshy-config-stop.sh"           "$LOCAL_BIN/toshy-config-stop"
-ln -sf "$TOSHY_BIN/toshy-tray.sh"                  "$LOCAL_BIN/toshy-tray"
-ln -sf "$TOSHY_BIN/toshy-gui.sh"                   "$LOCAL_BIN/toshy-gui"
-ln -sf "$TOSHY_BIN/toshy-env.sh"                   "$LOCAL_BIN/toshy-env"
-ln -sf "$TOSHY_BIN/toshy-venv.sh"                  "$LOCAL_BIN/toshy-venv"
-ln -sf "$TOSHY_BIN/toshy-fnmode.sh"                "$LOCAL_BIN/toshy-fnmode"
-ln -sf "$TOSHY_BIN/toshy-devices.sh"               "$LOCAL_BIN/toshy-devices"
-ln -sf "$TOSHY_BIN/toshy-kde-dbus-service.sh"      "$LOCAL_BIN/toshy-kde-dbus-service"
+ln -sf "${TOSHY_BIN}/toshy-systemd-setup.sh"         "${LOCAL_BIN}/toshy-systemd-setup"
+ln -sf "${TOSHY_BIN}/toshy-systemd-remove.sh"        "${LOCAL_BIN}/toshy-systemd-remove"
+ln -sf "${TOSHY_BIN}/toshy-services-status.sh"       "${LOCAL_BIN}/toshy-services-status"
+ln -sf "${TOSHY_BIN}/toshy-services-restart.sh"      "${LOCAL_BIN}/toshy-services-restart"
+ln -sf "${TOSHY_BIN}/toshy-services-start.sh"        "${LOCAL_BIN}/toshy-services-start"
+ln -sf "${TOSHY_BIN}/toshy-services-stop.sh"         "${LOCAL_BIN}/toshy-services-stop"
+ln -sf "${TOSHY_BIN}/toshy-services-log.sh"          "${LOCAL_BIN}/toshy-services-log"
+ln -sf "${TOSHY_BIN}/toshy-config-start.sh"          "${LOCAL_BIN}/toshy-config-start"
+ln -sf "${TOSHY_BIN}/toshy-config-start-verbose.sh"  "${LOCAL_BIN}/toshy-config-start-verbose"
+ln -sf "${TOSHY_BIN}/toshy-config-start-verbose.sh"  "${LOCAL_BIN}/toshy-config-verbose-start"
+ln -sf "${TOSHY_BIN}/toshy-config-restart.sh"        "${LOCAL_BIN}/toshy-config-restart"
+ln -sf "${TOSHY_BIN}/toshy-config-stop.sh"           "${LOCAL_BIN}/toshy-config-stop"
+ln -sf "${TOSHY_BIN}/toshy-tray.sh"                  "${LOCAL_BIN}/toshy-tray"
+ln -sf "${TOSHY_BIN}/toshy-gui.sh"                   "${LOCAL_BIN}/toshy-gui"
+ln -sf "${TOSHY_BIN}/toshy-env.sh"                   "${LOCAL_BIN}/toshy-env"
+ln -sf "${TOSHY_BIN}/toshy-venv.sh"                  "${LOCAL_BIN}/toshy-venv"
+ln -sf "${TOSHY_BIN}/toshy-fnmode.sh"                "${LOCAL_BIN}/toshy-fnmode"
+ln -sf "${TOSHY_BIN}/toshy-devices.sh"               "${LOCAL_BIN}/toshy-devices"
+ln -sf "${TOSHY_BIN}/toshy-kde-dbus-service.sh"      "${LOCAL_BIN}/toshy-kde-dbus-service"
 
 
 echo ""
@@ -55,6 +56,7 @@ echo "- toshy-services-stop"
 echo "- toshy-services-log"
 echo "- toshy-config-start"
 echo "- toshy-config-start-verbose"
+echo "- toshy-config-verbose-start"
 echo "- toshy-config-restart"
 echo "- toshy-config-stop"
 echo "- toshy-tray"
@@ -70,8 +72,8 @@ echo "run 'hash -r', or source your shell RC file to refresh executable hash tab
 echo ""
 
 
-if [[ -n "$XDG_RUNTIME_DIR" ]]; then
-    run_tmp_dir="$XDG_RUNTIME_DIR"
+if [[ -n "${XDG_RUNTIME_DIR}" ]]; then
+    run_tmp_dir="${XDG_RUNTIME_DIR}"
 else
     run_tmp_dir="/tmp"
 fi
@@ -80,7 +82,7 @@ path_line=""
 shell_rc=""
 
 path_good_tmp_file="toshy_installer_says_path_is_good"
-path_good_tmp_path="$run_tmp_dir/$path_good_tmp_file"
+path_good_tmp_path="${run_tmp_dir}/${path_good_tmp_file}"
 
 # echo "path_good_tmp_path: $path_good_tmp_path"
 
@@ -89,7 +91,7 @@ if [ -f "$path_good_tmp_path" ]; then
 fi
 
 path_fix_tmp_file="toshy_installer_says_fix_path"
-path_fix_tmp_path="$run_tmp_dir/$path_fix_tmp_file"
+path_fix_tmp_path="${run_tmp_dir}/${path_fix_tmp_file}"
 
 # echo "path_fix_tmp_path: $path_fix_tmp_path"
 
@@ -99,18 +101,18 @@ if [ -f "$path_fix_tmp_path" ]; then
 fi
 
 
-case "$SHELL" in
+case "${SHELL}" in
     */bash)
-        shell_rc="$HOME/.bashrc"
-        path_line="export PATH=\"$HOME/.local/bin:\$PATH\""
+        shell_rc="${HOME}/.bashrc"
+        path_line="export PATH=\"${LOCAL_BIN}:\$PATH\""
         ;;
     */zsh)
-        shell_rc="$HOME/.zshrc"
-        path_line="export PATH=\"$HOME/.local/bin:\$PATH\""
+        shell_rc="${HOME}/.zshrc"
+        path_line="export PATH=\"${LOCAL_BIN}:\$PATH\""
         ;;
     */fish)
-        shell_rc="$HOME/.config/fish/config.fish"
-        path_line="set -U fish_user_paths $HOME/.local/bin \$fish_user_paths"
+        shell_rc="${HOME}/.config/fish/config.fish"
+        path_line="set -U fish_user_paths ${LOCAL_BIN} \$fish_user_paths"
         ;;
     *)
         shell_rc=""
@@ -119,13 +121,13 @@ case "$SHELL" in
 esac
 
 
-if [[ $toshy_installer_says_fix_path -eq 1 ]]; then
+if [[ ${toshy_installer_says_fix_path} -eq 1 ]]; then
 
     if [[ -n "${shell_rc}" ]]; then
         echo -e "\nFixing path because Toshy installer said so..."
-        echo -e "Appending the export path line to '$shell_rc'..."
-        echo -e "\n$path_line\n" >> "${shell_rc}"
-        echo -e "Done. Restart your shell or run 'source $shell_rc' to apply the changes."
+        echo -e "Appending the export path line to '${shell_rc}'..."
+        echo -e "\n${path_line}\n" >> "${shell_rc}"
+        echo -e "Done. Restart your shell or run 'source ${shell_rc}' to apply the changes."
         exit 0
     else
         echo -e "\nALERT: Toshy Installer said to fix path but shell not recognized."
@@ -137,19 +139,19 @@ fi
 
 
 # Check if ~/.local/bin is in the user's PATH
-if ! echo "$PATH" | grep -q -E "(^|:)$HOME/.local/bin(:|$)"; then
-    echo -e "\nIt looks like '${HOME}/.local/bin' is not in your PATH."
+if ! echo "${PATH}" | grep -q -E "(^|:)${LOCAL_BIN}(:|$)"; then
+    echo -e "\nIt looks like '${LOCAL_BIN}' is not in your PATH."
     echo -e "To add it permanently, append the following line to your shell RC file:"
 
-    case "$SHELL" in
+    case "${SHELL}" in
         */bash)
-            echo "export PATH=\"$HOME/.local/bin:\$PATH\""
+            echo "export PATH=\"${LOCAL_BIN}:\$PATH\""
             ;;
         */zsh)
-            echo "export PATH=\"$HOME/.local/bin:\$PATH\""
+            echo "export PATH=\"${LOCAL_BIN}:\$PATH\""
             ;;
         */fish)
-            echo "set -U fish_user_paths $HOME/.local/bin \$fish_user_paths"
+            echo "set -U fish_user_paths ${LOCAL_BIN} \$fish_user_paths"
             ;;
         *)
             echo "ALERT: Shell not recognized."
@@ -160,18 +162,18 @@ if ! echo "$PATH" | grep -q -E "(^|:)$HOME/.local/bin(:|$)"; then
     if [[ -n "${shell_rc}" ]]; then
 
         # Check if the line already exists in the RC file
-        if grep -Fxq "$path_line" "${shell_rc}"; then
+        if grep -Fxq "${path_line}" "${shell_rc}"; then
             echo "The line is already in your $shell_rc file."
         else
-            read -r -p "Do you want to append the line to your $shell_rc file now? [Y/n] " yn
+            read -r -p "Do you want to append the line to your ${shell_rc} file now? [Y/n] " yn
             case $yn in
                 [Nn]* )
                     echo -e "Skipping. Please add the line to your shell RC file manually."
                     ;;
                 * )
-                    echo -e "\nAppending the line to $shell_rc..."
-                    echo -e "\n$path_line\n" >> "${shell_rc}"
-                    echo -e "Done. Restart your shell or run 'source $shell_rc' to apply the changes."
+                    echo -e "\nAppending the line to ${shell_rc}..."
+                    echo -e "\n${path_line}\n" >> "${shell_rc}"
+                    echo -e "Done. Restart your shell or run 'source ${shell_rc}' to apply the changes."
                     ;;
             esac
         fi
