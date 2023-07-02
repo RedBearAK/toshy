@@ -864,6 +864,7 @@ dialogs_Escape_lod = [
     {clas:"^konsole$|^org.kde.konsole$",    name:"^Configure.*Konsole$|^Edit Profile.*Konsole$"},
     {clas:"^org.kde.KWrite$",               name:"^Configure.*KWrite$"},
     {clas:"^org.kde.Dolphin$",              name:"^Configure.*Dolphin$|^Properties.*Dolphin$"},
+    {clas:"^xfce4-terminal$",               name:"^Terminal Preferences$"},
 ]
 
 ### dialogs_CloseWin_lod = send these windows the "Close window" combo for Cmd+W
