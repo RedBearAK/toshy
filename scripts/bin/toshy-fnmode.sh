@@ -112,7 +112,7 @@ fn_update_initramfs() {
     update_type_msg="\nTrying ${distro_type} distro type initramfs update commands."
     wait_msg="\nPlease WAIT (initramfs update can take some time to complete)...\n"
     case "$dist_id" in
-        debian|ubuntu|peppermintos)
+        debian|ubuntu|peppermint)
             distro_type="Debian/Ubuntu"
             echo -e "${update_type_msg}"
             echo -e "${wait_msg}"
