@@ -6,7 +6,7 @@
 
 - May have issues installing on distros not on the "tested" list below. Try the `--list-distros` and `--override-distro` options (separately) with the installer, if you think your distro is closely related to one on the list.  
 
-- May seem to run at login, but not do any remapping, needing `toshy-config-start-verbose` in the terminal to troubleshoot. Or, it may just need a restart of the services from the tray icon or with `toshy-services-restart`.  
+- May seem to run at login, but not do any remapping, needing `toshy-config-verbose-start` in the terminal to troubleshoot. Or, it may just need a restart of the services from the tray icon or with `toshy-services-restart`.  
 
 - May cause the keyboard in some odd circumstances after install/reboot to have no output (default emergency bail out key is F16, which can be changed in the config file before rebooting). If you don't have F16 on your keyboard, you may need to stop and restart the Toshy services from the tray icon menu, or by opening the "Preferences" app from a menu with the mouse.  
 
@@ -46,7 +46,7 @@ xprop WM_CLASS _NET_WM_NAME
 
 The mouse cursor will change to a cross shape. Click on the window in question and the attributes will appear in the terminal.  
 
-If you're in one of the compatible Wayland environments (GNOME or KDE, so far), you'll have to rely on other tools, or the verbose logging output from `toshy-config-start-verbose`. When a window has the focus and you use a keyboard shortcut that gets remapped by the keymapper config file, you will see additional output in the terminal showing the window's class and name/title. A good shortcut to use for this that usually won't do anything unless the app has a tabbed UI is `Shift+Cmd+Left_Brace` or `Shift+Cmd+Right_Brace` (those are the defined names of the square bracket keys). Utilities like `xprop` will generally have no output in a Wayland session.  
+If you're in one of the compatible Wayland environments (GNOME or KDE, so far), you'll have to rely on other tools, or the verbose logging output from `toshy-config-verbose-start`. When a window has the focus and you use a keyboard shortcut that gets remapped by the keymapper config file, you will see additional output in the terminal showing the window's class and name/title. A good shortcut to use for this that usually won't do anything unless the app has a tabbed UI is `Shift+Cmd+Left_Brace` or `Shift+Cmd+Right_Brace` (those are the defined names of the square bracket keys). Utilities like `xprop` will generally have no output in a Wayland session.  
 
 ## Windows Support
 
@@ -299,6 +299,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - Kubuntu 22.04/23.04 (X11/Xorg or Wayland+KDE)
     - Xubuntu 23.04 (X11/Xorg only)
     - Lubuntu 23.04 (X11/Xorg only)
+    - Ubuntu Budgie 23.04 (X11/Xorg only)
 
 - Pop!_OS 22.04 LTS (Ubuntu-based)
 
@@ -310,7 +311,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 - Zorin OS 16.2 (Ubuntu-based)
 
-    - X11/Xorg or Wayland+GNOME session
+    - X11/Xorg or Wayland+GNOME (requires extensions)
     - Wayland+GNOME requires Xremap extension
     - GNOME Shell is still 3.38.x, Xremap extension is the only compatible extension available for pre-GNOME 40.x
 
@@ -328,39 +329,42 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 - LMDE 5 (Linux Mint Debian Edition)
 
-- antiX (Debian-based, related to MX Linux)
+- PeppermintOS
+
+    - New release based on Debian 12 tested
+    - Desktop is Xfce4 v4.18
+
+- antiX 21.x (Debian-based, related to MX Linux)
 
     - Preliminary support, no SysVinit services yet, so no auto-start.
     - Starting only the "config script" from the tray icon menu should work now.
-    - Use `toshy-config-start` or `toshy-config-start-verbose` for manual start.
+    - Use `toshy-config-start` or `toshy-config-verbose-start` for manual start.
     - Only "rox-icewm" desktop verified/tested.
 
-- MX Linux (Debian-based, related to antiX)
+- MX Linux 21.x (Debian-based, related to antiX)
 
     - Preliminary support, no SysVinit services yet, so no auto-start.
     - Starting only the "config script" from the tray icon menu should work now.
-    - Use `toshy-config-start` or `toshy-config-start-verbose` for manual start.
+    - Use `toshy-config-start` or `toshy-config-verbose-start` for manual start.
     - Choosing advanced options and booting with `systemd` will work fine.
-
-- Debian distros in general might work, because:
-
-    - antiX & MX Linux are based on Debian 11 Bullseye and identify as `debian`.
 
 - Debian 12 tested and can be made to work:
 
-    - Add your user to `sudo` group (and reboot!)
+    - If you gave a root password, your user will NOT be in the `sudo` group!
+    - If necessary, add your user to `sudo` group (and reboot!)
         - `su -`
         - `usermod -aG sudo yourusername`
-        - Seriously, reboot!
+        - Seriously, reboot now!
     - Then, for Wayland+GNOME:
         - Install `flatpak` and the Flathub repo. Instructions here:
             - https://flatpak.org/setup/Debian
-        - Do `flatpak install com.mattjakeman.ExtensionManager` (and reboot!)
+        - Do `flatpak install com.mattjakeman.ExtensionManager`
+        - Reboot again! So that Flatpak folders are added to path.
         - Install any compatible shell extension with Extension Manager:
             - Xremap
             - Window Calls Extended
             - Focused Window D-Bus
-        - Recommended extensions:
+        - Recommended additional extensions:
             - AppIndicator and KStatusNotifier (for tray icon)
             - Logo Menu (enable power options in settings)
 
@@ -439,6 +443,7 @@ Restarting the Toshy services, either with one of the above commands or from the
 toshy-config-restart
 toshy-config-start
 toshy-config-start-verbose  (show debugging output in the terminal)
+toshy-config-verbose-start  (alias of 'toshy-config-start-verbose')
 toshy-config-stop
 ```
 
@@ -513,7 +518,7 @@ xprop WM_CLASS _NET_WM_NAME
 In a Wayland environment where you know the app-specific remapping is otherwise working (Wayland+GNOME with extensions or Wayland+KDE is all that works right now), run the Toshy manual config start "verbose" command and then use a shortcut that will be remapped (like `Shift+Cmd+Left_Brace`), while the keyboard focus is on the window that is not being recognized:  
 
 ```sh
-toshy-config-start-verbose
+toshy-config-verbose-start
 ```
 
 You should see some kind of output like this, which will display the class and name according to the Wayland window context provider, and which keymap has been triggered:  
@@ -613,7 +618,7 @@ This will force the keyboard to be treated as the 'type' you put after the colon
 If you run the verbose output script you'll be able to see the device name that `keyszer` is seeing when you use your keyboard. Run this in a terminal, and then use a remapped shortcut like `Shift+Cmd+Left_Brace` or `Shift+Cmd+Right_Brace` (the square bracket keys). Or just `Cmd+Tab` away from the terminal and back.  
 
 ```sh
-toshy-config-start-verbose
+toshy-config-verbose-start
 ```
 
 Using the device name, you can look for the correct keyboard Python "list" in the config file and add the device name to the list. The list names are:   
