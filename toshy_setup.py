@@ -722,8 +722,7 @@ def install_toshy_files():
                 '.gitignore',
                 'packages.json',
                 'README.md',
-                'kwin-application-switcher',
-                'Fantasque.*'
+                'kwin-application-switcher'
             )
         )
     except shutil.Error as copy_error:
@@ -1156,13 +1155,9 @@ def apply_desktop_tweaks():
         apply_tweaks_GNOME()
         cnfg.tweak_applied = True
 
-
-
     if cnfg.DESKTOP_ENV == 'kde':
         apply_tweaks_KDE()
         cnfg.tweak_applied = True
-    
-    # if KDE, install `ibus` or `fcitx` and choose as input manager (ask for confirmation)
 
     # General (not DE specific) "fancy pants" additions:
     if cnfg.fancy_pants:
@@ -1176,17 +1171,17 @@ def apply_desktop_tweaks():
 
         print(f'Downloading… ', end='', flush=True)
 
+        zip_path    = f'{cnfg.run_tmp_dir}/{font_file}'
+        
         if shutil.which('curl'):
-            subprocess.run(['curl', '-LO', font_link], 
+            subprocess.run(['curl', '-Lo', zip_path, font_link], 
                         stdout=DEVNULL, stderr=DEVNULL)
         elif shutil.which('wget'):
-            subprocess.run(['wget', font_link],
+            subprocess.run(['wget', '-O', zip_path, font_link],
                         stdout=DEVNULL, stderr=DEVNULL)
         else:
             print("\nERROR: Neither 'curl' nor 'wget' is available. Can't install font.")
 
-        zip_path    = f'./{font_file}'
-        
         if os.path.isfile(zip_path):
             folder_name = font_file.rsplit('.', 1)[0]
             extract_dir = f'{cnfg.run_tmp_dir}/'
