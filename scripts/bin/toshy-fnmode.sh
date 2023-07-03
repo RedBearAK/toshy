@@ -101,21 +101,20 @@ fn_show_info() {
     echo -e "Current contents of '${conf_file}':\n${conf_file_txt}"
 }
 
+fn_msg_distro_type() {
+    echo "Trying '$1' distro type initramfs update command(s)."
+}
+
 fn_update_initramfs() {
     # Get the distribution id
     local dist_id
-    local distro_type
-    local update_type_msg
     # do not forget to strip any quotes around distro ID, or case match will fail
     dist_id=$(awk -F= '/^ID=/ { gsub(/"/, "", $2); print tolower($2)}' /etc/os-release)
-    distro_type=""
-    update_type_msg="\nTrying ${distro_type} distro type initramfs update commands."
-    wait_msg="\nPlease WAIT (initramfs update can take some time to complete)...\n"
+    wait_msg="Please WAIT (initramfs update can take some time to complete)..."
     case "$dist_id" in
         debian|ubuntu|peppermint)
-            distro_type="Debian/Ubuntu"
-            echo -e "${update_type_msg}"
-            echo -e "${wait_msg}"
+            echo -e "\n$(fn_msg_distro_type 'Debian/Ubuntu')"
+            echo -e "\n${wait_msg}\n"
             # redirect stdout but not stderr to quiet this down
             ${sudo_cmd} update-initramfs -u > /dev/null
             ;;
@@ -128,25 +127,23 @@ fn_update_initramfs() {
             # dracut parser wants spaces around the " <value> " given to 'install_items+='
             drct_ins_str='install_items+=" /etc/modprobe.d/hid_apple.conf "'
             echo "${drct_ins_str}" | ${sudo_cmd} tee "$drct_hidapple_conf_file" > /dev/null
-            distro_type="Fedora/RHEL/openSUSE"
-            echo -e "${update_type_msg}"
-            echo -e "${wait_msg}"
+            echo -e "\n$(fn_msg_distro_type 'Fedora/RHEL/openSUSE')"
+            echo -e "\n${wait_msg}\n"
             # dracut log level 3 = show only warnings or errors/failures
             ${sudo_cmd} dracut -L3 --force
             ;;
         silverblue)
-            distro_type="Fedora Silverblue"
-            echo -e "${update_type_msg}"
-            echo -e "${wait_msg}"
+            echo -e "\n$(fn_msg_distro_type 'Fedora Silverblue')"
+            echo -e "\n${wait_msg}\n"
             ${sudo_cmd} rpm-ostree initramfs --enable --arg=-I --arg=/etc/modprobe.d/hid_apple.conf
             ;;
         arch*|arcolinux|manjaro|endeavouros)
-            distro_type="Arch"
-            echo -e "${update_type_msg}"
-            echo -e "${wait_msg}"
+            echo -e "\n$(fn_msg_distro_type 'Arch')"
+            echo -e "\n${wait_msg}\n"
             ${sudo_cmd} mkinitcpio -P
             ;;
         *)
+            echo ""
             echo "Unknown distribution ID: '$dist_id'"
             echo "Please manually update your initramfs image."
             return 1
