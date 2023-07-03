@@ -722,7 +722,8 @@ def install_toshy_files():
                 '.gitignore',
                 'packages.json',
                 'README.md',
-                'kwin-application-switcher'
+                'kwin-application-switcher',
+                'Fantasque.*'
             )
         )
     except shutil.Error as copy_error:
