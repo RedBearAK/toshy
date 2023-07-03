@@ -123,8 +123,6 @@ class InstallerSettings:
 
         self.keyszer_tmp_path       = os.path.join('.', 'keyszer-temp')
 
-        # experimental branch with support for repeating key filter, touchpad events
-        # self.keyszer_branch         = 'env_api_kde_repeatkeys_touchpad'
         self.keyszer_branch         = 'environ_api_kde'
         self.keyszer_url            = 'https://github.com/RedBearAK/keyszer.git'
         self.keyszer_clone_cmd      = f'git clone -b {self.keyszer_branch} {self.keyszer_url}'
@@ -593,7 +591,7 @@ def clone_keyszer_branch():
     if os.path.exists(cnfg.keyszer_tmp_path):
         # force a fresh copy of keyszer every time script is run
         try:
-            shutil.rmtree(cnfg.keyszer_tmp_path) # , ignore_errors=True)
+            shutil.rmtree(cnfg.keyszer_tmp_path)
         except (OSError, PermissionError, FileNotFoundError) as file_err:
             error(f"Problem removing existing '{cnfg.keyszer_tmp_path}' folder:\n\t{file_err}")
     subprocess.run(cnfg.keyszer_clone_cmd.split() + [cnfg.keyszer_tmp_path])
