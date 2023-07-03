@@ -8,14 +8,14 @@ if [[ $EUID -eq 0 ]]; then
     exit 1
 fi
 
-# Check if $USER and $HOME environment variables are not empty
-if [[ -z $USER ]] || [[ -z $HOME ]]; then
-    echo "\$USER and/or \$HOME environment variables are not set. We need them."
-    exit 1
-fi
+# # Check if $USER and $HOME environment variables are not empty
+# if [[ -z $USER ]] || [[ -z $HOME ]]; then
+#     echo "\$USER and/or \$HOME environment variables are not set. We need them."
+#     exit 1
+# fi
 
 sleep 3
-# check that there is a valid display, otherwise wait a bit before showing dialog
+# check that there is a valid display, otherwise wait a bit longer before showing dialog
 if [[ -z "${DISPLAY}" && -z "${WAYLAND_DISPLAY}" ]]; then
     sleep 6
 fi

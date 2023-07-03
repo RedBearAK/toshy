@@ -1,32 +1,42 @@
 # Current status: Stable-ish Beta (Please Read)
 
-- PRIMARY ISSUE you may run into at this point: The Toshy config file tries to automatically identify the "type" of your keyboard based on some pre-existing lists of keyboard device names, which do not have many entries yet. So your keyboard may be misidentified, leading to modifier keys in the "wrong" place. BE PREPARED to identify the name of your keyboard device (try `toshy-devices` in a terminal) and enter it into the correct list in the config file to fix this problem. There is an editable "custom" list where the entry should be retained even if you reinstall later. Please take the time to FILE AN ISSUE if you encounter this, whether or not you are able to fix it on your own. Include your device name and what type it should be. The goal is to populate the default keyboard name lists so that this becomes a very unusual problem going forward. The bigger goal of Toshy has been to allow a mixed-type environment where you can use any combination of Apple, Windows (PC), IBM or Chromebook keyboards together without thinking about switching types.  
+WARNING: There is a veru annoying "bug" going around where there is a problem with the `xdg-desktop-portal` and `xdg-desktop-portal-gnome` services causing problems with launching certain applications (particularly GTK apps like Firefox, but also reportedly Qt apps sometimes) in a Wayland session. Some distros seem to have a fix for this, others have not fixed it yet.  
 
-- Uninstall option has been implemented and tested on a few distros. Submit an issue if it doesn't work in some way.  
+Symptoms for Toshy are that the systemd services can't start up properly until anywhere from 30 seconds to a minute or more after logging in. They will eventually start, and restarting the services later works without issue. I've been observing this on KDE in multiple Linux distros. One "fix" is to mask the `xdg-desktop-portal-gnome` service to keep it from clogging things up:  
+
+```
+systemctl --user mask xdg-desktop-portal-gnome
+```
+
+## Main issues you might run into
+
+- KEYBOARD TYPE: The Toshy config file tries to automatically identify the "type" of your keyboard based on some pre-existing lists of keyboard device names, which do not have many entries yet. So your keyboard may be misidentified, leading to modifier keys in the "wrong" place. BE PREPARED to identify the name of your keyboard device (try `toshy-devices` in a terminal) and enter it into the correct list in the config file to fix this problem. There is an editable "custom" list where the entry should be retained even if you reinstall later.  
+
+Please take the time to FILE AN ISSUE if you encounter this, whether or not you are able to fix it on your own. Include your device name and what type it should be. The goal is to populate the default keyboard name lists so that this becomes a very unusual problem going forward. The bigger goal of Toshy has been to allow a mixed-type environment where you can use any combination of Apple, Windows (PC), IBM or Chromebook keyboards together without thinking about switching types.  
 
 - May have issues installing on distros not on the "tested" list below. Try the `--list-distros` and `--override-distro` options (separately) with the installer, if you think your distro is closely related to one on the list.  
 
-- May seem to run at login, but not do any remapping, needing `toshy-config-start-verbose` in the terminal to troubleshoot. Or, it may just need a restart of the services from the tray icon or with `toshy-services-restart`.  
+- May seem to run at login, but not do any remapping, needing `toshy-config-verbose-start` in the terminal to troubleshoot. Or, it may just need a restart of the services from the tray icon or with `toshy-services-restart`.  
 
 - May cause the keyboard in some odd circumstances after install/reboot to have no output (default emergency bail out key is F16, which can be changed in the config file before rebooting). If you don't have F16 on your keyboard, you may need to stop and restart the Toshy services from the tray icon menu, or by opening the "Preferences" app from a menu with the mouse.  
 
-- The Wayland+KDE (Plasma) solution is better now. It should be possible to install under some desktop that is not KDE, then log into KDE and have Toshy working.  
+- The Wayland+KDE (Plasma) solution is better now. It should be possible to install under some desktop that is not KDE, then log into KDE on the same system and have Toshy working. If you're not having the issue described above.  
 
 - Some distros have no `journal` output for the user services, for unknown reasons. I've seen this on Arcolinux, the RHEL clones.  
 
-- On a dual-init distro like MX Linux, if you install Toshy when using SysVinit it will avoid installing the `systemd` packages and services. If you then switch to `systemd` at the boot screen you'll need to re-run the Toshy installer once under `systemd` to make it work automatically like it does on other distros using `systemd`.  
+- On a dual-init distro like MX Linux, if you install Toshy while using SysVinit it will avoid installing the `systemd` packages and services. If you then switch to `systemd` at the boot screen you'll need to re-run the Toshy installer once under `systemd` to make it work automatically like it does on other distros using `systemd`.  
 
 # Toshy README
 
-• • • 
+• • • • • 
 ![Toshy app icon inverse grayscale](./assets/toshy_app_icon_rainbow_inverse_grayscale.svg "Toshy app icon inverse grayscale")
-• • •
+• • • • • 
 ![Toshy app icon inverted](./assets/toshy_app_icon_rainbow_inverse.svg "Toshy app icon inverse")
-• • •
+• • • • • 
 ![Toshy app icon](./assets/toshy_app_icon_rainbow.svg "Toshy app icon")
 
 
-## Make your Linux keyboard act like a 'Tosh! (or, What the Heck is This?!?)
+## Make your Linux keyboard act like a 'Tosh! <br>(or, What the Heck is This?!?)
 
 Toshy is a config file for the `keyszer` Python-based keymapper for Linux (which was forked from `xkeysnail`). The Toshy config is not strictly a fork of Kinto, but was based in the beginning entirely on the config file for Kinto.sh by Ben Reaves (https://github.com/rbreaves/kinto or https://kinto.sh). Without Kinto, Toshy would not exist.  Using Toshy will feel basically the same as using Kinto, just with some new features and some problems solved.  
 
@@ -46,7 +56,7 @@ xprop WM_CLASS _NET_WM_NAME
 
 The mouse cursor will change to a cross shape. Click on the window in question and the attributes will appear in the terminal.  
 
-If you're in one of the compatible Wayland environments (GNOME or KDE, so far), you'll have to rely on other tools, or the verbose logging output from `toshy-config-start-verbose`. When a window has the focus and you use a keyboard shortcut that gets remapped by the keymapper config file, you will see additional output in the terminal showing the window's class and name/title. A good shortcut to use for this that usually won't do anything unless the app has a tabbed UI is `Shift+Cmd+Left_Brace` or `Shift+Cmd+Right_Brace` (those are the defined names of the square bracket keys). Utilities like `xprop` will generally have no output in a Wayland session.  
+If you're in one of the compatible Wayland environments (GNOME or KDE, so far), you'll have to rely on other tools, or the verbose logging output from `toshy-config-verbose-start`. When a window has the focus and you use a keyboard shortcut that gets remapped by the keymapper config file, you will see additional output in the terminal showing the window's class and name/title. A good shortcut to use for this that usually won't do anything unless the app has a tabbed UI is `Shift+Cmd+Left_Brace` or `Shift+Cmd+Right_Brace` (those are the defined names of the square bracket keys). Utilities like `xprop` will generally have no output in a Wayland session.  
 
 ## Windows Support
 
@@ -88,7 +98,7 @@ There's no simple way around this, since the keymapper is only designed to send 
 
  1. Automatic categorizing of the keyboard type of the current keyboard device. No more switching of keyboard types from the tray icon menu, or re-running the installer, or being asked to press a certain key on the keyboard during install. Some keyboard devices will need to be added to a Python list in the config to be recognized as the correct type. This will evolve over time from user feedback.  
 
- 1. Changing of settings on-the-fly, without restarting the keymapper process. The tray icon menu and GUI preferences app will allow quickly enabling or disabling certain features, or changing the special characters layout. The change takes effect right away. (Adding or changing shortcuts in the config file will still require restarting the keymapper, which I've tried to make as easy as possible.)  
+ 1. Changing of some settings on-the-fly, without restarting the keymapper process. The tray icon menu and GUI preferences app will allow quickly enabling or disabling certain features, or changing/disabling the special characters layout. The change takes effect right away. (Adding or changing shortcuts in the config file will still require restarting the keymapper, which I've tried to make as easy as possible.)  
 
  1. Modmaps with `keyszer` are now concurrent/cascading rather than mutually exclusive. This enables some of the interesting fixes described in the following items.  
 
@@ -100,7 +110,7 @@ There's no simple way around this, since the keymapper is only designed to send 
 
  1. Sections of the config file are labeled with ASCII art designed to be readable on a "minimap" or "overview" sidebar view found in many text editors and code editors, to make finding certain parts of the config file a little easier. There's also a "tag" on each section that can be located easily with a `Find` search in any text editor.  
 
- 1. Custom function to make the `Enter` key behave pretty much like it does in the Finder, in most Linux file managers. Mainly what this enables is using the `Enter` key to quickly rename files/folders, while still leaving it usable in text fields like `Find` and the location bar. Not perfect, but works OK in most cases. [NOTE: If you've never actually used the keyboard to "open" or "run" files/applications from the Finder, you may not realize that the keyboard shortcut for this is just the same keyboard shortcut for opening (or, "drilling down") into folders. It's `Cmd+Down` arrow. The `Enter` key has never "opened" things in the Finder in the history of macOS, as far as I know, unlike the way the `Enter` key has always been used in Windows and Linux file managers.]  
+ 1. Custom function to make the `Enter` key behave pretty much like it does in the Finder, in most Linux file managers. Mainly what this enables is using the `Enter` key to quickly rename files/folders, while still leaving it usable in text fields like `Find` and the location bar. Not perfect, but works OK in most cases. _[NOTE: If you've never actually used the keyboard to "open" or "run" files/applications from the Finder, you may not realize that the keyboard shortcut for this is just the same keyboard shortcut for opening (or, "drilling down") into folders. It's `Cmd+Down` arrow. The `Enter` key has never "opened" things in the Finder in the history of macOS, as far as I know, unlike the way the `Enter` key has always been used in Windows and Linux file managers.]_  
 
  1. Evolving fix for the problem of `Cmd+W` unexpectedly failing to close a lot of Linux "child" windows and "dialog" windows (that have no binding to `Ctrl+W` and want either `Escape` or `Alt+F4/Ctrl+Q` to close). This can lead to a bad unconscious habit of hitting `Cmd+W` followed immediately by `Cmd+Q` (which becomes a problem when you're actually using macOS). The list of windows targeted by this pair of keymaps will grow over time, with input from users encountering the issue.  
 
@@ -122,13 +132,13 @@ There's no simple way around this, since the keymapper is only designed to send 
 
 - `keyszer` (keymapper for Linux, forked from `xkeysnail`)
 
-    - Automatically installed by Toshy installer
+    - Automatically installed from custom branch by Toshy installer
 
 - X11/Xorg or Wayland+GNOME or Wayland+KDE (Plasma)
 
     - Wayland+GNOME requires one of these GNOME Shell extensions‡ (see note):
 
-        - ### Name: 'Xremap' (try this if you have an older GNOME version)
+        - ### Name: 'Xremap' (try this if you have an older GNOME)
         - UUID: `xremap@k0kubun.com`
         - URL: https://extensions.gnome.org/extension/5060/xremap/
 
@@ -195,7 +205,7 @@ This will just show what the installer will see as the environment when you try 
 This will print out a list of the distros that the Toshy installer theoretically "knows" how to deal with, as far as knowing the correct package manager to use and having a list of package names that would actually work. This can be used with:  
 
 ```sh
-./toshy_setup.py --override-distro=distroname
+./toshy_setup.py --override-distro distro_name
 ```
 
 This option will force the installer to attempt the install for that distro name/type. You can use this if you have a distro that is not on the distro list yet, but you think it is close enough to one of the existing distros in the list that the installer should do the right things. For instance if you have some very Arch-ish or very Debian-ish distro, or something based on Ubuntu (there are many!) that doesn't identify as one of the "known" distros when you use `--show-env` and `--list-distros`, then you can try to make it install using one of the related distro names. This will probably work, if the distro is just a minor variation of its parent distro.  
@@ -222,7 +232,7 @@ And finally:
 ./toshy_setup.py --fancy-pants
 ```
 
-This will do the full install, but add various things that I find convenient, fun, or somehow makes the desktop environment behave more like macOS.  
+This will do the full install, but add various things that I find convenient, fun, or that somehow make the desktop environment behave more like macOS.  
 
 At the moment this installer option will do the following: 
 
@@ -299,6 +309,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - Kubuntu 22.04/23.04 (X11/Xorg or Wayland+KDE)
     - Xubuntu 23.04 (X11/Xorg only)
     - Lubuntu 23.04 (X11/Xorg only)
+    - Ubuntu Budgie 23.04 (X11/Xorg only)
 
 - Pop!_OS 22.04 LTS (Ubuntu-based)
 
@@ -310,7 +321,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 - Zorin OS 16.2 (Ubuntu-based)
 
-    - X11/Xorg or Wayland+GNOME session
+    - X11/Xorg or Wayland+GNOME (requires extensions)
     - Wayland+GNOME requires Xremap extension
     - GNOME Shell is still 3.38.x, Xremap extension is the only compatible extension available for pre-GNOME 40.x
 
@@ -328,47 +339,50 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 - LMDE 5 (Linux Mint Debian Edition)
 
-- antiX (Debian-based, related to MX Linux)
+- PeppermintOS (Debian-based)
+
+    - New release based on Debian 12 tested
+    - Desktop is Xfce4 v4.18
+
+- antiX 21.x (Debian-based, related to MX Linux)
 
     - Preliminary support, no SysVinit services yet, so no auto-start.
     - Starting only the "config script" from the tray icon menu should work now.
-    - Use `toshy-config-start` or `toshy-config-start-verbose` for manual start.
+    - Use `toshy-config-start` or `toshy-config-verbose-start` for manual start.
     - Only "rox-icewm" desktop verified/tested.
 
-- MX Linux (Debian-based, related to antiX)
+- MX Linux 21.x (Debian-based, related to antiX)
 
     - Preliminary support, no SysVinit services yet, so no auto-start.
     - Starting only the "config script" from the tray icon menu should work now.
-    - Use `toshy-config-start` or `toshy-config-start-verbose` for manual start.
+    - Use `toshy-config-start` or `toshy-config-verbose-start` for manual start.
     - Choosing advanced options and booting with `systemd` will work fine.
-
-- Debian distros in general might work, because:
-
-    - antiX & MX Linux are based on Debian 11 Bullseye and identify as `debian`.
 
 - Debian 12 tested and can be made to work:
 
-    - Add your user to `sudo` group (and reboot!)
+    - If you gave a root password, your user will NOT be in the `sudo` group!
+    - If necessary, add your user to `sudo` group (and reboot!)
         - `su -`
         - `usermod -aG sudo yourusername`
-        - Seriously, reboot!
+        - Seriously, reboot now!
     - Then, for Wayland+GNOME:
         - Install `flatpak` and the Flathub repo. Instructions here:
             - https://flatpak.org/setup/Debian
-        - Do `flatpak install com.mattjakeman.ExtensionManager` (and reboot!)
+        - Do `flatpak install com.mattjakeman.ExtensionManager`
+        - Reboot again! So that Flatpak folders are added to path.
         - Install any compatible shell extension with Extension Manager:
             - Xremap
             - Window Calls Extended
             - Focused Window D-Bus
-        - Recommended extensions:
+        - Recommended additional extensions:
             - AppIndicator and KStatusNotifier (for tray icon)
             - Logo Menu (enable power options in settings)
 
 ### Arch, Arch-based and related distros
 
-- Arcolinux (Arch-based)
+- ArcoLinux (Arch-based)
 
-    - ArcolinuxL ISO (full installer) tested
+    - ArcoLinuxL ISO (full installer) tested
     - Multiple desktops tested (GNOME, KDE, others)
     - X11/Xorg and Wayland+KDE, Wayland+GNOME
     - `plasma-wayland-session` can be installed
@@ -418,27 +432,41 @@ If the install was successful, there should be a number of different terminal co
 
 Toshy actually consists of two separate `systemd` services meant to work together, with one monitoring the other, so the shell commands are meant to make working with the paired services much easier.  
 
-These commands are copied into `~/.local/bin`, and you will be prompted to add that location to your shell's `PATH` if it is not present. Depends on the distro whether that location is already set up as part of the path or not.  
+(There is now a third service, but it is only active in a Wayland+KDE environment.)  
+
+The commands are copied into `~/.local/bin`, and you will be prompted to add that location to your shell's `PATH` if it is not present. Depends on the distro whether that location is already set up as part of the path or not.  
 
 ```
 toshy-services-log      (shows journalctl output for Toshy services)
-toshy-services-restart
-toshy-services-start
 toshy-services-status   (shows the current state of Toshy services)
+toshy-services-start
 toshy-services-stop
+toshy-services-restart
+```
 
+To disable/enable the Toshy services (to prevent or restore autostart at login), use the commands below. It should still be possible to start/restart the services with the commands above if they are disabled. Using the "enable" command in turn will not automatically start the services immediately if they are not running (but the services will then autostart at the next login). If the services are enabled they can be stopped at any time with the command above, but the enabled services will start automatically at the next login.  
+
+```
+toshy-services-disable  (services can still be started/stopped manually)
+toshy-services-enable   (does not auto-start the service until next login)
+```
+
+If you'd like to completely uninstall or re-install the Toshy services, use the commands below. These are the same commands used by the Toshy installer to set up the services.  
+
+```
 toshy-systemd-remove    (stops and removes the systemd service units)
 toshy-systemd-setup     (installs and starts the systemd service units)
 ```
 
 The following commands are also available, and meant to allow manually running just the Toshy config file, without any reliance on `systemd`. These will automatically stop the `systemd` services so there is no conflict, for instance if you need to run the `verbose` version of the command to debug a shortcut that is not working as expected, or find out how you broke the config file.  
 
-Restarting the Toshy services, either with one of the above commands or from the GUI preferences app or tray icon menu, will stop the manual process and return to running the Toshy config as a `systemd` service. All the commands are designed to work together as conveniently as possible.  
+Restarting the Toshy services, either with one of the above commands or from the GUI preferences app or tray icon menu, will stop any manual config process and return to running the Toshy config as a `systemd` service. All the commands are designed to work together as conveniently as possible.  
 
 ```
 toshy-config-restart
 toshy-config-start
 toshy-config-start-verbose  (show debugging output in the terminal)
+toshy-config-verbose-start  (alias of 'toshy-config-start-verbose')
 toshy-config-stop
 ```
 
@@ -448,12 +476,29 @@ And a command that will show what Toshy sees as the environment when you launch 
 toshy-env
 ```
 
-There are also some desktop "applications" that will be found in most Linux app launchers (like "Albert" or "Ulauncher") or application menus in Linux desktop environments:  
+For changing the function keys mode of a keyboard device that uses the `hid_apple` device driver/kernel module, use this command:  
+
+```
+toshy-fnmode                    (interactive prompts mode)
+toshy-fnmode --help             (show usage/options)
+toshy-fnmode --info             (show current status of fnmode)
+toshy-fnmode [--option] [mode]  (change fnmode non-interactively)
+```
+
+To activate the Toshy Python virtual environment for doing things like running `keyszer` directly, it is necessary to run this command:  
+
+```
+source toshy-venv
+```
+
+There are also some desktop apps that will be found in most Linux app launchers (like "Albert" or "Ulauncher") or application menus in Linux desktop environments:  
 
 - Toshy Preferences
 - Toshy Tray Icon
 
-Both of these "apps" will show the current status of the `systemd` services, and allow the immediate changing of the exposed optional features, as well as stopping or restarting the Toshy services. The tray icon menu also allows opening the Preferences app, and opening the `~/.config/toshy` folder if you need to edit the config file.  
+You may find them under a "Utilities" folder in some application menus (such as the IceWM menu). Or possibly under "Accessories" (LXDE menu).  
+
+Both of these apps will show the current status of the `systemd` services, and allow the immediate changing of the exposed optional features, as well as stopping or restarting the Toshy services. The tray icon menu also allows opening the Preferences app, and opening the `~/.config/toshy` folder if you need to edit the config file.  
 
 If the desktop apps aren't working for some reason, it may be useful to try to launch them from a terminal and see if they have any error output:  
 
@@ -500,6 +545,16 @@ This shortcut will initiate a "macro" that will type out the same kind of inform
 Unicode and Shift Test: 🌹—€—‡—ÿ—‡ 12345 !@#$% |\ !!!!!!
 ```
 
+Here's an example of the whole macro that will be typed out:  
+
+```
+Appl. Class: 'Code'
+Wind. Title: '● README.md - toshy (Workspace) - Visual Studio Code'
+Kbd. Device: 'AT Translated Set 2 keyboard'
+Next test should come out on ONE LINE!
+Unicode and Shift Test: 🌹—€—‡—ÿ—‡ 12345 !@#$% |\ !!!!!!
+```
+
 Previous advice below the line still works too:  
 
 * * *
@@ -513,7 +568,7 @@ xprop WM_CLASS _NET_WM_NAME
 In a Wayland environment where you know the app-specific remapping is otherwise working (Wayland+GNOME with extensions or Wayland+KDE is all that works right now), run the Toshy manual config start "verbose" command and then use a shortcut that will be remapped (like `Shift+Cmd+Left_Brace`), while the keyboard focus is on the window that is not being recognized:  
 
 ```sh
-toshy-config-start-verbose
+toshy-config-verbose-start
 ```
 
 You should see some kind of output like this, which will display the class and name according to the Wayland window context provider, and which keymap has been triggered:  
@@ -613,7 +668,7 @@ This will force the keyboard to be treated as the 'type' you put after the colon
 If you run the verbose output script you'll be able to see the device name that `keyszer` is seeing when you use your keyboard. Run this in a terminal, and then use a remapped shortcut like `Shift+Cmd+Left_Brace` or `Shift+Cmd+Right_Brace` (the square bracket keys). Or just `Cmd+Tab` away from the terminal and back.  
 
 ```sh
-toshy-config-start-verbose
+toshy-config-verbose-start
 ```
 
 Using the device name, you can look for the correct keyboard Python "list" in the config file and add the device name to the list. The list names are:   

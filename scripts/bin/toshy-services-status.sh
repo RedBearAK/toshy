@@ -53,5 +53,11 @@ echo "--------------------------------------------------------------------------
 /usr/bin/systemctl --user status toshy-config.service
 
 echo "--------------------------------------------------------------------------------"
-echo -e "Use \"toshy-systemd-setup\" to install/reinstall Toshy services...\n\
-Use \"toshy-systemd-remove\" to uninstall/remove Toshy services...\n"
+
+cat <<EOF
+Use 'toshy-services-disable' to disable Toshy services autostart at login.
+Use 'toshy-services-enable' to (re)enable Toshy services autostart at login.
+Use 'toshy-systemd-remove' to uninstall/remove Toshy services.
+Use 'toshy-systemd-setup' to install/reinstall Toshy services.
+
+EOF

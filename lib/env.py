@@ -71,28 +71,23 @@ def get_env_info():
 
     ########################################################################
     ##  Get distro name
-    if release_files['/etc/os-release']:
-        for line in release_files['/etc/os-release']:
-            line: str
-            if line.startswith('ID='):
-                _distro_name = line.split('=')[1].strip().strip('"')
+    if _distro_name == "" and release_files['/etc/os-release']:
+        for prefix in ['ID=', 'NAME=', 'PRETTY_NAME=']:
+            for line in release_files['/etc/os-release']:
+                if line.startswith(prefix):
+                    _distro_name = line.split('=')[1].strip().strip('"')
+                    break
+            if _distro_name != "":
                 break
-            elif line.startswith('NAME='):
-                _distro_name = line.split('=')[1].strip().strip('"')
+    if _distro_name == "" and release_files['/etc/lsb-release']:
+        for prefix in ['DISTRIB_ID=', 'DISTRIB_DESCRIPTION=']:
+            for line in release_files['/etc/lsb-release']:
+                if line.startswith(prefix):
+                    _distro_name = line.split('=')[1].strip().strip('"')
+                    break
+            if _distro_name != "":
                 break
-            elif line.startswith('PRETTY_NAME='):
-                _distro_name = line.split('=')[1].strip().strip('"')
-                break
-    elif release_files['/etc/lsb-release']:
-        for line in release_files['/etc/lsb-release']:
-            line: str
-            if line.startswith('DISTRIB_ID='):
-                _distro_name = line.split('=')[1].strip().strip('"')
-                break
-            elif line.startswith('DISTRIB_DESCRIPTION='):
-                _distro_name = line.split('=')[1].strip().strip('"')
-                break
-    elif release_files['/etc/arch-release']:
+    if _distro_name == "" and release_files['/etc/arch-release']:
         _distro_name = 'arch'
 
     distro_names = {            # simplify distro names
@@ -104,6 +99,7 @@ def get_env_info():
         'KDE Neon':             'neon',
         'Linux Mint':           'mint',
         'openSUSE Tumbleweed':  'opensuse-tumbleweed',
+        'Peppermint.*':         'peppermint',
         'Pop!_OS':              'popos',
         'Red Hat.*':            'rhel',
         'Rocky.*':              'rocky',

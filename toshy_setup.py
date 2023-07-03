@@ -123,8 +123,6 @@ class InstallerSettings:
 
         self.keyszer_tmp_path       = os.path.join('.', 'keyszer-temp')
 
-        # experimental branch with support for repeating key filter, touchpad events
-        # self.keyszer_branch         = 'env_api_kde_repeatkeys_touchpad'
         self.keyszer_branch         = 'environ_api_kde'
         self.keyszer_url            = 'https://github.com/RedBearAK/keyszer.git'
         self.keyszer_clone_cmd      = f'git clone -b {self.keyszer_branch} {self.keyszer_url}'
@@ -368,9 +366,13 @@ def install_udev_rules():
     """Set up `udev` rules file to give user/keyszer access to uinput"""
     print(f'\n\n§  Installing "udev" rules file for keymapper...\n{cnfg.separator}')
     rules_file_path = '/etc/udev/rules.d/90-toshy-keymapper-input.rules'
+    setfacl_path = shutil.which('setfacl')
+    acl_rule = ''
+    if setfacl_path is not None:
+        acl_rule = f', RUN+="{setfacl_path} -m g::rw /dev/uinput"'
     rule_content = (
         'SUBSYSTEM=="input", GROUP="input"\n'
-        'KERNEL=="uinput", SUBSYSTEM=="misc", GROUP="input", MODE="0660"\n'
+        f'KERNEL=="uinput", SUBSYSTEM=="misc", GROUP="input", MODE="0660"{acl_rule}\n'
     )
     # Only write the file if it doesn't exist or its contents are different
     if not os.path.exists(rules_file_path) or open(rules_file_path).read() != rule_content:
@@ -447,7 +449,7 @@ distro_groups_map = {
     'redhat-based':    ["fedora", "fedoralinux", "ultramarine", "almalinux", "rocky", "rhel"],
     'opensuse-based':  ["opensuse-tumbleweed"],
     'ubuntu-based':    ["ubuntu", "mint", "popos", "eos", "neon", "zorin"],
-    'debian-based':    ["lmde", "debian"],
+    'debian-based':    ["lmde", "peppermint", "debian"],
     'arch-based':      ["arch", "arcolinux", "endeavouros", "manjaro"],
     # Add more as needed...
 }
@@ -589,7 +591,7 @@ def clone_keyszer_branch():
     if os.path.exists(cnfg.keyszer_tmp_path):
         # force a fresh copy of keyszer every time script is run
         try:
-            shutil.rmtree(cnfg.keyszer_tmp_path) # , ignore_errors=True)
+            shutil.rmtree(cnfg.keyszer_tmp_path)
         except (OSError, PermissionError, FileNotFoundError) as file_err:
             error(f"Problem removing existing '{cnfg.keyszer_tmp_path}' folder:\n\t{file_err}")
     subprocess.run(cnfg.keyszer_clone_cmd.split() + [cnfg.keyszer_tmp_path])
@@ -639,15 +641,22 @@ def merge_slices(data: str, slices: Dict[str, str]) -> str:
 
     return "".join(data_slices)
 
-
 def backup_toshy_config():
     """Backup existing Toshy config folder"""
     print(f'\n\n§  Backing up existing Toshy config folder...\n{cnfg.separator}')
-    timestamp = datetime.datetime.now().strftime('_%Y%m%d_%H%M%S')
-    toshy_backup_dir_path = os.path.abspath(cnfg.toshy_dir_path + timestamp)
-    if os.path.exists(os.path.join(os.path.expanduser('~'), '.config', 'toshy')):
 
+    timestamp = datetime.datetime.now().strftime('_%Y%m%d_%H%M%S')
+    toshy_cfg_bkups_base_dir  = os.path.join(
+        os.path.expanduser('~'), '.config', 'toshy_config_backups')
+    toshy_cfg_bkup_timestamp_dir  = os.path.abspath(
+        os.path.join(toshy_cfg_bkups_base_dir, 'toshy' + timestamp))
+
+    if not os.path.exists(cnfg.toshy_dir_path):
+        print(f'No existing Toshy folder to backup.')
+        cnfg.backup_succeeded = True
+    else:
         cfg_file_path   = os.path.join(cnfg.toshy_dir_path, 'toshy_config.py')
+
         if os.path.isfile(cfg_file_path):
             try:
                 with open(cfg_file_path, 'r', encoding='UTF-8') as file:
@@ -656,7 +665,6 @@ def backup_toshy_config():
             except (FileNotFoundError, PermissionError, OSError) as file_err:
                 cnfg.existing_cfg_data = None
                 error(f'Problem reading existing config file contents.\n\t{file_err}')
-
             if cnfg.existing_cfg_data is not None:
                 try:
                     cnfg.existing_cfg_slices = extract_slices(cnfg.existing_cfg_data)
@@ -671,23 +679,19 @@ def backup_toshy_config():
                 shutil.copy(cnfg.db_file_path, f'{cnfg.run_tmp_dir}/')
             except (FileNotFoundError, PermissionError, OSError) as file_err:
                 error(f"Problem copying preferences db file to '{cnfg.run_tmp_dir}':\n\t{file_err}")
-
         try:
             # Define the ignore function
             def ignore_venv(dirname, filenames):
                 return ['.venv'] if '.venv' in filenames else []
             # Copy files recursively from source to destination
-            shutil.copytree(cnfg.toshy_dir_path, toshy_backup_dir_path, ignore=ignore_venv)
+            shutil.copytree(cnfg.toshy_dir_path, toshy_cfg_bkup_timestamp_dir, ignore=ignore_venv)
         except shutil.Error as copy_error:
             print(f"Failed to copy directory: {copy_error}")
-            exit(1)
+            safe_shutdown(1)
         except OSError as os_error:
             print(f"Failed to copy directory: {os_error}")
-            exit(1)
-        print(f"Backup completed to '{toshy_backup_dir_path}'")
-        cnfg.backup_succeeded = True
-    else:
-        print(f'No existing Toshy folder to backup.')
+            safe_shutdown(1)
+        print(f"Backup completed to '{toshy_cfg_bkup_timestamp_dir}'")
         cnfg.backup_succeeded = True
 
 
@@ -696,7 +700,7 @@ def install_toshy_files():
     print(f'\n\n§  Installing Toshy files...\n{cnfg.separator}')
     if not cnfg.backup_succeeded:
         print(f'Backup of Toshy config folder failed? Bailing out.')
-        exit(1)
+        safe_shutdown(1)
     script_name = os.path.basename(__file__)
     keyszer_tmp = os.path.basename(cnfg.keyszer_tmp_path)
     try:
@@ -1012,7 +1016,7 @@ def apply_tweaks_GNOME():
     # Disable GNOME `overlay-key` binding to Meta/Super/Win/Cmd
     # gsettings set org.gnome.mutter overlay-key ''
     subprocess.run(['gsettings', 'set', 'org.gnome.mutter', 'overlay-key', ''])
-    print(f'Disabled Meta/Super/Win/Cmd key opening the GNOME overview.')
+    print(f'Disabled Super key opening the GNOME overview. (Use Cmd+Space instead.)')
 
     # Set the keyboard shortcut for "Switch applications" to "Alt+Tab"
     # gsettings set org.gnome.desktop.wm.keybindings switch-applications "['<Alt>Tab']"
@@ -1063,7 +1067,7 @@ def apply_tweaks_KDE():
 
     # Run reconfigure command
     do_kwin_reconfigure()
-    print(f'Disabled Meta key opening application menu.')
+    print(f'Disabled Meta key opening application menu. (Use Cmd+Space instead.)')
     
     if cnfg.fancy_pants:
 
@@ -1149,13 +1153,9 @@ def apply_desktop_tweaks():
         apply_tweaks_GNOME()
         cnfg.tweak_applied = True
 
-
-
     if cnfg.DESKTOP_ENV == 'kde':
         apply_tweaks_KDE()
         cnfg.tweak_applied = True
-    
-    # if KDE, install `ibus` or `fcitx` and choose as input manager (ask for confirmation)
 
     # General (not DE specific) "fancy pants" additions:
     if cnfg.fancy_pants:
@@ -1169,17 +1169,17 @@ def apply_desktop_tweaks():
 
         print(f'Downloading… ', end='', flush=True)
 
+        zip_path    = f'{cnfg.run_tmp_dir}/{font_file}'
+        
         if shutil.which('curl'):
-            subprocess.run(['curl', '-LO', font_link], 
+            subprocess.run(['curl', '-Lo', zip_path, font_link], 
                         stdout=DEVNULL, stderr=DEVNULL)
         elif shutil.which('wget'):
-            subprocess.run(['wget', font_link],
+            subprocess.run(['wget', '-O', zip_path, font_link],
                         stdout=DEVNULL, stderr=DEVNULL)
         else:
             print("\nERROR: Neither 'curl' nor 'wget' is available. Can't install font.")
 
-        zip_path    = f'./{font_file}'
-        
         if os.path.isfile(zip_path):
             folder_name = font_file.rsplit('.', 1)[0]
             extract_dir = f'{cnfg.run_tmp_dir}/'
@@ -1537,6 +1537,7 @@ def main(cnfg: InstallerSettings):
         print(f'You MUST install GNOME EXTENSIONS if using Wayland+GNOME! See Toshy README.')
 
     print()   # blank line to avoid crowding the prompt after install is done
+    safe_shutdown()
 
 
 if __name__ == '__main__':
