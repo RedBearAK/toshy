@@ -354,8 +354,8 @@ def fn_monitor_toshy_services():
 
         if curr_svcs_state_tup != last_svcs_state_tup:
             try:
-                toshy_config_status_item.set_label(f'        Config: {svc_status_config}')
-                session_monitor_status_item.set_label(f'    SessMon: {svc_status_sessmon}')
+                toshy_config_status_item.set_label(f'         Config: {svc_status_config}')
+                session_monitor_status_item.set_label(f'     SessMon: {svc_status_sessmon}')
             except NameError: pass  # Let it pass if menu item not ready yet
 
         time.sleep(0.1)
@@ -447,11 +447,11 @@ services_label_item = Gtk.MenuItem(label=" ---- Services Status ---- ")
 services_label_item.set_sensitive(False)
 menu.append(services_label_item)
 
-toshy_config_status_item = Gtk.MenuItem(    label="        Config: (No SysD)")
+toshy_config_status_item = Gtk.MenuItem(    label="         Config: (?)")
 toshy_config_status_item.set_sensitive(False)
 menu.append(toshy_config_status_item)
 
-session_monitor_status_item = Gtk.MenuItem( label="    SessMon: (No SysD)")
+session_monitor_status_item = Gtk.MenuItem( label="     SessMon: (?)")
 session_monitor_status_item.set_sensitive(False)
 menu.append(session_monitor_status_item)
 
