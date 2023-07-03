@@ -491,14 +491,14 @@ To activate the Toshy Python virtual environment for doing things like running `
 source toshy-venv
 ```
 
-There are also some desktop "applications" that will be found in most Linux app launchers (like "Albert" or "Ulauncher") or application menus in Linux desktop environments:  
+There are also some desktop apps that will be found in most Linux app launchers (like "Albert" or "Ulauncher") or application menus in Linux desktop environments:  
 
 - Toshy Preferences
 - Toshy Tray Icon
 
-You may find them under a "Utilities" folder in some application menus (such as the IceWM menu).  
+You may find them under a "Utilities" folder in some application menus (such as the IceWM menu). Or possibly under "Accessories" (LXDE menu).  
 
-Both of these "apps" will show the current status of the `systemd` services, and allow the immediate changing of the exposed optional features, as well as stopping or restarting the Toshy services. The tray icon menu also allows opening the Preferences app, and opening the `~/.config/toshy` folder if you need to edit the config file.  
+Both of these apps will show the current status of the `systemd` services, and allow the immediate changing of the exposed optional features, as well as stopping or restarting the Toshy services. The tray icon menu also allows opening the Preferences app, and opening the `~/.config/toshy` folder if you need to edit the config file.  
 
 If the desktop apps aren't working for some reason, it may be useful to try to launch them from a terminal and see if they have any error output:  
 
