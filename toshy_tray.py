@@ -248,7 +248,7 @@ ntfy_id_last    = '0' # initiate with integer string to avoid error
 user_sysctl     = '/usr/bin/systemctl --user'
 sysctl_cmd      = '/usr/bin/systemctl'
 
-toshy_svc_session_monitor   = 'toshy-session-monitor.service'
+toshy_svc_sessmon           = 'toshy-session-monitor.service'
 toshy_svc_config            = 'toshy-config.service'
 
 svc_status_sessmon          = '❓'              # 'Undefined'
@@ -291,8 +291,8 @@ def fn_monitor_toshy_services():
         'org.freedesktop.systemd1.Manager'
     )
 
-    toshy_svc_config_unit_path = systemd1_mgr_iface.GetUnit(toshy_svc_config)
-    toshy_svc_sessmon_unit_path = systemd1_mgr_iface.GetUnit(toshy_svc_session_monitor)
+    toshy_svc_config_unit_path  = None
+    toshy_svc_sessmon_unit_path = None
 
     def get_svc_states_dbus():
         nonlocal toshy_svc_config_unit_state, toshy_svc_sessmon_unit_state
@@ -320,12 +320,23 @@ def fn_monitor_toshy_services():
     time.sleep(0.6)   # wait a bit before starting the loop
 
     while True:
-        # if _first_run:   # bypass sleep on first run to set icons faster
-        #     _first_run = False
-        # else:
-        #     time.sleep(1)
 
-        curr_svcs_state_tup = get_svc_states_dbus()
+        if not toshy_svc_config_unit_path or not toshy_svc_sessmon_unit_path:
+            try:
+                toshy_svc_config_unit_path = systemd1_mgr_iface.GetUnit(toshy_svc_config)
+                toshy_svc_sessmon_unit_path = systemd1_mgr_iface.GetUnit(toshy_svc_sessmon)
+            except dbus.exceptions.DBusException as dbus_err:
+                debug(f'TOSHY_TRAY: DBusException trying to get proxies:\n\t{dbus_err}')
+                time.sleep(3)
+                continue
+
+        try:
+            curr_svcs_state_tup = get_svc_states_dbus()
+        except dbus.exceptions.DBusException as dbus_err:
+            toshy_svc_config_unit_path  = None
+            toshy_svc_sessmon_unit_path = None
+            time.sleep(2)
+            continue
 
         if toshy_svc_config_unit_state == "active":
             svc_status_config = svc_status_glyph_active
@@ -341,40 +352,10 @@ def fn_monitor_toshy_services():
         else:
             svc_status_sessmon = svc_status_glyph_unknown
 
-        #######################################################################
-        ##  Original method of getting service status with subprocess.run
-        #######################################################################
-        # result_status_session_monitor = subprocess.run([
-        #     sysctl_cmd, "--user", "is-active", toshy_svc_session_monitor
-        # ], capture_output=True).stdout.decode().strip()
-        # if result_status_session_monitor == "active":
-        #     svc_status_session_monitor = svc_status_glyph_active
-        # elif result_status_session_monitor == "inactive":
-        #     svc_status_session_monitor = svc_status_glyph_inactive
-        # else:
-        #     svc_status_session_monitor = svc_status_glyph_unknown
-
-        # result_status_toshy_config = subprocess.run([
-        #     sysctl_cmd, "--user", "is-active", toshy_svc_session_monitor
-        # ], capture_output=True).stdout.decode().strip()
-        # if result_status_toshy_config == "active":
-        #     svc_status_config = svc_status_glyph_active
-        # elif result_status_toshy_config == "inactive":
-        #     svc_status_config = svc_status_glyph_inactive
-        # else:
-        #     svc_status_config = svc_status_glyph_unknown
-
-        # curr_svcs_state_tup = (
-        #     result_status_session_monitor,
-        #     result_status_toshy_config
-        # )
-        #######################################################################
-        #######################################################################
-
         if curr_svcs_state_tup != last_svcs_state_tup:
             try:
-                services_status_item.set_label(
-                    f'      Toshy Config: {svc_status_config}\n\n  Session Monitor: {svc_status_sessmon}')
+                toshy_config_status_item.set_label(f'        Config: {svc_status_config}')
+                session_monitor_status_item.set_label(f'    SessMon: {svc_status_sessmon}')
             except NameError: pass  # Let it pass if menu item not ready yet
 
         time.sleep(0.1)
@@ -398,43 +379,11 @@ def fn_monitor_toshy_services():
 
 # -------- MENU ACTION FUNCTIONS ----------------------------------------------
 
-# def fn_update_services_status_item_label():
-#     # have to declare globals to be able to update them!
-#     global svcs_status_config, svcs_status_session_monitor
-
-#     result_status_session_monitor = subprocess.run([
-#         sysctl_cmd, "--user", "is-active", toshy_svc_session_monitor
-#     ], capture_output=True).stdout.decode().strip()
-#     if result_status_session_monitor == "active":
-#         svcs_status_session_monitor = svcs_glyph_active
-#     elif result_status_session_monitor == "inactive":
-#         svcs_status_session_monitor = svcs_glyph_inactive
-#     else:
-#         svcs_status_session_monitor = svcs_glyph_unknown
-
-#     result_status_toshy_config = subprocess.run([
-#         sysctl_cmd, "--user", "is-active", toshy_svc_session_monitor
-#     ], capture_output=True).stdout.decode().strip()
-#     if result_status_toshy_config == "active":
-#         svcs_status_config = svcs_glyph_active
-#     elif result_status_toshy_config == "inactive":
-#         svcs_status_config = svcs_glyph_inactive
-#     else:
-#         svcs_status_config = svcs_glyph_unknown
-
-#     try:
-#         services_status_item.set_label(f'\nSession Monitor: {svcs_status_session_monitor}\n    Toshy Config: {svcs_status_config}')
-#     except NameError: pass
-
 def fn_restart_toshy_services(widget):
     """(Re)Start Toshy services with CLI command"""
     toshy_svcs_restart_cmd = os.path.join(home_local_bin, 'toshy-services-restart')
     subprocess.Popen([toshy_svcs_restart_cmd], stdout=DEVNULL, stderr=DEVNULL)
     time.sleep(3)
-    # os.system(f'{sysctl_cmd} --user restart {toshy_svc_config}')
-    # time.sleep(0.2)
-    # os.system(f'{sysctl_cmd} --user restart {toshy_svc_session_monitor}')
-    # time.sleep(0.2)
     _ntfy_icon = f'--icon={icon_file_active}'
     _ntfy_msg = 'Toshy systemd services (re)started.\nTap any modifier key before trying shortcuts.'
 
@@ -452,10 +401,6 @@ def fn_stop_toshy_services(widget):
     toshy_svcs_stop_cmd = os.path.join(home_local_bin, 'toshy-services-stop')
     subprocess.Popen([toshy_svcs_stop_cmd], stdout=DEVNULL, stderr=DEVNULL)
     time.sleep(3)
-    # os.system(f'{sysctl_cmd} --user stop {toshy_svc_session_monitor}')
-    # time.sleep(0.2)
-    # os.system(f'{sysctl_cmd} --user stop {toshy_svc_config}')
-    # time.sleep(0.2)
     _ntfy_icon = f'--icon={icon_file_inverse}'
     _ntfy_msg = 'Toshy systemd services stopped.'
 
@@ -498,9 +443,17 @@ def fn_remove_tray_icon(widget):
 
 # -------- MENU ITEMS --------------------------------------------------
 
-services_status_item = Gtk.MenuItem(label="No Systemd")
-services_status_item.set_sensitive(False)
-menu.append(services_status_item)
+services_label_item = Gtk.MenuItem(label=" ---- Services Status ---- ")
+services_label_item.set_sensitive(False)
+menu.append(services_label_item)
+
+toshy_config_status_item = Gtk.MenuItem(    label="        Config: (No SysD)")
+toshy_config_status_item.set_sensitive(False)
+menu.append(toshy_config_status_item)
+
+session_monitor_status_item = Gtk.MenuItem( label="    SessMon: (No SysD)")
+session_monitor_status_item.set_sensitive(False)
+menu.append(session_monitor_status_item)
 
 separator_above_svcs_item = Gtk.SeparatorMenuItem()
 menu.append(separator_above_svcs_item)  #-------------------------------------#
@@ -592,21 +545,6 @@ prefs_submenu.append(media_arrows_fix_item)
 
 # End of Preferences submenu
 ###############################################################
-
-# def load_optspec_layout_submenu_settings():
-#     cnfg.load_settings()
-#     for menu_item in optspec_layout_submenu.get_children():
-#         layout = menu_item.get_label()
-#         if layout == cnfg.optspec_layout:
-#             menu_item.set_active(True)
-#         else:
-#             menu_item.set_active(False)
-
-# def save_optspec_layout_setting(menu_item, layout):
-#     if menu_item.get_active():
-#         setattr(cnfg, 'optspec_layout', layout)
-#         cnfg.save_settings()
-#         load_optspec_layout_submenu_settings()
 
 def load_optspec_layout_submenu_settings():
     cnfg.load_settings()
