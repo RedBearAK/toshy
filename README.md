@@ -1,12 +1,14 @@
 # Current status: Stable-ish Beta (Please Read)
 
-WARNING: There is a veru annoying "bug" going around where there is a problem with the `xdg-desktop-portal` and `xdg-desktop-portal-gnome` services causing problems with launching certain applications (particularly GTK apps like Firefox, but also reportedly Qt apps sometimes) in a Wayland session. Some distros seem to have a fix for this, others have not fixed it yet.  
+WARNING: There is a very annoying "bug" going around where there is a problem with the `xdg-desktop-portal` and `xdg-desktop-portal-gnome` services causing very long delays with launching certain applications (particularly GTK apps like Firefox, but also reportedly Qt apps sometimes) in a Wayland session. Some distros seem to have a fix for this, others have not fixed it yet.  
 
-Symptoms for Toshy are that the systemd services can't start up properly until anywhere from 30 seconds to a minute or more after logging in. They will eventually start, and restarting the services later works without issue. I've been observing this on KDE in multiple Linux distros. One "fix" is to mask the `xdg-desktop-portal-gnome` service to keep it from clogging things up:  
+Symptoms for Toshy are that the systemd services can't start up properly until anywhere from 30 seconds to a minute or more after logging in. They will eventually start, and restarting the services later, after the glitchy desktop portal service times out, works without issue. I've been observing this on KDE in multiple Linux distros. One "fix" is to mask the `xdg-desktop-portal-gnome` service to keep it from clogging things up:  
 
 ```
 systemctl --user mask xdg-desktop-portal-gnome
 ```
+
+But you may need to unmask it if you log into a GNOME desktop, in a Wayland session.  
 
 ## Main issues you might run into
 
