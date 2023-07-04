@@ -371,6 +371,12 @@ def fn_monitor_toshy_services():
             # debug(f'{curr_svcs_state_tup = }\n')
             tray_indicator.set_icon_full(icon_file_grayscale, "Toshy Tray Icon Undefined")
 
+        if curr_svcs_state_tup != last_svcs_state_tup:
+            try:
+                toshy_config_status_item.set_label(f'         Config: {svc_status_config}')
+                session_monitor_status_item.set_label(f'     SessMon: {svc_status_sessmon}')
+            except NameError: pass  # Let it pass if menu item not ready yet
+
         last_svcs_state_tup = curr_svcs_state_tup
 
         time.sleep(2)
