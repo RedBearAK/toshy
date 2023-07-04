@@ -1062,6 +1062,8 @@ def remove_tweaks_GNOME():
 def apply_tweaks_KDE():
     """Utility function to add desktop tweaks to KDE"""
 
+    # Documentation on the use of Meta key in KDE:
+    # https://userbase.kde.org/Plasma/Tips#Windows.2FMeta_Key
     subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group',
                     'ModifierOnlyShortcuts', '--key', 'Meta', ''], check=True)
 
