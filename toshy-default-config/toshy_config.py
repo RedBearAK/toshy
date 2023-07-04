@@ -288,6 +288,9 @@ def isKBtype(kbtype: str, map=None):
     return _isKBtype
 
 
+kbtype_cache_dct = {}
+
+
 def getKBtype():
     """
     ### Get the keyboard type string for the current device
@@ -304,21 +307,28 @@ def getKBtype():
     4. Check if the device name indicates a "Windows" keyboard by excluding other types.
     """
 
-    # Create a "UserCustom" keyboard dictionary with casefolded keys
-    kbds_UserCustom_dct_cf = {k.casefold(): v for k, v in keyboards_UserCustom_dct.items()}
     def _getKBtype(ctx: KeyContext):
         global KBTYPE
-        kbd_dev_name    = ctx.device_name
-        kbd_dev_name_cf = ctx.device_name.casefold()
+        kbd_dev_name = ctx.device_name
 
-        def log_kbtype(msg=None):
+        def log_kbtype(msg=None, cache_dev=True):
             debug(f"KBTYPE: '{KBTYPE}' | {msg}: '{kbd_dev_name}'")
+            if cache_dev:
+                kbtype_cache_dct[kbd_dev_name] = (KBTYPE, msg)
+
+        # Check in the kbtype cache dict for the device
+        if kbd_dev_name in kbtype_cache_dct:
+            KBTYPE, cached_msg = kbtype_cache_dct[kbd_dev_name]
+            log_kbtype(f'{cached_msg} (cached)', cache_dev=False)
+            return
+
+        kbd_dev_name_cf = ctx.device_name.casefold()
 
         # Check if there is a custom type for the device
         custom_kbtype = kbds_UserCustom_dct_cf.get(kbd_dev_name_cf, '')
         if custom_kbtype and custom_kbtype in ['IBM', 'Chromebook', 'Windows', 'Apple']:
             KBTYPE = custom_kbtype
-            log_kbtype('Custom type given for device')
+            log_kbtype('Custom type for dev')
             return
 
         # Check against the keyboard type lists
@@ -326,14 +336,14 @@ def getKBtype():
             for rgx in regex_lst:
                 if rgx.search(kbd_dev_name_cf):
                     KBTYPE = kbtype
-                    log_kbtype('Regex matched for device')
+                    log_kbtype('Rgx matched on dev')
                     return
 
         # Check if any keyboard type string is found in the device name
         for kbtype in ['IBM', 'Chromebook', 'Windows', 'Apple']:
             if kbtype.casefold() in kbd_dev_name_cf:
                 KBTYPE = kbtype
-                log_kbtype('Type found in device name')
+                log_kbtype('Type in dev name')
                 return
 
         # Check if the device name indicates a "Windows" keyboard
@@ -341,12 +351,12 @@ def getKBtype():
             and not not_win_type_rgx.search(kbd_dev_name_cf) 
             and not all_kbds_rgx.search(kbd_dev_name_cf) ):
             KBTYPE = 'Windows'
-            log_kbtype('Device defaulted to Windows')
+            log_kbtype('Default type for dev')
             return
 
         # Default to None if no matching keyboard type is found
         KBTYPE = 'unidentified'
-        error(f"KBTYPE: '{KBTYPE}' | Device fell through all checks: '{kbd_dev_name}'")
+        error(f"KBTYPE: '{KBTYPE}' | Dev fell through all checks: '{kbd_dev_name}'")
 
     return _getKBtype  # Return the inner function
 
@@ -890,6 +900,9 @@ keyboards_UserCustom_dct = {
 ###  SLICE_MARK_END: kbtype_override  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 ###################################################################################################
 
+# Create a "UserCustom" keyboard dictionary with casefolded keys
+kbds_UserCustom_dct_cf = {k.casefold(): v for k, v in keyboards_UserCustom_dct.items()}
+
 
 # Lists of keyboard device names, to match keyboard type
 keyboards_IBM = [
@@ -1052,6 +1065,17 @@ modmap("Cond modmap - GTK3 numpad nav keys fix",{
 #     # {Key.LEFT_META:             [Key.ESC, Key.RIGHT_CTRL]       # Caps2Esc - Chromebook
 #     {                                                             # Placeholder
 # })
+
+
+# EXPERIMENTAL!!!!
+multipurpose_modmap("Block Mod when alone", {
+    Key.LEFT_META:              [Key.RESERVED, Key.LEFT_META],
+    Key.RIGHT_META:             [Key.RESERVED, Key.RIGHT_META],
+    # Key.LEFT_ALT:               [Key.RESERVED, Key.LEFT_ALT],
+    # Key.RIGHT_ALT:              [Key.RESERVED, Key.RIGHT_ALT],
+}, when = lambda ctx:
+    # matchProps(not_lst=terminals_and_remotes_lod)(ctx) )
+    matchProps(not_lst=remotes_lod)(ctx) )
 
 
 multipurpose_modmap("Enter2Cmd", {
