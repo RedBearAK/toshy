@@ -143,7 +143,7 @@ except NameError:
 ###                                            ###
 ###                                            ###
 ##################################################
-# Establish important variables here
+# Establish important global variables here
 
 # Variable to hold the keyboard type
 KBTYPE = None
@@ -179,399 +179,17 @@ last_dt_combo = None
 
 
 
-###################################  CUSTOM FUNCTIONS  ####################################
-###                                                                                     ###
-###                                                                                     ###
-###      ███████ ██    ██ ███    ██  ██████ ████████ ██  ██████  ███    ██ ███████      ###
-###      ██      ██    ██ ████   ██ ██         ██    ██ ██    ██ ████   ██ ██           ###
-###      █████   ██    ██ ██ ██  ██ ██         ██    ██ ██    ██ ██ ██  ██ ███████      ###
-###      ██      ██    ██ ██  ██ ██ ██         ██    ██ ██    ██ ██  ██ ██      ██      ###
-###      ██       ██████  ██   ████  ██████    ██    ██  ██████  ██   ████ ███████      ###
-###                                                                                     ###
-###                                                                                     ###
-###########################################################################################
-
-
-# DEPRECATED: old form of isKBtype()
-def XisKBtype(kbtype: str, map=None):
-    """
-    ### Match on the keyboard type for conditional modmaps and keymaps
-    
-    #### Valid Types
-    
-    - IBM | Chromebook | Windows | Apple
-    
-    #### Hierarchy of validations:
-    
-    1. Check if the device name is in the keyboards_UserCustom_dct dictionary.
-    2. Is device name in keyboard type list matching `kbtype` arg?
-    3. Is `kbtype` string in the device name string?
-    4. Is `kbtype` "Windows" and other type strings _not_ in device name
-        and device name _not_ in `all_keyboards` list?
-    """
-
-    # guard against failure to give valid type arg
-    if kbtype not in ['IBM', 'Chromebook', 'Windows', 'Apple']:
-        raise ValueError(  f"Invalid type given to isKBtype() function: '{kbtype}'"
-                f'\n\t Valid keyboard types (case sensitive): IBM | Chromebook | Windows | Apple')
-
-    # Create a "UserCustom" keyboard dictionary with casefolded keys
-    kbds_UserCustom_lower_dct   = {k.casefold(): v for k, v in keyboards_UserCustom_dct.items()}
-    kbtype_cf                   = kbtype.casefold()
-    regex_lst                   = kbtype_lists_rgx.get(kbtype, [])
-    not_win_type_rgx            = re.compile("IBM|Chromebook|Apple", re.I)
-    all_kbds_rgx                = re.compile(toRgxStr(all_keyboards), re.I)
-
-    def _isKBtype(ctx: KeyContext):
-        logging_enabled = True
-        kb_dev_name = ctx.device_name.casefold()
-
-        # get custom type for device, if there is one
-        custom_kbtype   = str(kbds_UserCustom_lower_dct.get(kb_dev_name, ''))
-        cust_kbtype_cf  = custom_kbtype.casefold()
-        # check that a valid type is being given in custom dict
-        if custom_kbtype and custom_kbtype not in ['IBM', 'Chromebook', 'Windows', 'Apple']:
-            raise ValueError(  f"Invalid custom keyboard type: '{custom_kbtype}'"
-                    f'\n\t Valid keyboard types (case sensitive): IBM | Chromebook | Windows | Apple')
-            return False
-        # check for type match/mismatch only if custom type is truthy (no regex, literal string)
-        if cust_kbtype_cf and cust_kbtype_cf == kbtype_cf:
-            if logging_enabled:
-                debug(f"KB_TYPE: '{kbtype}' | Type override given for device: '{ctx.device_name}'")
-            return True
-        elif cust_kbtype_cf and cust_kbtype_cf != kbtype_cf:
-            return False
-
-        for rgx in regex_lst:
-            match = rgx.search(kb_dev_name)
-            if match:
-                if logging_enabled:
-                    debug(f"KB_TYPE: '{kbtype}' | Regex matched on device name: '{ctx.device_name}'")
-                return True
-
-        if kbtype_cf == 'apple' and 'magic' in kb_dev_name and 'keyboard' in kb_dev_name:
-            if logging_enabled:
-                debug(f"KB_TYPE: '{kbtype}' | Identified as Magic Keyboard: '{ctx.device_name}' ")
-            return True
-
-        if kbtype_cf in kb_dev_name:
-            if logging_enabled:
-                debug(f"KB_TYPE: '{kbtype}' | Type found in device name: '{ctx.device_name}'")
-            return True
-
-        if kbtype_cf == 'windows':
-            # check there are no non-Windows type keywords in the device name
-            if not_win_type_rgx.search(kb_dev_name):
-                return False
-            # check device name is not in any existing default list
-            # this seems unnecessary and redundant if regex matching is working...
-            if not all_kbds_rgx.search(kb_dev_name):
-                if logging_enabled:
-                    debug(f"KB_TYPE: '{kbtype}' | Device given default type: '{ctx.device_name}'")
-                return True
-        return False
-
-    return _isKBtype    # return the inner function
-
-
-def isKBtype(kbtype: str, map=None):
-    # guard against failure to give valid type arg
-    if kbtype not in ['IBM', 'Chromebook', 'Windows', 'Apple']:
-        raise ValueError(f"Invalid type given to isKBtype() function: '{kbtype}'"
-                f'\n\t Valid keyboard types (case sensitive): IBM | Chromebook | Windows | Apple')
-    kbtype_cf = kbtype.casefold()
-    KBTYPE_cf = KBTYPE.casefold() if isinstance(KBTYPE, str) else None
-
-    def _isKBtype(ctx):
-        # debug(f"KBTYPE: '{KBTYPE}' | isKBtype check from map: '{map}'")
-        return kbtype_cf == KBTYPE_cf
-    return _isKBtype
-
-
-kbtype_cache_dct = {}
-
-
-def getKBtype():
-    """
-    ### Get the keyboard type string for the current device
-    
-    #### Valid Types
-    
-    - IBM | Chromebook | Windows | Apple
-    
-    #### Hierarchy of validations:
-    
-    1. Check if the device name is in the keyboards_UserCustom_dct dictionary.
-    2. Check if the device name matches any keyboard type list.
-    3. Check if any keyboard type string is found in the device name string.
-    4. Check if the device name indicates a "Windows" keyboard by excluding other types.
-    """
-
-    def _getKBtype(ctx: KeyContext):
-        global KBTYPE
-        kbd_dev_name = ctx.device_name
-
-        def log_kbtype(msg=None, cache_dev=True):
-            debug(f"KBTYPE: '{KBTYPE}' | {msg}: '{kbd_dev_name}'")
-            if cache_dev:
-                kbtype_cache_dct[kbd_dev_name] = (KBTYPE, msg)
-
-        # Check in the kbtype cache dict for the device
-        if kbd_dev_name in kbtype_cache_dct:
-            KBTYPE, cached_msg = kbtype_cache_dct[kbd_dev_name]
-            log_kbtype(f'{cached_msg} (cached)', cache_dev=False)
-            return
-
-        kbd_dev_name_cf = ctx.device_name.casefold()
-
-        # Check if there is a custom type for the device
-        custom_kbtype = kbds_UserCustom_dct_cf.get(kbd_dev_name_cf, '')
-        if custom_kbtype and custom_kbtype in ['IBM', 'Chromebook', 'Windows', 'Apple']:
-            KBTYPE = custom_kbtype
-            log_kbtype('Custom type for dev')
-            return
-
-        # Check against the keyboard type lists
-        for kbtype, regex_lst in kbtype_lists_rgx.items():
-            for rgx in regex_lst:
-                if rgx.search(kbd_dev_name_cf):
-                    KBTYPE = kbtype
-                    log_kbtype('Rgx matched on dev')
-                    return
-
-        # Check if any keyboard type string is found in the device name
-        for kbtype in ['IBM', 'Chromebook', 'Windows', 'Apple']:
-            if kbtype.casefold() in kbd_dev_name_cf:
-                KBTYPE = kbtype
-                log_kbtype('Type in dev name')
-                return
-
-        # Check if the device name indicates a "Windows" keyboard
-        if ('windows' not in kbd_dev_name_cf 
-            and not not_win_type_rgx.search(kbd_dev_name_cf) 
-            and not all_kbds_rgx.search(kbd_dev_name_cf) ):
-            KBTYPE = 'Windows'
-            log_kbtype('Default type for dev')
-            return
-
-        # Default to None if no matching keyboard type is found
-        KBTYPE = 'unidentified'
-        error(f"KBTYPE: '{KBTYPE}' | Dev fell through all checks: '{kbd_dev_name}'")
-
-    return _getKBtype  # Return the inner function
-
-
-def isDoubleTap(dt_combo):
-    """
-    VERY EXPERIMENTAL!!!
-    
-    Simplistic detection of double-tap of a key or combo.
-    
-    BLOCKS single-tap function, if used with a single key as the input, but the
-    'normal' (non-modifier) key of a combo will still be usable when used by 
-    itself as a non-double-tapped key press.
-    
-    Example: 'RC-CapsLock' will respond when "Cmd" key (under Toshy remapping)
-    is held and CapsLock key is double-tapped. Nothing will happen if 
-    Cmd+CapsLock is pressed without double-tapping CapsLock key within the
-    configured time interval. But the CapsLock key will still work by itself.
-    
-    If double-tap input "combo" is just 'CapsLock', the functioning of a single-tap
-    CapsLock key press will be BLOCKED. Nothing will happen unless the key is 
-    double-tapped within the configured time interval.
-    
-    Only cares about the 'real' key in a combo of Mods+key, like in the example
-    above with 'RC-CapsLock'. 
-    
-    The proper way to do this would be inside the keymapper, in the async event loop
-    that deals with input/output functions. 
-    """
-    def _isDoubleTap():
-        global tapTime1
-        global tapInterval
-        global tapCount
-        global last_dt_combo
-        _tapTime = time.time()
-        # This first "if" block has a logic defect, if a different key in the
-        # same keymap is also set up to send the same "dt_combo" value.
-        if tapCount == 1 and last_dt_combo != dt_combo:
-            debug(f'## isDoubleTap: \n\tDifferent combo: \n\t{last_dt_combo, dt_combo=}')
-            last_dt_combo = None
-            tapCount = 0
-        # 2nd tap beyond time interval? Treat as new double-tap cycle.
-        if tapCount == 1 and _tapTime - tapTime1 >= tapInterval:
-            debug(f'## isDoubleTap: \n\tTime diff (too long): \n\t{_tapTime - tapTime1=}')
-            tapCount = 0
-        # Try to keep held key from producing repeats of dt_combo.
-        # If repeat rate very slow or delay very short, this won't work well. 
-        if tapCount == 1 and _tapTime - tapTime1 < 0.07:
-            debug(f'## isDoubleTap: \n\tTime diff (too short): \n\t{_tapTime - tapTime1=}')
-            tapCount = 0
-            return None
-        # 2nd tap within interval window? Reset cycle & send dt_combo.
-        if tapCount == 1 and _tapTime - tapTime1 < tapInterval:
-            debug(f'## isDoubleTap: \n\tTime diff (just right): \n\t{_tapTime - tapTime1=}')
-            tapCount = 0
-            tapTime1 = 0.0
-            return dt_combo
-        # New cycle? Set count = 1, tapTime1 = now. Send nothing. 
-        if tapCount == 0:
-            debug(f'## isDoubleTap: \n\tTime diff (1st cycle): \n\t{_tapTime - tapTime1=}')
-            last_dt_combo = dt_combo
-            tapCount = 1
-            tapTime1 = _tapTime
-            return None
-    return _isDoubleTap
-
-
-
-# Correct syntax to reject all positional parameters: put `*,` at beginning
-def matchProps(*,
-    # string parameters (positive matching)
-    clas: str = None, name: str = None, devn: str = None,
-    # string parameters (negative matching)
-    not_clas: str = None, not_name: str = None, not_devn: str = None,
-    # bool parameters
-    numlk: bool = None, capslk: bool = None, cse: bool = None,
-    # list of dicts of parameters (positive)
-    lst: List[Dict[str, Union[str, bool]]] = None,
-    # list of dicts of parameters (negative)
-    not_lst: List[Dict[str, Union[str, bool]]] = None,
-    dbg: str = None,    # debugging info (such as: which modmap/keymap?)
-) -> Callable[[KeyContext], bool]:
-    """
-    ### Match all given properties to current window context.       \n
-    - Parameters must be _named_, no positional arguments.          \n
-    - All parameters optional, but at least one must be given.      \n
-    - Defaults to case insensitive matching of:                     \n
-        - WM_CLASS, WM_NAME, device_name                            \n
-    - To negate/invert regex pattern match use:                     \n
-        - `not_clas` `not_name` `not_devn` params or...             \n
-        - "^(?:(?!^pattern$).)*$"                                   \n
-    - To force case insensitive pattern match use:                  \n 
-        - "^(?i:pattern)$" or...                                    \n
-        - "^(?i)pattern$"                                           \n
-
-    ### Accepted Parameters:                                        \n
-    `clas` = WM_CLASS    (regex/string) [xprop WM_CLASS]            \n
-    `name` = WM_NAME     (regex/string) [xprop _NET_WM_NAME]        \n
-    `devn` = Device Name (regex/string) [keyszer --list-devices]    \n
-    `not_clas` = `clas` but inverted, matches when "not"            \n
-    `not_name` = `name` but inverted, matches when "not"            \n
-    `not_devn` = `devn` but inverted, matches when "not"            \n
-    `numlk`    = Num Lock LED state         (bool)                  \n
-    `capslk`   = Caps Lock LED state        (bool)                  \n
-    `cse`      = Case Sensitive matching    (bool)                  \n
-    `lst`      = List of dicts of the above arguments               \n
-    `not_lst`  = `lst` but inverted, matches when "not"             \n
-    `dbg`      = Debugging info             (string)                \n
-
-    ### Negative match parameters: 
-    - `not_clas`|`not_name`|`not_devn`                              \n
-    Parameters take same regex patterns as `clas`|`name`|`devn`     \n
-    but result in a True condition only if pattern is NOT found.    \n
-    Negative parameters cannot be used together with the normal     \n
-    positive matching equivalent parameter in same instance.        \n
-
-    ### List of Dicts parameter: `lst`|`not_lst`
-    A [list] of {dicts} with each dict containing 1 to 6 of the     \n
-    named parameters above, to be processed recursively as args.    \n
-    A dict can also contain a single `lst` or `not_lst` argment.    \n
-
-    ### Debugging info parameter: `dbg`
-    A string that will print as part of logging output. Use to      \n
-    help identify origin of logging output.                         \n
-    -                                                               \n
-    """
-    # Reference for successful negative lookahead pattern, and 
-    # explanation of why it works:
-    # https://stackoverflow.com/questions/406230/\
-        # regular-expression-to-match-a-line-that-doesnt-contain-a-word
-
-    logging_enabled = False
-    allowed_params  = (clas, name, devn, not_clas, not_name, not_devn, 
-                        numlk, capslk, cse, lst, not_lst, dbg)
-    lst_dct_params  = (clas, name, devn, not_clas, not_name, not_devn, 
-                        numlk, capslk, cse)
-    string_params   = (clas, name, devn, not_clas, not_name, not_devn, dbg)
-    dct_param_strs  = list(inspect.signature(matchProps).parameters.keys())
-
-    if all([x is None for x in allowed_params]): 
-        raise ValueError(f"\n\n(EE) matchProps(): Received no valid argument\n")
-    if any([x not in (True, False, None) for x in (numlk, capslk, cse)]): 
-        raise TypeError(f"\n\n(EE) matchProps(): Params 'nlk|clk|cse' are bools\n")
-    if any([x is not None and not isinstance(x, str) for x in string_params]):
-        raise TypeError(    f"\n\n(EE) matchProps(): These parameters must be strings:"
-                            f"\n\t'clas|name|devn|not_clas|not_name|not_devn|dbg'\n")
-    if clas and not_clas or name and not_name or devn and not_devn or lst and not_lst:
-        raise ValueError(   f"\n\n(EE) matchProps(): Do not mix positive and "
-                            f"negative match params for same property\n")
-
-    # consolidate positive and negative matching params into new vars
-    # only one should be in use at a time (checked above)
-    _lst = not_lst if lst is None else lst
-    _clas = not_clas if clas is None else clas
-    _name = not_name if name is None else name
-    _devn = not_devn if devn is None else devn
-
-    # process lists of conditions
-    if _lst is not None:
-        if any([x is not None for x in lst_dct_params]): 
-            raise TypeError(f"\n\n(EE) matchProps(): Param 'lst|not_lst' must be used alone\n")
-        if not isinstance(_lst, list) or not all(isinstance(item, dict) for item in _lst): 
-            raise TypeError(
-                f"\n\n(EE) matchProps(): Param 'lst|not_lst' wants a [list] of {{dicts}}\n")
-        # verify that every {dict} in [list of dicts] only contains valid parameter names
-        for dct in _lst:
-            for param in list(dct.keys()):
-                if param not in dct_param_strs:
-                    error(f"matchProps(): Invalid parameter: '{param}'")
-                    error(f"Invalid parameter is in this dict: \n\t{dct}")
-                    error(f"Dict is in this list:")
-                    for item in _lst:
-                        print(f"\t{item}")
-                    raise ValueError(
-                        f"\n(EE) matchProps(): Invalid parameter found in dict in list. "
-                        f"See log output before traceback.\n")
-
-        def _matchProps_Lst(ctx: KeyContext):
-            if not_lst is not None:
-                if logging_enabled: print(f"## _matchProps_Lst()[not_lst] ## {dbg=}")
-                return not any(matchProps(**dct)(ctx) for dct in not_lst)
-            else:
-                if logging_enabled: print(f"## _matchProps_Lst()[lst] ## {dbg=}")
-                return any(matchProps(**dct)(ctx) for dct in lst)
-
-        return _matchProps_Lst      # outer function returning inner function
-
-    # compile case insentitive regex object for given params, unless cse=True
-    if _clas is not None: clas_rgx = re.compile(_clas) if cse else re.compile(_clas, re.I)
-    if _name is not None: name_rgx = re.compile(_name) if cse else re.compile(_name, re.I)
-    if _devn is not None: devn_rgx = re.compile(_devn) if cse else re.compile(_devn, re.I)
-
-    def _matchProps(ctx: KeyContext):
-        cond_list = []
-        if _clas is not None:
-            clas_match = re.search(clas_rgx, ctx.wm_class)
-            cond_list.append(not clas_match if not_clas is not None else clas_match)
-        if _name is not None:
-            name_match = re.search(name_rgx, ctx.wm_name)
-            cond_list.append(not name_match if not_name is not None else name_match)
-        if _devn is not None:
-            devn_match = re.search(devn_rgx, ctx.device_name)
-            cond_list.append(not devn_match if not_devn is not None else devn_match)
-        # these two MUST check explicitly for "is not None" because external input is True/False,
-        # and we want to be able to match the LED_on state of either "True" or "False"
-        if numlk is not None: cond_list.append( numlk is ctx.numlock_on  )
-        if capslk is not None: cond_list.append( capslk is ctx.capslock_on )
-        if logging_enabled: # and all(cnd_lst): # << add this to show only "True" condition lists
-            print(f'####  CND_LST ({all(cond_list)})  ####  {dbg=}')
-            for elem in cond_list:
-                print('##', re.sub('^.*span=.*\), ', '', str(elem)).replace('>',''))
-            print('-------------------------------------------------------------------')
-        return all(cond_list)
-
-    return _matchProps      # outer function returning inner function
+######################  LISTS  #######################
+###                                                ###
+###                                                ###
+###      ██      ██ ███████ ████████ ███████       ###
+###      ██      ██ ██         ██    ██            ###
+###      ██      ██ ███████    ██    ███████       ###
+###      ██      ██      ██    ██         ██       ###
+###      ███████ ██ ███████    ██    ███████       ###
+###                                                ###
+###                                                ###
+######################################################
 
 
 def toRgxStr(lst_of_str) -> str:
@@ -601,63 +219,6 @@ def negRgx(rgx_str):
     neg_rgx_str = str(rgx_str_add).replace('^','^(?:(?!^').replace('$','$).)*$')
     return neg_rgx_str
 
-
-def macro_tester():
-    def _macro_tester(ctx: KeyContext):
-        return [
-                    C("Enter"),
-                    ST(f"Appl. Class: '{ctx.wm_class}'"), C("Enter"),
-                    ST(f"Wind. Title: '{ctx.wm_name}'"), C("Enter"),
-                    ST(f"Kbd. Device: '{ctx.device_name}'"), C("Enter"),
-                    ST("Next test should come out on ONE LINE!"), C("Enter"),
-                    ST("Unicode and Shift Test: 🌹—€—\u2021—ÿ—\U00002021 12345 !@#$% |\ !!!!!!"),
-                    C("Enter")
-        ]
-    return _macro_tester
-
-
-zenity_icon_option = None
-try:
-    zenity_help_output = subprocess.check_output(['zenity', '--help-info'])
-    help_text = str(zenity_help_output)
-    if '--icon=' in help_text:
-        zenity_icon_option = '--icon=toshy_app_icon_rainbow'
-    elif '--icon-name=' in help_text:
-        zenity_icon_option = '--icon-name=toshy_app_icon_rainbow'
-except subprocess.CalledProcessError:
-    pass  # zenity --help-info failed, assume icon is not supported
-
-def notify_context():
-    """pop up a notification with context info"""
-    def _notify_context(ctx: KeyContext):
-        global zenity_icon_option
-        zenity_cmd = [  'zenity', '--info', '--no-wrap', 
-                        '--title=Toshy Context Info',
-                        (
-                        '--text='
-                        f"Appl. Class   = '{ctx.wm_class}'"
-                        f"\nWndw. Title = '{ctx.wm_name}'"
-                        f"\nKbd. Device = '{ctx.device_name}'"
-                        )]
-        # insert the icon argument if it's supported
-        if zenity_icon_option is not None:
-            zenity_cmd.insert(3, zenity_icon_option)
-        subprocess.Popen(zenity_cmd, cwd=icons_dir, stderr=DEVNULL, stdout=DEVNULL)
-    return _notify_context
-
-
-
-######################  LISTS  #######################
-###                                                ###
-###                                                ###
-###      ██      ██ ███████ ████████ ███████       ###
-###      ██      ██ ██         ██    ██            ###
-###      ██      ██ ███████    ██    ███████       ###
-###      ██      ██      ██    ██         ██       ###
-###      ███████ ██ ███████    ██    ███████       ###
-###                                                ###
-###                                                ###
-######################################################
 
 # # OBSOLETED by the "list of dicts" `terminals_lod` below
 # # Use the following for testing terminal keymaps
@@ -956,6 +517,445 @@ kbtype_lists_rgx    = {
 all_kbds_rgx        = re.compile(toRgxStr(all_keyboards), re.I)
 
 not_win_type_rgx    = re.compile("IBM|Chromebook|Apple", re.I)
+
+
+
+###################################  CUSTOM FUNCTIONS  ####################################
+###                                                                                     ###
+###                                                                                     ###
+###      ███████ ██    ██ ███    ██  ██████ ████████ ██  ██████  ███    ██ ███████      ###
+###      ██      ██    ██ ████   ██ ██         ██    ██ ██    ██ ████   ██ ██           ###
+###      █████   ██    ██ ██ ██  ██ ██         ██    ██ ██    ██ ██ ██  ██ ███████      ###
+###      ██      ██    ██ ██  ██ ██ ██         ██    ██ ██    ██ ██  ██ ██      ██      ###
+###      ██       ██████  ██   ████  ██████    ██    ██  ██████  ██   ████ ███████      ###
+###                                                                                     ###
+###                                                                                     ###
+###########################################################################################
+
+
+def isKBtype(kbtype: str, map=None):
+    # guard against failure to give valid type arg
+    if kbtype not in ['IBM', 'Chromebook', 'Windows', 'Apple']:
+        raise ValueError(f"Invalid type given to isKBtype() function: '{kbtype}'"
+                f'\n\t Valid keyboard types (case sensitive): IBM | Chromebook | Windows | Apple')
+    kbtype_cf = kbtype.casefold()
+    KBTYPE_cf = KBTYPE.casefold() if isinstance(KBTYPE, str) else None
+
+    def _isKBtype(ctx):
+        # debug(f"KBTYPE: '{KBTYPE}' | isKBtype check from map: '{map}'")
+        return kbtype_cf == KBTYPE_cf
+    return _isKBtype
+
+
+kbtype_cache_dct = {}
+
+
+def getKBtype():
+    """
+    ### Get the keyboard type string for the current device
+    
+    #### Valid Types
+    
+    - IBM | Chromebook | Windows | Apple
+    
+    #### Hierarchy of validations:
+    
+    1. Check if the device name is in the keyboards_UserCustom_dct dictionary.
+    2. Check if the device name matches any keyboard type list.
+    3. Check if any keyboard type string is found in the device name string.
+    4. Check if the device name indicates a "Windows" keyboard by excluding other types.
+    """
+
+    def _getKBtype(ctx: KeyContext):
+        global KBTYPE
+        kbd_dev_name = ctx.device_name
+
+        def log_kbtype(msg=None, cache_dev=True):
+            debug(f"KBTYPE: '{KBTYPE}' | {msg}: '{kbd_dev_name}'")
+            if cache_dev:
+                kbtype_cache_dct[kbd_dev_name] = (KBTYPE, msg)
+
+        # Check in the kbtype cache dict for the device
+        if kbd_dev_name in kbtype_cache_dct:
+            KBTYPE, cached_msg = kbtype_cache_dct[kbd_dev_name]
+            log_kbtype(f'{cached_msg} (cached)', cache_dev=False)
+            return
+
+        kbd_dev_name_cf = ctx.device_name.casefold()
+
+        # Check if there is a custom type for the device
+        custom_kbtype = kbds_UserCustom_dct_cf.get(kbd_dev_name_cf, '')
+        if custom_kbtype and custom_kbtype in ['IBM', 'Chromebook', 'Windows', 'Apple']:
+            KBTYPE = custom_kbtype
+            log_kbtype('Custom type for dev')
+            return
+
+        # Check against the keyboard type lists
+        for kbtype, regex_lst in kbtype_lists_rgx.items():
+            for rgx in regex_lst:
+                if rgx.search(kbd_dev_name_cf):
+                    KBTYPE = kbtype
+                    log_kbtype('Rgx matched on dev')
+                    return
+
+        # Check if any keyboard type string is found in the device name
+        for kbtype in ['IBM', 'Chromebook', 'Windows', 'Apple']:
+            if kbtype.casefold() in kbd_dev_name_cf:
+                KBTYPE = kbtype
+                log_kbtype('Type in dev name')
+                return
+
+        # Check if the device name indicates a "Windows" keyboard
+        if ('windows' not in kbd_dev_name_cf 
+            and not not_win_type_rgx.search(kbd_dev_name_cf) 
+            and not all_kbds_rgx.search(kbd_dev_name_cf) ):
+            KBTYPE = 'Windows'
+            log_kbtype('Default type for dev')
+            return
+
+        # Default to None if no matching keyboard type is found
+        KBTYPE = 'unidentified'
+        error(f"KBTYPE: '{KBTYPE}' | Dev fell through all checks: '{kbd_dev_name}'")
+
+    return _getKBtype  # Return the inner function
+
+
+def isDoubleTap(dt_combo):
+    """
+    VERY EXPERIMENTAL!!!
+    
+    Simplistic detection of double-tap of a key or combo.
+    
+    BLOCKS single-tap function, if used with a single key as the input, but the
+    'normal' (non-modifier) key of a combo will still be usable when used by 
+    itself as a non-double-tapped key press.
+    
+    Example: 'RC-CapsLock' will respond when "Cmd" key (under Toshy remapping)
+    is held and CapsLock key is double-tapped. Nothing will happen if 
+    Cmd+CapsLock is pressed without double-tapping CapsLock key within the
+    configured time interval. But the CapsLock key will still work by itself.
+    
+    If double-tap input "combo" is just 'CapsLock', the functioning of a single-tap
+    CapsLock key press will be BLOCKED. Nothing will happen unless the key is 
+    double-tapped within the configured time interval.
+    
+    Only cares about the 'real' key in a combo of Mods+key, like in the example
+    above with 'RC-CapsLock'. 
+    
+    The proper way to do this would be inside the keymapper, in the async event loop
+    that deals with input/output functions. 
+    """
+    def _isDoubleTap():
+        global tapTime1
+        global tapInterval
+        global tapCount
+        global last_dt_combo
+        _tapTime = time.time()
+        # This first "if" block has a logic defect, if a different key in the
+        # same keymap is also set up to send the same "dt_combo" value.
+        if tapCount == 1 and last_dt_combo != dt_combo:
+            debug(f'## isDoubleTap: \n\tDifferent combo: \n\t{last_dt_combo, dt_combo=}')
+            last_dt_combo = None
+            tapCount = 0
+        # 2nd tap beyond time interval? Treat as new double-tap cycle.
+        if tapCount == 1 and _tapTime - tapTime1 >= tapInterval:
+            debug(f'## isDoubleTap: \n\tTime diff (too long): \n\t{_tapTime - tapTime1=}')
+            tapCount = 0
+        # Try to keep held key from producing repeats of dt_combo.
+        # If repeat rate very slow or delay very short, this won't work well. 
+        if tapCount == 1 and _tapTime - tapTime1 < 0.07:
+            debug(f'## isDoubleTap: \n\tTime diff (too short): \n\t{_tapTime - tapTime1=}')
+            tapCount = 0
+            return None
+        # 2nd tap within interval window? Reset cycle & send dt_combo.
+        if tapCount == 1 and _tapTime - tapTime1 < tapInterval:
+            debug(f'## isDoubleTap: \n\tTime diff (just right): \n\t{_tapTime - tapTime1=}')
+            tapCount = 0
+            tapTime1 = 0.0
+            return dt_combo
+        # New cycle? Set count = 1, tapTime1 = now. Send nothing. 
+        if tapCount == 0:
+            debug(f'## isDoubleTap: \n\tTime diff (1st cycle): \n\t{_tapTime - tapTime1=}')
+            last_dt_combo = dt_combo
+            tapCount = 1
+            tapTime1 = _tapTime
+            return None
+    return _isDoubleTap
+
+
+# Correct syntax to reject all positional parameters: put `*,` at beginning
+def matchProps(*,
+    # string parameters (positive matching)
+    clas: str = None, name: str = None, devn: str = None,
+    # string parameters (negative matching)
+    not_clas: str = None, not_name: str = None, not_devn: str = None,
+    # bool parameters
+    numlk: bool = None, capslk: bool = None, cse: bool = None,
+    # list of dicts of parameters (positive)
+    lst: List[Dict[str, Union[str, bool]]] = None,
+    # list of dicts of parameters (negative)
+    not_lst: List[Dict[str, Union[str, bool]]] = None,
+    dbg: str = None,    # debugging info (such as: which modmap/keymap?)
+) -> Callable[[KeyContext], bool]:
+    """
+    ### Match all given properties to current window context.       \n
+    - Parameters must be _named_, no positional arguments.          \n
+    - All parameters optional, but at least one must be given.      \n
+    - Defaults to case insensitive matching of:                     \n
+        - WM_CLASS, WM_NAME, device_name                            \n
+    - To negate/invert regex pattern match use:                     \n
+        - `not_clas` `not_name` `not_devn` params or...             \n
+        - "^(?:(?!^pattern$).)*$"                                   \n
+    - To force case insensitive pattern match use:                  \n 
+        - "^(?i:pattern)$" or...                                    \n
+        - "^(?i)pattern$"                                           \n
+
+    ### Accepted Parameters:                                        \n
+    `clas` = WM_CLASS    (regex/string) [xprop WM_CLASS]            \n
+    `name` = WM_NAME     (regex/string) [xprop _NET_WM_NAME]        \n
+    `devn` = Device Name (regex/string) [keyszer --list-devices]    \n
+    `not_clas` = `clas` but inverted, matches when "not"            \n
+    `not_name` = `name` but inverted, matches when "not"            \n
+    `not_devn` = `devn` but inverted, matches when "not"            \n
+    `numlk`    = Num Lock LED state         (bool)                  \n
+    `capslk`   = Caps Lock LED state        (bool)                  \n
+    `cse`      = Case Sensitive matching    (bool)                  \n
+    `lst`      = List of dicts of the above arguments               \n
+    `not_lst`  = `lst` but inverted, matches when "not"             \n
+    `dbg`      = Debugging info             (string)                \n
+
+    ### Negative match parameters: 
+    - `not_clas`|`not_name`|`not_devn`                              \n
+    Parameters take same regex patterns as `clas`|`name`|`devn`     \n
+    but result in a True condition only if pattern is NOT found.    \n
+    Negative parameters cannot be used together with the normal     \n
+    positive matching equivalent parameter in same instance.        \n
+
+    ### List of Dicts parameter: `lst`|`not_lst`
+    A [list] of {dicts} with each dict containing 1 to 6 of the     \n
+    named parameters above, to be processed recursively as args.    \n
+    A dict can also contain a single `lst` or `not_lst` argment.    \n
+
+    ### Debugging info parameter: `dbg`
+    A string that will print as part of logging output. Use to      \n
+    help identify origin of logging output.                         \n
+    -                                                               \n
+    """
+    # Reference for successful negative lookahead pattern, and 
+    # explanation of why it works:
+    # https://stackoverflow.com/questions/406230/\
+        # regular-expression-to-match-a-line-that-doesnt-contain-a-word
+
+    logging_enabled = False
+    allowed_params  = (clas, name, devn, not_clas, not_name, not_devn, 
+                        numlk, capslk, cse, lst, not_lst, dbg)
+    lst_dct_params  = (clas, name, devn, not_clas, not_name, not_devn, 
+                        numlk, capslk, cse)
+    string_params   = (clas, name, devn, not_clas, not_name, not_devn, dbg)
+    dct_param_strs  = list(inspect.signature(matchProps).parameters.keys())
+
+    if all([x is None for x in allowed_params]): 
+        raise ValueError(f"\n\n(EE) matchProps(): Received no valid argument\n")
+    if any([x not in (True, False, None) for x in (numlk, capslk, cse)]): 
+        raise TypeError(f"\n\n(EE) matchProps(): Params 'nlk|clk|cse' are bools\n")
+    if any([x is not None and not isinstance(x, str) for x in string_params]):
+        raise TypeError(    f"\n\n(EE) matchProps(): These parameters must be strings:"
+                            f"\n\t'clas|name|devn|not_clas|not_name|not_devn|dbg'\n")
+    if clas and not_clas or name and not_name or devn and not_devn or lst and not_lst:
+        raise ValueError(   f"\n\n(EE) matchProps(): Do not mix positive and "
+                            f"negative match params for same property\n")
+
+    # consolidate positive and negative matching params into new vars
+    # only one should be in use at a time (checked above)
+    _lst = not_lst if lst is None else lst
+    _clas = not_clas if clas is None else clas
+    _name = not_name if name is None else name
+    _devn = not_devn if devn is None else devn
+
+    # process lists of conditions
+    if _lst is not None:
+        if any([x is not None for x in lst_dct_params]): 
+            raise TypeError(f"\n\n(EE) matchProps(): Param 'lst|not_lst' must be used alone\n")
+        if not isinstance(_lst, list) or not all(isinstance(item, dict) for item in _lst): 
+            raise TypeError(
+                f"\n\n(EE) matchProps(): Param 'lst|not_lst' wants a [list] of {{dicts}}\n")
+        # verify that every {dict} in [list of dicts] only contains valid parameter names
+        for dct in _lst:
+            for param in list(dct.keys()):
+                if param not in dct_param_strs:
+                    error(f"matchProps(): Invalid parameter: '{param}'")
+                    error(f"Invalid parameter is in this dict: \n\t{dct}")
+                    error(f"Dict is in this list:")
+                    for item in _lst:
+                        print(f"\t{item}")
+                    raise ValueError(
+                        f"\n(EE) matchProps(): Invalid parameter found in dict in list. "
+                        f"See log output before traceback.\n")
+
+        def _matchProps_Lst(ctx: KeyContext):
+            if not_lst is not None:
+                if logging_enabled: print(f"## _matchProps_Lst()[not_lst] ## {dbg=}")
+                return not any(matchProps(**dct)(ctx) for dct in not_lst)
+            else:
+                if logging_enabled: print(f"## _matchProps_Lst()[lst] ## {dbg=}")
+                return any(matchProps(**dct)(ctx) for dct in lst)
+
+        return _matchProps_Lst      # outer function returning inner function
+
+    # compile case insentitive regex object for given params, unless cse=True
+    if _clas is not None: clas_rgx = re.compile(_clas) if cse else re.compile(_clas, re.I)
+    if _name is not None: name_rgx = re.compile(_name) if cse else re.compile(_name, re.I)
+    if _devn is not None: devn_rgx = re.compile(_devn) if cse else re.compile(_devn, re.I)
+
+    def _matchProps(ctx: KeyContext):
+        cond_list = []
+        if _clas is not None:
+            clas_match = re.search(clas_rgx, ctx.wm_class)
+            cond_list.append(not clas_match if not_clas is not None else clas_match)
+        if _name is not None:
+            name_match = re.search(name_rgx, ctx.wm_name)
+            cond_list.append(not name_match if not_name is not None else name_match)
+        if _devn is not None:
+            devn_match = re.search(devn_rgx, ctx.device_name)
+            cond_list.append(not devn_match if not_devn is not None else devn_match)
+        # these two MUST check explicitly for "is not None" because external input is True/False,
+        # and we want to be able to match the LED_on state of either "True" or "False"
+        if numlk is not None: cond_list.append( numlk is ctx.numlock_on  )
+        if capslk is not None: cond_list.append( capslk is ctx.capslock_on )
+        if logging_enabled: # and all(cnd_lst): # << add this to show only "True" condition lists
+            print(f'####  CND_LST ({all(cond_list)})  ####  {dbg=}')
+            for elem in cond_list:
+                print('##', re.sub('^.*span=.*\), ', '', str(elem)).replace('>',''))
+            print('-------------------------------------------------------------------')
+        return all(cond_list)
+
+    return _matchProps      # outer function returning inner function
+
+
+def macro_tester():
+    def _macro_tester(ctx: KeyContext):
+        return [
+                    C("Enter"),
+                    ST(f"Appl. Class: '{ctx.wm_class}'"), C("Enter"),
+                    ST(f"Wind. Title: '{ctx.wm_name}'"), C("Enter"),
+                    ST(f"Kbd. Device: '{ctx.device_name}'"), C("Enter"),
+                    ST("Next test should come out on ONE LINE!"), C("Enter"),
+                    ST("Unicode and Shift Test: 🌹—€—\u2021—ÿ—\U00002021 12345 !@#$% |\ !!!!!!"),
+                    C("Enter")
+        ]
+    return _macro_tester
+
+
+zenity_icon_option = None
+try:
+    zenity_help_output = subprocess.check_output(['zenity', '--help-info'])
+    help_text = str(zenity_help_output)
+    if '--icon=' in help_text:
+        zenity_icon_option = '--icon=toshy_app_icon_rainbow'
+    elif '--icon-name=' in help_text:
+        zenity_icon_option = '--icon-name=toshy_app_icon_rainbow'
+except subprocess.CalledProcessError:
+    pass  # zenity --help-info failed, assume icon is not supported
+
+def notify_context():
+    """pop up a notification with context info"""
+    def _notify_context(ctx: KeyContext):
+        global zenity_icon_option
+        zenity_cmd = [  'zenity', '--info', '--no-wrap', 
+                        '--title=Toshy Context Info',
+                        (
+                        '--text='
+                        f"Appl. Class   = '{ctx.wm_class}'"
+                        f"\nWndw. Title = '{ctx.wm_name}'"
+                        f"\nKbd. Device = '{ctx.device_name}'"
+                        )]
+        # insert the icon argument if it's supported
+        if zenity_icon_option is not None:
+            zenity_cmd.insert(3, zenity_icon_option)
+        subprocess.Popen(zenity_cmd, cwd=icons_dir, stderr=DEVNULL, stdout=DEVNULL)
+    return _notify_context
+
+
+# # DEPRECATED: old form of isKBtype()
+# def XisKBtype(kbtype: str, map=None):
+#     """
+#     ### Match on the keyboard type for conditional modmaps and keymaps
+    
+#     #### Valid Types
+    
+#     - IBM | Chromebook | Windows | Apple
+    
+#     #### Hierarchy of validations:
+    
+#     1. Check if the device name is in the keyboards_UserCustom_dct dictionary.
+#     2. Is device name in keyboard type list matching `kbtype` arg?
+#     3. Is `kbtype` string in the device name string?
+#     4. Is `kbtype` "Windows" and other type strings _not_ in device name
+#         and device name _not_ in `all_keyboards` list?
+#     """
+
+#     # guard against failure to give valid type arg
+#     if kbtype not in ['IBM', 'Chromebook', 'Windows', 'Apple']:
+#         raise ValueError(  f"Invalid type given to isKBtype() function: '{kbtype}'"
+#                 f'\n\t Valid keyboard types (case sensitive): IBM | Chromebook | Windows | Apple')
+
+#     # Create a "UserCustom" keyboard dictionary with casefolded keys
+#     kbds_UserCustom_lower_dct   = {k.casefold(): v for k, v in keyboards_UserCustom_dct.items()}
+#     kbtype_cf                   = kbtype.casefold()
+#     regex_lst                   = kbtype_lists_rgx.get(kbtype, [])
+#     not_win_type_rgx            = re.compile("IBM|Chromebook|Apple", re.I)
+#     all_kbds_rgx                = re.compile(toRgxStr(all_keyboards), re.I)
+
+#     def _isKBtype(ctx: KeyContext):
+#         logging_enabled = True
+#         kb_dev_name = ctx.device_name.casefold()
+
+#         # get custom type for device, if there is one
+#         custom_kbtype   = str(kbds_UserCustom_lower_dct.get(kb_dev_name, ''))
+#         cust_kbtype_cf  = custom_kbtype.casefold()
+#         # check that a valid type is being given in custom dict
+#         if custom_kbtype and custom_kbtype not in ['IBM', 'Chromebook', 'Windows', 'Apple']:
+#             raise ValueError(  f"Invalid custom keyboard type: '{custom_kbtype}'"
+#                     f'\n\t Valid keyboard types (case sensitive): IBM | Chromebook | Windows | Apple')
+#             return False
+#         # check for type match/mismatch only if custom type is truthy (no regex, literal string)
+#         if cust_kbtype_cf and cust_kbtype_cf == kbtype_cf:
+#             if logging_enabled:
+#                 debug(f"KB_TYPE: '{kbtype}' | Type override given for device: '{ctx.device_name}'")
+#             return True
+#         elif cust_kbtype_cf and cust_kbtype_cf != kbtype_cf:
+#             return False
+
+#         for rgx in regex_lst:
+#             match = rgx.search(kb_dev_name)
+#             if match:
+#                 if logging_enabled:
+#                     debug(f"KB_TYPE: '{kbtype}' | Regex matched on device name: '{ctx.device_name}'")
+#                 return True
+
+#         if kbtype_cf == 'apple' and 'magic' in kb_dev_name and 'keyboard' in kb_dev_name:
+#             if logging_enabled:
+#                 debug(f"KB_TYPE: '{kbtype}' | Identified as Magic Keyboard: '{ctx.device_name}' ")
+#             return True
+
+#         if kbtype_cf in kb_dev_name:
+#             if logging_enabled:
+#                 debug(f"KB_TYPE: '{kbtype}' | Type found in device name: '{ctx.device_name}'")
+#             return True
+
+#         if kbtype_cf == 'windows':
+#             # check there are no non-Windows type keywords in the device name
+#             if not_win_type_rgx.search(kb_dev_name):
+#                 return False
+#             # check device name is not in any existing default list
+#             # this seems unnecessary and redundant if regex matching is working...
+#             if not all_kbds_rgx.search(kb_dev_name):
+#                 if logging_enabled:
+#                     debug(f"KB_TYPE: '{kbtype}' | Device given default type: '{ctx.device_name}'")
+#                 return True
+#         return False
+
+#     return _isKBtype    # return the inner function
 
 
 
