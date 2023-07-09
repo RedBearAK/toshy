@@ -319,6 +319,7 @@ def fn_monitor_toshy_services():
 
     time.sleep(0.6)   # wait a bit before starting the loop
 
+    update_cycles = 0
     while True:
 
         if not toshy_svc_config_unit_path or not toshy_svc_sessmon_unit_path:
@@ -352,12 +353,6 @@ def fn_monitor_toshy_services():
         else:
             svc_status_sessmon = svc_status_glyph_unknown
 
-        if curr_svcs_state_tup != last_svcs_state_tup:
-            try:
-                toshy_config_status_item.set_label(f'         Config: {svc_status_config}')
-                session_monitor_status_item.set_label(f'     SessMon: {svc_status_sessmon}')
-            except NameError: pass  # Let it pass if menu item not ready yet
-
         time.sleep(0.1)
         curr_icon = tray_indicator.get_property('icon-name')
         if curr_svcs_state_tup == ('active', 'active') and curr_icon != icon_file_active:
@@ -371,7 +366,7 @@ def fn_monitor_toshy_services():
             # debug(f'{curr_svcs_state_tup = }\n')
             tray_indicator.set_icon_full(icon_file_grayscale, "Toshy Tray Icon Undefined")
 
-        if curr_svcs_state_tup != last_svcs_state_tup:
+        if update_cycles < 3 or curr_svcs_state_tup != last_svcs_state_tup:
             try:
                 toshy_config_status_item.set_label(f'         Config: {svc_status_config}')
                 session_monitor_status_item.set_label(f'     SessMon: {svc_status_sessmon}')
@@ -379,6 +374,7 @@ def fn_monitor_toshy_services():
 
         last_svcs_state_tup = curr_svcs_state_tup
 
+        update_cycles += 1
         time.sleep(2)
 
 
