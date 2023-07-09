@@ -14,7 +14,11 @@ But you may need to unmask it if you log into a GNOME desktop, in a Wayland sess
 
 - KEYBOARD TYPE: The Toshy config file tries to automatically identify the "type" of your keyboard based on some pre-existing lists of keyboard device names, which do not have many entries yet. So your keyboard may be misidentified, leading to modifier keys in the "wrong" place. BE PREPARED to identify the name of your keyboard device (try `toshy-devices` in a terminal) and enter it into the correct list in the config file to fix this problem. There is an editable "custom" list where the entry should be retained even if you reinstall later.  
 
-Please take the time to FILE AN ISSUE if you encounter this, whether or not you are able to fix it on your own. Include your device name and what type it should be. The goal is to populate the default keyboard name lists so that this becomes a very unusual problem going forward. The bigger goal of Toshy has been to allow a mixed-type environment where you can use any combination of Apple, Windows (PC), IBM or Chromebook keyboards together without thinking about switching types.  
+Go to the FAQ entry for more info:  
+
+[Keyboard Type Not Correct](#my-keyboard-is-not-recognized-as-the-correct-type)  
+
+> Please take the time to FILE AN ISSUE if you encounter this, whether or not you are able to fix it on your own. Include your device name and what type it should be. The goal is to populate the default keyboard name lists so that this becomes a very unusual problem going forward. The bigger goal of Toshy has been to allow a mixed-type environment where you can use any combination of Apple, Windows (PC), IBM or Chromebook keyboards together without thinking about switching types.  
 
 - May have issues installing on distros not on the "tested" list below. Try the `--list-distros` and `--override-distro` options (separately) with the installer, if you think your distro is closely related to one on the list.  
 
@@ -346,7 +350,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - New release based on Debian 12 tested
     - Desktop is Xfce4 v4.18
 
-- antiX 21.x (Debian-based, related to MX Linux)
+- antiX 22.x (Debian-based, related to MX Linux)
 
     - Preliminary support, no SysVinit services yet, so no auto-start.
     - Starting only the "config script" from the tray icon menu should work now.
@@ -626,11 +630,11 @@ Right now, the sections marked for attempted retention through upgrades/reinstal
 
 **Long version**: Because the config file is continually evolving, and the config file itself is really a "program" written in Python that is literally executed as Python code by the keymapper (`keyszer`) at runtime, it's a bit difficult to retain the changes you've made and be sure that the new version of the config file will load without some sort of error.  
 
-So the best solution I've come up with so far is to have the installer make a backup of your whole `~/.config/toshy` folder to a dated folder in `~/.config`. You'll find it/them in that "hidden" folder alongside the new `toshy` folder, and the backup will contain your previous `toshy_config.py` file.  
+So the best solution I've come up with so far is to have the installer make a backup of your whole `~/.config/toshy` folder to a timestamped folder in `~/.config/toshy_config_backups`.  
 
 > PLEASE NOTE: If you run the Toshy installer multiple times you may find that the most recent dated "backup" is just a backup of a fresh Toshy config folder, as it will make a new backup whenever a `toshy` folder is found in `~/.config`. In this case, the folder with your custom changes may be in an older backup folder.  
 
-The backup folders are typically less than 1 MB in size, as the Python virtual environment folder inside (20-30 MB) is not copied. So they should never take up too much space even if you run the installer multiple times on the same system.  
+The backup folders are typically less than 1 MB in size, as the Python virtual environment folder inside (~50 MB in size) is not copied. So they should never take up too much space even if you run the installer multiple times on the same system.  
 
 Using some software like Visual Studio Code, it is possible to compare the old and new config files in a "diff" sort of view and quickly see the differences. This can make it very easy to merge your custom changes back into the new config file with a few clicks. Then all you need to do is save the new config and restart the Toshy services or config script.  
 
@@ -902,6 +906,10 @@ qdbus org.kde.KWin /KWin reconfigure
 ```
 
 To undo this, remove or comment out the same text in the file, and run the same command. The `Meta` key binding should be back.  
+
+More info about this:  
+
+https://userbase.kde.org/Plasma/Tips#Windows.2FMeta_Key  
 
 ### Manjaro/Arcolinux KDE shortcut for Application Menu
 
