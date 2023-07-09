@@ -4,7 +4,7 @@
 # Indicator tray icon menu app for Toshy, using pygobject/gi
 TOSHY_PART      = 'tray'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Tray Icon app'
-APP_VERSION     = '2023.0703'
+APP_VERSION     = '2023.0709'
 
 # -------- COMMON COMPONENTS --------------------------------------------------
 
@@ -58,9 +58,6 @@ def signal_handler(sig, frame):
 
 signal.signal(signal.SIGINT,    signal_handler)
 signal.signal(signal.SIGQUIT,   signal_handler)
-signal.signal(signal.SIGHUP,    signal_handler)
-signal.signal(signal.SIGUSR1,   signal_handler)
-signal.signal(signal.SIGUSR2,   signal_handler)
 #########################################################################
 # Let signal handler be defined and called before other things ^^^^^^^
 
@@ -69,24 +66,9 @@ USER_ID         = f'{os.getuid()}'
 # support multiple simultaneous users via per-user temp folder
 TOSHY_USER_TMP_DIR   = f'/tmp/toshy_uid{USER_ID}'
 
-# PIPE_FILE_DIR   = f'{TOSHY_USER_TMP_DIR}/pipe'
-# PIPE_FILE_NAME  = f'toshy_{TOSHY_PART}.pipe'
-# PIPE_FILE       = os.path.join(PIPE_FILE_DIR, PIPE_FILE_NAME)
-
-# if not os.path.exists(PIPE_FILE_DIR):
-#     try:
-#         os.makedirs(PIPE_FILE_DIR, mode=0o700, exist_ok=True)
-#     except Exception as e:
-#         debug(f'Problem creating pipe file directory: {PIPE_FILE_DIR}')
-#         debug(e)
-
 PREF_FILE_DIR   = f'{current_folder_path}'
 PREF_FILE_NAME  = f'toshy_user_preferences.json'
 PREF_FILE       = os.path.join(PREF_FILE_DIR, PREF_FILE_NAME)
-
-# DB_FILE_DIR     = f'{current_folder_path}'
-# DB_FILE_NAME    = f'toshy_user_preferences.sqlite'
-# DB_FILE         = os.path.join(DB_FILE_DIR, DB_FILE_NAME)
 
 LOCK_FILE_DIR   = f'{TOSHY_USER_TMP_DIR}/lock'
 LOCK_FILE_NAME  = f'toshy_{TOSHY_PART}.lock'
@@ -319,7 +301,6 @@ def fn_monitor_toshy_services():
 
     time.sleep(0.6)   # wait a bit before starting the loop
 
-    update_cycles = 0
     while True:
 
         if not toshy_svc_config_unit_path or not toshy_svc_sessmon_unit_path:
@@ -366,15 +347,48 @@ def fn_monitor_toshy_services():
             # debug(f'{curr_svcs_state_tup = }\n')
             tray_indicator.set_icon_full(icon_file_grayscale, "Toshy Tray Icon Undefined")
 
-        if update_cycles < 3 or curr_svcs_state_tup != last_svcs_state_tup:
+        max_attempts = 5
+        
+        for attempt in range(max_attempts):
             try:
-                toshy_config_status_item.set_label(f'         Config: {svc_status_config}')
-                session_monitor_status_item.set_label(f'     SessMon: {svc_status_sessmon}')
-            except NameError: pass  # Let it pass if menu item not ready yet
+                _ = toshy_config_status_item.get_label()
+                _ = session_monitor_status_item.get_label()
+                break
+            except NameError:
+                time.sleep(0.01)  # Add a small delay between attempts
+                continue
+        else:
+            error(f"Error: Menu items not ready after {max_attempts} attempts")
+            time.sleep(2)
+            continue
+
+        if curr_svcs_state_tup != last_svcs_state_tup:
+            config_label_text = f'         Config: {svc_status_config}'
+            sessmon_label_text = f'     SessMon: {svc_status_sessmon}'
+            for attempt in range(max_attempts):
+                try:
+                    toshy_config_status_item.set_label(config_label_text)
+                    time.sleep(0.05) # give the event loop time to complete set_label
+                    if toshy_config_status_item.get_label() == config_label_text:
+                        break
+                except NameError: pass  # Let it pass if menu item not ready yet
+                time.sleep(0.01)  # Add a small delay between attempts
+            else:
+                error(f"Error: Failed to update Config label after {max_attempts} attempts")
+
+            for attempt in range(max_attempts):
+                try:
+                    session_monitor_status_item.set_label(sessmon_label_text)
+                    time.sleep(0.05) # give the event loop time to complete set_label
+                    if session_monitor_status_item.get_label() == sessmon_label_text:
+                        break
+                except NameError: pass  # Let it pass if menu item not ready yet
+                time.sleep(0.01)  # Add a small delay between attempts
+            else:
+                error(f"Error: Failed to update SessMon label after {max_attempts} attempts")
 
         last_svcs_state_tup = curr_svcs_state_tup
 
-        update_cycles += 1
         time.sleep(2)
 
 
