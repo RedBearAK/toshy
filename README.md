@@ -341,6 +341,11 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - All desktops can be installed on the same Mint system:
     - `sudo apt install mint-meta-mate mint-meta-xfce mint-meta-cinnamon`
 
+- Tuxedo OS 1 (Ubuntu 22.04 LTS variant)
+
+    - X11/Xorg
+    - KDE Plasma desktop
+
 ### Debian and Debian-based distros
 
 - LMDE 5 (Linux Mint Debian Edition)
