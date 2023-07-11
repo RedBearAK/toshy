@@ -718,6 +718,7 @@ def install_toshy_files():
                 keyszer_tmp,
                 'LICENSE',
                 '.gitignore',
+                '.github',
                 'packages.json',
                 'README.md',
                 'kwin-application-switcher'
