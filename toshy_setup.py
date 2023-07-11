@@ -701,8 +701,8 @@ def install_toshy_files():
     if not cnfg.backup_succeeded:
         print(f'Backup of Toshy config folder failed? Bailing out.')
         safe_shutdown(1)
-    script_name = os.path.basename(__file__)
-    keyszer_tmp = os.path.basename(cnfg.keyszer_tmp_path)
+    keyszer_tmp_dir     = os.path.basename(cnfg.keyszer_tmp_path)
+    script_file_name    = os.path.basename(__file__)
     try:
         if os.path.exists(cnfg.toshy_dir_path):
             try:
@@ -714,14 +714,14 @@ def install_toshy_files():
             '.', 
             cnfg.toshy_dir_path, 
             ignore=shutil.ignore_patterns(
-                script_name,
-                keyszer_tmp,
-                'LICENSE',
-                '.gitignore',
                 '.github',
+                '.gitignore',
+                keyszer_tmp_dir,
+                'kwin-application-switcher',
+                'LICENSE',
                 'packages.json',
                 'README.md',
-                'kwin-application-switcher'
+                script_file_name
             )
         )
     except shutil.Error as copy_error:
