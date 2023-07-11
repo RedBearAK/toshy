@@ -461,19 +461,24 @@ pkg_groups_map = {
                         "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
                         "gobject-introspection-devel", "libappindicator-gtk3", "xset",
                         "systemd-devel", "zenity"],
+    
     'opensuse-based':  ["gcc", "git", "cairo-devel",  "dbus-1-devel",
                         "python311-tk", "python311-dbus-python-devel", "python-devel",
                         "gobject-introspection-devel", "libappindicator3-devel", "tk",
                         "libnotify-tools", "typelib-1_0-AyatanaAppIndicator3-0_1",
                         "systemd-devel", "zenity"],
+    
     'ubuntu-based':    ["curl", "git", "input-utils", "libcairo2-dev", "libnotify-bin",
                         "python3-dbus", "python3-dev", "python3-pip", "python3-venv",
                         "python3-tk", "libdbus-1-dev", "libgirepository1.0-dev",
                         "gir1.2-appindicator3-0.1", "libsystemd-dev", "zenity"],
+    
     'debian-based':    ["curl", "git", "input-utils", "libcairo2-dev", "libdbus-1-dev",
                         "python3-dbus", "python3-dev", "python3-venv", "python3-tk",
                         "libgirepository1.0-dev", "libsystemd-dev", "zenity",
-                        "gir1.2-ayatanaappindicator3-0.1"],
+                        "gir1.2-ayatanaappindicator3-0.1",
+                        "libnotify-bin"],
+    
     'arch-based':      ["cairo", "dbus", "evtest", "git", "gobject-introspection", "tk",
                         "libappindicator-gtk3", "pkg-config", "python-dbus", "python-pip",
                         "python", "systemd", "zenity"],
