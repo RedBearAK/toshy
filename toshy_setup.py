@@ -448,7 +448,7 @@ def verify_user_groups():
 distro_groups_map = {
     'redhat-based':    ["fedora", "fedoralinux", "ultramarine", "almalinux", "rocky", "rhel"],
     'opensuse-based':  ["opensuse-tumbleweed"],
-    'ubuntu-based':    ["ubuntu", "mint", "popos", "eos", "neon", "zorin"],
+    'ubuntu-based':    ["ubuntu", "mint", "popos", "eos", "neon", "tuxedo", "zorin"],
     'debian-based':    ["lmde", "peppermint", "debian"],
     'arch-based':      ["arch", "arcolinux", "endeavouros", "manjaro"],
     # Add more as needed...
