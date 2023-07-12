@@ -5,7 +5,6 @@ import re
 import sys
 import pwd
 import grp
-import time
 import random
 import string
 import signal
@@ -461,8 +460,6 @@ distro_groups_map = {
     # Add more as needed...
 }
 
-# TODO: On openSUSE, check version of system Python to adapt Python package name
-# openSUSE package is python310-* now but will probably be python311-* soon
 pkg_groups_map = {
     # TODO: remove this package group if the change to RHEL/Fedora works out
     # 'redhat-based':    ["gcc", "git", "cairo-devel", "cairo-gobject-devel", "dbus-devel",
@@ -667,6 +664,7 @@ def merge_slices(data: str, slices: Dict[str, str]) -> str:
 
     return "".join(data_slices)
 
+
 def backup_toshy_config():
     """Backup existing Toshy config folder"""
     print(f'\n\n§  Backing up existing Toshy config folder...\n{cnfg.separator}')
@@ -855,7 +853,6 @@ def install_bin_commands():
     subprocess.run([script_path])
 
 
-# Replace $HOME with user home directory
 def replace_home_in_file(filename):
     """Utility function to replace '$HOME' in .desktop files with actual home path"""
     # Read in the file
@@ -1032,6 +1029,7 @@ def autostart_tray_icon():
     subprocess.run(['ln', '-sf', tray_desktop_file, dest_link_file])
 
     print(f'Toshy tray icon should appear in system tray at each login.')
+
 
 ###################################################################################################
 ##  TWEAKS UTILITY FUNCTIONS - START
@@ -1451,7 +1449,6 @@ def handle_cli_arguments():
         remove_desktop_tweaks()
         safe_shutdown(0)
     elif args.uninstall:
-        # raise NotImplementedError
         uninstall_toshy()
     elif args.fancy_pants:
         cnfg.fancy_pants = True
