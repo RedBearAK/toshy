@@ -446,7 +446,14 @@ def verify_user_groups():
 
 
 distro_groups_map = {
-    'redhat-based':    ["fedora", "fedoralinux", "ultramarine", "almalinux", "rocky", "rhel"],
+    # TODO: remove this distro group if the change to RHEL/Fedora works out
+    # 'redhat-based':    ["fedora", "fedoralinux", "ultramarine", "nobara",
+    #                     "rhel", "almalinux", "rocky", "eurolinux"],
+
+    # separate references for RHEL types versus Fedora types
+    'fedora-based':    ["fedora", "fedoralinux", "ultramarine", "nobara"],
+    'rhel-based':      ["rhel", "almalinux", "rocky", "eurolinux"],
+
     'opensuse-based':  ["opensuse-tumbleweed"],
     'ubuntu-based':    ["ubuntu", "mint", "popos", "eos", "neon", "tuxedo", "zorin"],
     'debian-based':    ["lmde", "peppermint", "debian"],
@@ -457,7 +464,18 @@ distro_groups_map = {
 # TODO: On openSUSE, check version of system Python to adapt Python package name
 # openSUSE package is python310-* now but will probably be python311-* soon
 pkg_groups_map = {
-    'redhat-based':    ["gcc", "git", "cairo-devel", "cairo-gobject-devel", "dbus-devel",
+    # TODO: remove this package group if the change to RHEL/Fedora works out
+    # 'redhat-based':    ["gcc", "git", "cairo-devel", "cairo-gobject-devel", "dbus-devel",
+    #                     "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
+    #                     "gobject-introspection-devel", "libappindicator-gtk3", "xset",
+    #                     "libnotify", "systemd-devel", "zenity"],
+
+    'fedora-based':    ["gcc", "git", "cairo-devel", "cairo-gobject-devel", "dbus-devel",
+                        "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
+                        "gobject-introspection-devel", "libappindicator-gtk3", "xset",
+                        "libnotify", "systemd-devel", "zenity", "evtest"],
+
+    'rhel-based':      ["gcc", "git", "cairo-devel", "cairo-gobject-devel", "dbus-devel",
                         "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
                         "gobject-introspection-devel", "libappindicator-gtk3", "xset",
                         "libnotify", "systemd-devel", "zenity"],
@@ -486,9 +504,10 @@ pkg_groups_map = {
 extra_pkgs_map = {
     # Add a distro name and its additional packages here as needed
     # 'distro_name': ["pkg1", "pkg2", ...],
-    'fedora':          ["evtest"],
-    'fedoralinux':     ["evtest"],
-    'ultramarine':     ["evtest"],
+    # TODO: remove the lines below if the updated RHEL/Fedora distro groups works out
+    # 'fedora':          ["evtest"],
+    # 'fedoralinux':     ["evtest"],
+    # 'ultramarine':     ["evtest"],
 }
 
 
@@ -521,10 +540,12 @@ def install_distro_pkgs():
         if cnfg.systemctl_present or 'systemd' not in pkg
     ]
 
-    apt_distros     = distro_groups_map['ubuntu-based'] + distro_groups_map['debian-based']
-    dnf_distros     = distro_groups_map['redhat-based']
-    pacman_distros  = distro_groups_map['arch-based']
+    # TODO: remove this line if change to RHEL/Fedora groups works out
+    # dnf_distros     = distro_groups_map['redhat-based']
+    dnf_distros     = distro_groups_map['fedora-based'] + distro_groups_map['rhel-based']
     zypper_distros  = distro_groups_map['opensuse-based']
+    apt_distros     = distro_groups_map['ubuntu-based'] + distro_groups_map['debian-based']
+    pacman_distros  = distro_groups_map['arch-based']
 
     if cnfg.DISTRO_NAME in apt_distros:
         call_attention_to_password_prompt()
@@ -533,7 +554,8 @@ def install_distro_pkgs():
     elif cnfg.DISTRO_NAME in dnf_distros:
         # do extra stuff only if distro is a RHEL type (not Fedora)
         # TODO: reverse this to name RHELs instead of non-RHELs? 
-        if cnfg.DISTRO_NAME not in ['fedora', 'fedoralinux', 'ultramarine']:
+        # if cnfg.DISTRO_NAME not in ['fedora', 'fedoralinux', 'ultramarine', 'nobara']:
+        if cnfg.DISTRO_NAME in distro_groups_map['rhel-based']:
             call_attention_to_password_prompt()
             # for gobject-introspection-devel: sudo dnf config-manager --set-enabled crb
             subprocess.run(['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb'])
@@ -542,6 +564,9 @@ def install_distro_pkgs():
             subprocess.run(['sudo', 'dnf', 'update', '-y'])
         # now do the install of the list of packages
         subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro)
+
+    elif cnfg.DISTRO_NAME in zypper_distros:
+        subprocess.run(['sudo', 'zypper', '--non-interactive', 'install'] + cnfg.pkgs_for_distro)
 
     elif cnfg.DISTRO_NAME in pacman_distros:
 
@@ -557,9 +582,6 @@ def install_distro_pkgs():
         if pkgs_to_install:
             call_attention_to_password_prompt()
             subprocess.run(['sudo', 'pacman', '-S', '--noconfirm'] + pkgs_to_install)
-
-    elif cnfg.DISTRO_NAME in zypper_distros:
-        subprocess.run(['sudo', 'zypper', '--non-interactive', 'install'] + cnfg.pkgs_for_distro)
 
     else:
         print()
