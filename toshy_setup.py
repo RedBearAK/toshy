@@ -46,11 +46,12 @@ else:
     error(f'This is only meant to run on Linux. Exiting.')
     sys.exit(1)
 
-trash_dir   = os.path.expanduser("~/.local/share/Trash")
-file_path   = os.path.abspath(__file__)
-if trash_dir in file_path or '/trash/' in file_path.lower():
+trash_dir               = os.path.expanduser("~/.local/share/Trash")
+installer_file_path     = os.path.abspath(__file__)
+installer_dir_path      = os.path.dirname(installer_file_path)
+if trash_dir in installer_file_path or '/trash/' in installer_file_path.lower():
     print()
-    error(f"Path to this file: {file_path}")
+    error(f"Path to this file: {installer_file_path}")
     error(f"You probably did not intend to run this from the TRASH. See path. Exiting.")
     print()
     sys.exit(1)
@@ -120,7 +121,7 @@ class InstallerSettings:
         self.existing_cfg_slices    = None
         self.venv_path              = os.path.join(self.toshy_dir_path, '.venv')
 
-        self.keyszer_tmp_path       = os.path.join('.', 'keyszer-temp')
+        self.keyszer_tmp_path       = os.path.join(installer_dir_path, 'keyszer-temp')
 
         self.keyszer_branch         = 'environ_api_kde'
         self.keyszer_url            = 'https://github.com/RedBearAK/keyszer.git'
@@ -444,6 +445,35 @@ def verify_user_groups():
         prompt_for_reboot()
 
 
+def get_highest_python_version():
+    for minor in reversed(range(0, 25)):  # Arbitrarily chosen upper limit
+        python_version      = f"python3.{minor}"
+        python_interp_path  = shutil.which(python_version)
+        if python_interp_path:
+            return 3, minor, python_interp_path  # Return version and path
+    return None, None, None
+
+# highest Python version found in PATH
+max_py_ver_major, max_py_ver_minor, max_py_path = get_highest_python_version()
+max_py_pkg_ver      = None
+if max_py_ver_major and max_py_ver_minor:
+    max_py_pkg_ver      = f'{max_py_ver_major}{max_py_ver_minor}'
+    max_py_interp_ver   = f'{max_py_ver_major}.{max_py_ver_minor}'
+
+# default system Python version
+def_py_ver_major, def_py_ver_minor = sys.version_info[:2]
+def_py_pkg_ver      = f'{def_py_ver_major}{def_py_ver_minor}'
+def_py_interp_ver   = f'{def_py_ver_major}.{def_py_ver_minor}'
+
+# 'sys.executable' changes if a venv is active! do not use for Python interpreter path!
+def_py_path         = shutil.which('python3')
+
+# Get the Python version for use in some package names (for openSUSE)
+py_pkg_ver          = def_py_pkg_ver if max_py_pkg_ver is None else max_py_pkg_ver
+py_interp_ver       = def_py_interp_ver if max_py_pkg_ver is None else max_py_interp_ver
+py_interp_path      = def_py_path if max_py_path is None else max_py_path
+
+
 distro_groups_map = {
     # TODO: remove this distro group if the change to RHEL/Fedora works out
     # 'redhat-based':    ["fedora", "fedoralinux", "ultramarine", "nobara",
@@ -477,8 +507,8 @@ pkg_groups_map = {
                         "gobject-introspection-devel", "libappindicator-gtk3", "xset",
                         "libnotify", "systemd-devel", "zenity"],
 
-    'opensuse-based':  ["gcc", "git", "cairo-devel",  "dbus-1-devel",
-                        "python311-tk", "python311-dbus-python-devel", "python-devel",
+    'opensuse-based':  ["gcc", "git", "cairo-devel",  "dbus-1-devel", f"python{py_pkg_ver}-tk",
+                        f"python{py_pkg_ver}-dbus-python-devel", "python-devel",
                         "gobject-introspection-devel", "libappindicator3-devel", "tk",
                         "libnotify-tools", "typelib-1_0-AyatanaAppIndicator3-0_1",
                         "systemd-devel", "zenity"],
@@ -735,7 +765,7 @@ def install_toshy_files():
                 error(f'Problem removing existing Toshy config folder after backup:\n\t{file_err}')
         # Copy files recursively from source to destination
         shutil.copytree(
-            '.', 
+            installer_dir_path, 
             cnfg.toshy_dir_path, 
             ignore=shutil.ignore_patterns(
                 '.github',
@@ -798,8 +828,9 @@ def setup_python_virt_env():
         # subprocess.run([sys.executable, '-m', 'venv', cnfg.venv_path])
         
         # Get the path to the Python interpreter (not the one inside the venv)
-        sys_python3 = shutil.which('python3')
-        subprocess.run([sys_python3, '-m', 'venv', cnfg.venv_path])
+        # sys_python3 = shutil.which(f'python{py_interp_ver}')
+        # subprocess.run([sys_python3, '-m', 'venv', cnfg.venv_path])
+        subprocess.run([py_interp_path, '-m', 'venv', cnfg.venv_path])
 
 
     # We do not need to "activate" the venv right now, just create it
@@ -836,13 +867,13 @@ def install_pip_packages():
         if result.returncode != 0:
             print(f'Error installing/upgrading Python packages. Installer exiting.')
             safe_shutdown(1)
-    if os.path.exists('./keyszer-temp'):
-        result = subprocess.run([venv_pip_cmd, 'install', '--upgrade', './keyszer-temp'])
+    if os.path.exists(cnfg.keyszer_tmp_path):
+        result = subprocess.run([venv_pip_cmd, 'install', '--upgrade', cnfg.keyszer_tmp_path])
         if result.returncode != 0:
             print(f'Error installing/upgrading "keyszer".')
             safe_shutdown(1)
     else:
-        print(f'"keyszer-temp" folder missing. Unable to install "keyszer".')
+        print(f'Temporary "keyszer" clone folder missing. Unable to install "keyszer".')
         safe_shutdown(1)
 
 
