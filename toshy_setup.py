@@ -818,14 +818,17 @@ def setup_python_virt_env():
 
     # Create the virtual environment if it doesn't exist
     if not os.path.exists(cnfg.venv_path):
-        # change the Python interpreter path to use the 3.11 version if distro is openSUSE Leap type
+        # change the Python interpreter path to user current release version 
+        # if distro is openSUSE Leap type (instead of old 3.6 version)
         if cnfg.DISTRO_NAME in distro_groups_map['leap-based']:
             if shutil.which(f'python{curr_py_rel_ver}'):
                 cnfg.py_interp_path     = shutil.which(f'python{curr_py_rel_ver}')
+                print(f'Using Python version {curr_py_rel_ver}.')
             else:
                 print(  f'Current stable Python release version '
-                        f'({curr_py_rel_ver}) not found. '
-                        f"Using version: '{py_interp_ver}'")
+                        f'({curr_py_rel_ver}) not found. ')
+        else:
+            print(f'Using Python version {py_interp_ver}.')
         subprocess.run([cnfg.py_interp_path, '-m', 'venv', cnfg.venv_path])
 
     # We do not need to "activate" the venv right now, just create it
