@@ -922,9 +922,19 @@ def setup_kwin2dbus_script():
         zipf.write(os.path.join(kwin_script_path, 'metadata.json'), arcname='metadata.json')
 
     # Try to remove any installed KWin script entirely
-    result = subprocess.run(
+    process = subprocess.Popen(
         ['kpackagetool5', '-t', 'KWin/Script', '-r', kwin_script_name],
-        capture_output=True, text=True)
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = process.communicate()
+    out = out.decode('utf-8')
+    err = err.decode('utf-8')
+    result = subprocess.CompletedProcess(args=process.args, returncode=process.returncode,
+                                            stdout=out, stderr=err)
+
+    # NOT COMPATIBLE WITH PYTHON 3.6
+    # result = subprocess.run(
+    #     ['kpackagetool5', '-t', 'KWin/Script', '-r', kwin_script_name],
+    #     capture_output=True, text=True)
 
     if result.returncode != 0:
         pass
@@ -932,8 +942,19 @@ def setup_kwin2dbus_script():
         print("Successfully removed existing KWin script.")
 
     # Install the KWin script
-    result = subprocess.run(
-        ['kpackagetool5', '-t', 'KWin/Script', '-i', script_tmp_file], capture_output=True, text=True)
+    process = subprocess.Popen(
+        ['kpackagetool5', '-t', 'KWin/Script', '-i', script_tmp_file],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = process.communicate()
+    out = out.decode('utf-8')
+    err = err.decode('utf-8')
+    result = subprocess.CompletedProcess(args=process.args, returncode=process.returncode,
+                                            stdout=out, stderr=err)
+
+    # NOT COMPATIBLE WITH PYTHON 3.6
+    # result = subprocess.run(
+    #     ['kpackagetool5', '-t', 'KWin/Script', '-i', script_tmp_file],
+    #     capture_output=True, text=True)
 
     if result.returncode != 0:
         error(f"Error installing the KWin script. The error was:\n\t{result.stderr}")
@@ -946,11 +967,22 @@ def setup_kwin2dbus_script():
     except (FileNotFoundError, PermissionError): pass
 
     # Enable the script using kwriteconfig5
-    result = subprocess.run(
+    process = subprocess.Popen(
         [   'kwriteconfig5', '--file', 'kwinrc', '--group', 'Plugins', '--key',
             f'{kwin_script_name}Enabled', 'true'],
-        capture_output=True, text=True)
-    
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = process.communicate()
+    out = out.decode('utf-8')
+    err = err.decode('utf-8')
+    result = subprocess.CompletedProcess(args=process.args, returncode=process.returncode,
+                                            stdout=out, stderr=err)
+
+    # NOT COMPATIBLE WITH PYTHON 3.6
+    # result = subprocess.run(
+    #     [   'kwriteconfig5', '--file', 'kwinrc', '--group', 'Plugins', '--key',
+    #         f'{kwin_script_name}Enabled', 'true'],
+    #     capture_output=True, text=True)
+
     if result.returncode != 0:
         error(f"Error enabling the KWin script. The error was:\n\t{result.stderr}")
     else:
