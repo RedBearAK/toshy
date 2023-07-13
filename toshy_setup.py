@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+os.environ['PYTHONDONTWRITEBYTECODE'] = '1'     # prevent creation of cache files
 import re
 import sys
 import pwd
@@ -762,6 +763,7 @@ def install_toshy_files():
             installer_dir_path, 
             cnfg.toshy_dir_path, 
             ignore=shutil.ignore_patterns(
+                '__pycache__',
                 '.github',
                 '.gitignore',
                 keyszer_tmp_dir,
