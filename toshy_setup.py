@@ -67,13 +67,28 @@ path_fix_tmp_file   = 'toshy_installer_says_fix_path'
 path_fix_tmp_path   = os.path.join(run_tmp_dir, path_fix_tmp_file)
 
 # set a standard path for duration of script run, to avoid issues with user customized paths
-os.environ['PATH'] = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+os.environ['PATH']  = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 
 # deactivate Python virtual environment, if one is active, to avoid issues with sys.executable
 if sys.prefix != sys.base_prefix:
     os.environ["VIRTUAL_ENV"] = ""
     sys.path = [p for p in sys.path if not p.startswith(sys.prefix)]
     sys.prefix = sys.base_prefix
+
+# system Python version
+py_ver_major, py_ver_minor = sys.version_info[:2]
+py_pkg_ver          = f'{py_ver_major}{py_ver_minor}'
+py_interp_ver       = f'{py_ver_major}.{py_ver_minor}'
+
+# current stable Python release version (update when needed):
+curr_py_rel_ver_maj = 3
+curr_py_rel_ver_min = 11
+# 3.11 Release Date: Oct. 24, 2022
+curr_py_rel_ver     = f'{curr_py_rel_ver_maj}.{curr_py_rel_ver_min}'
+curr_py_rel_ver_tup = (curr_py_rel_ver_maj, curr_py_rel_ver_min)
+
+# 'sys.executable' changes if a venv is active! do not use for Python interpreter path!
+py_interp_path = shutil.which('python3')
 
 # Check if 'sudo' command is available to user
 if not shutil.which('sudo'):
@@ -445,35 +460,6 @@ def verify_user_groups():
         prompt_for_reboot()
 
 
-def get_highest_python_version():
-    for minor in reversed(range(0, 25)):  # Arbitrarily chosen upper limit
-        python_version      = f"python3.{minor}"
-        python_interp_path  = shutil.which(python_version)
-        if python_interp_path:
-            return 3, minor, python_interp_path  # Return version and path
-    return None, None, None
-
-# highest Python version found in PATH
-max_py_ver_major, max_py_ver_minor, max_py_path = get_highest_python_version()
-max_py_pkg_ver      = None
-if max_py_ver_major and max_py_ver_minor:
-    max_py_pkg_ver      = f'{max_py_ver_major}{max_py_ver_minor}'
-    max_py_interp_ver   = f'{max_py_ver_major}.{max_py_ver_minor}'
-
-# default system Python version
-def_py_ver_major, def_py_ver_minor = sys.version_info[:2]
-def_py_pkg_ver      = f'{def_py_ver_major}{def_py_ver_minor}'
-def_py_interp_ver   = f'{def_py_ver_major}.{def_py_ver_minor}'
-
-# 'sys.executable' changes if a venv is active! do not use for Python interpreter path!
-def_py_path         = shutil.which('python3')
-
-# Get the Python version for use in some package names (for openSUSE)
-py_pkg_ver          = def_py_pkg_ver if max_py_pkg_ver is None else max_py_pkg_ver
-py_interp_ver       = def_py_interp_ver if max_py_pkg_ver is None else max_py_interp_ver
-py_interp_path      = def_py_path if max_py_path is None else max_py_path
-
-
 distro_groups_map = {
     # TODO: remove this distro group if the change to RHEL/Fedora works out
     # 'redhat-based':    ["fedora", "fedoralinux", "ultramarine", "nobara",
@@ -483,7 +469,8 @@ distro_groups_map = {
     'fedora-based':    ["fedora", "fedoralinux", "ultramarine", "nobara"],
     'rhel-based':      ["rhel", "almalinux", "rocky", "eurolinux"],
 
-    'opensuse-based':  ["opensuse-tumbleweed"],
+    'tumbleweed-based':["opensuse-tumbleweed"],
+    'leap-based':      ["opensuse-leap"],
     'ubuntu-based':    ["ubuntu", "mint", "popos", "eos", "neon", "tuxedo", "zorin"],
     'debian-based':    ["lmde", "peppermint", "debian"],
     'arch-based':      ["arch", "arcolinux", "endeavouros", "manjaro"],
@@ -507,8 +494,15 @@ pkg_groups_map = {
                         "gobject-introspection-devel", "libappindicator-gtk3", "xset",
                         "libnotify", "systemd-devel", "zenity"],
 
-    'opensuse-based':  ["gcc", "git", "cairo-devel",  "dbus-1-devel", f"python{py_pkg_ver}-tk",
-                        f"python{py_pkg_ver}-dbus-python-devel", "python-devel",
+    # opensuse-tumbleweed
+    'tumbleweed-based':["gcc", "git", "cairo-devel",  "dbus-1-devel", f"python{py_pkg_ver}-tk",
+                        f"python{py_pkg_ver}-dbus-python-devel", f"python{py_pkg_ver}-devel",
+                        "gobject-introspection-devel", "libappindicator3-devel", "tk",
+                        "libnotify-tools", "typelib-1_0-AyatanaAppIndicator3-0_1",
+                        "systemd-devel", "zenity"],
+
+    'leap-based':      ["gcc", "git", "cairo-devel",  "dbus-1-devel", "python311-tk",
+                        "python3-dbus-python-devel", "python311-devel", "python311",
                         "gobject-introspection-devel", "libappindicator3-devel", "tk",
                         "libnotify-tools", "typelib-1_0-AyatanaAppIndicator3-0_1",
                         "systemd-devel", "zenity"],
@@ -570,7 +564,7 @@ def install_distro_pkgs():
     # TODO: remove this line if change to RHEL/Fedora groups works out
     # dnf_distros     = distro_groups_map['redhat-based']
     dnf_distros     = distro_groups_map['fedora-based'] + distro_groups_map['rhel-based']
-    zypper_distros  = distro_groups_map['opensuse-based']
+    zypper_distros  = distro_groups_map['tumbleweed-based'] + distro_groups_map['leap-based']
     apt_distros     = distro_groups_map['ubuntu-based'] + distro_groups_map['debian-based']
     pacman_distros  = distro_groups_map['arch-based']
 
@@ -824,14 +818,15 @@ def setup_python_virt_env():
 
     # Create the virtual environment if it doesn't exist
     if not os.path.exists(cnfg.venv_path):
-        # 'sys.executable' changes if a venv is active! do something else here:
-        # subprocess.run([sys.executable, '-m', 'venv', cnfg.venv_path])
-        
-        # Get the path to the Python interpreter (not the one inside the venv)
-        # sys_python3 = shutil.which(f'python{py_interp_ver}')
-        # subprocess.run([sys_python3, '-m', 'venv', cnfg.venv_path])
+        # change the Python interpreter path to use the 3.11 version if distro is openSUSE Leap type
+        if cnfg.DISTRO_NAME in distro_groups_map['leap-based']:
+            if shutil.which(f'python{curr_py_rel_ver}'):
+                py_interp_path = shutil.which(f'python{curr_py_rel_ver}')
+            else:
+                print(  f'Current stable Python release version '
+                        f'({curr_py_rel_ver}) not found. '
+                        f"Using version: '{py_interp_ver}'")
         subprocess.run([py_interp_path, '-m', 'venv', cnfg.venv_path])
-
 
     # We do not need to "activate" the venv right now, just create it
     print(f'Python virtual environment setup complete.')
