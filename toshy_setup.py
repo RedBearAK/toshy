@@ -88,9 +88,6 @@ curr_py_rel_ver_min = 11
 curr_py_rel_ver     = f'{curr_py_rel_ver_maj}.{curr_py_rel_ver_min}'
 curr_py_rel_ver_tup = (curr_py_rel_ver_maj, curr_py_rel_ver_min)
 
-# 'sys.executable' changes if a venv is active! do not use for Python interpreter path!
-py_interp_path = shutil.which('python3')
-
 # Check if 'sudo' command is available to user
 if not shutil.which('sudo'):
     print("Error: 'sudo' not found. Installer will fail without it. Exiting.")
@@ -127,6 +124,7 @@ class InstallerSettings:
         self.pkgs_for_distro        = None
         self.pip_pkgs               = None
         self.qdbus                  = 'qdbus-qt5' if shutil.which('qdbus-qt5') else 'qdbus'
+        self.py_interp_path         = shutil.which('python3')
 
         self.home_dir_path          = os.path.abspath(os.path.expanduser('~'))
         self.toshy_dir_path         = os.path.join(self.home_dir_path, '.config', 'toshy')
@@ -823,12 +821,12 @@ def setup_python_virt_env():
         # change the Python interpreter path to use the 3.11 version if distro is openSUSE Leap type
         if cnfg.DISTRO_NAME in distro_groups_map['leap-based']:
             if shutil.which(f'python{curr_py_rel_ver}'):
-                py_interp_path = shutil.which(f'python{curr_py_rel_ver}')
+                cnfg.py_interp_path     = shutil.which(f'python{curr_py_rel_ver}')
             else:
                 print(  f'Current stable Python release version '
                         f'({curr_py_rel_ver}) not found. '
                         f"Using version: '{py_interp_ver}'")
-        subprocess.run([py_interp_path, '-m', 'venv', cnfg.venv_path])
+        subprocess.run([cnfg.py_interp_path, '-m', 'venv', cnfg.venv_path])
 
     # We do not need to "activate" the venv right now, just create it
     print(f'Python virtual environment setup complete.')
