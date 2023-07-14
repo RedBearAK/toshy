@@ -302,10 +302,11 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - KDE desktop works (X11/Xorg or Wayland)
     - Other desktop choices should work, if session is X11/Xorg
 
-- openSUSE Leap 15.4/15.5 (fixed release) **_UNSUPPORTED!_**
+- openSUSE Leap 15.5 (fixed release) **_WORKING!_**
 
-    - Leap 15.4/15.5 system Python version is 3.6.x
-    - Package list for Tumbleweed doesn't work for Leap
+    - GNOME desktop works (Wayland session needs extensions, see Requirements)
+    - KDE desktop works (X11/Xorg or Wayland)
+    - Other desktop choices should work, if session is X11/Xorg
 
 ### Ubuntu variants and Ubuntu-based distros
 
@@ -333,7 +334,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 - elementary OS 7.0 (Ubuntu-based)
 
-- Linux Mint 21.1 (Ubuntu-based)
+- Linux Mint 21.1/21.2 (Ubuntu-based)
 
     - Cinnamon desktop
     - Xfce desktop
