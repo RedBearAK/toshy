@@ -1512,7 +1512,7 @@ def handle_cli_arguments():
 
     # Check that "exit-after" arguments are used alone
     if any(exit_args_dct.values()) and sum(all_args_dct.values()) > 1:
-        error(f"ERROR: These options should be used alone:" +
+        error(f"ERROR: These options should be used alone:\n" +
             ''.join(f"\n\t{arg}" for arg in exit_args_dct.keys()))
         safe_shutdown(1)
 
