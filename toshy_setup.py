@@ -1452,7 +1452,8 @@ def handle_cli_arguments():
     """Deal with CLI arguments given to installer script"""
     parser = argparse.ArgumentParser(
         description='Toshy Installer - some options are mutually exclusive',
-        epilog='Default action: Install Toshy'
+        epilog='Default action: Install Toshy',
+        allow_abbrev=False
     )
 
     # Add arguments
@@ -1460,12 +1461,12 @@ def handle_cli_arguments():
         '--override-distro',
         type=str,
         # dest='override_distro',
-        help=f'Override auto-detection of distro name/type. See --list-distros'
+        help=f'Override auto-detection of distro name/type. See "--list-distros"'
     )
     parser.add_argument(
         '--list-distros',
         action='store_true',
-        help='Display list of distro names to use with --override-distro'
+        help='Display list of distro names to use with "--override-distro"'
     )
     parser.add_argument(
         '--uninstall',
@@ -1518,7 +1519,7 @@ def handle_cli_arguments():
 
     if sum(exit_args_dct.values()) > 1:
         raise ValueError(   f"ERROR: These options are mutually exclusive (use only one): "
-                            f"{', '.join(exit_args_dct.keys())}\n")
+                            f"\n\t{', '.join(exit_args_dct.keys())}\n")
 
     if args.uninstall:
         uninstall_toshy()
