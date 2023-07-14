@@ -1451,13 +1451,10 @@ def uninstall_toshy():
 def handle_cli_arguments():
     """Deal with CLI arguments given to installer script"""
     parser = argparse.ArgumentParser(
-        description='Toshy Installer - options are mutually exclusive',
+        description='Toshy Installer - some options are mutually exclusive',
         epilog='Default action: Install Toshy'
     )
 
-    # This would require a 'lambda' to be able to pass 'cnfg' object to 'main()':
-    # parser.set_defaults(func=main)
-    
     # Add arguments
     parser.add_argument(
         '--override-distro',
@@ -1496,35 +1493,59 @@ def handle_cli_arguments():
         help='Optional: install font, KDE task switcher, etc...'
     )
 
+    # Add a catch-all for unknown arguments
+    parser.add_argument(
+        'unknown',
+        nargs=argparse.REMAINDER,
+        help=argparse.SUPPRESS
+    )
+
     args = parser.parse_args()
 
-    # Check the values of arguments and perform actions accordingly
-    if args.override_distro:
-        cnfg.override_distro = args.override_distro
-        # proceed with normal install sequence
-        main(cnfg)
+    # Check for unknown arguments
+    if args.unknown:
+        raise ValueError(   f"ERROR: Unknown argument(s): {args.unknown}\n"
+                            f'Check the "--help" output.\n'     )
+
+    # Check that at most one "exit-immediately" argument is true
+    exit_args_dct = {
+        '--uninstall':          args.uninstall,
+        '--show-env':           args.show_env,
+        '--list-distros':       args.list_distros,
+        '--apply-tweaks':       args.apply_tweaks,
+        '--remove-tweaks':      args.remove_tweaks
+    }
+
+    if sum(exit_args_dct.values()) > 1:
+        raise ValueError(   f"ERROR: These options are mutually exclusive (use only one): "
+                            f"{', '.join(exit_args_dct.keys())}\n")
+
+    if args.uninstall:
+        uninstall_toshy()
         safe_shutdown(0)
-    elif args.list_distros:
-        print(  f'Distro names known to the Toshy installer (to use with --override-distro):'
-                f'\n\n\t{get_distro_names()}\n')
-        safe_shutdown(0)
-    elif args.show_env:
+
+    if args.show_env:
         get_environment_info()
         safe_shutdown(0)
-    elif args.apply_tweaks:
+
+    if args.list_distros:
+        print(  f'Distro names known to the Toshy installer (use with "--override-distro" arg):'
+                f'\n\n\t{get_distro_names()}')
+        safe_shutdown(0)
+
+    if args.apply_tweaks:
         apply_desktop_tweaks()
         safe_shutdown(0)
-    elif args.remove_tweaks:
+
+    if args.remove_tweaks:
         remove_desktop_tweaks()
         safe_shutdown(0)
-    elif args.uninstall:
-        uninstall_toshy()
-    elif args.fancy_pants:
+
+    if args.fancy_pants:
         cnfg.fancy_pants = True
-        main(cnfg)
-    else:
-        # proceed with normal install sequence if no CLI args given
-        main(cnfg)
+
+    if args.override_distro:
+        cnfg.override_distro = args.override_distro
 
 
 def main(cnfg: InstallerSettings):
@@ -1649,3 +1670,6 @@ if __name__ == '__main__':
     cnfg = InstallerSettings()
 
     handle_cli_arguments()
+
+    # proceed with install sequence if no CLI args triggered an exit-after action
+    main(cnfg)
