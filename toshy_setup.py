@@ -1517,8 +1517,16 @@ def handle_cli_arguments():
         '--remove-tweaks':      args.remove_tweaks
     }
 
-    if sum(exit_args_dct.values()) > 1:
-        error(f"ERROR: These options are mutually exclusive (use only one):" +
+    # Also include the other arguments in the check
+    all_args_dct = {
+        '--override-distro':    bool(args.override_distro),
+        '--fancy-pants':        args.fancy_pants,
+        **exit_args_dct
+    }
+
+    # Check that at most one argument is true when an "exit-immediately" argument is true
+    if any(exit_args_dct.values()) and sum(all_args_dct.values()) > 1:
+        error(f"ERROR: These options should be used alone:" +
             ''.join(f"\n\t{arg}" for arg in exit_args_dct.keys()))
         safe_shutdown(1)
 
