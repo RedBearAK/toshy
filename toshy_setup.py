@@ -167,6 +167,7 @@ def safe_shutdown(exit_code=0):
 
     # invalidate the sudo ticket, don't leave system in "superuser" state
     subprocess.run(['sudo', '-k'])
+    print()     # avoid crowding the prompt on exit
     sys.exit(exit_code)
 
 
@@ -269,7 +270,7 @@ def dot_Xmodmap_warning():
             info("Good code. User has taken responsibility for '.Xmodmap' file. Proceeding...\n")
         else:
             print()
-            error("Code does not match! Try the installer again after dealing with '.Xmodmap'.\n")
+            error("Code does not match! Try the installer again after dealing with '.Xmodmap'.")
             safe_shutdown(1)
 
 
@@ -283,7 +284,6 @@ def ask_is_distro_updated():
     if response not in ['y', 'Y']:
         print()
         error("Try the installer again after you've done a full system update. Exiting.")
-        print()
         safe_shutdown(1)
 
 
@@ -545,7 +545,7 @@ def install_distro_pkgs():
         print()
         print(f"ERROR: No list of packages found for this distro: '{cnfg.DISTRO_NAME}'")
         print(f'Installation cannot proceed without a list of packages. Sorry.')
-        print(f'Try some options in "./toshy_setup.py --help"\n')
+        print(f'Try some options in "./toshy_setup.py --help"')
         safe_shutdown(1)
 
     cnfg.pkgs_for_distro = pkg_groups_map[pkg_group]
@@ -613,7 +613,7 @@ def install_distro_pkgs():
 
     else:
         print()
-        error(f"ERROR: Installer does not know how to handle distro: {cnfg.DISTRO_NAME}\n")
+        error(f"ERROR: Installer does not know how to handle distro: {cnfg.DISTRO_NAME}")
         safe_shutdown(1)
 
     # Have something come out even if package list is empty (like Arch after initial run)
@@ -1343,7 +1343,7 @@ def uninstall_toshy():
     # confirm if user really wants to uninstall
     response = input("\nThis will completely uninstall Toshy. Are you sure? [y/N]: ")
     if response not in ['y', 'Y']:
-        print(f"\nToshy uninstall cancelled.\n")
+        print(f"\nToshy uninstall cancelled.")
         safe_shutdown()
     else:
         print(f'\nToshy uninstall proceeding...\n')
@@ -1631,7 +1631,7 @@ def main(cnfg: InstallerSettings):
     if cnfg.remind_extensions or (cnfg.DESKTOP_ENV == 'gnome' and cnfg.SESSION_TYPE == 'wayland'):
         print(f'You MUST install GNOME EXTENSIONS if using Wayland+GNOME! See Toshy README.')
 
-    print()   # blank line to avoid crowding the prompt after install is done
+    # print()   # blank line to avoid crowding the prompt after install is done
     safe_shutdown()
 
 
