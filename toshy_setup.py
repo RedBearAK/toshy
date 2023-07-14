@@ -1494,21 +1494,8 @@ def handle_cli_arguments():
         help='Optional: install font, KDE task switcher, etc...'
     )
 
-    # # Add a catch-all for unknown arguments
-    # parser.add_argument(
-    #     'unknown',
-    #     nargs=argparse.REMAINDER,
-    #     help=argparse.SUPPRESS
-    # )
-
     args = parser.parse_args()
 
-    # # Check for unknown arguments
-    # if args.unknown:
-    #     raise ValueError(   f"ERROR: Unknown argument(s): {args.unknown}\n"
-    #                         f'Check the "--help" output.\n'     )
-
-    # Check that at most one "exit-immediately" argument is true
     exit_args_dct = {
         '--uninstall':          args.uninstall,
         '--show-env':           args.show_env,
@@ -1517,14 +1504,13 @@ def handle_cli_arguments():
         '--remove-tweaks':      args.remove_tweaks
     }
 
-    # Also include the other arguments in the check
     all_args_dct = {
         '--override-distro':    bool(args.override_distro),
         '--fancy-pants':        args.fancy_pants,
         **exit_args_dct
     }
 
-    # Check that at most one argument is true when an "exit-immediately" argument is true
+    # Check that "exit-after" arguments are used alone
     if any(exit_args_dct.values()) and sum(all_args_dct.values()) > 1:
         error(f"ERROR: These options should be used alone:" +
             ''.join(f"\n\t{arg}" for arg in exit_args_dct.keys()))
