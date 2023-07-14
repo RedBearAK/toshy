@@ -1493,19 +1493,19 @@ def handle_cli_arguments():
         help='Optional: install font, KDE task switcher, etc...'
     )
 
-    # Add a catch-all for unknown arguments
-    parser.add_argument(
-        'unknown',
-        nargs=argparse.REMAINDER,
-        help=argparse.SUPPRESS
-    )
+    # # Add a catch-all for unknown arguments
+    # parser.add_argument(
+    #     'unknown',
+    #     nargs=argparse.REMAINDER,
+    #     help=argparse.SUPPRESS
+    # )
 
     args = parser.parse_args()
 
-    # Check for unknown arguments
-    if args.unknown:
-        raise ValueError(   f"ERROR: Unknown argument(s): {args.unknown}\n"
-                            f'Check the "--help" output.\n'     )
+    # # Check for unknown arguments
+    # if args.unknown:
+    #     raise ValueError(   f"ERROR: Unknown argument(s): {args.unknown}\n"
+    #                         f'Check the "--help" output.\n'     )
 
     # Check that at most one "exit-immediately" argument is true
     exit_args_dct = {
