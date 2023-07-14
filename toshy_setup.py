@@ -560,21 +560,21 @@ def install_distro_pkgs():
         if cnfg.systemctl_present or 'systemd' not in pkg
     ]
 
-    # TODO: remove this line if change to RHEL/Fedora groups works out
-    # dnf_distros     = distro_groups_map['redhat-based']
     dnf_distros     = distro_groups_map['fedora-based'] + distro_groups_map['rhel-based']
     zypper_distros  = distro_groups_map['tumbleweed-based'] + distro_groups_map['leap-based']
     apt_distros     = distro_groups_map['ubuntu-based'] + distro_groups_map['debian-based']
     pacman_distros  = distro_groups_map['arch-based']
 
-    if cnfg.DISTRO_NAME in apt_distros:
-        call_attention_to_password_prompt()
-        subprocess.run(['sudo', 'apt', 'install', '-y'] + cnfg.pkgs_for_distro)
+    def check_for_pkg_mgr_cmd(command):
+        pkg_mgr_cmd = command
+        if not shutil.which(pkg_mgr_cmd):
+            print()
+            error(f'Package manager command ({pkg_mgr_cmd}) not available. Unable to continue.')
+            safe_shutdown(1)
 
-    elif cnfg.DISTRO_NAME in dnf_distros:
-        # do extra stuff only if distro is a RHEL type (not Fedora)
-        # TODO: reverse this to name RHELs instead of non-RHELs? 
-        # if cnfg.DISTRO_NAME not in ['fedora', 'fedoralinux', 'ultramarine', 'nobara']:
+    if cnfg.DISTRO_NAME in dnf_distros:
+        check_for_pkg_mgr_cmd('dnf')
+        # do extra stuff only if distro is a RHEL type (not Fedora type)
         if cnfg.DISTRO_NAME in distro_groups_map['rhel-based']:
             call_attention_to_password_prompt()
             # for gobject-introspection-devel: sudo dnf config-manager --set-enabled crb
@@ -586,18 +586,26 @@ def install_distro_pkgs():
         subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro)
 
     elif cnfg.DISTRO_NAME in zypper_distros:
+        check_for_pkg_mgr_cmd('zypper')
+        call_attention_to_password_prompt()
         subprocess.run(['sudo', 'zypper', '--non-interactive', 'install'] + cnfg.pkgs_for_distro)
 
-    elif cnfg.DISTRO_NAME in pacman_distros:
+    elif cnfg.DISTRO_NAME in apt_distros:
+        check_for_pkg_mgr_cmd('apt')
+        call_attention_to_password_prompt()
+        subprocess.run(['sudo', 'apt', 'install', '-y'] + cnfg.pkgs_for_distro)
 
-        def is_package_installed(package):
+    elif cnfg.DISTRO_NAME in pacman_distros:
+        check_for_pkg_mgr_cmd('pacman')
+
+        def is_pkg_installed_pacman(package):
             result = subprocess.run(['pacman', '-Q', package], stdout=DEVNULL, stderr=DEVNULL)
             return result.returncode == 0
 
         pkgs_to_install = [
             pkg
             for pkg in cnfg.pkgs_for_distro
-            if not is_package_installed(pkg)
+            if not is_pkg_installed_pacman(pkg)
         ]
         if pkgs_to_install:
             call_attention_to_password_prompt()
