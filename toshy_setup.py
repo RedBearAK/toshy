@@ -465,7 +465,7 @@ distro_groups_map = {
     #                     "rhel", "almalinux", "rocky", "eurolinux"],
 
     # separate references for RHEL types versus Fedora types
-    'fedora-based':    ["fedora", "fedoralinux", "ultramarine", "nobara"],
+    'fedora-based':    ["fedora", "fedoralinux", "ultramarine", "nobara", "silverblue"],
     'rhel-based':      ["rhel", "almalinux", "rocky", "eurolinux"],
 
     'tumbleweed-based':["opensuse-tumbleweed"],
@@ -573,7 +573,10 @@ def install_distro_pkgs():
             safe_shutdown(1)
 
     if cnfg.DISTRO_NAME in dnf_distros:
-        check_for_pkg_mgr_cmd('dnf')
+        if cnfg.DISTRO_NAME == 'silverblue':
+            check_for_pkg_mgr_cmd('rpm-ostree')
+        else:
+            check_for_pkg_mgr_cmd('dnf')
         # do extra stuff only if distro is a RHEL type (not Fedora type)
         if cnfg.DISTRO_NAME in distro_groups_map['rhel-based']:
             call_attention_to_password_prompt()
@@ -583,7 +586,10 @@ def install_distro_pkgs():
             subprocess.run(['sudo', 'dnf', 'install', '-y', 'epel-release'])
             subprocess.run(['sudo', 'dnf', 'update', '-y'])
         # now do the install of the list of packages
-        subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro)
+        if cnfg.DISTRO_NAME == 'silverblue':
+            subprocess.run(['sudo', 'rpm-ostree', 'install', '-y'] + cnfg.pkgs_for_distro)
+        else:
+            subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro)
 
     elif cnfg.DISTRO_NAME in zypper_distros:
         check_for_pkg_mgr_cmd('zypper')
