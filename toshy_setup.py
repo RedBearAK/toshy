@@ -1518,8 +1518,9 @@ def handle_cli_arguments():
     }
 
     if sum(exit_args_dct.values()) > 1:
-        raise ValueError(   f"ERROR: These options are mutually exclusive (use only one): "
-                            f"\n\t{', '.join(exit_args_dct.keys())}\n")
+        error(f"ERROR: These options are mutually exclusive (use only one):" +
+            ''.join(f"\n\t{arg}" for arg in exit_args_dct.keys()))
+        safe_shutdown(1)
 
     if args.uninstall:
         uninstall_toshy()
