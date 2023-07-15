@@ -581,8 +581,9 @@ def install_distro_pkgs():
 
             # do even more prep/checks if distro is CentOS
             if cnfg.DISTRO_NAME in ['centos'] and cnfg.DISTRO_VER in ['7', '8']:
-                if py_interp_ver_tup >= curr_py_rel_ver_tup:
-                    print(f"Good, Python version is current stable ({curr_py_rel_ver}) or later: "
+                # if py_interp_ver_tup >= curr_py_rel_ver_tup:
+                if py_interp_ver_tup >= (3, 8):
+                    print(f"Good, Python version is 3.8 or later: "
                             f"'{py_interp_ver}'")
                 else:
                     # sudo yum install -y centos-release-scl
@@ -598,9 +599,9 @@ def install_distro_pkgs():
 
 
                     error(f'ERROR: Python version used to run Toshy installer is too old.')
-                    debug(f"Install stable Python release version {curr_py_rel_ver} or later.")
+                    debug(f"Install stable Python release version 3.8 or later.")
                     debug(f'Then run Toshy installer with that version of Python interpreter:')
-                    debug(f"'python{curr_py_rel_ver} ./toshy_setup.py [--option]'")
+                    debug(f"'python3.8 ./toshy_setup.py [--option]'")
                     safe_shutdown(1)
                 # use yum to install dnf package manager
                 check_for_pkg_mgr_cmd('yum')
