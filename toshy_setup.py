@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import os
-os.environ['PYTHONDONTWRITEBYTECODE'] = '1'     # prevent creation of cache files
+os.environ['PYTHONDONTWRITEBYTECODE'] = '1'     # prevent this script from creating cache files
 import re
 import sys
 import pwd
@@ -78,15 +78,16 @@ if sys.prefix != sys.base_prefix:
 
 # system Python version
 py_ver_major, py_ver_minor = sys.version_info[:2]
-py_pkg_ver          = f'{py_ver_major}{py_ver_minor}'
+py_interp_ver_tup   = (py_ver_major, py_ver_minor)
 py_interp_ver       = f'{py_ver_major}.{py_ver_minor}'
+py_pkg_ver          = f'{py_ver_major}{py_ver_minor}'
 
 # current stable Python release version (update when needed):
+# 3.11 Release Date: Oct. 24, 2022
 curr_py_rel_ver_maj = 3
 curr_py_rel_ver_min = 11
-# 3.11 Release Date: Oct. 24, 2022
-curr_py_rel_ver     = f'{curr_py_rel_ver_maj}.{curr_py_rel_ver_min}'
 curr_py_rel_ver_tup = (curr_py_rel_ver_maj, curr_py_rel_ver_min)
+curr_py_rel_ver     = f'{curr_py_rel_ver_maj}.{curr_py_rel_ver_min}'
 
 # Check if 'sudo' command is available to user
 if not shutil.which('sudo'):
@@ -466,7 +467,7 @@ distro_groups_map = {
 
     # separate references for RHEL types versus Fedora types
     'fedora-based':    ["fedora", "fedoralinux", "ultramarine", "nobara", "silverblue"],
-    'rhel-based':      ["rhel", "almalinux", "rocky", "eurolinux"],
+    'rhel-based':      ["rhel", "almalinux", "rocky", "eurolinux", "centos"],
 
     'tumbleweed-based':["opensuse-tumbleweed"],
     'leap-based':      ["opensuse-leap"],
@@ -573,33 +574,84 @@ def install_distro_pkgs():
             safe_shutdown(1)
 
     if cnfg.DISTRO_NAME in dnf_distros:
-        if cnfg.DISTRO_NAME == 'silverblue':
-            check_for_pkg_mgr_cmd('rpm-ostree')
-        else:
-            check_for_pkg_mgr_cmd('dnf')
+
         # do extra stuff only if distro is a RHEL type (not Fedora type)
         if cnfg.DISTRO_NAME in distro_groups_map['rhel-based']:
             call_attention_to_password_prompt()
-            # for gobject-introspection-devel: sudo dnf config-manager --set-enabled crb
-            subprocess.run(['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb'])
+
+            # do even more prep/checks if distro is CentOS
+            if cnfg.DISTRO_NAME in ['centos'] and cnfg.DISTRO_VER in ['7', '8']:
+                if py_interp_ver_tup >= curr_py_rel_ver_tup:
+                    print(f"Good, Python version is current stable ({curr_py_rel_ver}) or later: "
+                            f"'{py_interp_ver}'")
+                else:
+                    # sudo yum install -y centos-release-scl
+                    # sudo yum install -y rh-python38
+                    # scl enable rh-python38 bash
+                    
+                    # OR:
+                    
+                    # sudo yum install -y epel-release
+                    # sudo yum install -y https://repo.ius.io/ius-release-el7.rpm
+                    # sudo yum update
+                    # sudo yum install -y python311
+
+
+                    error(f'ERROR: Python version used to run Toshy installer is too old.')
+                    debug(f"Install stable Python release version {curr_py_rel_ver} or later.")
+                    debug(f'Then run Toshy installer with that version of Python interpreter:')
+                    debug(f"'python{curr_py_rel_ver} ./toshy_setup.py [--option]'")
+                    safe_shutdown(1)
+                # use yum to install dnf package manager
+                check_for_pkg_mgr_cmd('yum')
+                subprocess.run(['sudo', 'yum', 'install', '-y', 'dnf'])
+
+            if cnfg.DISTRO_NAME not in ['centos']:
+                # enable "CodeReady Builder" repo for 'gobject-introspection-devel' on RHELs:
+                # sudo dnf config-manager --set-enabled crb
+                subprocess.run(['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb'])
+
             # for libappindicator-gtk3: sudo dnf install -y epel-release
             subprocess.run(['sudo', 'dnf', 'install', '-y', 'epel-release'])
             subprocess.run(['sudo', 'dnf', 'update', '-y'])
-        # now do the install of the list of packages
+
         if cnfg.DISTRO_NAME == 'silverblue':
-            subprocess.run(['sudo', 'rpm-ostree', 'install', '-y'] + cnfg.pkgs_for_distro)
+            check_for_pkg_mgr_cmd('rpm-ostree')
+            print(f'Distro appears to be immutable using "rpm-ostree".')
         else:
-            subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro)
+            check_for_pkg_mgr_cmd('dnf')    # if we get here, 'dnf' should exist on CentOS too
+
+        # finally, do the install of the main list of packages for this distro type
+        try:
+            call_attention_to_password_prompt()
+            if cnfg.DISTRO_NAME == 'silverblue':
+                subprocess.run(['sudo', 'rpm-ostree', 'install', '-y'] + cnfg.pkgs_for_distro,
+                                check=True)
+            else:
+                subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro,
+                                check=True)
+        except subprocess.CalledProcessError as proc_err:
+            error(f'ERROR: Problem installing package list for distro type:\n\t{proc_err}')
+            safe_shutdown(1)
 
     elif cnfg.DISTRO_NAME in zypper_distros:
         check_for_pkg_mgr_cmd('zypper')
         call_attention_to_password_prompt()
-        subprocess.run(['sudo', 'zypper', '--non-interactive', 'install'] + cnfg.pkgs_for_distro)
+        try:
+            subprocess.run(['sudo', 'zypper', '--non-interactive', 'install'] + cnfg.pkgs_for_distro,
+                            check=True)
+        except subprocess.CalledProcessError as proc_err:
+            error(f'ERROR: Problem installing package list for distro type:\n\t{proc_err}')
+            safe_shutdown(1)
 
     elif cnfg.DISTRO_NAME in apt_distros:
         check_for_pkg_mgr_cmd('apt')
         call_attention_to_password_prompt()
-        subprocess.run(['sudo', 'apt', 'install', '-y'] + cnfg.pkgs_for_distro)
+        try:
+            subprocess.run(['sudo', 'apt', 'install', '-y'] + cnfg.pkgs_for_distro, check=True)
+        except subprocess.CalledProcessError as proc_err:
+            error(f'ERROR: Problem installing package list for distro type:\n\t{proc_err}')
+            safe_shutdown(1)
 
     elif cnfg.DISTRO_NAME in pacman_distros:
         check_for_pkg_mgr_cmd('pacman')
@@ -615,7 +667,11 @@ def install_distro_pkgs():
         ]
         if pkgs_to_install:
             call_attention_to_password_prompt()
-            subprocess.run(['sudo', 'pacman', '-S', '--noconfirm'] + pkgs_to_install)
+            try:
+                subprocess.run(['sudo', 'pacman', '-S', '--noconfirm'] + pkgs_to_install, check=True)
+            except subprocess.CalledProcessError as proc_err:
+                error(f'ERROR: Problem installing package list for distro type:\n\t{proc_err}')
+                safe_shutdown(1)
 
     else:
         print()
