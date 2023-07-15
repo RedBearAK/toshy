@@ -586,23 +586,21 @@ def install_distro_pkgs():
                     print(f"Good, Python version is 3.8 or later: "
                             f"'{py_interp_ver}'")
                 else:
-                    # sudo yum install -y centos-release-scl
-                    # sudo yum install -y rh-python38
-                    # scl enable rh-python38 bash
-                    
-                    # OR:
-                    
-                    # sudo yum install -y epel-release
-                    # sudo yum install -y https://repo.ius.io/ius-release-el7.rpm
-                    # sudo yum update
-                    # sudo yum install -y python311
-
-
-                    error(f'ERROR: Python version used to run Toshy installer is too old.')
-                    debug(f"Install stable Python release version 3.8 or later.")
-                    debug(f'Then run Toshy installer with that version of Python interpreter:')
-                    debug(f"'python3.8 ./toshy_setup.py [--option]'")
-                    safe_shutdown(1)
+                    try:
+                        # sudo yum install -y centos-release-scl
+                        subprocess.run(['sudo', 'yum', 'install', '-y', 'centos-release-scl'],
+                                        check=True)
+                        # sudo yum install -y rh-python38
+                        subprocess.run(['sudo', 'yum', 'install', '-y', 'rh-python38'],
+                                        check=True)
+                        # scl enable rh-python38 bash
+                        subprocess.run(['scl', 'enable', 'rh-python38', 'bash'],
+                                        check=True)
+                    except subprocess.CalledProcessError as proc_err:
+                        print()
+                        error(f'ERROR: (CentOS-specific) Problem installing/enabling Python 3.8:'
+                                f'\n\t{proc_err}')
+                        safe_shutdown(1)
                 # use yum to install dnf package manager
                 check_for_pkg_mgr_cmd('yum')
                 subprocess.run(['sudo', 'yum', 'install', '-y', 'dnf'])
@@ -632,6 +630,7 @@ def install_distro_pkgs():
                 subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro,
                                 check=True)
         except subprocess.CalledProcessError as proc_err:
+            print()
             error(f'ERROR: Problem installing package list for distro type:\n\t{proc_err}')
             safe_shutdown(1)
 
@@ -642,6 +641,7 @@ def install_distro_pkgs():
             subprocess.run(['sudo', 'zypper', '--non-interactive', 'install'] + cnfg.pkgs_for_distro,
                             check=True)
         except subprocess.CalledProcessError as proc_err:
+            print()
             error(f'ERROR: Problem installing package list for distro type:\n\t{proc_err}')
             safe_shutdown(1)
 
@@ -651,6 +651,7 @@ def install_distro_pkgs():
         try:
             subprocess.run(['sudo', 'apt', 'install', '-y'] + cnfg.pkgs_for_distro, check=True)
         except subprocess.CalledProcessError as proc_err:
+            print()
             error(f'ERROR: Problem installing package list for distro type:\n\t{proc_err}')
             safe_shutdown(1)
 
@@ -671,6 +672,7 @@ def install_distro_pkgs():
             try:
                 subprocess.run(['sudo', 'pacman', '-S', '--noconfirm'] + pkgs_to_install, check=True)
             except subprocess.CalledProcessError as proc_err:
+                print()
                 error(f'ERROR: Problem installing package list for distro type:\n\t{proc_err}')
                 safe_shutdown(1)
 
