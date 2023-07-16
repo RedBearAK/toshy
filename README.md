@@ -299,6 +299,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - You must install `python3` to run `toshy_setup.py`
     - systemd "user" services are not supported in CentOS/RHEL 7
     - Auto-start at login with systemd services not available
+    - Cmd+Space (Alt+F1) shortcut must be assigned to app launcher menu
     - To manually start Toshy config from tray icon menu:
         - "(Re)Start Toshy Script" option will start Toshy config
         - "Stop Toshy Script" option will stop background Toshy config
