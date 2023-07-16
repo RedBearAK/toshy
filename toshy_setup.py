@@ -581,7 +581,7 @@ def install_distro_pkgs():
             call_attention_to_password_prompt()
 
             # do even more prep/checks if distro is CentOS
-            if cnfg.DISTRO_NAME in ['centos'] and cnfg.DISTRO_VER in ['7', '8']:
+            if cnfg.DISTRO_NAME in ['centos'] and cnfg.DISTRO_VER in ['7']:
                 # if py_interp_ver_tup >= curr_py_rel_ver_tup:
                 if py_interp_ver_tup >= (3, 8):
                     print(f"Good, Python version is 3.8 or later: "
@@ -610,7 +610,7 @@ def install_distro_pkgs():
                         cnfg.systemctl_present = False
                     except subprocess.CalledProcessError as proc_err:
                         print()
-                        error(f'ERROR: (CentOS-specific) Problem installing/enabling Python 3.8:'
+                        error(f'ERROR: (CentOS 7-specific) Problem installing/enabling Python 3.8:'
                                 f'\n\t{proc_err}')
                         safe_shutdown(1)
                 # use yum to install dnf package manager
@@ -1235,7 +1235,6 @@ def apply_tweaks_KDE():
     print(f'Disabled Meta key opening application menu. (Use Cmd+Space instead.)')
     
     if cnfg.fancy_pants:
-
         print(f'Installing "Application Switcher" KWin script...')
         # How to install nclarius grouped "Application Switcher" KWin script:
         # git clone https://github.com/nclarius/kwin-application-switcher.git
@@ -1316,6 +1315,9 @@ def apply_desktop_tweaks():
 
     print(f'\n\n§  Applying any known desktop environment tweaks...\n{cnfg.separator}')
 
+    if cnfg.fancy_pants:
+        print(f'Fancy-Pants install invoked. Additional steps will be taken.')
+
     if cnfg.DESKTOP_ENV == 'gnome':
         apply_tweaks_GNOME()
         cnfg.tweak_applied = True
@@ -1326,7 +1328,7 @@ def apply_desktop_tweaks():
 
     # General (not DE specific) "fancy pants" additions:
     if cnfg.fancy_pants:
-        
+
         print(f'Installing font: ', end='', flush=True)
 
         # install Fantasque Sans Mono NoLig (no ligatures) from GitHub fork
@@ -1387,6 +1389,7 @@ def apply_desktop_tweaks():
             print(f'Done.', flush=True)
 
             print(f"Installed font: '{folder_name}'")
+            cnfg.tweak_applied = True
 
     if not cnfg.tweak_applied:
         print(f'If nothing printed, no tweaks available for "{cnfg.DESKTOP_ENV}" yet.')
