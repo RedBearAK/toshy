@@ -593,9 +593,11 @@ def install_distro_pkgs():
                         # sudo yum install -y rh-python38
                         subprocess.run(['sudo', 'yum', 'install', '-y', 'rh-python38'],
                                         check=True)
+                        # THIS WILL DROP US INTO A NEW SHELL! Not what we want. 
                         # scl enable rh-python38 bash
-                        subprocess.run(['scl', 'enable', 'rh-python38', 'bash'],
-                                        check=True)
+                        # subprocess.run(['scl', 'enable', 'rh-python38', 'bash'],
+                        #                 check=True)
+                        cnfg.py_interp_path = '/opt/rh/rh-python38/root/usr/bin/python3.8'
                     except subprocess.CalledProcessError as proc_err:
                         print()
                         error(f'ERROR: (CentOS-specific) Problem installing/enabling Python 3.8:'
@@ -891,11 +893,11 @@ def setup_python_virt_env():
 
     # Create the virtual environment if it doesn't exist
     if not os.path.exists(cnfg.venv_path):
-        # change the Python interpreter path to user current release version 
+        # change the Python interpreter path to use current release version from pkg list
         # if distro is openSUSE Leap type (instead of old 3.6 version)
         if cnfg.DISTRO_NAME in distro_groups_map['leap-based']:
             if shutil.which(f'python{curr_py_rel_ver}'):
-                cnfg.py_interp_path     = shutil.which(f'python{curr_py_rel_ver}')
+                cnfg.py_interp_path = shutil.which(f'python{curr_py_rel_ver}')
                 print(f'Using Python version {curr_py_rel_ver}.')
             else:
                 print(  f'Current stable Python release version '
