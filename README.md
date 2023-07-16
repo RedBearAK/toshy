@@ -294,6 +294,18 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - Red Hat Enterprise Linux itself? Probably.
     - Try `./toshy_setup.py --override-distro=almalinux` or `=rhel`
 
+- CentOS 7 (RHEL 7 clone) - Partial support:
+
+    - You must install `python3` to run `toshy_setup.py`
+    - systemd "user" services are not supported in CentOS/RHEL 7
+    - Auto-start at login with systemd services not available
+    - To manually start Toshy config from tray icon menu:
+        - "(Re)Start Toshy Script" option will start Toshy config
+        - "Stop Toshy Script" option will stop background Toshy config
+    - To manually start Toshy config from terminal:
+        - Use `toshy-config-start` or `toshy-config-verbose-start`
+        - Use `toshy-config-stop` to stop a background Toshy config
+
 ### openSUSE (RPM-based packaging system)
 
 - openSUSE Tumbleweed (rolling release)
