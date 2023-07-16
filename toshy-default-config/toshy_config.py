@@ -277,7 +277,7 @@ terminals_lod = [
     {clas:"^lxterminal$"                },
     {clas:"^mate-terminal$"             },
     {clas:"^org.gnome.Console$"         },
-    {clas:"org.kde.konsole$"            },
+    {clas:"^org.kde.konsole$"           },
     {clas:"^roxterm$"                   },
     {clas:"^qterminal$"                 },
     {clas:"^st$"                        },
@@ -3530,10 +3530,13 @@ keymap("Tab Nav fix for apps that use Ctrl+Alt+PgUp/PgDn", {
 
 keymap("Konsole tab switching", {
     # Ctrl Tab - In App Tab Switching
-    C("LC-Tab") :               C("Shift-Right"),
     C("Shift-LC-Tab") :         C("Shift-Left"),
+    C("LC-Tab") :               C("Shift-Right"),
     C("LC-Grave") :             C("Shift-Left"),
-}, when = matchProps(clas="^konsole$"))
+    # Konsole tab switching in KDE4 (not needed in KDE5)
+    C("Shift-RC-Left_Brace"):   C("Shift-Left"),                # Go to prior tab (Left)
+    C("Shift-RC-Right_Brace"):  C("Shift-Right"),               # Go to next tab (Right)
+}, when = matchProps(clas="^konsole$|^org.kde.Konsole$"))
 
 keymap("Elementary Terminal tab switching", {
     # Ctrl Tab - In App Tab Switching
