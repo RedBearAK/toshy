@@ -606,6 +606,8 @@ def install_distro_pkgs():
                         # set new Python interpreter version and path to reflect what was installed
                         cnfg.py_interp_path = '/opt/rh/rh-python38/root/usr/bin/python3.8'
                         cnfg.py_interp_ver  = '3.8'
+                        # avoid using systemd packages/services for CentOS
+                        cnfg.systemctl_present = False
                     except subprocess.CalledProcessError as proc_err:
                         print()
                         error(f'ERROR: (CentOS-specific) Problem installing/enabling Python 3.8:'
