@@ -594,6 +594,10 @@ def install_distro_pkgs():
                         # sudo yum install -y rh-python38
                         subprocess.run(['sudo', 'yum', 'install', '-y', 'rh-python38'],
                                         check=True)
+                        # sudo yum install rh-python38-python-devel
+                        subprocess.run(['sudo', 'yum', 'install', '-y', 'rh-python38-python-devel'],
+                                        check=True)
+                        
                         # THIS WILL DROP US INTO A NEW SHELL! Not what we want. 
                         # scl enable rh-python38 bash
                         # subprocess.run(['scl', 'enable', 'rh-python38', 'bash'],
@@ -990,6 +994,11 @@ def install_desktop_apps():
 def setup_kwin2dbus_script():
     """Install the KWin script to notify D-Bus service about window focus changes"""
     print(f'\n\n§  Setting up the Toshy KWin script...\n{cnfg.separator}')
+    if not shutil.which('kpackagetool5') or not shutil.which('kconfigwrite5'):
+        pass
+        print(f'One or more KDE CLI tools not found. Assuming older KDE...')
+        return
+    
     kwin_script_name    = 'toshy-dbus-notifyactivewindow'
     kwin_script_path    = os.path.join( cnfg.toshy_dir_path,
                                         'kde-kwin-dbus-service', kwin_script_name)
@@ -1013,11 +1022,6 @@ def setup_kwin2dbus_script():
     result = subprocess.CompletedProcess(args=process.args, returncode=process.returncode,
                                             stdout=out, stderr=err)
 
-    # NOT COMPATIBLE WITH PYTHON 3.6
-    # result = subprocess.run(
-    #     ['kpackagetool5', '-t', 'KWin/Script', '-r', kwin_script_name],
-    #     capture_output=True, text=True)
-
     if result.returncode != 0:
         pass
     else:
@@ -1032,11 +1036,6 @@ def setup_kwin2dbus_script():
     err = err.decode('utf-8')
     result = subprocess.CompletedProcess(args=process.args, returncode=process.returncode,
                                             stdout=out, stderr=err)
-
-    # NOT COMPATIBLE WITH PYTHON 3.6
-    # result = subprocess.run(
-    #     ['kpackagetool5', '-t', 'KWin/Script', '-i', script_tmp_file],
-    #     capture_output=True, text=True)
 
     if result.returncode != 0:
         error(f"Error installing the KWin script. The error was:\n\t{result.stderr}")
@@ -1058,12 +1057,6 @@ def setup_kwin2dbus_script():
     err = err.decode('utf-8')
     result = subprocess.CompletedProcess(args=process.args, returncode=process.returncode,
                                             stdout=out, stderr=err)
-
-    # NOT COMPATIBLE WITH PYTHON 3.6
-    # result = subprocess.run(
-    #     [   'kwriteconfig5', '--file', 'kwinrc', '--group', 'Plugins', '--key',
-    #         f'{kwin_script_name}Enabled', 'true'],
-    #     capture_output=True, text=True)
 
     if result.returncode != 0:
         error(f"Error enabling the KWin script. The error was:\n\t{result.stderr}")
