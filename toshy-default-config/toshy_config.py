@@ -810,13 +810,16 @@ def matchProps(*,
     def _matchProps(ctx: KeyContext):
         cond_list = []
         if _clas is not None:
-            clas_match = re.search(clas_rgx, ctx.wm_class)
+            clas_match = re.search(clas_rgx,
+                                    ctx.wm_class or 'ERR: matchProps: NoneType in ctx.wm_class')
             cond_list.append(not clas_match if not_clas is not None else clas_match)
         if _name is not None:
-            name_match = re.search(name_rgx, ctx.wm_name)
+            name_match = re.search(name_rgx,
+                                    ctx.wm_name or 'ERR: matchProps: NoneType in ctx.wm_name')
             cond_list.append(not name_match if not_name is not None else name_match)
         if _devn is not None:
-            devn_match = re.search(devn_rgx, ctx.device_name)
+            devn_match = re.search(devn_rgx,
+                                    ctx.device_name or 'ERR: matchProps: NoneType in ctx.device_name')
             cond_list.append(not devn_match if not_devn is not None else devn_match)
         # these two MUST check explicitly for "is not None" because external input is True/False,
         # and we want to be able to match the LED_on state of either "True" or "False"
