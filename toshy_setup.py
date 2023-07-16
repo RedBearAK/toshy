@@ -76,12 +76,6 @@ if sys.prefix != sys.base_prefix:
     sys.path = [p for p in sys.path if not p.startswith(sys.prefix)]
     sys.prefix = sys.base_prefix
 
-# system Python version
-py_ver_major, py_ver_minor = sys.version_info[:2]
-py_interp_ver_tup   = (py_ver_major, py_ver_minor)
-py_interp_ver       = f'{py_ver_major}.{py_ver_minor}'
-py_pkg_ver          = f'{py_ver_major}{py_ver_minor}'
-
 # current stable Python release version (update when needed):
 # 3.11 Release Date: Oct. 24, 2022
 curr_py_rel_ver_maj = 3
@@ -105,6 +99,11 @@ else:
     debug("Home user local bin not part of PATH string.")
 # do the 'else' of creating 'path_fix_tmp_path' later in function that prompts user
 
+# system Python version
+py_ver_major, py_ver_minor  = sys.version_info[:2]
+py_interp_ver_tup      = (py_ver_major, py_ver_minor)
+py_pkg_ver             = f'{py_ver_major}{py_ver_minor}'
+
 
 class InstallerSettings:
     """Set up variables for necessary information to be used by all functions"""
@@ -125,6 +124,8 @@ class InstallerSettings:
         self.pkgs_for_distro        = None
         self.pip_pkgs               = None
         self.qdbus                  = 'qdbus-qt5' if shutil.which('qdbus-qt5') else 'qdbus'
+        
+        self.py_interp_ver          = f'{py_ver_major}.{py_ver_minor}'
         self.py_interp_path         = shutil.which('python3')
 
         self.home_dir_path          = os.path.abspath(os.path.expanduser('~'))
@@ -584,7 +585,7 @@ def install_distro_pkgs():
                 # if py_interp_ver_tup >= curr_py_rel_ver_tup:
                 if py_interp_ver_tup >= (3, 8):
                     print(f"Good, Python version is 3.8 or later: "
-                            f"'{py_interp_ver}'")
+                            f"'{cnfg.py_interp_ver}'")
                 else:
                     try:
                         # sudo yum install -y centos-release-scl
@@ -597,7 +598,10 @@ def install_distro_pkgs():
                         # scl enable rh-python38 bash
                         # subprocess.run(['scl', 'enable', 'rh-python38', 'bash'],
                         #                 check=True)
+                        
+                        # set new Python interpreter version and path to reflect what was installed
                         cnfg.py_interp_path = '/opt/rh/rh-python38/root/usr/bin/python3.8'
+                        cnfg.py_interp_ver  = '3.8'
                     except subprocess.CalledProcessError as proc_err:
                         print()
                         error(f'ERROR: (CentOS-specific) Problem installing/enabling Python 3.8:'
@@ -903,7 +907,7 @@ def setup_python_virt_env():
                 print(  f'Current stable Python release version '
                         f'({curr_py_rel_ver}) not found. ')
         else:
-            print(f'Using Python version {py_interp_ver}.')
+            print(f'Using Python version {cnfg.py_interp_ver}.')
         subprocess.run([cnfg.py_interp_path, '-m', 'venv', cnfg.venv_path])
 
     # We do not need to "activate" the venv right now, just create it
