@@ -994,7 +994,7 @@ def install_desktop_apps():
 def setup_kwin2dbus_script():
     """Install the KWin script to notify D-Bus service about window focus changes"""
     print(f'\n\n§  Setting up the Toshy KWin script...\n{cnfg.separator}')
-    if not shutil.which('kpackagetool5') or not shutil.which('kconfigwrite5'):
+    if not shutil.which('kpackagetool5') or not shutil.which('kwriteconfig5'):
         pass
         print(f'One or more KDE CLI tools not found. Assuming older KDE...')
         return
@@ -1220,6 +1220,9 @@ def remove_tweaks_GNOME():
 def apply_tweaks_KDE():
     """Utility function to add desktop tweaks to KDE"""
 
+    if not shutil.which('kwriteconfig5'):
+        return
+
     # Documentation on the use of Meta key in KDE:
     # https://userbase.kde.org/Plasma/Tips#Windows.2FMeta_Key
     subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group',
@@ -1279,6 +1282,8 @@ def apply_tweaks_KDE():
 
 def remove_tweaks_KDE():
     """Utility function to remove the tweaks applied to KDE"""
+    if not shutil.which('kwriteconfig5'):
+        return
 
     # Re-enable Meta key opening the application menu
     subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group',
