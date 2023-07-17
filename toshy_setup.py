@@ -462,14 +462,11 @@ def verify_user_groups():
 
 
 distro_groups_map = {
-    # TODO: remove this distro group if the change to RHEL/Fedora works out
-    # 'redhat-based':    ["fedora", "fedoralinux", "ultramarine", "nobara",
-    #                     "rhel", "almalinux", "rocky", "eurolinux"],
-
     # separate references for RHEL types versus Fedora types
     'fedora-based':    ["fedora", "fedoralinux", "ultramarine", "nobara", "silverblue"],
     'rhel-based':      ["rhel", "almalinux", "rocky", "eurolinux", "centos"],
 
+    # separate references for Tumbleweed types versus Leap types
     'tumbleweed-based':["opensuse-tumbleweed"],
     'leap-based':      ["opensuse-leap"],
     'ubuntu-based':    ["ubuntu", "mint", "popos", "eos", "neon", "tuxedo", "zorin"],
@@ -479,12 +476,6 @@ distro_groups_map = {
 }
 
 pkg_groups_map = {
-    # TODO: remove this package group if the change to RHEL/Fedora works out
-    # 'redhat-based':    ["gcc", "git", "cairo-devel", "cairo-gobject-devel", "dbus-devel",
-    #                     "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
-    #                     "gobject-introspection-devel", "libappindicator-gtk3", "xset",
-    #                     "libnotify", "systemd-devel", "zenity"],
-
     'fedora-based':    ["gcc", "git", "cairo-devel", "cairo-gobject-devel", "dbus-devel",
                         "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
                         "gobject-introspection-devel", "libappindicator-gtk3", "xset",
@@ -495,7 +486,6 @@ pkg_groups_map = {
                         "gobject-introspection-devel", "libappindicator-gtk3", "xset",
                         "libnotify", "systemd-devel", "zenity"],
 
-    # opensuse-tumbleweed
     'tumbleweed-based':["gcc", "git", "cairo-devel",  "dbus-1-devel", f"python{py_pkg_ver}-tk",
                         f"python{py_pkg_ver}-dbus-python-devel", f"python{py_pkg_ver}-devel",
                         "gobject-introspection-devel", "libappindicator3-devel", "tk",
@@ -526,10 +516,6 @@ pkg_groups_map = {
 extra_pkgs_map = {
     # Add a distro name and its additional packages here as needed
     # 'distro_name': ["pkg1", "pkg2", ...],
-    # TODO: remove the lines below if the updated RHEL/Fedora distro groups works out
-    # 'fedora':          ["evtest"],
-    # 'fedoralinux':     ["evtest"],
-    # 'ultramarine':     ["evtest"],
 }
 
 
