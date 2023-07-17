@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
 import os
+os.environ['PYTHONDONTWRITEBYTECODE'] = '1'     # prevent this script from creating cache files
 import re
 import sys
 import pwd
 import grp
-import time
 import random
 import string
 import signal
@@ -47,11 +47,12 @@ else:
     error(f'This is only meant to run on Linux. Exiting.')
     sys.exit(1)
 
-trash_dir   = os.path.expanduser("~/.local/share/Trash")
-file_path   = os.path.abspath(__file__)
-if trash_dir in file_path or '/trash/' in file_path.lower():
+trash_dir               = os.path.expanduser("~/.local/share/Trash")
+installer_file_path     = os.path.abspath(__file__)
+installer_dir_path      = os.path.dirname(installer_file_path)
+if trash_dir in installer_file_path or '/trash/' in installer_file_path.lower():
     print()
-    error(f"Path to this file: {file_path}")
+    error(f"Path to this file: {installer_file_path}")
     error(f"You probably did not intend to run this from the TRASH. See path. Exiting.")
     print()
     sys.exit(1)
@@ -67,13 +68,20 @@ path_fix_tmp_file   = 'toshy_installer_says_fix_path'
 path_fix_tmp_path   = os.path.join(run_tmp_dir, path_fix_tmp_file)
 
 # set a standard path for duration of script run, to avoid issues with user customized paths
-os.environ['PATH'] = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+os.environ['PATH']  = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 
 # deactivate Python virtual environment, if one is active, to avoid issues with sys.executable
 if sys.prefix != sys.base_prefix:
     os.environ["VIRTUAL_ENV"] = ""
     sys.path = [p for p in sys.path if not p.startswith(sys.prefix)]
     sys.prefix = sys.base_prefix
+
+# current stable Python release version (update when needed):
+# 3.11 Release Date: Oct. 24, 2022
+curr_py_rel_ver_maj = 3
+curr_py_rel_ver_min = 11
+curr_py_rel_ver_tup = (curr_py_rel_ver_maj, curr_py_rel_ver_min)
+curr_py_rel_ver     = f'{curr_py_rel_ver_maj}.{curr_py_rel_ver_min}'
 
 # Check if 'sudo' command is available to user
 if not shutil.which('sudo'):
@@ -90,6 +98,11 @@ if home_local_bin in orig_PATH_str:
 else:
     debug("Home user local bin not part of PATH string.")
 # do the 'else' of creating 'path_fix_tmp_path' later in function that prompts user
+
+# system Python version
+py_ver_major, py_ver_minor  = sys.version_info[:2]
+py_interp_ver_tup      = (py_ver_major, py_ver_minor)
+py_pkg_ver             = f'{py_ver_major}{py_ver_minor}'
 
 
 class InstallerSettings:
@@ -111,6 +124,9 @@ class InstallerSettings:
         self.pkgs_for_distro        = None
         self.pip_pkgs               = None
         self.qdbus                  = 'qdbus-qt5' if shutil.which('qdbus-qt5') else 'qdbus'
+        
+        self.py_interp_ver          = f'{py_ver_major}.{py_ver_minor}'
+        self.py_interp_path         = shutil.which('python3')
 
         self.home_dir_path          = os.path.abspath(os.path.expanduser('~'))
         self.toshy_dir_path         = os.path.join(self.home_dir_path, '.config', 'toshy')
@@ -121,7 +137,7 @@ class InstallerSettings:
         self.existing_cfg_slices    = None
         self.venv_path              = os.path.join(self.toshy_dir_path, '.venv')
 
-        self.keyszer_tmp_path       = os.path.join('.', 'keyszer-temp')
+        self.keyszer_tmp_path       = os.path.join(installer_dir_path, 'keyszer-temp')
 
         self.keyszer_branch         = 'environ_api_kde'
         self.keyszer_url            = 'https://github.com/RedBearAK/keyszer.git'
@@ -153,6 +169,7 @@ def safe_shutdown(exit_code=0):
 
     # invalidate the sudo ticket, don't leave system in "superuser" state
     subprocess.run(['sudo', '-k'])
+    print()     # avoid crowding the prompt on exit
     sys.exit(exit_code)
 
 
@@ -255,7 +272,7 @@ def dot_Xmodmap_warning():
             info("Good code. User has taken responsibility for '.Xmodmap' file. Proceeding...\n")
         else:
             print()
-            error("Code does not match! Try the installer again after dealing with '.Xmodmap'.\n")
+            error("Code does not match! Try the installer again after dealing with '.Xmodmap'.")
             safe_shutdown(1)
 
 
@@ -269,7 +286,6 @@ def ask_is_distro_updated():
     if response not in ['y', 'Y']:
         print()
         error("Try the installer again after you've done a full system update. Exiting.")
-        print()
         safe_shutdown(1)
 
 
@@ -446,50 +462,60 @@ def verify_user_groups():
 
 
 distro_groups_map = {
-    'redhat-based':    ["fedora", "fedoralinux", "ultramarine", "almalinux", "rocky", "rhel"],
-    'opensuse-based':  ["opensuse-tumbleweed"],
+    # separate references for RHEL types versus Fedora types
+    'fedora-based':    ["fedora", "fedoralinux", "ultramarine", "nobara", "silverblue"],
+    'rhel-based':      ["rhel", "almalinux", "rocky", "eurolinux", "centos"],
+
+    # separate references for Tumbleweed types versus Leap types
+    'tumbleweed-based':["opensuse-tumbleweed"],
+    'leap-based':      ["opensuse-leap"],
     'ubuntu-based':    ["ubuntu", "mint", "popos", "eos", "neon", "tuxedo", "zorin"],
     'debian-based':    ["lmde", "peppermint", "debian"],
     'arch-based':      ["arch", "arcolinux", "endeavouros", "manjaro"],
     # Add more as needed...
 }
 
-# TODO: On openSUSE, check version of system Python to adapt Python package name
-# openSUSE package is python310-* now but will probably be python311-* soon
 pkg_groups_map = {
-    'redhat-based':    ["gcc", "git", "cairo-devel", "cairo-gobject-devel", "dbus-devel",
+    'fedora-based':    ["gcc", "git", "cairo-devel", "cairo-gobject-devel", "dbus-devel",
                         "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
                         "gobject-introspection-devel", "libappindicator-gtk3", "xset",
-                        "systemd-devel", "zenity"],
-    
-    'opensuse-based':  ["gcc", "git", "cairo-devel",  "dbus-1-devel",
-                        "python311-tk", "python311-dbus-python-devel", "python-devel",
+                        "libnotify", "systemd-devel", "zenity", "evtest"],
+
+    'rhel-based':      ["gcc", "git", "cairo-devel", "cairo-gobject-devel", "dbus-devel",
+                        "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
+                        "gobject-introspection-devel", "libappindicator-gtk3", "xset",
+                        "libnotify", "systemd-devel", "zenity"],
+
+    'tumbleweed-based':["gcc", "git", "cairo-devel",  "dbus-1-devel", f"python{py_pkg_ver}-tk",
+                        f"python{py_pkg_ver}-dbus-python-devel", f"python{py_pkg_ver}-devel",
                         "gobject-introspection-devel", "libappindicator3-devel", "tk",
                         "libnotify-tools", "typelib-1_0-AyatanaAppIndicator3-0_1",
                         "systemd-devel", "zenity"],
-    
+
+    'leap-based':      ["gcc", "git", "cairo-devel",  "dbus-1-devel", "python311-tk",
+                        "python3-dbus-python-devel", "python311-devel", "python311",
+                        "gobject-introspection-devel", "libappindicator3-devel", "tk",
+                        "libnotify-tools", "typelib-1_0-AyatanaAppIndicator3-0_1",
+                        "systemd-devel", "zenity"],
+
     'ubuntu-based':    ["curl", "git", "input-utils", "libcairo2-dev", "libnotify-bin",
                         "python3-dbus", "python3-dev", "python3-pip", "python3-venv",
                         "python3-tk", "libdbus-1-dev", "libgirepository1.0-dev",
                         "gir1.2-appindicator3-0.1", "libsystemd-dev", "zenity"],
-    
-    'debian-based':    ["curl", "git", "input-utils", "libcairo2-dev", "libdbus-1-dev",
-                        "python3-dbus", "python3-dev", "python3-venv", "python3-tk",
-                        "libgirepository1.0-dev", "libsystemd-dev", "zenity",
-                        "gir1.2-ayatanaappindicator3-0.1",
-                        "libnotify-bin"],
-    
+
+    'debian-based':    ["curl", "git", "input-utils", "libcairo2-dev", "libnotify-bin", 
+                        "python3-dbus", "python3-dev", "python3-pip", "python3-venv",
+                        "python3-tk", "libdbus-1-dev", "libgirepository1.0-dev", 
+                        "gir1.2-ayatanaappindicator3-0.1", "libsystemd-dev", "zenity"],
+
     'arch-based':      ["cairo", "dbus", "evtest", "git", "gobject-introspection", "tk",
                         "libappindicator-gtk3", "pkg-config", "python-dbus", "python-pip",
-                        "python", "systemd", "zenity"],
+                        "python", "libnotify", "systemd", "zenity"],
 }
 
 extra_pkgs_map = {
     # Add a distro name and its additional packages here as needed
     # 'distro_name': ["pkg1", "pkg2", ...],
-    'fedora':          ["evtest"],
-    'fedoralinux':     ["evtest"],
-    'ultramarine':     ["evtest"],
 }
 
 
@@ -507,7 +533,7 @@ def install_distro_pkgs():
         print()
         print(f"ERROR: No list of packages found for this distro: '{cnfg.DISTRO_NAME}'")
         print(f'Installation cannot proceed without a list of packages. Sorry.')
-        print(f'Try some options in "./toshy_setup.py --help"\n')
+        print(f'Try some options in "./toshy_setup.py --help"')
         safe_shutdown(1)
 
     cnfg.pkgs_for_distro = pkg_groups_map[pkg_group]
@@ -522,49 +548,135 @@ def install_distro_pkgs():
         if cnfg.systemctl_present or 'systemd' not in pkg
     ]
 
+    dnf_distros     = distro_groups_map['fedora-based'] + distro_groups_map['rhel-based']
+    zypper_distros  = distro_groups_map['tumbleweed-based'] + distro_groups_map['leap-based']
     apt_distros     = distro_groups_map['ubuntu-based'] + distro_groups_map['debian-based']
-    dnf_distros     = distro_groups_map['redhat-based']
     pacman_distros  = distro_groups_map['arch-based']
-    zypper_distros  = distro_groups_map['opensuse-based']
 
-    if cnfg.DISTRO_NAME in apt_distros:
-        call_attention_to_password_prompt()
-        subprocess.run(['sudo', 'apt', 'install', '-y'] + cnfg.pkgs_for_distro)
+    def check_for_pkg_mgr_cmd(command):
+        pkg_mgr_cmd = command
+        if not shutil.which(pkg_mgr_cmd):
+            print()
+            error(f'Package manager command ({pkg_mgr_cmd}) not available. Unable to continue.')
+            safe_shutdown(1)
 
-    elif cnfg.DISTRO_NAME in dnf_distros:
-        # do extra stuff only if distro is a RHEL type (not Fedora)
-        # TODO: reverse this to name RHELs instead of non-RHELs? 
-        if cnfg.DISTRO_NAME not in ['fedora', 'fedoralinux', 'ultramarine']:
+    if cnfg.DISTRO_NAME in dnf_distros:
+
+        # do extra stuff only if distro is a RHEL type (not Fedora type)
+        if cnfg.DISTRO_NAME in distro_groups_map['rhel-based']:
             call_attention_to_password_prompt()
-            # for gobject-introspection-devel: sudo dnf config-manager --set-enabled crb
-            subprocess.run(['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb'])
+
+            # do even more prep/checks if distro is CentOS
+            if cnfg.DISTRO_NAME in ['centos'] and cnfg.DISTRO_VER in ['7']:
+                # if py_interp_ver_tup >= curr_py_rel_ver_tup:
+                if py_interp_ver_tup >= (3, 8):
+                    print(f"Good, Python version is 3.8 or later: "
+                            f"'{cnfg.py_interp_ver}'")
+                else:
+                    try:
+                        # sudo yum install -y centos-release-scl
+                        subprocess.run(['sudo', 'yum', 'install', '-y', 'centos-release-scl'],
+                                        check=True)
+                        # sudo yum install -y rh-python38
+                        subprocess.run(['sudo', 'yum', 'install', '-y', 'rh-python38'],
+                                        check=True)
+                        # sudo yum install rh-python38-python-devel
+                        subprocess.run(['sudo', 'yum', 'install', '-y', 'rh-python38-python-devel'],
+                                        check=True)
+                        
+                        # THIS WILL DROP US INTO A NEW SHELL! Not what we want. 
+                        # scl enable rh-python38 bash
+                        # subprocess.run(['scl', 'enable', 'rh-python38', 'bash'],
+                        #                 check=True)
+                        
+                        # set new Python interpreter version and path to reflect what was installed
+                        cnfg.py_interp_path = '/opt/rh/rh-python38/root/usr/bin/python3.8'
+                        cnfg.py_interp_ver  = '3.8'
+                        # avoid using systemd packages/services for CentOS
+                        cnfg.systemctl_present = False
+                    except subprocess.CalledProcessError as proc_err:
+                        print()
+                        error(f'ERROR: (CentOS 7-specific) Problem installing/enabling Python 3.8:'
+                                f'\n\t{proc_err}')
+                        safe_shutdown(1)
+                # use yum to install dnf package manager
+                check_for_pkg_mgr_cmd('yum')
+                subprocess.run(['sudo', 'yum', 'install', '-y', 'dnf'])
+
+            if cnfg.DISTRO_NAME not in ['centos']:
+                # enable "CodeReady Builder" repo for 'gobject-introspection-devel' on RHELs:
+                # sudo dnf config-manager --set-enabled crb
+                subprocess.run(['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb'])
+
             # for libappindicator-gtk3: sudo dnf install -y epel-release
             subprocess.run(['sudo', 'dnf', 'install', '-y', 'epel-release'])
             subprocess.run(['sudo', 'dnf', 'update', '-y'])
-        # now do the install of the list of packages
-        subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro)
+
+        if cnfg.DISTRO_NAME == 'silverblue':
+            check_for_pkg_mgr_cmd('rpm-ostree')
+            print(f'Distro appears to be immutable using "rpm-ostree".')
+        else:
+            check_for_pkg_mgr_cmd('dnf')    # if we get here, 'dnf' should exist on CentOS too
+
+        # finally, do the install of the main list of packages for this distro type
+        try:
+            call_attention_to_password_prompt()
+            if cnfg.DISTRO_NAME == 'silverblue':
+                subprocess.run(['sudo', 'rpm-ostree', 'install', '-y'] + cnfg.pkgs_for_distro,
+                                check=True)
+            else:
+                subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro,
+                                check=True)
+        except subprocess.CalledProcessError as proc_err:
+            print()
+            error(f'ERROR: Problem installing package list for distro type:\n\t{proc_err}')
+            safe_shutdown(1)
+
+    elif cnfg.DISTRO_NAME in zypper_distros:
+        check_for_pkg_mgr_cmd('zypper')
+        call_attention_to_password_prompt()
+        try:
+            subprocess.run(['sudo', 'zypper', '--non-interactive', 'install'] + cnfg.pkgs_for_distro,
+                            check=True)
+        except subprocess.CalledProcessError as proc_err:
+            print()
+            error(f'ERROR: Problem installing package list for distro type:\n\t{proc_err}')
+            safe_shutdown(1)
+
+    elif cnfg.DISTRO_NAME in apt_distros:
+        check_for_pkg_mgr_cmd('apt')
+        call_attention_to_password_prompt()
+        try:
+            subprocess.run(['sudo', 'apt', 'install', '-y'] + cnfg.pkgs_for_distro, check=True)
+        except subprocess.CalledProcessError as proc_err:
+            print()
+            error(f'ERROR: Problem installing package list for distro type:\n\t{proc_err}')
+            safe_shutdown(1)
 
     elif cnfg.DISTRO_NAME in pacman_distros:
+        check_for_pkg_mgr_cmd('pacman')
 
-        def is_package_installed(package):
+        def is_pkg_installed_pacman(package):
             result = subprocess.run(['pacman', '-Q', package], stdout=DEVNULL, stderr=DEVNULL)
             return result.returncode == 0
 
         pkgs_to_install = [
             pkg
             for pkg in cnfg.pkgs_for_distro
-            if not is_package_installed(pkg)
+            if not is_pkg_installed_pacman(pkg)
         ]
         if pkgs_to_install:
             call_attention_to_password_prompt()
-            subprocess.run(['sudo', 'pacman', '-S', '--noconfirm'] + pkgs_to_install)
-
-    elif cnfg.DISTRO_NAME in zypper_distros:
-        subprocess.run(['sudo', 'zypper', '--non-interactive', 'install'] + cnfg.pkgs_for_distro)
+            try:
+                subprocess.run(['sudo', 'pacman', '-S', '--noconfirm'] + pkgs_to_install, check=True)
+            except subprocess.CalledProcessError as proc_err:
+                print()
+                error(f'ERROR: Problem installing package list for distro type:\n\t{proc_err}')
+                safe_shutdown(1)
 
     else:
         print()
-        error(f"ERROR: Installer does not know how to handle distro: {cnfg.DISTRO_NAME}\n")
+        error(f"ERROR: Installer does not know how to handle distro: {cnfg.DISTRO_NAME}")
         safe_shutdown(1)
 
     # Have something come out even if package list is empty (like Arch after initial run)
@@ -646,6 +758,7 @@ def merge_slices(data: str, slices: Dict[str, str]) -> str:
 
     return "".join(data_slices)
 
+
 def backup_toshy_config():
     """Backup existing Toshy config folder"""
     print(f'\n\n§  Backing up existing Toshy config folder...\n{cnfg.separator}')
@@ -716,9 +829,10 @@ def install_toshy_files():
                 error(f'Problem removing existing Toshy config folder after backup:\n\t{file_err}')
         # Copy files recursively from source to destination
         shutil.copytree(
-            '.', 
+            installer_dir_path, 
             cnfg.toshy_dir_path, 
             ignore=shutil.ignore_patterns(
+                '__pycache__',
                 '.github',
                 '.gitignore',
                 keyszer_tmp_dir,
@@ -775,13 +889,18 @@ def setup_python_virt_env():
 
     # Create the virtual environment if it doesn't exist
     if not os.path.exists(cnfg.venv_path):
-        # 'sys.executable' changes if a venv is active! do something else here:
-        # subprocess.run([sys.executable, '-m', 'venv', cnfg.venv_path])
-        
-        # Get the path to the Python interpreter (not the one inside the venv)
-        sys_python3 = shutil.which('python3')
-        subprocess.run([sys_python3, '-m', 'venv', cnfg.venv_path])
-
+        # change the Python interpreter path to use current release version from pkg list
+        # if distro is openSUSE Leap type (instead of old 3.6 version)
+        if cnfg.DISTRO_NAME in distro_groups_map['leap-based']:
+            if shutil.which(f'python{curr_py_rel_ver}'):
+                cnfg.py_interp_path = shutil.which(f'python{curr_py_rel_ver}')
+                print(f'Using Python version {curr_py_rel_ver}.')
+            else:
+                print(  f'Current stable Python release version '
+                        f'({curr_py_rel_ver}) not found. ')
+        else:
+            print(f'Using Python version {cnfg.py_interp_ver}.')
+        subprocess.run([cnfg.py_interp_path, '-m', 'venv', cnfg.venv_path])
 
     # We do not need to "activate" the venv right now, just create it
     print(f'Python virtual environment setup complete.')
@@ -817,13 +936,13 @@ def install_pip_packages():
         if result.returncode != 0:
             print(f'Error installing/upgrading Python packages. Installer exiting.')
             safe_shutdown(1)
-    if os.path.exists('./keyszer-temp'):
-        result = subprocess.run([venv_pip_cmd, 'install', '--upgrade', './keyszer-temp'])
+    if os.path.exists(cnfg.keyszer_tmp_path):
+        result = subprocess.run([venv_pip_cmd, 'install', '--upgrade', cnfg.keyszer_tmp_path])
         if result.returncode != 0:
             print(f'Error installing/upgrading "keyszer".')
             safe_shutdown(1)
     else:
-        print(f'"keyszer-temp" folder missing. Unable to install "keyszer".')
+        print(f'Temporary "keyszer" clone folder missing. Unable to install "keyszer".')
         safe_shutdown(1)
 
 
@@ -834,7 +953,6 @@ def install_bin_commands():
     subprocess.run([script_path])
 
 
-# Replace $HOME with user home directory
 def replace_home_in_file(filename):
     """Utility function to replace '$HOME' in .desktop files with actual home path"""
     # Read in the file
@@ -864,6 +982,11 @@ def install_desktop_apps():
 def setup_kwin2dbus_script():
     """Install the KWin script to notify D-Bus service about window focus changes"""
     print(f'\n\n§  Setting up the Toshy KWin script...\n{cnfg.separator}')
+    if not shutil.which('kpackagetool5') or not shutil.which('kwriteconfig5'):
+        pass
+        print(f'One or more KDE CLI tools not found. Assuming older KDE...')
+        return
+    
     kwin_script_name    = 'toshy-dbus-notifyactivewindow'
     kwin_script_path    = os.path.join( cnfg.toshy_dir_path,
                                         'kde-kwin-dbus-service', kwin_script_name)
@@ -878,9 +1001,14 @@ def setup_kwin2dbus_script():
         zipf.write(os.path.join(kwin_script_path, 'metadata.json'), arcname='metadata.json')
 
     # Try to remove any installed KWin script entirely
-    result = subprocess.run(
+    process = subprocess.Popen(
         ['kpackagetool5', '-t', 'KWin/Script', '-r', kwin_script_name],
-        capture_output=True, text=True)
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = process.communicate()
+    out = out.decode('utf-8')
+    err = err.decode('utf-8')
+    result = subprocess.CompletedProcess(args=process.args, returncode=process.returncode,
+                                            stdout=out, stderr=err)
 
     if result.returncode != 0:
         pass
@@ -888,8 +1016,14 @@ def setup_kwin2dbus_script():
         print("Successfully removed existing KWin script.")
 
     # Install the KWin script
-    result = subprocess.run(
-        ['kpackagetool5', '-t', 'KWin/Script', '-i', script_tmp_file], capture_output=True, text=True)
+    process = subprocess.Popen(
+        ['kpackagetool5', '-t', 'KWin/Script', '-i', script_tmp_file],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = process.communicate()
+    out = out.decode('utf-8')
+    err = err.decode('utf-8')
+    result = subprocess.CompletedProcess(args=process.args, returncode=process.returncode,
+                                            stdout=out, stderr=err)
 
     if result.returncode != 0:
         error(f"Error installing the KWin script. The error was:\n\t{result.stderr}")
@@ -902,11 +1036,16 @@ def setup_kwin2dbus_script():
     except (FileNotFoundError, PermissionError): pass
 
     # Enable the script using kwriteconfig5
-    result = subprocess.run(
+    process = subprocess.Popen(
         [   'kwriteconfig5', '--file', 'kwinrc', '--group', 'Plugins', '--key',
             f'{kwin_script_name}Enabled', 'true'],
-        capture_output=True, text=True)
-    
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = process.communicate()
+    out = out.decode('utf-8')
+    err = err.decode('utf-8')
+    result = subprocess.CompletedProcess(args=process.args, returncode=process.returncode,
+                                            stdout=out, stderr=err)
+
     if result.returncode != 0:
         error(f"Error enabling the KWin script. The error was:\n\t{result.stderr}")
     else:
@@ -1012,6 +1151,7 @@ def autostart_tray_icon():
 
     print(f'Toshy tray icon should appear in system tray at each login.')
 
+
 ###################################################################################################
 ##  TWEAKS UTILITY FUNCTIONS - START
 ###################################################################################################
@@ -1068,6 +1208,9 @@ def remove_tweaks_GNOME():
 def apply_tweaks_KDE():
     """Utility function to add desktop tweaks to KDE"""
 
+    if not shutil.which('kwriteconfig5'):
+        return
+
     # Documentation on the use of Meta key in KDE:
     # https://userbase.kde.org/Plasma/Tips#Windows.2FMeta_Key
     subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group',
@@ -1078,7 +1221,6 @@ def apply_tweaks_KDE():
     print(f'Disabled Meta key opening application menu. (Use Cmd+Space instead.)')
     
     if cnfg.fancy_pants:
-
         print(f'Installing "Application Switcher" KWin script...')
         # How to install nclarius grouped "Application Switcher" KWin script:
         # git clone https://github.com/nclarius/kwin-application-switcher.git
@@ -1127,6 +1269,8 @@ def apply_tweaks_KDE():
 
 def remove_tweaks_KDE():
     """Utility function to remove the tweaks applied to KDE"""
+    if not shutil.which('kwriteconfig5'):
+        return
 
     # Re-enable Meta key opening the application menu
     subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group',
@@ -1157,6 +1301,9 @@ def apply_desktop_tweaks():
 
     print(f'\n\n§  Applying any known desktop environment tweaks...\n{cnfg.separator}')
 
+    if cnfg.fancy_pants:
+        print(f'Fancy-Pants install invoked. Additional steps will be taken.')
+
     if cnfg.DESKTOP_ENV == 'gnome':
         apply_tweaks_GNOME()
         cnfg.tweak_applied = True
@@ -1167,7 +1314,7 @@ def apply_desktop_tweaks():
 
     # General (not DE specific) "fancy pants" additions:
     if cnfg.fancy_pants:
-        
+
         print(f'Installing font: ', end='', flush=True)
 
         # install Fantasque Sans Mono NoLig (no ligatures) from GitHub fork
@@ -1228,6 +1375,7 @@ def apply_desktop_tweaks():
             print(f'Done.', flush=True)
 
             print(f"Installed font: '{folder_name}'")
+            cnfg.tweak_applied = True
 
     if not cnfg.tweak_applied:
         print(f'If nothing printed, no tweaks available for "{cnfg.DESKTOP_ENV}" yet.')
@@ -1255,7 +1403,7 @@ def uninstall_toshy():
     # confirm if user really wants to uninstall
     response = input("\nThis will completely uninstall Toshy. Are you sure? [y/N]: ")
     if response not in ['y', 'Y']:
-        print(f"\nToshy uninstall cancelled.\n")
+        print(f"\nToshy uninstall cancelled.")
         safe_shutdown()
     else:
         print(f'\nToshy uninstall proceeding...\n')
@@ -1363,24 +1511,22 @@ def uninstall_toshy():
 def handle_cli_arguments():
     """Deal with CLI arguments given to installer script"""
     parser = argparse.ArgumentParser(
-        description='Toshy Installer - options are mutually exclusive',
-        epilog='Default action: Install Toshy'
+        description='Toshy Installer - some options are mutually exclusive',
+        epilog='Default action: Install Toshy',
+        allow_abbrev=False
     )
 
-    # This would require a 'lambda' to be able to pass 'cnfg' object to 'main()':
-    # parser.set_defaults(func=main)
-    
     # Add arguments
     parser.add_argument(
         '--override-distro',
         type=str,
         # dest='override_distro',
-        help=f'Override auto-detection of distro name/type. See --list-distros'
+        help=f'Override auto-detection of distro name/type. See "--list-distros"'
     )
     parser.add_argument(
         '--list-distros',
         action='store_true',
-        help='Display list of distro names to use with --override-distro'
+        help='Display list of distro names to use with "--override-distro"'
     )
     parser.add_argument(
         '--uninstall',
@@ -1410,34 +1556,52 @@ def handle_cli_arguments():
 
     args = parser.parse_args()
 
-    # Check the values of arguments and perform actions accordingly
-    if args.override_distro:
-        cnfg.override_distro = args.override_distro
-        # proceed with normal install sequence
-        main(cnfg)
+    exit_args_dct = {
+        '--uninstall':          args.uninstall,
+        '--show-env':           args.show_env,
+        '--list-distros':       args.list_distros,
+        '--apply-tweaks':       args.apply_tweaks,
+        '--remove-tweaks':      args.remove_tweaks
+    }
+
+    all_args_dct = {
+        '--override-distro':    bool(args.override_distro),
+        '--fancy-pants':        args.fancy_pants,
+        **exit_args_dct
+    }
+
+    # Check that "exit-after" arguments are used alone
+    if any(exit_args_dct.values()) and sum(all_args_dct.values()) > 1:
+        error(f"ERROR: These options should be used alone:\n" +
+            ''.join(f"\n\t{arg}" for arg in exit_args_dct.keys()))
+        safe_shutdown(1)
+
+    if args.uninstall:
+        uninstall_toshy()
         safe_shutdown(0)
-    elif args.list_distros:
-        print(  f'Distro names known to the Toshy installer (to use with --override-distro):'
-                f'\n\n\t{get_distro_names()}\n')
-        safe_shutdown(0)
-    elif args.show_env:
+
+    if args.show_env:
         get_environment_info()
         safe_shutdown(0)
-    elif args.apply_tweaks:
+
+    if args.list_distros:
+        print(  f'Distro names known to the Toshy installer (use with "--override-distro" arg):'
+                f'\n\n\t{get_distro_names()}')
+        safe_shutdown(0)
+
+    if args.apply_tweaks:
         apply_desktop_tweaks()
         safe_shutdown(0)
-    elif args.remove_tweaks:
+
+    if args.remove_tweaks:
         remove_desktop_tweaks()
         safe_shutdown(0)
-    elif args.uninstall:
-        # raise NotImplementedError
-        uninstall_toshy()
-    elif args.fancy_pants:
+
+    if args.fancy_pants:
         cnfg.fancy_pants = True
-        main(cnfg)
-    else:
-        # proceed with normal install sequence if no CLI args given
-        main(cnfg)
+
+    if args.override_distro:
+        cnfg.override_distro = args.override_distro
 
 
 def main(cnfg: InstallerSettings):
@@ -1544,7 +1708,7 @@ def main(cnfg: InstallerSettings):
     if cnfg.remind_extensions or (cnfg.DESKTOP_ENV == 'gnome' and cnfg.SESSION_TYPE == 'wayland'):
         print(f'You MUST install GNOME EXTENSIONS if using Wayland+GNOME! See Toshy README.')
 
-    print()   # blank line to avoid crowding the prompt after install is done
+    # print()   # blank line to avoid crowding the prompt after install is done
     safe_shutdown()
 
 
@@ -1562,3 +1726,6 @@ if __name__ == '__main__':
     cnfg = InstallerSettings()
 
     handle_cli_arguments()
+
+    # proceed with install sequence if no CLI args triggered an exit-after action
+    main(cnfg)

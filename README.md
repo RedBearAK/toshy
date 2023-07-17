@@ -294,6 +294,19 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - Red Hat Enterprise Linux itself? Probably.
     - Try `./toshy_setup.py --override-distro=almalinux` or `=rhel`
 
+- CentOS 7 (RHEL 7 clone) - Partial support:
+
+    - You must install `python3` to run `toshy_setup.py`
+    - systemd "user" services are not supported in CentOS/RHEL 7
+    - Auto-start at login with systemd services not available
+    - Cmd+Space (Alt+F1) shortcut must be assigned to app launcher menu
+    - To manually start Toshy config from tray icon menu:
+        - "(Re)Start Toshy Script" option will start Toshy config
+        - "Stop Toshy Script" option will stop background Toshy config
+    - To manually start Toshy config from terminal:
+        - Use `toshy-config-start` or `toshy-config-verbose-start`
+        - Use `toshy-config-stop` to stop a background Toshy config
+
 ### openSUSE (RPM-based packaging system)
 
 - openSUSE Tumbleweed (rolling release)
@@ -302,10 +315,11 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - KDE desktop works (X11/Xorg or Wayland)
     - Other desktop choices should work, if session is X11/Xorg
 
-- openSUSE Leap 15.4/15.5 (fixed release) **_UNSUPPORTED!_**
+- openSUSE Leap 15.5 (fixed release) **_WORKING!_**
 
-    - Leap 15.4/15.5 system Python version is 3.6.x
-    - Package list for Tumbleweed doesn't work for Leap
+    - GNOME desktop works (Wayland session needs extensions, see Requirements)
+    - KDE desktop works (X11/Xorg or Wayland)
+    - Other desktop choices should work, if session is X11/Xorg
 
 ### Ubuntu variants and Ubuntu-based distros
 
@@ -333,7 +347,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 - elementary OS 7.0 (Ubuntu-based)
 
-- Linux Mint 21.1 (Ubuntu-based)
+- Linux Mint 21.1/21.2 (Ubuntu-based)
 
     - Cinnamon desktop
     - Xfce desktop
