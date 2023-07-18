@@ -1162,6 +1162,7 @@ def apply_tweaks_GNOME():
     # Disable GNOME `overlay-key` binding to Meta/Super/Win/Cmd
     # gsettings set org.gnome.mutter overlay-key ''
     subprocess.run(['gsettings', 'set', 'org.gnome.mutter', 'overlay-key', ''])
+
     print(f'Disabled Super key opening the GNOME overview. (Use Cmd+Space instead.)')
 
     # Set the keyboard shortcut for "Switch applications" to "Alt+Tab"
@@ -1172,6 +1173,7 @@ def apply_tweaks_GNOME():
     # gsettings set org.gnome.desktop.wm.keybindings switch-group "['<Alt>grave']"
     subprocess.run(['gsettings', 'set', 'org.gnome.desktop.wm.keybindings',
                     'switch-group', "['<Alt>grave']"])
+
     print(f'Enabled "Switch applications" Mac-like task switching.')
     
     # Enable keyboard shortcut for GNOME Terminal preferences dialog
@@ -1179,17 +1181,19 @@ def apply_tweaks_GNOME():
     cmd_path = 'org.gnome.Terminal.Legacy.Keybindings:/org/gnome/terminal/legacy/keybindings/'
     prefs_binding = '<Control>less'
     subprocess.run(['gsettings', 'set', cmd_path, 'preferences', prefs_binding])
+
     print(f'Set a keybinding for GNOME Terminal preferences.')
-    
+
     # Enable "Expandable folders" in Nautilus
     # dconf write /org/gnome/nautilus/list-view/use-tree-view true
     subprocess.run(['dconf', 'write', '/org/gnome/nautilus/list-view/use-tree-view', 'true'])
-    
+
     # Set default view option in Nautilus to "list-view"
     # dconf write /org/gnome/nautilus/preferences/default-folder-viewer "'list-view'"
     subprocess.run(['dconf', 'write', '/org/gnome/nautilus/preferences/default-folder-viewer',
                     "'list-view'"])
-    print(f'Set Nautilus to "List" view with "Expandable folders" enabled.')
+
+    print(f'Set Nautilus default to "List" view with "Expandable folders" enabled.')
 
 
 def remove_tweaks_GNOME():
@@ -1305,10 +1309,12 @@ def apply_desktop_tweaks():
         print(f'Fancy-Pants install invoked. Additional steps will be taken.')
 
     if cnfg.DESKTOP_ENV == 'gnome':
+        print(f'Applying GNOME desktop tweaks...')
         apply_tweaks_GNOME()
         cnfg.tweak_applied = True
 
     if cnfg.DESKTOP_ENV == 'kde':
+        print(f'Applying KDE Plasma desktop tweaks...')
         apply_tweaks_KDE()
         cnfg.tweak_applied = True
 
@@ -1389,9 +1395,11 @@ def remove_desktop_tweaks():
     # if GNOME, re-enable `overlay-key`
     # gsettings reset org.gnome.mutter overlay-key
     if cnfg.DESKTOP_ENV == 'gnome':
+        print(f'Removing GNOME desktop tweaks...')
         remove_tweaks_GNOME()
 
     if cnfg.DESKTOP_ENV == 'kde':
+        print(f'Removing KDE Plasma desktop tweaks...')
         remove_tweaks_KDE()
         
     print('Removed known desktop tweaks applied by installer.')
@@ -1590,10 +1598,12 @@ def handle_cli_arguments():
         safe_shutdown(0)
 
     if args.apply_tweaks:
+        get_environment_info()
         apply_desktop_tweaks()
         safe_shutdown(0)
 
     if args.remove_tweaks:
+        get_environment_info()
         remove_desktop_tweaks()
         safe_shutdown(0)
 
