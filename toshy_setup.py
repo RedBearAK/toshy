@@ -162,15 +162,27 @@ class InstallerSettings:
                 """)
 
 
-def safe_shutdown(exit_code=0):
+def safe_shutdown(exit_code: int):
     """do some stuff on the way out"""
 
     # good place to do some file cleanup?
 
     # invalidate the sudo ticket, don't leave system in "superuser" state
     subprocess.run(['sudo', '-k'])
-    print()     # avoid crowding the prompt on exit
+    print()                         # avoid crowding the prompt on exit
     sys.exit(exit_code)
+
+
+def show_reboot_prompt():
+    """show the big ASCII reboot prompt"""
+    print()
+    print()
+    print()
+    print(cnfg.separator)
+    print(cnfg.separator)
+    print(cnfg.reboot_ascii_art)
+    print(cnfg.separator)
+    print(cnfg.separator)
 
 
 def get_environment_info():
@@ -1212,16 +1224,17 @@ def apply_tweaks_KDE():
     """Utility function to add desktop tweaks to KDE"""
 
     if not shutil.which('kwriteconfig5'):
+        print(f'KDE 5.x tools not present. Skipping KDE tweaks.')
         return
 
     # Documentation on the use of Meta key in KDE:
     # https://userbase.kde.org/Plasma/Tips#Windows.2FMeta_Key
     subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group',
                     'ModifierOnlyShortcuts', '--key', 'Meta', ''], check=True)
+    print(f'Disabled Meta key opening application menu. (Use Cmd+Space instead.)')
 
     # Run reconfigure command
     do_kwin_reconfigure()
-    print(f'Disabled Meta key opening application menu. (Use Cmd+Space instead.)')
 
     if cnfg.fancy_pants:
         print(f'Installing "Application Switcher" KWin script...')
@@ -1240,7 +1253,7 @@ def apply_tweaks_KDE():
                     try:
                         shutil.rmtree(switcher_dir_path)
                     except (FileNotFoundError, PermissionError, OSError) as file_err:
-                        print(f'Problem removing existing switcher clone folder:\n\t{file_err}')
+                        error(f'Problem removing existing switcher clone folder:\n\t{file_err}')
                 subprocess.run(["git", "clone", switcher_url, switcher_dir_path], check=True,
                                 stdout=DEVNULL, stderr=DEVNULL)
                 command_dir     = os.path.join(script_path, switcher_dir)
@@ -1248,9 +1261,9 @@ def apply_tweaks_KDE():
                                 stdout=DEVNULL, stderr=DEVNULL)
                 print(f'Installed "Application Switcher" KWin script.')
             except subprocess.CalledProcessError as proc_err:
-                print(f'Something went wrong installing KWin Application Switcher.\n\t{proc_err}')
+                error(f'Something went wrong installing KWin Application Switcher.\n\t{proc_err}')
         else:
-            print(f"ERROR: Unable to clone KWin Application Switcher. 'git' not installed.")
+            error(f"ERROR: Unable to clone KWin Application Switcher. 'git' not installed.")
 
         do_kwin_reconfigure()
 
@@ -1284,12 +1297,24 @@ def apply_tweaks_KDE():
         # Restart Plasma shell to make the new setting active
         # killall plasmashell && kstart5 plasmashell
         try:
-            print('Restarting Plasma shell...')
-            subprocess.run(['kquitapp5', 'plasmashell'], check=True)
-            subprocess.run(['kstart5', 'plasmashell'], check=True)
-            print('Plasma shell restarted.')
+            print('Stopping Plasma shell... ', flush=True, end='')
+            subprocess.run(['kquitapp5', 'plasmashell'], check=True,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            print('Plasma shell stopped.')
         except subprocess.CalledProcessError as proc_err:
-            error(f'Problem while restarting Plasma shell:\n\t{proc_err}')
+            err_output: bytes = proc_err.stderr             # type hint error output
+            error(f'\nProblem while stopping Plasma shell:\n\t{err_output.decode()}')
+
+        try:
+            print('Starting Plasma shell... ', flush=True, end='')
+            subprocess.run(['kstart5', 'plasmashell'], check=True,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            print('Plasma shell started.')
+        except subprocess.CalledProcessError as proc_err:
+            err_output: bytes = proc_err.stderr             # type hint error output
+            error(f'\nProblem while starting Plasma shell:\n\t{err_output.decode()}')
+            # prompt user to reboot when installer exits, if this happens
+            cnfg.should_reboot = True
 
         # THIS STUFF DOESN'T SEEM TO WORK!
         # Disable "sort folders first" option in Dolphin:
@@ -1451,7 +1476,7 @@ def uninstall_toshy():
     response = input("\nThis will completely uninstall Toshy. Are you sure? [y/N]: ")
     if response not in ['y', 'Y']:
         print(f"\nToshy uninstall cancelled.")
-        safe_shutdown()
+        safe_shutdown(0)
     else:
         print(f'\nToshy uninstall proceeding...\n')
     
@@ -1639,6 +1664,14 @@ def handle_cli_arguments():
     if args.apply_tweaks:
         get_environment_info()
         apply_desktop_tweaks()
+        if cnfg.should_reboot:
+            show_reboot_prompt()
+            print(f'{cnfg.sep_char * 2}  Tweaks application complete. Report issues on the GitHub repo.')
+            print(f'{cnfg.sep_char * 2}  https://github.com/RedBearAK/toshy/issues/')
+            print(f'{cnfg.sep_char * 2}  >>  ALERT: Something odd happened. You should probably reboot.')
+            print(cnfg.separator)
+            print(cnfg.separator)
+            print()
         safe_shutdown(0)
 
     if args.remove_tweaks:
@@ -1716,17 +1749,18 @@ def main(cnfg: InstallerSettings):
 
     if cnfg.should_reboot or os.path.exists(cnfg.reboot_tmp_file):
         cnfg.should_reboot = True
-        # create reboot reminder temp file, in case installer is run again
+        # create reboot reminder temp file, in case installer is run again before a reboot
         if not os.path.exists(cnfg.reboot_tmp_file):
             os.mknod(cnfg.reboot_tmp_file)
-        print()
-        print()
-        print()
-        print(cnfg.separator)
-        print(cnfg.separator)
-        print(cnfg.reboot_ascii_art)
-        print(cnfg.separator)
-        print(cnfg.separator)
+        # print()
+        # print()
+        # print()
+        # print(cnfg.separator)
+        # print(cnfg.separator)
+        # print(cnfg.reboot_ascii_art)
+        # print(cnfg.separator)
+        # print(cnfg.separator)
+        show_reboot_prompt()
         print(f'{cnfg.sep_char * 2}  Toshy install complete. Report issues on the GitHub repo.')
         print(f'{cnfg.sep_char * 2}  https://github.com/RedBearAK/toshy/issues/')
         print(f'{cnfg.sep_char * 2}  >>  ALERT: Permissions changed. You MUST reboot for Toshy to work.')
@@ -1757,7 +1791,7 @@ def main(cnfg: InstallerSettings):
         print(f'You MUST install GNOME EXTENSIONS if using Wayland+GNOME! See Toshy README.')
 
     # print()   # blank line to avoid crowding the prompt after install is done
-    safe_shutdown()
+    safe_shutdown(0)
 
 
 if __name__ == '__main__':
