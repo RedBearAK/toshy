@@ -6,6 +6,7 @@ import re
 import sys
 import pwd
 import grp
+import time
 import random
 import string
 import signal
@@ -1305,16 +1306,18 @@ def apply_tweaks_KDE():
             err_output: bytes = proc_err.stderr             # type hint error output
             error(f'\nProblem while stopping Plasma shell:\n\t{err_output.decode()}')
 
-        try:
-            print('Starting Plasma shell... ', flush=True, end='')
-            subprocess.run(['kstart5', 'plasmashell'], check=True,
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            print('Plasma shell started.')
-        except subprocess.CalledProcessError as proc_err:
-            err_output: bytes = proc_err.stderr             # type hint error output
-            error(f'\nProblem while starting Plasma shell:\n\t{err_output.decode()}')
-            # prompt user to reboot when installer exits, if this happens
-            cnfg.should_reboot = True
+        print('Starting Plasma shell... ', flush=True, end='')
+        proc = subprocess.Popen(['kstart5', 'plasmashell'],
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # Wait for a while...
+        time.sleep(5)
+
+        # Check whether the process has finished
+        exit_code = proc.poll()
+        if exit_code is None:
+            print('Plasma shell has restarted.')
+        else:
+            print(f'Plasma shell has exited with code {exit_code}.')
 
         # THIS STUFF DOESN'T SEEM TO WORK!
         # Disable "sort folders first" option in Dolphin:
