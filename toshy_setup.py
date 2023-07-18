@@ -319,8 +319,8 @@ def do_kwin_reconfigure():
     try:
         subprocess.run([cnfg.qdbus, 'org.kde.KWin', '/KWin', 'reconfigure'],
                         check=True, stderr=DEVNULL, stdout=DEVNULL)
-    except subprocess.CalledProcessError as proc_error:
-        error(f'Error while running KWin reconfigure.\n\t{proc_error}')
+    except subprocess.CalledProcessError as proc_err:
+        error(f'Error while running KWin reconfigure.\n\t{proc_err}')
 
 
 def load_uinput_module():
@@ -345,8 +345,8 @@ def load_uinput_module():
                 call_attention_to_password_prompt()
                 command = "echo 'uinput' | sudo tee /etc/modules-load.d/uinput.conf >/dev/null"
                 subprocess.run(command, shell=True, check=True)
-            except subprocess.CalledProcessError as proc_error:
-                error(f"Failed to create /etc/modules-load.d/uinput.conf:\n\t{proc_error}")
+            except subprocess.CalledProcessError as proc_err:
+                error(f"Failed to create /etc/modules-load.d/uinput.conf:\n\t{proc_err}")
                 error(f'ERROR: Install failed.')
                 safe_shutdown(1)
 
@@ -361,8 +361,8 @@ def load_uinput_module():
                         call_attention_to_password_prompt()
                         command = "echo 'uinput' | sudo tee -a /etc/modules >/dev/null"
                         subprocess.run(command, shell=True, check=True)
-                    except subprocess.CalledProcessError as proc_error:
-                        error(f"ERROR: Failed to append 'uinput' to /etc/modules:\n\t{proc_error}")
+                    except subprocess.CalledProcessError as proc_err:
+                        error(f"ERROR: Failed to append 'uinput' to /etc/modules:\n\t{proc_err}")
                         error(f'ERROR: Install failed.')
                         safe_shutdown(1)
 
@@ -373,8 +373,8 @@ def reload_udev_rules():
         subprocess.run(['sudo', 'udevadm', 'control', '--reload-rules'], check=True)
         subprocess.run(['sudo', 'udevadm', 'trigger'], check=True)
         print('Reloaded the "udev" rules successfully.')
-    except subprocess.CalledProcessError as proc_error:
-        print(f'Failed to reload "udev" rules:\n\t{proc_error}')
+    except subprocess.CalledProcessError as proc_err:
+        print(f'Failed to reload "udev" rules:\n\t{proc_err}')
         prompt_for_reboot()
 
 
@@ -401,10 +401,10 @@ def install_udev_rules():
             print()
             print(f'Toshy "udev" rules file successfully installed.')
             reload_udev_rules()
-        except subprocess.CalledProcessError as proc_error:
+        except subprocess.CalledProcessError as proc_err:
             print()
             error(f'ERROR: Problem while installing "udev" rules file for keymapper.\n')
-            err_output: bytes = proc_error.output  # Type hinting the error output variable
+            err_output: bytes = proc_err.output  # Type hinting the error output variable
             # Deal with possible 'NoneType' error output
             error(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
             print()
@@ -425,10 +425,10 @@ def verify_user_groups():
         try:
             call_attention_to_password_prompt()
             subprocess.run(['sudo', 'groupadd', cnfg.input_group_name], check=True)
-        except subprocess.CalledProcessError as proc_error:
+        except subprocess.CalledProcessError as proc_err:
             print()
             error(f'ERROR: Problem when trying to create "input" group.\n')
-            err_output: bytes = proc_error.output  # Type hinting the error output variable
+            err_output: bytes = proc_err.output  # Type hinting the error output variable
             # Deal with possible 'NoneType' error output
             error(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
             print()
@@ -446,11 +446,11 @@ def verify_user_groups():
             call_attention_to_password_prompt()
             subprocess.run(
                 ['sudo', 'usermod', '-aG', cnfg.input_group_name, cnfg.user_name], check=True)
-        except subprocess.CalledProcessError as proc_error:
+        except subprocess.CalledProcessError as proc_err:
             print()
             error(f'ERROR: Problem when trying to add user "{cnfg.user_name}" to '
                     f'group "{cnfg.input_group_name}".\n')
-            err_output: bytes = proc_error.output  # Type hinting the error output variable
+            err_output: bytes = proc_err.output  # Type hinting the error output variable
             # Deal with possible 'NoneType' error output
             error(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
             print()
@@ -983,7 +983,6 @@ def setup_kwin2dbus_script():
     """Install the KWin script to notify D-Bus service about window focus changes"""
     print(f'\n\n§  Setting up the Toshy KWin script...\n{cnfg.separator}')
     if not shutil.which('kpackagetool5') or not shutil.which('kwriteconfig5'):
-        pass
         print(f'One or more KDE CLI tools not found. Assuming older KDE...')
         return
     
@@ -1223,7 +1222,7 @@ def apply_tweaks_KDE():
     # Run reconfigure command
     do_kwin_reconfigure()
     print(f'Disabled Meta key opening application menu. (Use Cmd+Space instead.)')
-    
+
     if cnfg.fancy_pants:
         print(f'Installing "Application Switcher" KWin script...')
         # How to install nclarius grouped "Application Switcher" KWin script:
@@ -1248,27 +1247,67 @@ def apply_tweaks_KDE():
                 subprocess.run(["./install.sh"], cwd=command_dir, check=True,
                                 stdout=DEVNULL, stderr=DEVNULL)
                 print(f'Installed "Application Switcher" KWin script.')
-            except subprocess.CalledProcessError as proc_error:
-                print(f'Something went wrong installing KWin Application Switcher.\n\t{proc_error}')
+            except subprocess.CalledProcessError as proc_err:
+                print(f'Something went wrong installing KWin Application Switcher.\n\t{proc_err}')
         else:
             print(f"ERROR: Unable to clone KWin Application Switcher. 'git' not installed.")
 
-        # Run reconfigure command
         do_kwin_reconfigure()
 
         # Set the LayoutName value to big_icons (shows task switcher with large icons, no previews)
-        subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox',
-                        '--key', 'LayoutName', 'big_icons'], check=True)
-        # Set the HighlightWindows value to false (disables "Show selected window" option)
-        subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox',
-                        '--key', 'HighlightWindows', 'false'], check=True)
-        # Set the ApplicationsMode value to 1 (enables "Only one window per application" option)
-        subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox',
-                        '--key', 'ApplicationsMode', '1'], check=True)
+        LayoutName_cmd = ['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox',
+                            '--key', 'LayoutName', 'big_icons']
+        subprocess.run(LayoutName_cmd, check=True)
+        print(f'Set task switcher style to: "Large Icons"')
 
-        # Run reconfigure command
+        # Set the HighlightWindows value to false (disables "Show selected window" option)
+        HighlightWindows_cmd = ['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox',
+                                '--key', 'HighlightWindows', 'false']
+        subprocess.run(HighlightWindows_cmd, check=True)
+        print(f'Disabled task switcher option: "Show selected window"')
+
+        # Set the ApplicationsMode value to 1 (enables "Only one window per application" option)
+        ApplicationsMode_cmd = ['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox',
+                                '--key', 'ApplicationsMode', '1']
+        subprocess.run(ApplicationsMode_cmd, check=True)
+        print(f'Enabled task switcher option: "Only one window per application"')
+
         do_kwin_reconfigure()
-        print(f'Set task switcher to "Large Icons", disabled "Show selected window" option.')
+
+        # Disable single click to open/launch files/folders:
+        # kwriteconfig5 --file kdeglobals --group KDE --key SingleClick false
+        SingleClick_cmd = ['kwriteconfig5', '--file', 'kdeglobals', '--group', 'KDE',
+                            '--key', 'SingleClick', 'false']
+        subprocess.run(SingleClick_cmd, check=True)
+        print('Disabled single-click to open/launch files/folders')
+
+        # Restart Plasma shell to make the new setting active
+        # killall plasmashell && kstart5 plasmashell
+        try:
+            print('Restarting Plasma shell...')
+            subprocess.run(['kquitapp5', 'plasmashell'], check=True)
+            subprocess.run(['kstart5', 'plasmashell'], check=True)
+            print('Plasma shell restarted.')
+        except subprocess.CalledProcessError as proc_err:
+            error(f'Problem while restarting Plasma shell:\n\t{proc_err}')
+
+        # THIS STUFF DOESN'T SEEM TO WORK!
+        # Disable "sort folders first" option in Dolphin:
+        # kwriteconfig5 --file dolphinrc --group General --key FirstSortingFolders false
+        # kwriteconfig5 --file kdeglobals --group "KFileDialog Settings" --key "Sort directories first" false 
+        # FirstSortingFolders_cmd = ['kwriteconfig5', '--file', 'dolphinrc',
+        #                             '--group', 'General',
+        #                             '--key', 'FirstSortingFolders', 'false']
+        # subprocess.run(FirstSortingFolders_cmd, check=True)
+        # print('Disabled "sort folders first" option in Dolphin.')
+        # # kquitapp5 dolphin && dolphin &
+        # print('Restarting Dolphin file manager...')
+        # try:
+        #     subprocess.run(['kquitapp5', 'dolphin'], check=True)
+        #     subprocess.Popen('dolphin')
+        #     print('Dolphin file manager restarted.')
+        # except subprocess.CalledProcessError as proc_err:
+        #     error(f'Problem restarting Dolphin file manager:\n\t{proc_err}')
 
 
 def remove_tweaks_KDE():
@@ -1669,7 +1708,6 @@ def main(cnfg: InstallerSettings):
 
         if is_extension_enabled("appindicatorsupport@rgcjonas.gmail.com"):
             print("AppIndicator extension is enabled. Tray icon should work.")
-            # pass
         else:
             print()
             debug(f"RECOMMENDATION: Install 'AppIndicator' GNOME extension\n"
