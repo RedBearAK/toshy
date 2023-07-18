@@ -848,7 +848,7 @@ def install_toshy_files():
     except OSError as os_error:
         print(f"Failed to create backup directory: {os_error}")
     toshy_default_cfg = os.path.join(
-        cnfg.toshy_dir_path, 'toshy-default-config', 'toshy_config.py')
+        cnfg.toshy_dir_path, 'default-toshy-config', 'toshy_config.py')
     shutil.copy(toshy_default_cfg, cnfg.toshy_dir_path)
     print(f"Toshy files installed in '{cnfg.toshy_dir_path}'.")
 
