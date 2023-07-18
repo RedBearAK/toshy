@@ -1625,11 +1625,11 @@ def handle_cli_arguments():
         '--uninstall':          args.uninstall,
         '--show-env':           args.show_env,
         '--list-distros':       args.list_distros,
-        '--apply-tweaks':       args.apply_tweaks,
-        '--remove-tweaks':      args.remove_tweaks
     }
 
     all_args_dct = {
+        '--apply-tweaks':       args.apply_tweaks,
+        '--remove-tweaks':      args.remove_tweaks,
         '--override-distro':    bool(args.override_distro),
         '--fancy-pants':        args.fancy_pants,
         **exit_args_dct
@@ -1654,6 +1654,9 @@ def handle_cli_arguments():
                 f'\n\n\t{get_distro_names()}')
         safe_shutdown(0)
 
+    if args.fancy_pants:
+        cnfg.fancy_pants = True
+
     if args.apply_tweaks:
         get_environment_info()
         apply_desktop_tweaks()
@@ -1671,9 +1674,6 @@ def handle_cli_arguments():
         get_environment_info()
         remove_desktop_tweaks()
         safe_shutdown(0)
-
-    if args.fancy_pants:
-        cnfg.fancy_pants = True
 
     if args.override_distro:
         cnfg.override_distro = args.override_distro
