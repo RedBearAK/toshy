@@ -25,7 +25,7 @@ fi
 
 # If XDG_RUNTIME_DIR is not set or is empty
 if [ -z "${XDG_RUNTIME_DIR}" ]; then
-    echo "Toshy Config Service: XDG_RUNTIME_DIR is not set. Unable to determine where to store the marker file."
+    echo "Toshy SessMon Svc: XDG_RUNTIME_DIR not set. Unable to determine where to store the marker file."
     # exit 1
 else
     # Full path to the marker file
@@ -91,7 +91,10 @@ while true
                         # only start Toshy Config service if we stopped it due to inactive session (below)
                         if [[ "$STOPPED_BY_ME" == "true" ]]
                             then
-                                /usr/bin/systemctl --user start toshy-config.service > /dev/null 2>&1
+                                # start/restart KDE D-Bus service (adapt to switching DEs w/out reboot)
+                                /usr/bin/systemctl --user restart toshy-kde-dbus.service > /dev/null 2>&1
+                                sleep 0.5
+                                /usr/bin/systemctl --user restart toshy-config.service > /dev/null 2>&1
                                 STOPPED_BY_ME="false"
                         fi
                 fi
@@ -105,6 +108,8 @@ while true
                     then
                         echo "SESSMON: Stopping config service because session is inactive."
                         /usr/bin/systemctl --user stop toshy-config.service > /dev/null 2>&1
+                        # also stop KDE D-Bus service (unnecessary if config is not running)
+                        /usr/bin/systemctl --user stop toshy-kde-dbus.service > /dev/null 2>&1
                         STOPPED_BY_ME="true"
                 fi
         fi
