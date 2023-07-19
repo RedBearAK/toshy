@@ -271,32 +271,38 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 ### Red Hat and similar distros
 
-- Fedora 36/37/38 (from Red Hat)
+- Fedora 36/37/38 (upstream of CentOS Stream and RHEL)
 
-    - Standard GNOME variant tested (Wayland session requires extensions)
+    - Standard GNOME variant tested (Wayland session requires extension)
     - KDE variant tested (X11/Xorg or Wayland+KDE session)
 
 - Ultramarine Linux 38 (Fedora-based)
 
     - Ultramarine GNOME tested (Wayland session requires extensions)
 
-- AlmaLinux 9.2 and/or Rocky Linux 9.2 (RHEL clones)
+- [ AlmaLinux / Rocky Linux ] 9.2 (RHEL clones)
 
     - Tested with "Workstation" installer choice, not "Server with GUI"
-    - Default GNOME desktop tested (Wayland session requires extensions)
+    - Default GNOME desktop tested (Wayland session requires extension)
     - KDE Plasma desktop tested (Wayland+KDE supported)
+    - Some non-default (but official) repos like CRB will be enabled
+    - NB: There is no journal for "user" services, for some reason
+
+- Eurolinux 9.2 (RHEL clone)
+
+    - Tested with "Server with GUI" installer choice
+    - Default GNOME desktop tested (Wayland session requires extension)
     - Some non-default (but official) repos like CRB will be enabled
     - NB: There is no journal for "user" services, for some reason
 
 - Other RHEL clones should be supportable
 
-    - EuroLinux? Probably.
     - Red Hat Enterprise Linux itself? Probably.
     - Try `./toshy_setup.py --override-distro=almalinux` or `=rhel`
 
 - CentOS 7 (RHEL 7 clone) - Partial support:
 
-    - You must install `python3` to run `toshy_setup.py`
+    - You must first install `python3` to run `toshy_setup.py`
     - systemd "user" services are not supported in CentOS/RHEL 7
     - Auto-start at login with systemd services not available
     - Cmd+Space (Alt+F1) shortcut must be assigned to app launcher menu
