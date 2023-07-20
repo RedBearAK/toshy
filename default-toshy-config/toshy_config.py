@@ -435,6 +435,8 @@ dialogs_Escape_lod = [
     {clas:"^org.kde.Dolphin$", name:"^Configure.*Dolphin$|^Properties.*Dolphin$"},
     {clas:"^xfce4-terminal$", name:"^Terminal Preferences$"},
     {clas:"^epiphany$|^org.gnome.Epiphany$", name:"^Preferences$"},
+    {clas:"^Angry.*IP.*Scanner$",
+        name:"^IP.*address.*details.*$|^Preferences.*$|^Scan.*Statistics.*$|^Edit.*openers.*$"},
 ]
 
 ### dialogs_CloseWin_lod = send these windows the "Close window" combo for Cmd+W
@@ -444,6 +446,7 @@ dialogs_CloseWin_lod = [
     {clas:"^gnome-terminal-pref.*$", name:"^Preferences.*$"},
     {clas:"^pcloud$"},
     {clas:"^Totem$", not_name:"^Videos$"},
+    {clas:"^Angry.*IP.*Scanner$", name:"^Fetchers.*$|^Edit.*favorites.*$"},
 ]
 
 
@@ -2829,6 +2832,9 @@ keymap("Thunderbird email client", {
 
 keymap("Angry IP Scanner", {
     C("RC-comma"):              C("Shift-RC-P"),                # Open preferences
+    C("RC-i"):                  C("Alt-Enter"),                 # Get info (details)
+    C("RC-h"):                  C("C-h"),                       # Go to next live host (override hide window)
+    C("Shift-RC-i"):            C("C-i"),                       # Invert selection
 }, when = matchProps(clas="^Angry.*IP.*Scanner$") )
 
 keymap("Transmission bittorrent client", {
@@ -3748,6 +3754,7 @@ keymap("GenGUI overrides: Manjaro Xfce", {
     C("RC-Space"):              C("Alt-F1"),                    # Open Whisker Menu with Cmd+Space
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'manjaro' and DESKTOP_ENV == 'xfce' )
 keymap("GenGUI overrides: Manjaro", {
+    # TODO: figure out why these two are the same!
     C("RC-LC-f"):               C("Super-PAGE_UP"),             # SL- Maximize app manjaro
     C("RC-LC-f"):               C("Super-PAGE_DOWN"),           # SL - Minimize app manjaro
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'manjaro' )
