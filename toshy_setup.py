@@ -505,6 +505,7 @@ pkg_groups_map = {
                         "libnotify-tools", "typelib-1_0-AyatanaAppIndicator3-0_1",
                         "systemd-devel", "zenity"],
 
+    # TODO: update Leap Python package versions as it makes newer Python available
     'leap-based':      ["gcc", "git", "cairo-devel",  "dbus-1-devel", "python311-tk",
                         "python3-dbus-python-devel", "python311-devel", "python311",
                         "gobject-introspection-devel", "libappindicator3-devel", "tk",
