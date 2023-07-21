@@ -598,10 +598,17 @@ def install_distro_pkgs():
                     else:
                         error(  f'ERROR: Did not find any appropriate Python interpreter version.')
                         safe_shutdown(1)
-                # for dbus-python
-                subprocess.run(['sudo', 'dnf', 'install', '-y', f'python{cnfg.py_interp_ver}-devel'])
-                # for Toshy Preferences GUI app
-                subprocess.run(['sudo', 'dnf', 'install', '-y', f'python{cnfg.py_interp_ver}-tkinter'])
+                try:
+                    # for dbus-python
+                    subprocess.run(['sudo', 'dnf', 'install', '-y',
+                                    f'python{cnfg.py_interp_ver}-devel'], check=True)
+                    # for Toshy Preferences GUI app
+                    subprocess.run(['sudo', 'dnf', 'install', '-y',
+                                    f'python{cnfg.py_interp_ver}-tkinter'], check=True)
+                except subprocess.CalledProcessError as proc_err:
+                    error(f'ERROR: Problem installing necessary packages on CentOS Stream 8:'
+                            f'\n\t{proc_err}')
+                    safe_shutdown(1)
 
             # do extra prep/checks if distro is CentOS 7
             if cnfg.DISTRO_NAME in ['centos'] and cnfg.DISTRO_VER in ['7']:
