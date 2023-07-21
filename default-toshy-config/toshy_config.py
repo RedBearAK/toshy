@@ -3586,10 +3586,10 @@ keymap("Kitty terminal - not tab nav", {
 
 # Overrides to General Terminals shortcuts for specific distros (or are they really just desktop environments?)
 keymap("GenTerms overrides: elementary OS", {
-    C("LC-Right"):              [bind,C("Super-Right")],        # SL - Change workspace (eos)
-    C("LC-Left"):               [bind,C("Super-Left")],         # SL - Change workspace (eos)
-# }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DISTRO_NAME == 'eos')
-}, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_NAME == 'eos')
+    C("LC-Right"):              [bind,C("Super-Right")],        # SL - Change workspace (elementary)
+    C("LC-Left"):               [bind,C("Super-Left")],         # SL - Change workspace (elementary)
+# }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DISTRO_NAME == 'elementary')
+}, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_NAME == 'elementary')
 keymap("GenTerms overrides: Fedora", {
     C("RC-H"):                  C("Super-h"),                   # Hide Window/Minimize app (gnome/fedora)
 # }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DISTRO_NAME in ['fedora', 'almalinux'] )
@@ -3738,10 +3738,10 @@ keymap("GenGUI overrides: not Chromebook", {
 
 # Overrides to General GUI shortcuts for specific distros
 keymap("GenGUI overrides: elementary OS", {
-    C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,eos)
-    C("RC-Space"):              C("Super-Space"),               # SL - Launch Application Menu (eos)
-    C("RC-LC-f"):               C("Super-Up"),                  # SL- Maximize app eos
-}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'eos' )
+    C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,elementary)
+    C("RC-Space"):              C("Super-Space"),               # SL - Launch Application Menu (elementary)
+    C("RC-LC-f"):               C("Super-Up"),                  # SL- Maximize app elementary
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'elementary' )
 keymap("GenGUI overrides: Fedora", {
     C("RC-H"):                  C("Super-h"),                   # Default SL - Minimize app (gnome/budgie/popos/fedora) not-deepin
     C("Super-Right"):          [bind,C("Super-Page_Up")],       # SL - Change workspace (ubuntu/fedora)
@@ -3795,7 +3795,7 @@ keymap("GenGUI overrides: Deepin", {
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'deepin' )
 keymap("GenGUI overrides: GNOME", {
     C("RC-Space"):              C("Super-s"),                   # Show GNOME overview/app launcher
-    C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,eos)
+    C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,elementary)
     C("RC-Super-f"):            C("Alt-F10"),                   # Default SL - Maximize app (gnome/kde)
     C("RC-H"):                  C("Super-h"),                   # Default SL - Minimize app (gnome/budgie/popos/fedora) not-deepin
     # Screenshot shortcuts for GNOME 42+
@@ -3808,7 +3808,7 @@ keymap("GenGUI overrides: IceWM", {
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'icewm' )
 keymap("GenGUI overrides: KDE", {
     C("RC-Space"):              C("Alt-F1"),                    # Default SL - Launch Application Menu (gnome/kde)
-    C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,eos)
+    C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,elementary)
     C("RC-Super-f"):            C("Alt-F10"),                   # Default SL - Maximize app (gnome/kde)
     # Screenshot shortcuts for KDE Plasma desktops (Spectacle app)
     C("RC-Shift-Key_3"):        C("Shift-Print"),               # Take a screenshot immediately (kde)
@@ -3843,7 +3843,7 @@ keymap("General GUI", {
     C("Shift-RC-Left_Brace"):   C("C-Page_Up"),                 # Tab navigation: Go to prior (left) tab
     C("Shift-RC-Right_Brace"):  C("C-Page_Down"),               # Tab navigation: Go to next (right) tab
     C("RC-Space"):              C("Alt-F1"),                    # Default SL - Launch Application Menu (gnome/kde)
-    C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,eos)
+    C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,elementary)
     C("RC-Super-f"):            C("Alt-F10"),                   # Default SL - Maximize app (gnome/kde)
     C("RC-Q"):                  C("Alt-F4"),                    # Default SL - not-popos
     C("Alt-Tab"):               ignore_combo,                   # Default - Cmd Tab - App Switching Default
