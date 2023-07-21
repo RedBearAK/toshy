@@ -321,6 +321,15 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
         - Use `toshy-config-start` or `toshy-config-verbose-start`
         - Use `toshy-config-stop` to stop a background Toshy config
 
+- CentOS Stream 8 (RHEL upstream) - Partial support:
+
+    - Tested with "Workstation" installer choice (GNOME)
+    - Auto-start with systemd user services works
+    - GNOME X11/Xorg session works
+        - Choose "Standard (X11 display server)" at login
+    - GNOME Wayland session WILL NOT WORK! Because:
+        - GNOME shell too old, no compatible extension available
+
 ### openSUSE (RPM-based packaging system)
 
 - openSUSE Tumbleweed (rolling release)
