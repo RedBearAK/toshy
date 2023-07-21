@@ -271,32 +271,46 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 ### Red Hat and similar distros
 
-- Fedora 36/37/38 (from Red Hat)
+- Fedora 36/37/38 (upstream of CentOS Stream and RHEL)
 
-    - Standard GNOME variant tested (Wayland session requires extensions)
+    - Standard GNOME variant tested (Wayland session requires extension)
     - KDE variant tested (X11/Xorg or Wayland+KDE session)
 
 - Ultramarine Linux 38 (Fedora-based)
 
-    - Ultramarine GNOME tested (Wayland session requires extensions)
+    - Ultramarine GNOME tested (Wayland session requires extension)
 
-- AlmaLinux 9.2 and/or Rocky Linux 9.2 (RHEL clones)
+- Nobara 38 (Fedora-based)
+
+    - Tested the usual GNOME desktop variant (X11/Xorg and Wayland)
+    - Many Toshy dependencies are pre-installed on Nobara
+    - Nobara pre-installs the Extension Manager app. Nice!
+    - Enable the AppIndicator extension (pre-installed) for tray icon
+    - Install an extension from `Requirements` if using Wayland+GNOME
+
+- [ AlmaLinux / Rocky Linux ] 9.2 (RHEL clones)
 
     - Tested with "Workstation" installer choice, not "Server with GUI"
-    - Default GNOME desktop tested (Wayland session requires extensions)
+    - Default GNOME desktop tested (Wayland session requires extension)
     - KDE Plasma desktop tested (Wayland+KDE supported)
+    - Some non-default (but official) repos like CRB will be enabled
+    - NB: There is no journal for "user" services, for some reason
+
+- Eurolinux 9.2 (RHEL clone)
+
+    - Tested with "Server with GUI" installer choice
+    - Default GNOME desktop tested (Wayland session requires extension)
     - Some non-default (but official) repos like CRB will be enabled
     - NB: There is no journal for "user" services, for some reason
 
 - Other RHEL clones should be supportable
 
-    - EuroLinux? Probably.
     - Red Hat Enterprise Linux itself? Probably.
     - Try `./toshy_setup.py --override-distro=almalinux` or `=rhel`
 
 - CentOS 7 (RHEL 7 clone) - Partial support:
 
-    - You must install `python3` to run `toshy_setup.py`
+    - You must first install `python3` to run `toshy_setup.py`
     - systemd "user" services are not supported in CentOS/RHEL 7
     - Auto-start at login with systemd services not available
     - Cmd+Space (Alt+F1) shortcut must be assigned to app launcher menu
@@ -307,17 +321,28 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
         - Use `toshy-config-start` or `toshy-config-verbose-start`
         - Use `toshy-config-stop` to stop a background Toshy config
 
+- CentOS Stream 8 (RHEL upstream) - Partial support:
+
+    - Tested with "Workstation" installer choice (GNOME)
+    - Auto-start with systemd user services works
+    - GNOME X11/Xorg session works (not the default!)
+        - Choose "Standard (X11 display server)" at login
+    - For tray icon support:
+        - Install AppIndicator extension from GNOME Software app
+    - NB: GNOME Wayland session WILL NOT WORK! Because:
+        - GNOME shell too old, no compatible extension available
+
 ### openSUSE (RPM-based packaging system)
 
 - openSUSE Tumbleweed (rolling release)
 
-    - GNOME desktop works (Wayland session needs extensions, see Requirements)
+    - GNOME desktop works (Wayland session needs extension, see Requirements)
     - KDE desktop works (X11/Xorg or Wayland)
     - Other desktop choices should work, if session is X11/Xorg
 
 - openSUSE Leap 15.5 (fixed release) **_WORKING!_**
 
-    - GNOME desktop works (Wayland session needs extensions, see Requirements)
+    - GNOME desktop works (Wayland session needs extension, see Requirements)
     - KDE desktop works (X11/Xorg or Wayland)
     - Other desktop choices should work, if session is X11/Xorg
 
@@ -325,7 +350,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 - Ubuntu official variants tested:
 
-    - Ubuntu 22.04/23.04 (X11/Xorg or Wayland+GNOME, requires extensions)
+    - Ubuntu 22.04/23.04 (X11/Xorg or Wayland+GNOME, requires extension)
     - Kubuntu 22.04/23.04 (X11/Xorg or Wayland+KDE)
     - Xubuntu 23.04 (X11/Xorg only)
     - Lubuntu 23.04 (X11/Xorg only)
@@ -333,7 +358,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 - Pop!_OS 22.04 LTS (Ubuntu-based)
 
-    - X11/Xorg or Wayland+GNOME (requires extensions)
+    - X11/Xorg or Wayland+GNOME (requires extension)
 
 - KDE Neon (based on Ubuntu LTS releases)
 
@@ -341,7 +366,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 - Zorin OS 16.2 (Ubuntu-based)
 
-    - X11/Xorg or Wayland+GNOME (requires extensions)
+    - X11/Xorg or Wayland+GNOME (requires extension)
     - Wayland+GNOME requires Xremap extension
     - GNOME Shell is still 3.38.x, Xremap extension is the only compatible extension available for pre-GNOME 40.x
 
@@ -363,6 +388,8 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 ### Debian and Debian-based distros
 
 - LMDE 5 (Linux Mint Debian Edition)
+
+    - Default desktop is Cinnamon
 
 - PeppermintOS (Debian-based)
 

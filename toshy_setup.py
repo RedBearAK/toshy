@@ -6,6 +6,7 @@ import re
 import sys
 import pwd
 import grp
+import time
 import random
 import string
 import signal
@@ -79,9 +80,9 @@ if sys.prefix != sys.base_prefix:
 # current stable Python release version (update when needed):
 # 3.11 Release Date: Oct. 24, 2022
 curr_py_rel_ver_maj = 3
-curr_py_rel_ver_min = 11
-curr_py_rel_ver_tup = (curr_py_rel_ver_maj, curr_py_rel_ver_min)
-curr_py_rel_ver     = f'{curr_py_rel_ver_maj}.{curr_py_rel_ver_min}'
+curr_py_rel_ver_minor = 11
+curr_py_rel_ver_tup = (curr_py_rel_ver_maj, curr_py_rel_ver_minor)
+curr_py_rel_ver     = f'{curr_py_rel_ver_maj}.{curr_py_rel_ver_minor}'
 
 # Check if 'sudo' command is available to user
 if not shutil.which('sudo'):
@@ -162,15 +163,27 @@ class InstallerSettings:
                 """)
 
 
-def safe_shutdown(exit_code=0):
+def safe_shutdown(exit_code: int):
     """do some stuff on the way out"""
 
     # good place to do some file cleanup?
 
     # invalidate the sudo ticket, don't leave system in "superuser" state
     subprocess.run(['sudo', '-k'])
-    print()     # avoid crowding the prompt on exit
+    print()                         # avoid crowding the prompt on exit
     sys.exit(exit_code)
+
+
+def show_reboot_prompt():
+    """show the big ASCII reboot prompt"""
+    print()
+    print()
+    print()
+    print(cnfg.separator)
+    print(cnfg.separator)
+    print(cnfg.reboot_ascii_art)
+    print(cnfg.separator)
+    print(cnfg.separator)
 
 
 def get_environment_info():
@@ -319,8 +332,8 @@ def do_kwin_reconfigure():
     try:
         subprocess.run([cnfg.qdbus, 'org.kde.KWin', '/KWin', 'reconfigure'],
                         check=True, stderr=DEVNULL, stdout=DEVNULL)
-    except subprocess.CalledProcessError as proc_error:
-        error(f'Error while running KWin reconfigure.\n\t{proc_error}')
+    except subprocess.CalledProcessError as proc_err:
+        error(f'Error while running KWin reconfigure.\n\t{proc_err}')
 
 
 def load_uinput_module():
@@ -345,8 +358,8 @@ def load_uinput_module():
                 call_attention_to_password_prompt()
                 command = "echo 'uinput' | sudo tee /etc/modules-load.d/uinput.conf >/dev/null"
                 subprocess.run(command, shell=True, check=True)
-            except subprocess.CalledProcessError as proc_error:
-                error(f"Failed to create /etc/modules-load.d/uinput.conf:\n\t{proc_error}")
+            except subprocess.CalledProcessError as proc_err:
+                error(f"Failed to create /etc/modules-load.d/uinput.conf:\n\t{proc_err}")
                 error(f'ERROR: Install failed.')
                 safe_shutdown(1)
 
@@ -361,8 +374,8 @@ def load_uinput_module():
                         call_attention_to_password_prompt()
                         command = "echo 'uinput' | sudo tee -a /etc/modules >/dev/null"
                         subprocess.run(command, shell=True, check=True)
-                    except subprocess.CalledProcessError as proc_error:
-                        error(f"ERROR: Failed to append 'uinput' to /etc/modules:\n\t{proc_error}")
+                    except subprocess.CalledProcessError as proc_err:
+                        error(f"ERROR: Failed to append 'uinput' to /etc/modules:\n\t{proc_err}")
                         error(f'ERROR: Install failed.')
                         safe_shutdown(1)
 
@@ -373,8 +386,8 @@ def reload_udev_rules():
         subprocess.run(['sudo', 'udevadm', 'control', '--reload-rules'], check=True)
         subprocess.run(['sudo', 'udevadm', 'trigger'], check=True)
         print('Reloaded the "udev" rules successfully.')
-    except subprocess.CalledProcessError as proc_error:
-        print(f'Failed to reload "udev" rules:\n\t{proc_error}')
+    except subprocess.CalledProcessError as proc_err:
+        print(f'Failed to reload "udev" rules:\n\t{proc_err}')
         prompt_for_reboot()
 
 
@@ -401,10 +414,10 @@ def install_udev_rules():
             print()
             print(f'Toshy "udev" rules file successfully installed.')
             reload_udev_rules()
-        except subprocess.CalledProcessError as proc_error:
+        except subprocess.CalledProcessError as proc_err:
             print()
             error(f'ERROR: Problem while installing "udev" rules file for keymapper.\n')
-            err_output: bytes = proc_error.output  # Type hinting the error output variable
+            err_output: bytes = proc_err.output  # Type hinting the error output variable
             # Deal with possible 'NoneType' error output
             error(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
             print()
@@ -425,10 +438,10 @@ def verify_user_groups():
         try:
             call_attention_to_password_prompt()
             subprocess.run(['sudo', 'groupadd', cnfg.input_group_name], check=True)
-        except subprocess.CalledProcessError as proc_error:
+        except subprocess.CalledProcessError as proc_err:
             print()
             error(f'ERROR: Problem when trying to create "input" group.\n')
-            err_output: bytes = proc_error.output  # Type hinting the error output variable
+            err_output: bytes = proc_err.output  # Type hinting the error output variable
             # Deal with possible 'NoneType' error output
             error(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
             print()
@@ -446,11 +459,11 @@ def verify_user_groups():
             call_attention_to_password_prompt()
             subprocess.run(
                 ['sudo', 'usermod', '-aG', cnfg.input_group_name, cnfg.user_name], check=True)
-        except subprocess.CalledProcessError as proc_error:
+        except subprocess.CalledProcessError as proc_err:
             print()
             error(f'ERROR: Problem when trying to add user "{cnfg.user_name}" to '
                     f'group "{cnfg.input_group_name}".\n')
-            err_output: bytes = proc_error.output  # Type hinting the error output variable
+            err_output: bytes = proc_err.output  # Type hinting the error output variable
             # Deal with possible 'NoneType' error output
             error(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
             print()
@@ -492,6 +505,7 @@ pkg_groups_map = {
                         "libnotify-tools", "typelib-1_0-AyatanaAppIndicator3-0_1",
                         "systemd-devel", "zenity"],
 
+    # TODO: update Leap Python package versions as it makes newer Python available
     'leap-based':      ["gcc", "git", "cairo-devel",  "dbus-1-devel", "python311-tk",
                         "python3-dbus-python-devel", "python311-devel", "python311",
                         "gobject-introspection-devel", "libappindicator3-devel", "tk",
@@ -564,11 +578,34 @@ def install_distro_pkgs():
 
         # do extra stuff only if distro is a RHEL type (not Fedora type)
         if cnfg.DISTRO_NAME in distro_groups_map['rhel-based']:
+            print(f'Doing prep/checks for RHEL-type distro...')
             call_attention_to_password_prompt()
 
-            # do even more prep/checks if distro is CentOS
+            # do extra prep/checks if distro is CentOS Stream 8
+            if cnfg.DISTRO_NAME in ['centos'] and cnfg.DISTRO_VER in ['8']:
+                print('Doing prep/checks for CentOS Stream 8...')
+                min_minor = curr_py_rel_ver_minor - 3           # check up to 2 vers before current
+                max_minor = curr_py_rel_ver_minor + 3           # check up to 3 vers after current
+                py_minor_ver_rng = range(max_minor, min_minor, -1)
+                if py_interp_ver_tup < curr_py_rel_ver_tup:
+                    print(f"Checking for appropriate Python version on system...")
+                    for check_py_ver in py_minor_ver_rng:
+                        if shutil.which(f'python3.{check_py_ver}'):
+                            cnfg.py_interp_path = shutil.which(f'python3.{check_py_ver}')
+                            cnfg.py_interp_ver = f'3.{check_py_ver}'
+                            print(f'Found Python version {cnfg.py_interp_ver} available.')
+                            break
+                    else:
+                        error(  f'ERROR: Did not find any appropriate Python interpreter version.')
+                        safe_shutdown(1)
+                # for dbus-python
+                subprocess.run(['sudo', 'dnf', 'install', '-y', f'python{cnfg.py_interp_ver}-devel'])
+                # for Toshy Preferences GUI app
+                subprocess.run(['sudo', 'dnf', 'install', '-y', f'python{cnfg.py_interp_ver}-tkinter'])
+
+            # do extra prep/checks if distro is CentOS 7
             if cnfg.DISTRO_NAME in ['centos'] and cnfg.DISTRO_VER in ['7']:
-                # if py_interp_ver_tup >= curr_py_rel_ver_tup:
+                print('Doing prep/checks for CentOS 7...')
                 if py_interp_ver_tup >= (3, 8):
                     print(f"Good, Python version is 3.8 or later: "
                             f"'{cnfg.py_interp_ver}'")
@@ -691,7 +728,7 @@ def get_distro_names():
         distro_list.extend(group)
 
     sorted_distro_list = sorted(distro_list)
-    distros = ",\n\t".join(sorted_distro_list)
+    distros = "\n\t".join(sorted_distro_list)
     return distros
 
 
@@ -848,7 +885,7 @@ def install_toshy_files():
     except OSError as os_error:
         print(f"Failed to create backup directory: {os_error}")
     toshy_default_cfg = os.path.join(
-        cnfg.toshy_dir_path, 'toshy-default-config', 'toshy_config.py')
+        cnfg.toshy_dir_path, 'default-toshy-config', 'toshy_config.py')
     shutil.copy(toshy_default_cfg, cnfg.toshy_dir_path)
     print(f"Toshy files installed in '{cnfg.toshy_dir_path}'.")
 
@@ -983,7 +1020,6 @@ def setup_kwin2dbus_script():
     """Install the KWin script to notify D-Bus service about window focus changes"""
     print(f'\n\n§  Setting up the Toshy KWin script...\n{cnfg.separator}')
     if not shutil.which('kpackagetool5') or not shutil.which('kwriteconfig5'):
-        pass
         print(f'One or more KDE CLI tools not found. Assuming older KDE...')
         return
     
@@ -1162,6 +1198,7 @@ def apply_tweaks_GNOME():
     # Disable GNOME `overlay-key` binding to Meta/Super/Win/Cmd
     # gsettings set org.gnome.mutter overlay-key ''
     subprocess.run(['gsettings', 'set', 'org.gnome.mutter', 'overlay-key', ''])
+
     print(f'Disabled Super key opening the GNOME overview. (Use Cmd+Space instead.)')
 
     # Set the keyboard shortcut for "Switch applications" to "Alt+Tab"
@@ -1172,6 +1209,7 @@ def apply_tweaks_GNOME():
     # gsettings set org.gnome.desktop.wm.keybindings switch-group "['<Alt>grave']"
     subprocess.run(['gsettings', 'set', 'org.gnome.desktop.wm.keybindings',
                     'switch-group', "['<Alt>grave']"])
+
     print(f'Enabled "Switch applications" Mac-like task switching.')
     
     # Enable keyboard shortcut for GNOME Terminal preferences dialog
@@ -1179,17 +1217,19 @@ def apply_tweaks_GNOME():
     cmd_path = 'org.gnome.Terminal.Legacy.Keybindings:/org/gnome/terminal/legacy/keybindings/'
     prefs_binding = '<Control>less'
     subprocess.run(['gsettings', 'set', cmd_path, 'preferences', prefs_binding])
+
     print(f'Set a keybinding for GNOME Terminal preferences.')
-    
+
     # Enable "Expandable folders" in Nautilus
     # dconf write /org/gnome/nautilus/list-view/use-tree-view true
     subprocess.run(['dconf', 'write', '/org/gnome/nautilus/list-view/use-tree-view', 'true'])
-    
+
     # Set default view option in Nautilus to "list-view"
     # dconf write /org/gnome/nautilus/preferences/default-folder-viewer "'list-view'"
     subprocess.run(['dconf', 'write', '/org/gnome/nautilus/preferences/default-folder-viewer',
                     "'list-view'"])
-    print(f'Set Nautilus to "List" view with "Expandable folders" enabled.')
+
+    print(f'Set Nautilus default to "List" view with "Expandable folders" enabled.')
 
 
 def remove_tweaks_GNOME():
@@ -1209,17 +1249,18 @@ def apply_tweaks_KDE():
     """Utility function to add desktop tweaks to KDE"""
 
     if not shutil.which('kwriteconfig5'):
+        print(f'KDE 5.x tools not present. Skipping KDE tweaks.')
         return
 
     # Documentation on the use of Meta key in KDE:
     # https://userbase.kde.org/Plasma/Tips#Windows.2FMeta_Key
     subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group',
                     'ModifierOnlyShortcuts', '--key', 'Meta', ''], check=True)
+    print(f'Disabled Meta key opening application menu. (Use Cmd+Space instead.)')
 
     # Run reconfigure command
     do_kwin_reconfigure()
-    print(f'Disabled Meta key opening application menu. (Use Cmd+Space instead.)')
-    
+
     if cnfg.fancy_pants:
         print(f'Installing "Application Switcher" KWin script...')
         # How to install nclarius grouped "Application Switcher" KWin script:
@@ -1237,34 +1278,78 @@ def apply_tweaks_KDE():
                     try:
                         shutil.rmtree(switcher_dir_path)
                     except (FileNotFoundError, PermissionError, OSError) as file_err:
-                        print(f'Problem removing existing switcher clone folder:\n\t{file_err}')
+                        error(f'Problem removing existing switcher clone folder:\n\t{file_err}')
                 subprocess.run(["git", "clone", switcher_url, switcher_dir_path], check=True,
                                 stdout=DEVNULL, stderr=DEVNULL)
                 command_dir     = os.path.join(script_path, switcher_dir)
                 subprocess.run(["./install.sh"], cwd=command_dir, check=True,
                                 stdout=DEVNULL, stderr=DEVNULL)
                 print(f'Installed "Application Switcher" KWin script.')
-            except subprocess.CalledProcessError as proc_error:
-                print(f'Something went wrong installing KWin Application Switcher.\n\t{proc_error}')
+            except subprocess.CalledProcessError as proc_err:
+                error(f'Something went wrong installing KWin Application Switcher.\n\t{proc_err}')
         else:
-            print(f"ERROR: Unable to clone KWin Application Switcher. 'git' not installed.")
+            error(f"ERROR: Unable to clone KWin Application Switcher. 'git' not installed.")
 
-        # Run reconfigure command
         do_kwin_reconfigure()
 
         # Set the LayoutName value to big_icons (shows task switcher with large icons, no previews)
-        subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox',
-                        '--key', 'LayoutName', 'big_icons'], check=True)
-        # Set the HighlightWindows value to false (disables "Show selected window" option)
-        subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox',
-                        '--key', 'HighlightWindows', 'false'], check=True)
-        # Set the ApplicationsMode value to 1 (enables "Only one window per application" option)
-        subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox',
-                        '--key', 'ApplicationsMode', '1'], check=True)
+        LayoutName_cmd = ['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox',
+                            '--key', 'LayoutName', 'big_icons']
+        subprocess.run(LayoutName_cmd, check=True)
+        print(f'Set task switcher style to: "Large Icons"')
 
-        # Run reconfigure command
+        # Set the HighlightWindows value to false (disables "Show selected window" option)
+        HighlightWindows_cmd = ['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox',
+                                '--key', 'HighlightWindows', 'false']
+        subprocess.run(HighlightWindows_cmd, check=True)
+        print(f'Disabled task switcher option: "Show selected window"')
+
+        # Set the ApplicationsMode value to 1 (enables "Only one window per application" option)
+        ApplicationsMode_cmd = ['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox',
+                                '--key', 'ApplicationsMode', '1']
+        subprocess.run(ApplicationsMode_cmd, check=True)
+        print(f'Enabled task switcher option: "Only one window per application"')
+
         do_kwin_reconfigure()
-        print(f'Set task switcher to "Large Icons", disabled "Show selected window" option.')
+
+        # Disable single click to open/launch files/folders:
+        # kwriteconfig5 --file kdeglobals --group KDE --key SingleClick false
+        SingleClick_cmd = ['kwriteconfig5', '--file', 'kdeglobals', '--group', 'KDE',
+                            '--key', 'SingleClick', 'false']
+        subprocess.run(SingleClick_cmd, check=True)
+        print('Disabled single-click to open/launch files/folders')
+
+        # Restart Plasma shell to make the new setting active
+        # killall plasmashell && kstart5 plasmashell
+        try:
+            print('Stopping Plasma shell... ', flush=True, end='')
+            subprocess.run(['kquitapp5', 'plasmashell'], check=True,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            print('Plasma shell stopped.')
+        except subprocess.CalledProcessError as proc_err:
+            err_output: bytes = proc_err.stderr             # type hint error output
+            error(f'\nProblem while stopping Plasma shell:\n\t{err_output.decode()}')
+
+        print('Starting Plasma shell (backgrounded)... ')
+        subprocess.Popen(['kstart5', 'plasmashell'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        # THIS STUFF DOESN'T SEEM TO WORK!
+        # Disable "sort folders first" option in Dolphin:
+        # kwriteconfig5 --file dolphinrc --group General --key FirstSortingFolders false
+        # kwriteconfig5 --file kdeglobals --group "KFileDialog Settings" --key "Sort directories first" false 
+        # FirstSortingFolders_cmd = ['kwriteconfig5', '--file', 'dolphinrc',
+        #                             '--group', 'General',
+        #                             '--key', 'FirstSortingFolders', 'false']
+        # subprocess.run(FirstSortingFolders_cmd, check=True)
+        # print('Disabled "sort folders first" option in Dolphin.')
+        # # kquitapp5 dolphin && dolphin &
+        # print('Restarting Dolphin file manager...')
+        # try:
+        #     subprocess.run(['kquitapp5', 'dolphin'], check=True)
+        #     subprocess.Popen('dolphin')
+        #     print('Dolphin file manager restarted.')
+        # except subprocess.CalledProcessError as proc_err:
+        #     error(f'Problem restarting Dolphin file manager:\n\t{proc_err}')
 
 
 def remove_tweaks_KDE():
@@ -1305,10 +1390,12 @@ def apply_desktop_tweaks():
         print(f'Fancy-Pants install invoked. Additional steps will be taken.')
 
     if cnfg.DESKTOP_ENV == 'gnome':
+        print(f'Applying GNOME desktop tweaks...')
         apply_tweaks_GNOME()
         cnfg.tweak_applied = True
 
     if cnfg.DESKTOP_ENV == 'kde':
+        print(f'Applying KDE Plasma desktop tweaks...')
         apply_tweaks_KDE()
         cnfg.tweak_applied = True
 
@@ -1389,9 +1476,11 @@ def remove_desktop_tweaks():
     # if GNOME, re-enable `overlay-key`
     # gsettings reset org.gnome.mutter overlay-key
     if cnfg.DESKTOP_ENV == 'gnome':
+        print(f'Removing GNOME desktop tweaks...')
         remove_tweaks_GNOME()
 
     if cnfg.DESKTOP_ENV == 'kde':
+        print(f'Removing KDE Plasma desktop tweaks...')
         remove_tweaks_KDE()
         
     print('Removed known desktop tweaks applied by installer.')
@@ -1404,7 +1493,7 @@ def uninstall_toshy():
     response = input("\nThis will completely uninstall Toshy. Are you sure? [y/N]: ")
     if response not in ['y', 'Y']:
         print(f"\nToshy uninstall cancelled.")
-        safe_shutdown()
+        safe_shutdown(0)
     else:
         print(f'\nToshy uninstall proceeding...\n')
     
@@ -1560,11 +1649,11 @@ def handle_cli_arguments():
         '--uninstall':          args.uninstall,
         '--show-env':           args.show_env,
         '--list-distros':       args.list_distros,
-        '--apply-tweaks':       args.apply_tweaks,
-        '--remove-tweaks':      args.remove_tweaks
     }
 
     all_args_dct = {
+        '--apply-tweaks':       args.apply_tweaks,
+        '--remove-tweaks':      args.remove_tweaks,
         '--override-distro':    bool(args.override_distro),
         '--fancy-pants':        args.fancy_pants,
         **exit_args_dct
@@ -1589,16 +1678,26 @@ def handle_cli_arguments():
                 f'\n\n\t{get_distro_names()}')
         safe_shutdown(0)
 
+    if args.fancy_pants:
+        cnfg.fancy_pants = True
+
     if args.apply_tweaks:
+        get_environment_info()
         apply_desktop_tweaks()
+        if cnfg.should_reboot:
+            show_reboot_prompt()
+            print(f'{cnfg.sep_char * 2}  Tweaks application complete. Report issues on the GitHub repo.')
+            print(f'{cnfg.sep_char * 2}  https://github.com/RedBearAK/toshy/issues/')
+            print(f'{cnfg.sep_char * 2}  >>  ALERT: Something odd happened. You should probably reboot.')
+            print(cnfg.separator)
+            print(cnfg.separator)
+            print()
         safe_shutdown(0)
 
     if args.remove_tweaks:
+        get_environment_info()
         remove_desktop_tweaks()
         safe_shutdown(0)
-
-    if args.fancy_pants:
-        cnfg.fancy_pants = True
 
     if args.override_distro:
         cnfg.override_distro = args.override_distro
@@ -1659,7 +1758,6 @@ def main(cnfg: InstallerSettings):
 
         if is_extension_enabled("appindicatorsupport@rgcjonas.gmail.com"):
             print("AppIndicator extension is enabled. Tray icon should work.")
-            # pass
         else:
             print()
             debug(f"RECOMMENDATION: Install 'AppIndicator' GNOME extension\n"
@@ -1668,17 +1766,18 @@ def main(cnfg: InstallerSettings):
 
     if cnfg.should_reboot or os.path.exists(cnfg.reboot_tmp_file):
         cnfg.should_reboot = True
-        # create reboot reminder temp file, in case installer is run again
+        # create reboot reminder temp file, in case installer is run again before a reboot
         if not os.path.exists(cnfg.reboot_tmp_file):
             os.mknod(cnfg.reboot_tmp_file)
-        print()
-        print()
-        print()
-        print(cnfg.separator)
-        print(cnfg.separator)
-        print(cnfg.reboot_ascii_art)
-        print(cnfg.separator)
-        print(cnfg.separator)
+        # print()
+        # print()
+        # print()
+        # print(cnfg.separator)
+        # print(cnfg.separator)
+        # print(cnfg.reboot_ascii_art)
+        # print(cnfg.separator)
+        # print(cnfg.separator)
+        show_reboot_prompt()
         print(f'{cnfg.sep_char * 2}  Toshy install complete. Report issues on the GitHub repo.')
         print(f'{cnfg.sep_char * 2}  https://github.com/RedBearAK/toshy/issues/')
         print(f'{cnfg.sep_char * 2}  >>  ALERT: Permissions changed. You MUST reboot for Toshy to work.')
@@ -1709,7 +1808,7 @@ def main(cnfg: InstallerSettings):
         print(f'You MUST install GNOME EXTENSIONS if using Wayland+GNOME! See Toshy README.')
 
     # print()   # blank line to avoid crowding the prompt after install is done
-    safe_shutdown()
+    safe_shutdown(0)
 
 
 if __name__ == '__main__':

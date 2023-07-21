@@ -10,7 +10,7 @@ export PATH=$HOME/.local/bin:$PATH
 
 # If XDG_RUNTIME_DIR is not set or is empty
 if [ -z "${XDG_RUNTIME_DIR}" ]; then
-    echo "Toshy Config Service: XDG_RUNTIME_DIR is not set. Unable to determine where to store the marker file."
+    echo "Toshy Config Svc: XDG_RUNTIME_DIR not set. Unable to determine where to store the marker file."
     # exit 1
 else
     # Full path to the marker file
@@ -25,7 +25,7 @@ else
 fi
 
 
-# Start the virtual environment
+# Activate the Python virtual environment
 # shellcheck disable=SC1091
 source "$HOME/.config/toshy/.venv/bin/activate"
 

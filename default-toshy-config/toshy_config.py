@@ -194,22 +194,18 @@ last_dt_combo = None
 
 def toRgxStr(lst_of_str) -> str:
     """
-    Convert a list of strings into a casefolded             \n
-    concatenated regex pattern string.
+    Convert a list of strings into single casefolded regex pattern string.
     """
-    if not isinstance(lst_of_str, list): raise TypeError(\
-        f"\n\n###  toRgxStr wants a list of strings  ###\n")
-    elif isinstance(lst_of_str, list):
-        if any([not isinstance(x, str) for x in lst_of_str]): raise TypeError(\
-            f"\n\n###  toRgxStr wants a list of strings  ###\n")
-        lst_of_str_clean = [str(x).replace('^','').replace('$','') for x in lst_of_str]
-        return "|".join(str('^'+x.casefold()+'$') for x in lst_of_str_clean)
+    def raise_TypeError(): raise TypeError(f"\n\n###  toRgxStr wants a list of strings  ###\n")
+    if not isinstance(lst_of_str, list): raise_TypeError()
+    if any([not isinstance(x, str) for x in lst_of_str]): raise_TypeError()
+    lst_of_str_clean = [str(x).replace('^','').replace('$','') for x in lst_of_str]
+    return "|".join('^'+x.casefold()+'$' for x in lst_of_str_clean)
 
 
 def negRgx(rgx_str):
     """
-    Invert/convert a positive match regex pattern into      \n
-    a negative lookahead regex pattern.
+    Convert positive match regex pattern into negative lookahead regex pattern.
     """
     # remove any ^$
     rgx_str_strip = str(rgx_str).replace('^','').replace('$','')
@@ -345,7 +341,7 @@ remoteStr = toRgxStr(remotes)
 
 remotes_lod = [
     {clas:"^Gnome-boxes$"                },
-    {clas:"^org.remmina.Remmina$",       not_name:"^Remmina Remote Desktop Client$|^Remote Connection Profile$"},
+    {clas:"^org.remmina.Remmina$", not_name:"^Remmina Remote Desktop Client$|^Remote Connection Profile$"},
     {clas:"^Nxplayer.bin$"               },
     {clas:"^remmina$"                    },
     {clas:"^qemu-system-.*$"             },
@@ -376,37 +372,39 @@ vscodes_and_remotes_lod = [
     {lst:remotes_lod                    },
 ]
 
-# Use for browser specific hotkeys
-browsers = [
+browsers_chrome = [
     "Brave-browser",
     "Chromium",
     "Chromium-browser",
-    "Discord",
-    "Epiphany",
+    "Google-chrome",
+    "microsoft-edge",
+    "microsoft-edge-dev",
+    "org.deepin.browser",
+]
+browsers_chrome         = [x.casefold() for x in browsers_chrome]
+browsers_chromeStr      = "|".join('^'+x+'$' for x in browsers_chrome)
+
+browsers_firefox = [
     "Firefox",
     "Firefox Developer Edition",
     "firefoxdeveloperedition",
-    "Google-chrome",
-    "microsoft-edge",
-    "microsoft-edge-dev",
+    "LibreWolf",
     "Navigator",
-    "org.deepin.browser",
     "Waterfox",
 ]
-browsers = [x.casefold() for x in browsers]
-browserStr = "|".join(str('^'+x+'$') for x in browsers)
+browsers_firefox        = [x.casefold() for x in browsers_firefox]
+browsers_firefoxStr     = "|".join('^'+x+'$' for x in browsers_firefox)
 
-chromes = [
-    "Brave-browser",
-    "Chromium",
-    "Chromium-browser",
-    "Google-chrome",
-    "microsoft-edge",
-    "microsoft-edge-dev",
-    "org.deepin.browser",
+browsers_all = [
+    # unpack Chrome and Firefox lists into this general browser list
+    *browsers_chrome,
+    *browsers_firefox,
+    "Discord",
+    "Epiphany",
+    "org.gnome.Epiphany",
 ]
-chromes = [x.casefold() for x in chromes]
-chromeStr = "|".join(str('^'+x+'$') for x in chromes)
+browsers_all            = [x.casefold() for x in browsers_all]
+browsers_allStr         = "|".join('^'+x+'$' for x in browsers_all)
 
 filemanagers = [
     "caja",
@@ -423,28 +421,32 @@ filemanagers = [
     "thunar",
 ]
 filemanagers = [x.casefold() for x in filemanagers]
-filemanagerStr = "|".join(str('^'+x+'$') for x in filemanagers)
+filemanagerStr = "|".join('^'+x+'$' for x in filemanagers)
 
 ### dialogs_Escape_lod = send these windows the Escape key for Cmd+W
 dialogs_Escape_lod = [
-    {clas:"^.*nautilus$",                   name:"^.*Properties$|^Preferences$|^Create Archive$"},
+    {clas:"^.*nautilus$", name:"^.*Properties$|^Preferences$|^Create Archive$"},
     {clas:"^Transmission-gtk$|^com.transmissionbt.Transmission.*$", not_name:"^Transmission$"},
-    {clas:"^org.gnome.Software$",           not_name:"^Software$"},
+    {clas:"^org.gnome.Software$", not_name:"^Software$"},
     {clas:"^gnome-text-editor$|^org.gnome.TextEditor$", name:"^Preferences$"},
     {clas:"^org.gnome.Shell.Extensions$"},
-    {clas:"^konsole$|^org.kde.konsole$",    name:"^Configure.*Konsole$|^Edit Profile.*Konsole$"},
-    {clas:"^org.kde.KWrite$",               name:"^Configure.*KWrite$"},
-    {clas:"^org.kde.Dolphin$",              name:"^Configure.*Dolphin$|^Properties.*Dolphin$"},
-    {clas:"^xfce4-terminal$",               name:"^Terminal Preferences$"},
+    {clas:"^konsole$|^org.kde.konsole$", name:"^Configure.*Konsole$|^Edit Profile.*Konsole$"},
+    {clas:"^org.kde.KWrite$", name:"^Configure.*KWrite$"},
+    {clas:"^org.kde.Dolphin$", name:"^Configure.*Dolphin$|^Properties.*Dolphin$"},
+    {clas:"^xfce4-terminal$", name:"^Terminal Preferences$"},
+    {clas:"^epiphany$|^org.gnome.Epiphany$", name:"^Preferences$"},
+    {clas:"^Angry.*IP.*Scanner$",
+        name:"^IP.*address.*details.*$|^Preferences.*$|^Scan.*Statistics.*$|^Edit.*openers.*$"},
 ]
 
 ### dialogs_CloseWin_lod = send these windows the "Close window" combo for Cmd+W
 dialogs_CloseWin_lod = [
-    {clas:"^Gnome-control-center$",     not_name:"^Settings$"},
-    {clas:"^gnome-terminal.*$",         name:"^Preferences.*$"},
-    {clas:"^gnome-terminal-pref.*$",    name:"^Preferences.*$"},
-    {clas:"^pcloud$"                    },
-    {clas:"^Totem$",                    not_name:"^Videos$"},
+    {clas:"^Gnome-control-center$", not_name:"^Settings$"},
+    {clas:"^gnome-terminal.*$", name:"^Preferences.*$"},
+    {clas:"^gnome-terminal-pref.*$", name:"^Preferences.*$"},
+    {clas:"^pcloud$"},
+    {clas:"^Totem$", not_name:"^Videos$"},
+    {clas:"^Angry.*IP.*Scanner$", name:"^Fetchers.*$|^Edit.*favorites.*$"},
 ]
 
 
@@ -2830,6 +2832,9 @@ keymap("Thunderbird email client", {
 
 keymap("Angry IP Scanner", {
     C("RC-comma"):              C("Shift-RC-P"),                # Open preferences
+    C("RC-i"):                  C("Alt-Enter"),                 # Get info (details)
+    C("RC-h"):                  C("C-h"),                       # Go to next live host (override hide window)
+    C("Shift-RC-i"):            C("C-i"),                       # Invert selection
 }, when = matchProps(clas="^Angry.*IP.*Scanner$") )
 
 keymap("Transmission bittorrent client", {
@@ -3009,8 +3014,8 @@ keymap("Overrides for Thunar - Finder Mods", {
 
 # Keybindings overrides for GNOME XDG "Save As" and "Open File" dialogs
 file_open_save_dialogs = [
-    {clas:"^xdg-desktop-portal-gnome$|^firefox.*$", name:"^Open File$"},
-    {clas:"^xdg-desktop-portal-gnome$|^firefox.*$", name:"^Save As$"},
+    {clas:"^xdg-desktop-portal-gnome$|^Firefox.*$|^LibreWolf$|^Waterfox$", name:"^Open File$"},
+    {clas:"^xdg-desktop-portal-gnome$|^Firefox.*$|^LibreWolf$|^Waterfox$", name:"^Save As$"},
 ]
 keymap("XDG file dialogs", {
     C("RC-Left"):               C("Alt-Left"),                  # Go Back
@@ -3099,7 +3104,7 @@ keymap("Firefox Browsers Overrides", {
     C("Shift-RC-N"):            C("Shift-RC-P"),                      # Open private window with Cmd+Shift+N like other browsers
     C("RC-Backspace"):         [C("Shift-Home"), C("Backspace")],     # Delete Entire Line Left of Cursor
     C("RC-Delete"):            [C("Shift-End"), C("Delete")],         # Delete Entire Line Right of Cursor
-}, when = matchProps(clas="^Firefox.*$"))
+}, when = matchProps(clas=browsers_firefoxStr))
 
 keymap("Chrome Browsers Overrides", {
     C("C-comma"):              [C("Alt-e"), C("s"),C("Enter")], # Open preferences
@@ -3108,7 +3113,7 @@ keymap("Chrome Browsers Overrides", {
     # C("RC-Right"):              C("Alt-Right"),                 # Page nav: Forward to next page in history (conflict with wordwise)
     C("RC-Left_Brace"):         C("Alt-Left"),                  # Page nav: Back to prior page in history
     C("RC-Right_Brace"):        C("Alt-Right"),                 # Page nav: Forward to next page in history
-}, when = matchProps(clas=chromeStr))
+}, when = matchProps(clas=browsers_chromeStr))
 
 # Keybindings for General Web Browsers
 keymap("General Web Browsers", {
@@ -3136,7 +3141,7 @@ keymap("General Web Browsers", {
     # Use Cmd+Braces keys for tab navigation instead of page navigation 
     # C("C-Left_Brace"):        C("C-Page_Up"),
     # C("C-Right_Brace"):       C("C-Page_Down"),
-}, when = matchProps(clas=browserStr))
+}, when = matchProps(clas=browsers_allStr))
 
 
 
@@ -3749,6 +3754,7 @@ keymap("GenGUI overrides: Manjaro Xfce", {
     C("RC-Space"):              C("Alt-F1"),                    # Open Whisker Menu with Cmd+Space
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'manjaro' and DESKTOP_ENV == 'xfce' )
 keymap("GenGUI overrides: Manjaro", {
+    # TODO: figure out why these two are the same!
     C("RC-LC-f"):               C("Super-PAGE_UP"),             # SL- Maximize app manjaro
     C("RC-LC-f"):               C("Super-PAGE_DOWN"),           # SL - Minimize app manjaro
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'manjaro' )
