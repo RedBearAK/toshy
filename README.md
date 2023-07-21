@@ -336,13 +336,13 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 - openSUSE Tumbleweed (rolling release)
 
-    - GNOME desktop works (Wayland session needs extensions, see Requirements)
+    - GNOME desktop works (Wayland session needs extension, see Requirements)
     - KDE desktop works (X11/Xorg or Wayland)
     - Other desktop choices should work, if session is X11/Xorg
 
 - openSUSE Leap 15.5 (fixed release) **_WORKING!_**
 
-    - GNOME desktop works (Wayland session needs extensions, see Requirements)
+    - GNOME desktop works (Wayland session needs extension, see Requirements)
     - KDE desktop works (X11/Xorg or Wayland)
     - Other desktop choices should work, if session is X11/Xorg
 
@@ -388,6 +388,8 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 ### Debian and Debian-based distros
 
 - LMDE 5 (Linux Mint Debian Edition)
+
+    - Default desktop is Cinnamon
 
 - PeppermintOS (Debian-based)
 
