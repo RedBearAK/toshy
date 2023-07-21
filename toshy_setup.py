@@ -80,9 +80,9 @@ if sys.prefix != sys.base_prefix:
 # current stable Python release version (update when needed):
 # 3.11 Release Date: Oct. 24, 2022
 curr_py_rel_ver_maj = 3
-curr_py_rel_ver_min = 11
-curr_py_rel_ver_tup = (curr_py_rel_ver_maj, curr_py_rel_ver_min)
-curr_py_rel_ver     = f'{curr_py_rel_ver_maj}.{curr_py_rel_ver_min}'
+curr_py_rel_ver_minor = 11
+curr_py_rel_ver_tup = (curr_py_rel_ver_maj, curr_py_rel_ver_minor)
+curr_py_rel_ver     = f'{curr_py_rel_ver_maj}.{curr_py_rel_ver_minor}'
 
 # Check if 'sudo' command is available to user
 if not shutil.which('sudo'):
@@ -578,11 +578,30 @@ def install_distro_pkgs():
 
         # do extra stuff only if distro is a RHEL type (not Fedora type)
         if cnfg.DISTRO_NAME in distro_groups_map['rhel-based']:
+            print(f'Doing prep/checks for RHEL-type distro...')
             call_attention_to_password_prompt()
 
-            # do even more prep/checks if distro is CentOS
+            # do extra prep/checks if distro is CentOS Stream 8
+            if cnfg.DISTRO_NAME in ['centos'] and cnfg.DISTRO_VER in ['8']:
+                print('Doing prep/checks for CentOS Stream 8...')
+                min_minor = curr_py_rel_ver_minor - 3           # check up to 2 vers before current
+                max_minor = curr_py_rel_ver_minor + 3           # check up to 3 vers after current
+                py_minor_ver_rng = range(max_minor, min_minor, -1)
+                if py_interp_ver_tup < curr_py_rel_ver_tup:
+                    print(f"Checking for appropriate Python version on system...")
+                    for check_py_ver in py_minor_ver_rng:
+                        if shutil.which(f'python3.{check_py_ver}'):
+                            cnfg.py_interp_path = shutil.which(f'python3.{check_py_ver}')
+                            cnfg.py_interp_ver = f'3.{check_py_ver}'
+                            print(f'Found Python version {cnfg.py_interp_ver} available.')
+                            break
+                    else:
+                        error(  f'ERROR: Did not find any appropriate Python interpreter version.')
+                        safe_shutdown(1)
+
+            # do extra prep/checks if distro is CentOS 7
             if cnfg.DISTRO_NAME in ['centos'] and cnfg.DISTRO_VER in ['7']:
-                # if py_interp_ver_tup >= curr_py_rel_ver_tup:
+                print('Doing prep/checks for CentOS 7...')
                 if py_interp_ver_tup >= (3, 8):
                     print(f"Good, Python version is 3.8 or later: "
                             f"'{cnfg.py_interp_ver}'")
@@ -705,7 +724,7 @@ def get_distro_names():
         distro_list.extend(group)
 
     sorted_distro_list = sorted(distro_list)
-    distros = ",\n\t".join(sorted_distro_list)
+    distros = "\n\t".join(sorted_distro_list)
     return distros
 
 
