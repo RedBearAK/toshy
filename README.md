@@ -325,9 +325,11 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
     - Tested with "Workstation" installer choice (GNOME)
     - Auto-start with systemd user services works
-    - GNOME X11/Xorg session works
+    - GNOME X11/Xorg session works (not the default!)
         - Choose "Standard (X11 display server)" at login
-    - GNOME Wayland session WILL NOT WORK! Because:
+    - For tray icon support:
+        - Install AppIndicator extension from GNOME Software app
+    - NB: GNOME Wayland session WILL NOT WORK! Because:
         - GNOME shell too old, no compatible extension available
 
 ### openSUSE (RPM-based packaging system)
