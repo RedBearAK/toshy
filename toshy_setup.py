@@ -482,7 +482,7 @@ distro_groups_map = {
     # separate references for Tumbleweed types versus Leap types
     'tumbleweed-based':["opensuse-tumbleweed"],
     'leap-based':      ["opensuse-leap"],
-    'ubuntu-based':    ["ubuntu", "mint", "popos", "eos", "neon", "tuxedo", "zorin"],
+    'ubuntu-based':    ["ubuntu", "mint", "popos", "elementary", "neon", "tuxedo", "zorin"],
     'debian-based':    ["lmde", "peppermint", "debian"],
     'arch-based':      ["arch", "arcolinux", "endeavouros", "manjaro"],
     # Add more as needed...

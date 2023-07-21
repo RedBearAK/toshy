@@ -92,7 +92,7 @@ def get_env_info():
 
     distro_names = {            # simplify distro names
         'Debian.*':             'debian',
-        'elementary':           'eos',
+        # 'elementary':           'eos',
         'Fedora.*':             'fedora',
         'LMDE.*':               'lmde',
         'Manjaro':              'manjaro',
