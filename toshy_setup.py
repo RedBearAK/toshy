@@ -598,6 +598,8 @@ def install_distro_pkgs():
                     else:
                         error(  f'ERROR: Did not find any appropriate Python interpreter version.')
                         safe_shutdown(1)
+                # sudo dnf install python3.11-devel
+                subprocess.run(['sudo', 'dnf', 'install', f'python{cnfg.py_interp_ver}-devel'])
 
             # do extra prep/checks if distro is CentOS 7
             if cnfg.DISTRO_NAME in ['centos'] and cnfg.DISTRO_VER in ['7']:
