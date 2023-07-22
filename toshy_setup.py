@@ -733,10 +733,11 @@ def install_distro_pkgs():
         check_for_pkg_mgr_cmd('eopkg')
         call_attention_to_password_prompt()
         try:
-            if not shutil.which('/usr/bin/bash'):
-                sys_bash_cmd = shutil.which('bash')
-                subprocess.run(['sudo', 'ln', '-s', sys_bash_cmd, '/usr/bin/bash'])
-                print(f"Created symbolic link from '/usr/bin/bash' to '{sys_bash_cmd}'")
+            # SWITCHED SERVICE FILES TO USE '/bin/bash' INSTEAD OF '/usr/bin/bash'
+            # if not shutil.which('/usr/bin/bash'):
+            #     sys_bash_cmd = shutil.which('bash')
+            #     subprocess.run(['sudo', 'ln', '-s', sys_bash_cmd, '/usr/bin/bash'])
+            #     print(f"Created symbolic link from '/usr/bin/bash' to '{sys_bash_cmd}'")
             subprocess.run(['sudo', 'eopkg', 'install', '-y', '-c', 'system.devel'], check=True)
             subprocess.run(['sudo', 'eopkg', 'install', '-y'] + cnfg.pkgs_for_distro, check=True)
         except subprocess.CalledProcessError as proc_err:
