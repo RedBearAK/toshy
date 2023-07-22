@@ -1181,7 +1181,7 @@ def setup_systemd_services():
     if cnfg.systemctl_present and cnfg.init_system == 'systemd':
         script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'bin', 'toshy-systemd-setup.sh')
         subprocess.run([script_path])
-        print(f'Finished setting up Toshy "systemd" services.')
+        print(f'Finished setting up Toshy systemd services.')
     else:
         print(f'System does not seem to be using "systemd" as init system.')
 
