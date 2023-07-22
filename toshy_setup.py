@@ -53,7 +53,7 @@ installer_file_path     = os.path.abspath(__file__)
 installer_dir_path      = os.path.dirname(installer_file_path)
 if trash_dir in installer_file_path or '/trash/' in installer_file_path.lower():
     print()
-    error(f"Path to this file: {installer_file_path}")
+    error(f"Path to this file:\n\t{installer_file_path}")
     error(f"You probably did not intend to run this from the TRASH. See path. Exiting.")
     print()
     sys.exit(1)
@@ -69,7 +69,7 @@ path_fix_tmp_file   = 'toshy_installer_says_fix_path'
 path_fix_tmp_path   = os.path.join(run_tmp_dir, path_fix_tmp_file)
 
 # set a standard path for duration of script run, to avoid issues with user customized paths
-os.environ['PATH']  = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+os.environ['PATH']  = '/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin'
 
 # deactivate Python virtual environment, if one is active, to avoid issues with sys.executable
 if sys.prefix != sys.base_prefix:
@@ -527,9 +527,14 @@ pkg_groups_map = {
                         "libappindicator-gtk3", "pkg-config", "python-dbus", "python-pip",
                         "python", "libnotify", "systemd", "zenity"],
 
-    'solus-based':     ["gcc", "git", "libcairo-devel", "python3-devel", "python3-pip", 
-                        "python3-tkinter", "gir1.2-gtk-3.0", "libappindicator-devel",
-                        "xorg-server-xrandr", "libnotify", "systemd-devel", "zenity"],
+    # 'solus-based':     ["gcc", "git", "libcairo-devel", "python3-devel", "python3-pip", 
+    #                     "python3-tkinter", "libappindicator-devel",
+    #                     "libnotify", "systemd-devel", "zenity"],
+
+    'solus-based':     ["gcc", "git", "libcairo-devel", "python3-devel", "pip", 
+                        "python3-tkinter", "python3-dbus", "python-gobject-devel", "python-dbus-devel",
+                        # "dbus-devel", "dbus-glib-devel", "binutils", "libappindicator-devel",
+                        "libnotify", "systemd-devel", "zenity"],
 
 }
 
@@ -728,6 +733,11 @@ def install_distro_pkgs():
         check_for_pkg_mgr_cmd('eopkg')
         call_attention_to_password_prompt()
         try:
+            if not shutil.which('/usr/bin/bash'):
+                sys_bash_cmd = shutil.which('bash')
+                subprocess.run(['sudo', 'ln', '-s', sys_bash_cmd, '/usr/bin/bash'])
+                print(f"Created symbolic link from '/usr/bin/bash' to '{sys_bash_cmd}'")
+            subprocess.run(['sudo', 'eopkg', 'install', '-y', '-c', 'system.devel'], check=True)
             subprocess.run(['sudo', 'eopkg', 'install', '-y'] + cnfg.pkgs_for_distro, check=True)
         except subprocess.CalledProcessError as proc_err:
             exit_with_pkg_install_error(proc_err)
