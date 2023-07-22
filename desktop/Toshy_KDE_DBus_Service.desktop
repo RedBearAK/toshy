@@ -3,7 +3,7 @@ Type=Application
 Name=Toshy KDE D-Bus Service
 GenericName=Toshy KDE D-Bus Service
 # autostart the D-Bus service to get window focus notifications from KWin script
-Exec=/usr/bin/sh -c 'exec env $HOME/.local/bin/toshy-kde-dbus-service'
+Exec=/bin/sh -c 'exec env $HOME/.local/bin/toshy-kde-dbus-service'
 Terminal=false
 NoDisplay=false
 # Icon must be copied to ~/.local/share/icons

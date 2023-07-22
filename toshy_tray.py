@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/bin/env python3
 # -*- coding: utf-8 -*-
 
 # Indicator tray icon menu app for Toshy, using pygobject/gi
@@ -83,7 +83,8 @@ if not os.path.exists(LOCK_FILE_DIR):
 
 # recursively set user's Toshy temp folder as only read/write by owner
 try:
-    os.system(f'/usr/bin/chmod 0700 {TOSHY_USER_TMP_DIR}')
+    chmod_cmd = shutil.which('chmod')
+    os.system(f'{chmod_cmd} 0700 {TOSHY_USER_TMP_DIR}')
 except Exception as e:
     debug(f'NON-FATAL ERROR: Problem when setting permissions on temp folder.')
     debug(e)
@@ -220,15 +221,15 @@ def check_notify_send():
 
 is_p_option_supported = check_notify_send()
 
-ntfy_cmd        = '/usr/bin/notify-send'
+ntfy_cmd        = shutil.which('notify-send')
 ntfy_prio       = '--urgency=critical'
 ntfy_icon       = f'--icon=\"{icon_file_active}\"'
 ntfy_title      = 'Toshy Alert'
 ntfy_id_new     = None
 ntfy_id_last    = '0' # initiate with integer string to avoid error
 
-user_sysctl     = '/usr/bin/systemctl --user'
-sysctl_cmd      = '/usr/bin/systemctl'
+sysctl_cmd      = f"{shutil.which('systemctl')}"
+user_sysctl     = f'{sysctl_cmd} --user'
 
 toshy_svc_sessmon           = 'toshy-session-monitor.service'
 toshy_svc_config            = 'toshy-config.service'
@@ -444,7 +445,8 @@ def fn_open_preferences(widget):
 
 def fn_open_config_folder(widget):
     try:
-        subprocess.Popen(['/usr/bin/xdg-open', current_folder_path])
+        xdg_open_cmd = shutil.which('xdg-open')
+        subprocess.Popen([xdg_open_cmd, current_folder_path])
     except FileNotFoundError as e:
         error('File not found. I have no idea how this error is possible.')
         error(e)
@@ -453,7 +455,8 @@ def fn_remove_tray_icon(widget):
     global loop
     remove_lockfile()
     loop.quit()
-    os.system('/usr/bin/pkill -f "toshy_tray.py"')
+    pkill_cmd = shutil.which('pkill')
+    os.system(f'{pkill_cmd} -f "toshy_tray.py"')
     # Gtk.main_quit()
     sys.exit(0)
 

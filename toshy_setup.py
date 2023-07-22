@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/bin/env python3
 
 import os
 os.environ['PYTHONDONTWRITEBYTECODE'] = '1'     # prevent this script from creating cache files
@@ -532,7 +532,8 @@ pkg_groups_map = {
     #                     "libnotify", "systemd-devel", "zenity"],
 
     'solus-based':     ["gcc", "git", "libcairo-devel", "python3-devel", "pip", 
-                        "python3-tkinter", "python3-dbus", "python-gobject-devel", "python-dbus-devel",
+                        "python3-tkinter", "python3-dbus", "python-gobject-devel",
+                        "python-dbus-devel", "libayatana-appindicator",
                         # "dbus-devel", "dbus-glib-devel", "binutils", "libappindicator-devel",
                         "libnotify", "systemd-devel", "zenity"],
 
@@ -733,11 +734,6 @@ def install_distro_pkgs():
         check_for_pkg_mgr_cmd('eopkg')
         call_attention_to_password_prompt()
         try:
-            # SWITCHED SERVICE FILES TO USE '/bin/bash' INSTEAD OF '/usr/bin/bash'
-            # if not shutil.which('/usr/bin/bash'):
-            #     sys_bash_cmd = shutil.which('bash')
-            #     subprocess.run(['sudo', 'ln', '-s', sys_bash_cmd, '/usr/bin/bash'])
-            #     print(f"Created symbolic link from '/usr/bin/bash' to '{sys_bash_cmd}'")
             subprocess.run(['sudo', 'eopkg', 'install', '-y', '-c', 'system.devel'], check=True)
             subprocess.run(['sudo', 'eopkg', 'install', '-y'] + cnfg.pkgs_for_distro, check=True)
         except subprocess.CalledProcessError as proc_err:

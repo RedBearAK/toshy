@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/env bash
 
 
 # Start Toshy KDE D-Bus service, after terminating existing

@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/env bash
 
 
 # Set up the Toshy systemd services (session monitor and config).
@@ -57,11 +57,11 @@ sleep $DELAY
 # But silence errors (e.g., "XDG_SESSION_DESKTOP not set, ignoring")
 vars_to_import="XDG_SESSION_TYPE XDG_SESSION_DESKTOP XDG_CURRENT_DESKTOP"
 # shellcheck disable=SC2086
-/usr/bin/systemctl --user import-environment $vars_to_import >/dev/null 2>&1
+systemctl --user import-environment $vars_to_import >/dev/null 2>&1
 
 echo -e "\nIssuing systemctl daemon-reload..."
 
-/usr/bin/systemctl --user daemon-reload
+systemctl --user daemon-reload
 
 sleep $DELAY
 
@@ -74,41 +74,26 @@ service_names=(
 )
 
 for service_name in "${service_names[@]}"; do
-    /usr/bin/systemctl --user reenable "$service_name"
-    /usr/bin/systemctl --user start "$service_name"
+    systemctl --user reenable "$service_name"
+    systemctl --user start "$service_name"
     sleep "$DELAY"
 done
-
-# /usr/bin/systemctl --user reenable toshy-kde-dbus.service
-# /usr/bin/systemctl --user start toshy-kde-dbus.service
-
-# sleep $DELAY
-
-# /usr/bin/systemctl --user reenable toshy-config.service
-# /usr/bin/systemctl --user start toshy-config.service
-
-# sleep $DELAY
-
-# /usr/bin/systemctl --user reenable toshy-session-monitor.service
-# /usr/bin/systemctl --user start toshy-session-monitor.service
-
-# sleep $DELAY
 
 export SYSTEMD_PAGER=""
 
 echo -e "\nDisplaying status of Toshy systemd services...\n"
 
-/usr/bin/systemctl --user status toshy-kde-dbus.service
+systemctl --user status toshy-kde-dbus.service
 echo ""
 
 sleep $DELAY
 
-/usr/bin/systemctl --user status toshy-session-monitor.service
+systemctl --user status toshy-session-monitor.service
 echo ""
 
 sleep $DELAY
 
-/usr/bin/systemctl --user status toshy-config.service
+systemctl --user status toshy-config.service
 
 sleep $DELAY
 

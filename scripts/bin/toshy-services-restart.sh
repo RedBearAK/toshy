@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/env bash
 
 
 # Restart the Toshy services. First stop session monitor so that it doesn't 
@@ -40,13 +40,13 @@ fi
 
 echo -e "\nRestarting Toshy systemd services..."
 
-/usr/bin/systemctl --user restart toshy-kde-dbus.service
+systemctl --user restart toshy-kde-dbus.service
 sleep 0.5
-/usr/bin/systemctl --user stop toshy-session-monitor.service
+systemctl --user stop toshy-session-monitor.service
 sleep 0.5
-/usr/bin/systemctl --user restart toshy-config.service
+systemctl --user restart toshy-config.service
 sleep 0.5
-/usr/bin/systemctl --user start toshy-session-monitor.service
+systemctl --user start toshy-session-monitor.service
 
 echo -e "\nToshy systemd services restarted.\n\nRemember to tap a modifier key before trying shortcuts!\n"
 sleep 1
