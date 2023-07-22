@@ -485,6 +485,7 @@ distro_groups_map = {
     'ubuntu-based':    ["ubuntu", "mint", "popos", "elementary", "neon", "tuxedo", "zorin"],
     'debian-based':    ["lmde", "peppermint", "debian"],
     'arch-based':      ["arch", "arcolinux", "endeavouros", "manjaro"],
+    'solus-based':     ["solus"],
     # Add more as needed...
 }
 
@@ -525,6 +526,11 @@ pkg_groups_map = {
     'arch-based':      ["cairo", "dbus", "evtest", "git", "gobject-introspection", "tk",
                         "libappindicator-gtk3", "pkg-config", "python-dbus", "python-pip",
                         "python", "libnotify", "systemd", "zenity"],
+
+    'solus-based':     ["gcc", "git", "libcairo-devel", "python3-devel", "python3-pip", 
+                        "python3-tkinter", "gir1.2-gtk-3.0", "libappindicator-devel",
+                        "xorg-server-xrandr", "libnotify", "systemd-devel", "zenity"],
+
 }
 
 extra_pkgs_map = {
@@ -566,13 +572,21 @@ def install_distro_pkgs():
     zypper_distros  = distro_groups_map['tumbleweed-based'] + distro_groups_map['leap-based']
     apt_distros     = distro_groups_map['ubuntu-based'] + distro_groups_map['debian-based']
     pacman_distros  = distro_groups_map['arch-based']
+    eopkg_distros   = distro_groups_map['solus-based']
 
     def check_for_pkg_mgr_cmd(command):
+        """make sure native package installer command exists before using it, or exit"""
         pkg_mgr_cmd = command
         if not shutil.which(pkg_mgr_cmd):
             print()
             error(f'Package manager command ({pkg_mgr_cmd}) not available. Unable to continue.')
             safe_shutdown(1)
+
+    def exit_with_pkg_install_error(proc_err):
+        """shutdown with error message if there is a problem with installing package list"""
+        print()
+        error(f'ERROR: Problem installing package list for distro type:\n\t{proc_err}')
+        safe_shutdown(1)
 
     if cnfg.DISTRO_NAME in dnf_distros:
 
@@ -660,9 +674,9 @@ def install_distro_pkgs():
             check_for_pkg_mgr_cmd('rpm-ostree')
             print(f'Distro appears to be immutable using "rpm-ostree".')
         else:
-            check_for_pkg_mgr_cmd('dnf')    # if we get here, 'dnf' should exist on CentOS too
+            check_for_pkg_mgr_cmd('dnf')    # if we get here, 'dnf' should also exist on CentOS 7
 
-        # finally, do the install of the main list of packages for this distro type
+        # finally, do the install of the main list of packages for DNF/RHEL distro types
         try:
             call_attention_to_password_prompt()
             if cnfg.DISTRO_NAME == 'silverblue':
@@ -672,9 +686,7 @@ def install_distro_pkgs():
                 subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro,
                                 check=True)
         except subprocess.CalledProcessError as proc_err:
-            print()
-            error(f'ERROR: Problem installing package list for distro type:\n\t{proc_err}')
-            safe_shutdown(1)
+            exit_with_pkg_install_error(proc_err)
 
     elif cnfg.DISTRO_NAME in zypper_distros:
         check_for_pkg_mgr_cmd('zypper')
@@ -683,9 +695,7 @@ def install_distro_pkgs():
             subprocess.run(['sudo', 'zypper', '--non-interactive', 'install'] + cnfg.pkgs_for_distro,
                             check=True)
         except subprocess.CalledProcessError as proc_err:
-            print()
-            error(f'ERROR: Problem installing package list for distro type:\n\t{proc_err}')
-            safe_shutdown(1)
+            exit_with_pkg_install_error(proc_err)
 
     elif cnfg.DISTRO_NAME in apt_distros:
         check_for_pkg_mgr_cmd('apt')
@@ -693,9 +703,7 @@ def install_distro_pkgs():
         try:
             subprocess.run(['sudo', 'apt', 'install', '-y'] + cnfg.pkgs_for_distro, check=True)
         except subprocess.CalledProcessError as proc_err:
-            print()
-            error(f'ERROR: Problem installing package list for distro type:\n\t{proc_err}')
-            safe_shutdown(1)
+            exit_with_pkg_install_error(proc_err)
 
     elif cnfg.DISTRO_NAME in pacman_distros:
         check_for_pkg_mgr_cmd('pacman')
@@ -714,13 +722,20 @@ def install_distro_pkgs():
             try:
                 subprocess.run(['sudo', 'pacman', '-S', '--noconfirm'] + pkgs_to_install, check=True)
             except subprocess.CalledProcessError as proc_err:
-                print()
-                error(f'ERROR: Problem installing package list for distro type:\n\t{proc_err}')
-                safe_shutdown(1)
+                exit_with_pkg_install_error(proc_err)
+
+    if cnfg.DISTRO_NAME in eopkg_distros:
+        check_for_pkg_mgr_cmd('eopkg')
+        call_attention_to_password_prompt()
+        try:
+            subprocess.run(['sudo', 'eopkg', 'install', '-y'] + cnfg.pkgs_for_distro, check=True)
+        except subprocess.CalledProcessError as proc_err:
+            exit_with_pkg_install_error(proc_err)
 
     else:
         print()
         error(f"ERROR: Installer does not know how to handle distro: {cnfg.DISTRO_NAME}")
+        print(f'Try some options in "./toshy_setup.py --help".')
         safe_shutdown(1)
 
     # Have something come out even if package list is empty (like Arch after initial run)
