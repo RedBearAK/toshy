@@ -79,10 +79,10 @@ if sys.prefix != sys.base_prefix:
 
 # current stable Python release version (update when needed):
 # 3.11 Release Date: Oct. 24, 2022
-curr_py_rel_ver_maj = 3
-curr_py_rel_ver_minor = 11
-curr_py_rel_ver_tup = (curr_py_rel_ver_maj, curr_py_rel_ver_minor)
-curr_py_rel_ver     = f'{curr_py_rel_ver_maj}.{curr_py_rel_ver_minor}'
+curr_py_rel_ver_major   = 3
+curr_py_rel_ver_minor   = 11
+curr_py_rel_ver_tup     = (curr_py_rel_ver_major, curr_py_rel_ver_minor)
+curr_py_rel_ver         = f'{curr_py_rel_ver_major}.{curr_py_rel_ver_minor}'
 
 # Check if 'sudo' command is available to user
 if not shutil.which('sudo'):
@@ -603,10 +603,10 @@ def install_distro_pkgs():
                 py_minor_ver_rng = range(max_minor, min_minor, -1)
                 if py_interp_ver_tup < curr_py_rel_ver_tup:
                     print(f"Checking for appropriate Python version on system...")
-                    for check_py_ver in py_minor_ver_rng:
-                        if shutil.which(f'python3.{check_py_ver}'):
-                            cnfg.py_interp_path = shutil.which(f'python3.{check_py_ver}')
-                            cnfg.py_interp_ver = f'3.{check_py_ver}'
+                    for check_py_minor_ver in py_minor_ver_rng:
+                        if shutil.which(f'python3.{check_py_minor_ver}'):
+                            cnfg.py_interp_path = shutil.which(f'python3.{check_py_minor_ver}')
+                            cnfg.py_interp_ver = f'3.{check_py_minor_ver}'
                             print(f'Found Python version {cnfg.py_interp_ver} available.')
                             break
                     else:
