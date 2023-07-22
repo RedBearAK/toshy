@@ -647,7 +647,7 @@ def install_distro_pkgs():
                 check_for_pkg_mgr_cmd('yum')
                 subprocess.run(['sudo', 'yum', 'install', '-y', 'dnf'])
 
-            if cnfg.DISTRO_NAME not in ['centos']:
+            if not (cnfg.DISTRO_NAME == 'centos' and cnfg.DISTRO_VER in ['7', '8']):
                 # enable "CodeReady Builder" repo for 'gobject-introspection-devel' on RHELs:
                 # sudo dnf config-manager --set-enabled crb
                 subprocess.run(['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb'])
