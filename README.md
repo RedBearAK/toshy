@@ -308,6 +308,22 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - Red Hat Enterprise Linux itself? Probably.
     - Try `./toshy_setup.py --override-distro=almalinux` or `=rhel`
 
+- CentOS Stream 9 (RHEL 9 upstream)
+
+    - Same info as the RHEL clones above
+    - Tested with "Workstation" installer choice
+
+- CentOS Stream 8 (RHEL upstream) - Partial support:
+
+    - Tested with "Workstation" installer choice (GNOME)
+    - Auto-start with systemd user services works
+    - GNOME X11/Xorg session works (not the default!)
+        - Choose "Standard (X11 display server)" at login
+    - For tray icon support:
+        - Install AppIndicator extension from GNOME Software app
+    - NB: GNOME Wayland session WILL NOT WORK! Because:
+        - GNOME shell too old, no compatible extension available
+
 - CentOS 7 (RHEL 7 clone) - Partial support:
 
     - You must first install `python3` to run `toshy_setup.py`
@@ -320,17 +336,6 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - To manually start Toshy config from terminal:
         - Use `toshy-config-start` or `toshy-config-verbose-start`
         - Use `toshy-config-stop` to stop a background Toshy config
-
-- CentOS Stream 8 (RHEL upstream) - Partial support:
-
-    - Tested with "Workstation" installer choice (GNOME)
-    - Auto-start with systemd user services works
-    - GNOME X11/Xorg session works (not the default!)
-        - Choose "Standard (X11 display server)" at login
-    - For tray icon support:
-        - Install AppIndicator extension from GNOME Software app
-    - NB: GNOME Wayland session WILL NOT WORK! Because:
-        - GNOME shell too old, no compatible extension available
 
 ### openSUSE (RPM-based packaging system)
 

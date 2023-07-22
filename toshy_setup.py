@@ -647,7 +647,7 @@ def install_distro_pkgs():
                 check_for_pkg_mgr_cmd('yum')
                 subprocess.run(['sudo', 'yum', 'install', '-y', 'dnf'])
 
-            if cnfg.DISTRO_NAME not in ['centos']:
+            if not (cnfg.DISTRO_NAME == 'centos' and cnfg.DISTRO_VER in ['7', '8']):
                 # enable "CodeReady Builder" repo for 'gobject-introspection-devel' on RHELs:
                 # sudo dnf config-manager --set-enabled crb
                 subprocess.run(['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb'])
@@ -735,8 +735,19 @@ def get_distro_names():
         distro_list.extend(group)
 
     sorted_distro_list = sorted(distro_list)
-    distros = "\n\t".join(sorted_distro_list)
-    return distros
+
+    prev_char = sorted_distro_list[0][0]
+    distro_index = prev_char.upper() + ": "  # start with the initial letter
+    for distro in sorted_distro_list:
+        if distro[0] != prev_char:
+            distro_index = distro_index[:-2]  # remove last comma and space from previous line
+            distro_index += "\n\t" + distro[0].upper() + ": " + distro + ", "  # start a new line with new initial letter
+            prev_char = distro[0]
+        else:
+            distro_index += distro + ", "
+    distro_index = distro_index[:-2]  # remove last comma and space from the final line
+
+    return distro_index
 
 
 def clone_keyszer_branch():
@@ -1170,7 +1181,7 @@ def setup_systemd_services():
     if cnfg.systemctl_present and cnfg.init_system == 'systemd':
         script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'bin', 'toshy-systemd-setup.sh')
         subprocess.run([script_path])
-        print(f'Finished setting up Toshy "systemd" services.')
+        print(f'Finished setting up Toshy systemd services.')
     else:
         print(f'System does not seem to be using "systemd" as init system.')
 
