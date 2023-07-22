@@ -735,8 +735,19 @@ def get_distro_names():
         distro_list.extend(group)
 
     sorted_distro_list = sorted(distro_list)
-    distros = "\n\t".join(sorted_distro_list)
-    return distros
+
+    prev_char = sorted_distro_list[0][0]
+    distro_index = prev_char.upper() + ": "  # start with the initial letter
+    for distro in sorted_distro_list:
+        if distro[0] != prev_char:
+            distro_index = distro_index[:-2]  # remove last comma and space from previous line
+            distro_index += "\n\t" + distro[0].upper() + ": " + distro + ", "  # start a new line with new initial letter
+            prev_char = distro[0]
+        else:
+            distro_index += distro + ", "
+    distro_index = distro_index[:-2]  # remove last comma and space from the final line
+
+    return distro_index
 
 
 def clone_keyszer_branch():
