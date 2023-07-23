@@ -730,7 +730,7 @@ def install_distro_pkgs():
             except subprocess.CalledProcessError as proc_err:
                 exit_with_pkg_install_error(proc_err)
 
-    if cnfg.DISTRO_NAME in eopkg_distros:
+    elif cnfg.DISTRO_NAME in eopkg_distros:
         check_for_pkg_mgr_cmd('eopkg')
         call_attention_to_password_prompt()
         try:
