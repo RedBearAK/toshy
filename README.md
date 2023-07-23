@@ -465,6 +465,12 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
     - Installer will try to work on any distro that identifies as `Arch`
 
+### Independent distros
+
+- Solus 4.4 (eopkg)
+
+    - Budgie ISO tested, GNOME and MATE should work without issue
+
 ## Currently working desktop environments / window managers
 
 - X11/Xorg (all desktop environments)
