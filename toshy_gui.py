@@ -513,7 +513,7 @@ svc_lbl_font = tkfont.Font(**svc_lbl_font_dict)
 services_label = tk.Label(
     top_frame_left_column,
     justify=tk.CENTER,
-    text=('Toshy Services Status:'),
+    text=('Toshy Services Status:   '),
     font=svc_lbl_font
 )
 services_label.pack(padx=sw_lbl_indent, pady=btn_lbl_pady)
