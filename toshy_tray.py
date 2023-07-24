@@ -451,6 +451,40 @@ def fn_open_config_folder(widget):
         error('File not found. I have no idea how this error is possible.')
         error(e)
 
+def run_cmd_in_terminal(command):
+    # List of common terminal emulators in descending order of commonness.
+    terminal_apps = [
+        ("gnome-terminal", ["--"]),
+        ("konsole", ["-e"]),
+        ("xfce4-terminal", ["-e"]),
+        ("mate-terminal", ["-e"]),
+        ("xterm", ["-e"]),
+        ("rxvt", ["-e"]),
+        ("urxvt", ["-e"]),
+    ]
+
+    for terminal, terminal_args in terminal_apps:
+        terminal_path = shutil.which(terminal)
+        if terminal_path is not None:
+            # run the terminal emulator with the command
+            subprocess.Popen([terminal_path] + terminal_args + [command])
+            return
+
+    _ntfy_icon = f'--icon={icon_file_inverse}'
+    _ntfy_msg = "ERROR: No suitable terminal emulator found."
+
+    if is_p_option_supported:
+        global ntfy_id_last, ntfy_id_new
+        ntfy_id_new = subprocess.run(
+            [ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg, '-p','-r',ntfy_id_last], 
+            stdout=subprocess.PIPE).stdout.decode().strip()
+        ntfy_id_last = ntfy_id_new
+    else:
+        subprocess.run([ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg])
+
+def fn_show_services_log(widget):
+    run_cmd_in_terminal('toshy-services-log')
+
 def fn_remove_tray_icon(widget):
     global loop
     remove_lockfile()
@@ -608,6 +642,10 @@ menu.append(preferences_item)
 open_config_folder_item = Gtk.MenuItem(label="Open Config Folder")
 open_config_folder_item.connect("activate", fn_open_config_folder)
 menu.append(open_config_folder_item)
+
+show_services_log_item = Gtk.MenuItem(label="Show Services Log")
+show_services_log_item.connect("activate", fn_show_services_log)
+menu.append(show_services_log_item)
 
 separator_above_remove_icon_item = Gtk.SeparatorMenuItem()
 menu.append(separator_above_remove_icon_item)  #-------------------------------------#
