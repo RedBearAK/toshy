@@ -462,17 +462,14 @@ def run_cmd_in_terminal(command):
         ("rxvt", ["-e"]),
         ("urxvt", ["-e"]),
     ]
-
     for terminal, terminal_args in terminal_apps:
         terminal_path = shutil.which(terminal)
         if terminal_path is not None:
             # run the terminal emulator with the command
             subprocess.Popen([terminal_path] + terminal_args + [command])
             return
-
     _ntfy_icon = f'--icon={icon_file_inverse}'
     _ntfy_msg = "ERROR: No suitable terminal emulator found."
-
     if is_p_option_supported:
         global ntfy_id_last, ntfy_id_new
         ntfy_id_new = subprocess.run(
