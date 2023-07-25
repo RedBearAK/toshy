@@ -3322,7 +3322,14 @@ keymap("VSCodes", {
     C("Alt-Shift-Left"):       [C("Alt-F19"),C("C-Shift-Left")],    # Select Left of Word
     C("Alt-Shift-Right"):      [C("Alt-F19"),C("C-Shift-Right")],   # Select Right of Word
 
-    C("RC-Backspace"):          C("C-Backspace"),               # Delete Entire Line Left of Cursor
+    # To make this work, assign these shortcuts to "deleteWordPartLeft" and "deleteWordPartRight" shortcuts
+    C("Shift-Alt-Backspace"):   C("Shift-Alt-Backspace"),        # Delete word left of cursor (override GenGUI)
+    C("Shift-Alt-Delete"):      C("Shift-Alt-Delete"),           # Delete word right of cursor (override GenGUI)
+    # C("Shift-Alt-Backspace"):  [C("Alt-F19"),C("C-Backspace")], # Delete word left of cursor
+    # C("Shift-Alt-Delete"):     [C("Alt-F19"),C("C-Delete")],    # Delete word right of cursor
+    # C("RC-Backspace"):          C("C-Backspace"),               # Delete Entire Line Left of Cursor
+    C("RC-Backspace"):         [C("Shift-Home"), C("Delete")],  # Delete entire line left of cursor
+    C("RC-Delete"):            [C("Shift-End"), C("Delete")],   # Delete entire line right of cursor
 
     # C("C-PAGE_DOWN"):           ignore_combo,                   # cancel next_view
     # C("C-PAGE_UP"):             ignore_combo,                   # cancel prev_view
@@ -3873,19 +3880,21 @@ keymap("General GUI", {
     C("Shift-RC-Left"):         C("Shift-Home"),                # Select all to Beginning of Line
     C("RC-Right"):              C("End"),                       # End of Line
     C("Shift-RC-Right"):        C("Shift-End"),                 # Select all to End of Line
-    # C("RC-Left"):               C("C-LEFT_BRACE"),              # Firefox-nw - Back
-    # C("RC-Right"):              C("C-RIGHT_BRACE"),             # Firefox-nw - Forward
-    # C("RC-Left"):               C("Alt-LEFT"),                  # Chrome-nw - Back
-    # C("RC-Right"):              C("Alt-RIGHT"),                 # Chrome-nw - Forward
     C("RC-Up"):                 C("C-Home"),                    # Beginning of File
     C("Shift-RC-Up"):           C("C-Shift-Home"),              # Select all to Beginning of File
     C("RC-Down"):               C("C-End"),                     # End of File
     C("Shift-RC-Down"):         C("C-Shift-End"),               # Select all to End of File
     C("Super-Backspace"):       C("C-Backspace"),               # Delete Left Word of Cursor
     C("Super-Delete"):          C("C-Delete"),                  # Delete Right Word of Cursor
-    # C("Alt-Backspace"):         C("C-Backspace"),               # Default not-chromebook
     C("RC-Backspace"):          C("C-Shift-Backspace"),         # Delete Entire Line Left of Cursor
     C("Alt-Delete"):            C("C-Delete"),                  # Delete Right Word of Cursor
+    C("Shift-Alt-Backspace"):   C("C-Backspace"),               # Delete word left of cursor
+    C("Shift-Alt-Delete"):      C("C-Delete"),                  # Delete word right of cursor
+
+    # C("RC-Left"):               C("C-LEFT_BRACE"),              # Firefox-nw - Back
+    # C("RC-Right"):              C("C-RIGHT_BRACE"),             # Firefox-nw - Forward
+    # C("RC-Left"):               C("Alt-LEFT"),                  # Chrome-nw - Back
+    # C("RC-Right"):              C("Alt-RIGHT"),                 # Chrome-nw - Forward
     # C(""):                      ignore_combo,                   # cancel
     # C(""):                      C(""),                          #
 
