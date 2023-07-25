@@ -430,6 +430,13 @@ def install_udev_rules():
 def verify_user_groups():
     """Check if the `input` group exists and user is in group"""
     print(f'\n\n§  Checking if user is in "input" group...\n{cnfg.separator}')
+    
+    if cnfg.DISTRO_NAME == 'silverblue':
+        # special command to make Fedora Silverblue/uBlue work, or usermod will fail: 
+        # grep -E '^input:' /usr/lib/group | sudo tee -a /etc/group
+        command = "grep -E '^input:' /usr/lib/group | sudo tee -a /etc/group >/dev/null"
+        subprocess.run(command, shell=True, check=True)
+    
     try:
         grp.getgrnam(cnfg.input_group_name)
     except KeyError:
@@ -594,6 +601,10 @@ def install_distro_pkgs():
         error(f'ERROR: Problem installing package list for distro type:\n\t{proc_err}')
         safe_shutdown(1)
 
+    def show_pkg_install_success():
+        # Have something come out even if package list is empty (like Arch after initial run)
+        print(f'All necessary native distro packages are installed.')
+
     if cnfg.DISTRO_NAME in dnf_distros:
 
         # do extra stuff only if distro is a RHEL type (not Fedora type)
@@ -676,21 +687,23 @@ def install_distro_pkgs():
             subprocess.run(['sudo', 'dnf', 'install', '-y', 'epel-release'])
             subprocess.run(['sudo', 'dnf', 'update', '-y'])
 
-        if cnfg.DISTRO_NAME == 'silverblue':
-            check_for_pkg_mgr_cmd('rpm-ostree')
-            print(f'Distro appears to be immutable using "rpm-ostree".')
-        else:
-            check_for_pkg_mgr_cmd('dnf')    # if we get here, 'dnf' should also exist on CentOS 7
-
         # finally, do the install of the main list of packages for DNF/RHEL distro types
         try:
             call_attention_to_password_prompt()
             if cnfg.DISTRO_NAME == 'silverblue':
-                subprocess.run(['sudo', 'rpm-ostree', 'install', '-y'] + cnfg.pkgs_for_distro,
-                                check=True)
+                check_for_pkg_mgr_cmd('rpm-ostree')
+                print(f'Distro is Silverblue type. Using "rpm-ostree" instead of DNF.')
+                subprocess.run(['sudo', 'rpm-ostree', 'install', 
+                                '--idempotent', '--allow-inactive', 
+                                '--apply-live', '-y'] + cnfg.pkgs_for_distro, check=True)
+                # subprocess.run(['sudo', 'rpm-ostree', 'install', '-y'] + cnfg.pkgs_for_distro,
+                                # check=True)
             else:
+                check_for_pkg_mgr_cmd('dnf')    # if we get here, 'dnf' should also exist on CentOS 7
                 subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro,
                                 check=True)
+            show_pkg_install_success()
+            return
         except subprocess.CalledProcessError as proc_err:
             exit_with_pkg_install_error(proc_err)
 
@@ -700,6 +713,8 @@ def install_distro_pkgs():
         try:
             subprocess.run(['sudo', 'zypper', '--non-interactive', 'install'] + cnfg.pkgs_for_distro,
                             check=True)
+            show_pkg_install_success()
+            return
         except subprocess.CalledProcessError as proc_err:
             exit_with_pkg_install_error(proc_err)
 
@@ -708,6 +723,8 @@ def install_distro_pkgs():
         call_attention_to_password_prompt()
         try:
             subprocess.run(['sudo', 'apt', 'install', '-y'] + cnfg.pkgs_for_distro, check=True)
+            show_pkg_install_success()
+            return
         except subprocess.CalledProcessError as proc_err:
             exit_with_pkg_install_error(proc_err)
 
@@ -727,6 +744,8 @@ def install_distro_pkgs():
             call_attention_to_password_prompt()
             try:
                 subprocess.run(['sudo', 'pacman', '-S', '--noconfirm'] + pkgs_to_install, check=True)
+                show_pkg_install_success()
+                return
             except subprocess.CalledProcessError as proc_err:
                 exit_with_pkg_install_error(proc_err)
 
@@ -736,6 +755,8 @@ def install_distro_pkgs():
         try:
             subprocess.run(['sudo', 'eopkg', 'install', '-y', '-c', 'system.devel'], check=True)
             subprocess.run(['sudo', 'eopkg', 'install', '-y'] + cnfg.pkgs_for_distro, check=True)
+            show_pkg_install_success()
+            return
         except subprocess.CalledProcessError as proc_err:
             exit_with_pkg_install_error(proc_err)
 
@@ -744,9 +765,6 @@ def install_distro_pkgs():
         error(f"ERROR: Installer does not know how to handle distro: {cnfg.DISTRO_NAME}")
         print(f'Try some options in "./toshy_setup.py --help".')
         safe_shutdown(1)
-
-    # Have something come out even if package list is empty (like Arch after initial run)
-    print(f'All necessary native distro packages are installed.')
 
 
 def get_distro_names():
