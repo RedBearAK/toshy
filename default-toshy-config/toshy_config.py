@@ -259,6 +259,7 @@ def negRgx(rgx_str):
 terminals_lod = [
     {clas:"^alacritty$"                 },
     {clas:"^com.raggesilver.BlackBox$"  },
+    {clas:"^contour$"                   },
     {clas:"^cutefish-terminal$"         },
     {clas:"^deepin-terminal$"           },
     {clas:"^eterm$"                     },
@@ -275,6 +276,7 @@ terminals_lod = [
     {clas:"^mate-terminal$"             },
     {clas:"^org.gnome.Console$"         },
     {clas:"^org.kde.konsole$"           },
+    {clas:"^org.wezfurlong.wezterm$"    },
     {clas:"^roxterm$"                   },
     {clas:"^qterminal$"                 },
     {clas:"^st$"                        },
