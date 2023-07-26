@@ -694,11 +694,17 @@ def install_distro_pkgs():
             if cnfg.DISTRO_NAME == 'silverblue':
                 check_for_pkg_mgr_cmd('rpm-ostree')
                 print(f'Distro is Silverblue type. Using "rpm-ostree" instead of DNF.')
+
+                # set up a toolbox to install software inside (the normal way) on Silverblue types
+                # all launcher shell scripts will need to be changed to "enter" the named toolbox!
+                
+                # toolbox_name = "toshy_toolbox"
+                # subprocess.run(["toolbox", "create", "-y", "-c", toolbox_name])
+                # subprocess.run(["toolbox", "run", "-c", toolbox_name, "dnf", "install", "-y", "python3-dbus", "python3-devel"])
+
                 subprocess.run(['sudo', 'rpm-ostree', 'install', 
                                 '--idempotent', '--allow-inactive', 
                                 '--apply-live', '-y'] + cnfg.pkgs_for_distro, check=True)
-                # subprocess.run(['sudo', 'rpm-ostree', 'install', '-y'] + cnfg.pkgs_for_distro,
-                                # check=True)
             else:
                 check_for_pkg_mgr_cmd('dnf')    # if we get here, 'dnf' should also exist on CentOS 7
                 subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro,
@@ -1274,7 +1280,8 @@ def apply_tweaks_GNOME():
     # Enable keyboard shortcut for GNOME Terminal preferences dialog
     # gsettings set org.gnome.Terminal.Legacy.Keybindings:/org/gnome/terminal/legacy/keybindings/ preferences '<Control>less'
     cmd_path = 'org.gnome.Terminal.Legacy.Keybindings:/org/gnome/terminal/legacy/keybindings/'
-    prefs_binding = '<Control>less'
+    # prefs_binding = '<Control>less'
+    prefs_binding = '<Control>comma'
     subprocess.run(['gsettings', 'set', cmd_path, 'preferences', prefs_binding])
 
     print(f'Set a keybinding for GNOME Terminal preferences.')
