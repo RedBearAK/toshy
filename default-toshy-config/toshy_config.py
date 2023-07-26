@@ -258,6 +258,7 @@ def negRgx(rgx_str):
 
 terminals_lod = [
     {clas:"^alacritty$"                 },
+    {clas:"^com.raggesilver.BlackBox$"  },
     {clas:"^cutefish-terminal$"         },
     {clas:"^deepin-terminal$"           },
     {clas:"^eterm$"                     },
@@ -3516,11 +3517,10 @@ keymap("Cmd+W dialog fix - Alt+F4", {
 ### Various fixes for supporting tab navigation shortcuts like Shift+Cmd+Braces
 
 tab_UI_fix_CtrlShiftTab = [
+    {clas:"^com.raggesilver.BlackBox$"},
     {clas:"^org.gnome.Console$|^Console$"},
     {clas:"^deepin-terminal$"},
     {lst:JDownloader_lod},
-    # {clas:"^.*jDownloader.*$"},
-    # {clas:"^java-lang-Thread$", name:"^JDownloader.*$"},
     {clas:"^kitty$"},
     {clas:"^Kgx$"},
 ]
@@ -3608,6 +3608,7 @@ keymap("GenTerms overrides: Pop!_OS", {
 # }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DISTRO_NAME == 'popos')
 }, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_NAME == 'popos')
 keymap("GenTerms overrides: Ubuntu/Fedora", {
+    C("LC-RC-Q"):               C("Super-L"),                   # Lock screen (ubuntu/fedora)
     C("LC-Right"):              [bind,C("Super-Page_Up")],      # SL - Change workspace (ubuntu/fedora)
     C("LC-Left"):               [bind,C("Super-Page_Down")],    # SL - Change workspace (ubuntu/fedora)
 # }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DISTRO_NAME in ['ubuntu', 'fedora'] )
@@ -3692,7 +3693,7 @@ keymap("General Terminals", {
     C("RC-B"):                  C("C-Shift-B"),
     C("RC-N"):                  C("C-Shift-N"),
     C("RC-M"):                  C("C-Shift-M"),
-    C("RC-COMMA"):              C("C-Shift-COMMA"),
+    # C("RC-COMMA"):              C("C-Shift-COMMA"),             # Open Preferences
     C("RC-Dot"):                C("LC-c"),                      # Mimic macOS Cmd+Dot to cancel command
     C("RC-SLASH"):              C("C-Shift-SLASH"),
     C("RC-KPASTERISK"):         C("C-Shift-KPASTERISK"),
@@ -3751,6 +3752,7 @@ keymap("GenGUI overrides: elementary OS", {
     C("RC-LC-f"):               C("Super-Up"),                  # SL- Maximize app elementary
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'elementary' )
 keymap("GenGUI overrides: Fedora", {
+    C("Super-RC-Q"):            C("Super-L"),                   # Lock screen (fedora)
     C("RC-H"):                  C("Super-h"),                   # Default SL - Minimize app (gnome/budgie/popos/fedora) not-deepin
     C("Super-Right"):          [bind,C("Super-Page_Up")],       # SL - Change workspace (ubuntu/fedora)
     C("Super-Left"):           [bind,C("Super-Page_Down")],     # SL - Change workspace (ubuntu/fedora)
@@ -3782,8 +3784,9 @@ keymap("GenGUI overrides: Pop!_OS", {
     C("RC-Q"):                  C("Super-q"),                   # SL - Close Apps (popos)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'popos' )
 keymap("GenGUI overrides: Ubuntu", {
-    C("Super-Right"):          [bind,C("Super-Page_Up")],       # SL - Change workspace (ubuntu/fedora)
-    C("Super-Left"):           [bind,C("Super-Page_Down")],     # SL - Change workspace (ubuntu/fedora)
+    C("Super-RC-Q"):            C("Super-L"),                   # Lock screen (ubuntu)
+    C("Super-Right"):          [bind,C("Super-Page_Up")],       # SL - Change workspace (ubuntu)
+    C("Super-Left"):           [bind,C("Super-Page_Down")],     # SL - Change workspace (ubuntu)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'ubuntu' )
 
 
