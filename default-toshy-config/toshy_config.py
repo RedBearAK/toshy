@@ -389,6 +389,7 @@ browsers_firefox = [
     "Firefox Developer Edition",
     "firefoxdeveloperedition",
     "LibreWolf",
+    "Mullvad Browser",
     "Navigator",
     "Waterfox",
 ]
