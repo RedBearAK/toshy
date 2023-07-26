@@ -432,7 +432,8 @@ def verify_user_groups():
     print(f'\n\n§  Checking if user is in "input" group...\n{cnfg.separator}')
     
     if cnfg.DISTRO_NAME == 'silverblue':
-        # special command to make Fedora Silverblue/uBlue work, or usermod will fail: 
+        # https://docs.fedoraproject.org/en-US/fedora-silverblue/troubleshooting/
+        # Special command to make Fedora Silverblue/uBlue work, or usermod will fail: 
         # grep -E '^input:' /usr/lib/group | sudo tee -a /etc/group
         command = "grep -E '^input:' /usr/lib/group | sudo tee -a /etc/group >/dev/null"
         subprocess.run(command, shell=True, check=True)
