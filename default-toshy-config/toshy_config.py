@@ -3591,6 +3591,10 @@ keymap("Kitty terminal - not tab nav", {
     C("RC-K"):                  C("C-L"),                       # Clear log (macOS)
 }, when = matchProps(clas="^kitty$"))
 
+keymap("Konsole terminal - not tab nav", {
+    C("RC-comma"):              C("Shift-RC-comma"),            # Open Preferences dialog
+}, when = matchProps(clas="^Konsole$|^org.kde.Konsole$"))
+
 
 # Overrides to General Terminals shortcuts for specific distros (or are they really just desktop environments?)
 keymap("GenTerms overrides: elementary OS", {
