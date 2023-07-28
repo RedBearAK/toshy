@@ -4,6 +4,7 @@ import re
 import os
 import sys
 import time
+import shutil
 import inspect
 import subprocess
 
@@ -59,11 +60,16 @@ icons_dir = os.path.join(home_dir, '.local', 'share', 'icons')
 
 # get the path of this file (not the main module loading it)
 config_globals = inspect.stack()[1][0].f_globals
-config_dir_path = os.path.dirname(os.path.abspath(config_globals["__config__"]))
-sys.path.insert(0, config_dir_path)
+current_folder_path = os.path.dirname(os.path.abspath(config_globals["__config__"]))
+sys.path.insert(0, current_folder_path)
 
 import lib.env
 from lib.settings_class import Settings
+
+assets_path         = os.path.join(current_folder_path, 'assets')
+icon_file_active    = os.path.join(assets_path, "toshy_app_icon_rainbow.svg")
+icon_file_grayscale = os.path.join(assets_path, "toshy_app_icon_rainbow_inverse_grayscale.svg")
+icon_file_inverse   = os.path.join(assets_path, "toshy_app_icon_rainbow_inverse.svg")
 
 # Toshy config file
 TOSHY_PART      = 'config'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
@@ -71,7 +77,7 @@ TOSHY_PART_NAME = 'Toshy Config file'
 APP_VERSION     = '2023.0604'
 
 # Settings object used to tweak preferences "live" between gui, tray and config.
-cnfg = Settings(config_dir_path)
+cnfg = Settings(current_folder_path)
 cnfg.watch_database()   # activate watchdog observer on the sqlite3 db file
 debug("")
 debug(cnfg, ctx="CG")
@@ -537,6 +543,28 @@ not_win_type_rgx    = re.compile("IBM|Chromebook|Apple", re.I)
 ###                                                                                     ###
 ###                                                                                     ###
 ###########################################################################################
+
+
+def check_notify_send():
+    """check that notify-send command supports -p flag"""
+    try:
+        subprocess.run(['notify-send', '-p'], check=True, capture_output=True)
+    except subprocess.CalledProcessError as e:
+        # Check if the error message contains "Unknown option" for -p flag
+        error_output: bytes = e.stderr  # type hint to validate decode()
+        if 'Unknown option' in error_output.decode('utf-8'):
+            return False
+    return True
+
+
+is_p_option_supported = check_notify_send()
+
+ntfy_cmd        = shutil.which('notify-send')
+ntfy_prio       = '--urgency=normal' # '--urgency=critical'
+ntfy_icon       = f'--icon=\"{icon_file_active}\"'
+ntfy_title      = 'Toshy Alert'
+ntfy_id_new     = None
+ntfy_id_last    = '0' # initiate with integer string to avoid error
 
 
 def isKBtype(kbtype: str, map=None):
@@ -1035,9 +1063,7 @@ modmap("Cond modmap - Forced Numpad feature",{
     Key.KP0:                    Key.KEY_0,
     Key.KPDOT:                  Key.DOT,  
     Key.KPENTER:                Key.ENTER,
-# }, when = lambda _: forced_numpad is True)
 }, when = lambda ctx: 
-    # matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
     matchProps(not_lst=remotes_lod)(ctx) and 
     cnfg.forced_numpad is True )
 
@@ -1062,7 +1088,6 @@ modmap("Cond modmap - GTK3 numpad nav keys fix",{
 # }, when = lambda ctx: ctx.numlock_on is False and forced_numpad is False)
 # }, when = lambda ctx: ctx.numlock_on is False and cnfg.forced_numpad is False )
 }, when = lambda ctx:
-    # matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
     matchProps(not_lst=remotes_lod)(ctx) and 
     matchProps(numlk=False)(ctx) and 
     cnfg.forced_numpad is False )
@@ -1325,15 +1350,30 @@ modmap("Cond modmap - Terms - Mac kbd", {
 def forced_numpad_alert():
     """Show notification of state of Forced Numpad feature"""
     if cnfg.forced_numpad:
-        subprocess.Popen('notify-send -u critical ALERT \
-            "Forced Numpad feature is now ENABLED.\
-            \rNumlock becomes "Clear" key (Escape).\
-            \rDisable with Option+Numlock."')
+        global ntfy_id_last, ntfy_id_new
+        _ntfy_icon = f'--icon={icon_file_active}'
+        _ntfy_msg = (   'Forced Numpad feature is now ENABLED.' +
+                        '\rNumlock becomes "Clear" key (Esc).' +
+                        '\rDisable with Option+Numlock.')
+        if is_p_option_supported:
+            ntfy_id_new = subprocess.run(
+                [ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg, '-p','-r',ntfy_id_last], 
+                stdout=subprocess.PIPE).stdout.decode().strip()
+            ntfy_id_last = ntfy_id_new
+        else:
+            subprocess.run([ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg])
         debug("Forced Numpad feature is now ENABLED.")
-    if not cnfg.forced_numpad:
-        subprocess.Popen('notify-send -u critical ALERT \
-            "Forced Numpad feature is now DISABLED.\
-            \rRe-enable with Option+Numlock."')
+    else:
+        _ntfy_icon = f'--icon={icon_file_active}'
+        _ntfy_msg = (   'Forced Numpad feature is now DISABLED.' +
+                        '\rRe-enable with Option+Numlock.')
+        if is_p_option_supported:
+            ntfy_id_new = subprocess.run(
+                [ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg, '-p','-r',ntfy_id_last], 
+                stdout=subprocess.PIPE).stdout.decode().strip()
+            ntfy_id_last = ntfy_id_new
+        else:
+            subprocess.run([ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg])
         debug("Forced Numpad feature is now DISABLED.")
 
 
@@ -1374,14 +1414,19 @@ applelogoalert_enabled = True   # Default: True
 
 
 def apple_logo_alert():
-    """Show a notification about needing Baskerville Old Face 
-    font for displaying Apple logo"""
-    def _apple_logo_alert():
-        global applelogoalert_enabled
-        if applelogoalert_enabled:
-            subprocess.Popen( 'notify-send -u critical ALERT "Apple logo requires '
-                            'Baskerville Old Face font."')
-    return _apple_logo_alert
+    """Show a notification about needing Baskerville Old Face font for displaying Apple logo"""
+    global applelogoalert_enabled
+    if applelogoalert_enabled:
+        global ntfy_id_last, ntfy_id_new
+        _ntfy_icon = f'--icon={icon_file_active}'
+        _ntfy_msg = 'Apple logo requires "Baskerville Old Face" font.'
+        if is_p_option_supported:
+            ntfy_id_new = subprocess.run(
+                [ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg, '-p','-r',ntfy_id_last], 
+                stdout=subprocess.PIPE).stdout.decode().strip()
+            ntfy_id_last = ntfy_id_new
+        else:
+            subprocess.run([ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg])
 
 
 
@@ -2746,7 +2791,7 @@ keymap("OptSpecialChars - US", {
     #########################################################################################################
     # The Apple logo is at {U+F8FF} in a Unicode Private Use Area. Only at that location in Mac fonts. 
     # Symbol exists at {U+F000} in Baskerville Old Face font. 
-    C("Shift-Alt-K"):   [apple_logo_alert(),UC(0xF000)],        #  Apple logo [req's Baskerville Old Face font]
+    C("Shift-Alt-K"):   [apple_logo_alert,UC(0xF000)],          #  Apple logo [req's Baskerville Old Face font]
     C("Shift-Alt-L"):           UC(0x00D2),                     # Ò Latin Capital Letter O with Grave
     C("Shift-Alt-Semicolon"):   UC(0x00DA),                     # Ú Latin Capital Letter U with Acute
     C("Shift-Alt-Apostrophe"):  UC(0x00C6),                     # Æ Capital AE ligature
