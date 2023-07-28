@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/env bash
 
 
 # Remove the Toshy desktop entry files so that app launchers and menus do not
@@ -20,9 +20,9 @@ fi
 
 echo -e "\nRemoving Toshy Preferences and Tray Icon app launchers..."
 
-/usr/bin/rm -f "$HOME/.local/share/applications/Toshy_GUI.desktop"
-/usr/bin/rm -f "$HOME/.local/share/applications/Toshy_Tray.desktop"
-/usr/bin/rm -f "$HOME/.local/share/icons/toshy_app_icon_rainbow.svg"
+rm -f "$HOME/.local/share/applications/Toshy_GUI.desktop"
+rm -f "$HOME/.local/share/applications/Toshy_Tray.desktop"
+rm -f "$HOME/.local/share/icons/toshy_app_icon_rainbow.svg"
 
 echo ""
 echo "Finished removing Toshy Preferences and Tray Icon app launchers:"

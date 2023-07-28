@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/env bash
 
 
 # Start the actual run of the keymapper with Toshy config, making 
@@ -64,7 +64,7 @@ fi
 
 
 # shut down any existing keyszer (or xkeysnail) process
-/usr/bin/pkill -f "bin/keyszer"
-/usr/bin/pkill -f "bin/xkeysnail"
+pkill -f "bin/keyszer"
+pkill -f "bin/xkeysnail"
 
 keyszer -w -c "$HOME/.config/toshy/toshy_config.py"

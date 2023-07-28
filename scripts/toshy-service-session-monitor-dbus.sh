@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/env bash
 
 
 # Monitor whether the user's desktop session is "Active" according to loginctl.
@@ -90,13 +90,13 @@ while (( i > 0 ))
         (( i -= 1 ))
 
         # get the current session ID (number)
-        SESSION_ID="$(/usr/bin/loginctl session-status | head -n1 | cut -d' ' -f1)"
+        SESSION_ID="$(loginctl session-status | head -n1 | cut -d' ' -f1)"
 
         # check the loginctl show-session metadata to see if it's "Active" (yes/no)
-        SESSION_IS_ACTIVE="$(/usr/bin/loginctl show-session "$SESSION_ID" -p Active --value)"
+        SESSION_IS_ACTIVE="$(loginctl show-session "$SESSION_ID" -p Active --value)"
 
         # check the status of Toshy service
-        SERVICE_STATUS="$(/usr/bin/systemctl --user is-active toshy-config.service)"
+        SERVICE_STATUS="$(systemctl --user is-active toshy-config.service)"
 
 
 
@@ -106,7 +106,7 @@ while (( i > 0 ))
                 # echo "Session for user $USER is active right now. $(date +%F_%H%M%S)" | tee -a /tmp/user-$USER.txt
                 if [[ "$SERVICE_STATUS" == "inactive" ]]
                     then
-                        /usr/bin/systemctl --user start toshy-config.service > /dev/null 2>&1
+                        systemctl --user start toshy-config.service > /dev/null 2>&1
                 fi
         fi
 
@@ -116,7 +116,7 @@ while (( i > 0 ))
                 # echo "Session for user $USER is NOT active right now. $(date +%F_%H%M%S)" | tee -a /tmp/user-$USER.txt
                 if [[ "$SERVICE_STATUS" == "active" ]]
                     then
-                        /usr/bin/systemctl --user stop toshy-config.service > /dev/null 2>&1
+                        systemctl --user stop toshy-config.service > /dev/null 2>&1
                 fi
         fi
         sleep 3 # no need to check too frequently

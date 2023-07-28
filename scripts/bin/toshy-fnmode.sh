@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/env bash
 
 # Script to change the function keys mode of keyboards that use `hid_apple` device driver
 

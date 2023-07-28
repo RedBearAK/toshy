@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/env bash
 
 # Script to create a KWin event that will get the KWin script to start working
 

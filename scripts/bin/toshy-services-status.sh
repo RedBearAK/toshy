@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/env bash
 
 
 # Show the status of the Toshy systemd services (session monitor and config).
@@ -42,15 +42,15 @@ export SYSTEMD_PAGER=""
 echo -e "\nCurrent status of Toshy systemd services..."
 echo "--------------------------------------------------------------------------------"
 
-/usr/bin/systemctl --user status toshy-kde-dbus.service
+systemctl --user status toshy-kde-dbus.service
 
 echo "--------------------------------------------------------------------------------"
 
-/usr/bin/systemctl --user status toshy-session-monitor.service
+systemctl --user status toshy-session-monitor.service
 
 echo "--------------------------------------------------------------------------------"
 
-/usr/bin/systemctl --user status toshy-config.service
+systemctl --user status toshy-config.service
 
 echo "--------------------------------------------------------------------------------"
 

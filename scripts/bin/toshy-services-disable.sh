@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/env bash
 
 
 # Disable the Toshy services
@@ -39,11 +39,11 @@ fi
 
 echo -e "\nDisabling Toshy systemd services..."
 
-/usr/bin/systemctl --user disable toshy-kde-dbus.service
+systemctl --user disable toshy-kde-dbus.service
 sleep 0.5
-/usr/bin/systemctl --user disable toshy-config.service
+systemctl --user disable toshy-config.service
 sleep 0.5
-/usr/bin/systemctl --user disable toshy-session-monitor.service
+systemctl --user disable toshy-session-monitor.service
 
 echo -e "\nToshy systemd services disabled.\n"
 sleep 1

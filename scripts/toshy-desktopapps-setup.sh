@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/env bash
 
 
 # "Install" the Toshy dekstop entry files so that app launchers and menus can 

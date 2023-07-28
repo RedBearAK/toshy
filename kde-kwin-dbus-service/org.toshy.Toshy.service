@@ -1,4 +1,4 @@
 [D-BUS Service]
 Name=org.toshy.Toshy
 # SystemdService=toshy-kde-dbus.service
-Exec=/usr/bin/sh -c 'env TERM=xterm echo "D-Bus service org.toshy.Toshy was contacted"'
+Exec=/bin/sh -c 'env TERM=xterm echo "D-Bus service org.toshy.Toshy was contacted"'

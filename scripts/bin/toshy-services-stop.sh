@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/env bash
 
 
 # Stop the Toshy services. First session monitor so that it doesn't try 
@@ -40,11 +40,11 @@ fi
 
 echo -e "\nStopping Toshy systemd services..."
 
-/usr/bin/systemctl --user stop toshy-kde-dbus.service
+systemctl --user stop toshy-kde-dbus.service
 sleep 0.5
-/usr/bin/systemctl --user stop toshy-session-monitor.service
+systemctl --user stop toshy-session-monitor.service
 sleep 0.5
-/usr/bin/systemctl --user stop toshy-config.service
+systemctl --user stop toshy-config.service
 
 echo -e "\nToshy systemd services stopped.\n"
 sleep 0.5

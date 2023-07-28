@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/env bash
 
 
 # Disable the Toshy services
@@ -39,11 +39,11 @@ fi
 
 echo -e "\nRe-enabling Toshy systemd services..."
 
-/usr/bin/systemctl --user reenable toshy-kde-dbus.service
+systemctl --user reenable toshy-kde-dbus.service
 sleep 0.5
-/usr/bin/systemctl --user reenable toshy-config.service
+systemctl --user reenable toshy-config.service
 sleep 0.5
-/usr/bin/systemctl --user reenable toshy-session-monitor.service
+systemctl --user reenable toshy-session-monitor.service
 
 echo -e "\nToshy systemd services re-enabled.\n"
 sleep 1

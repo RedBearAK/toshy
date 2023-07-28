@@ -4,6 +4,7 @@ import re
 import os
 import sys
 import time
+import shutil
 import inspect
 import subprocess
 
@@ -59,11 +60,16 @@ icons_dir = os.path.join(home_dir, '.local', 'share', 'icons')
 
 # get the path of this file (not the main module loading it)
 config_globals = inspect.stack()[1][0].f_globals
-config_dir_path = os.path.dirname(os.path.abspath(config_globals["__config__"]))
-sys.path.insert(0, config_dir_path)
+current_folder_path = os.path.dirname(os.path.abspath(config_globals["__config__"]))
+sys.path.insert(0, current_folder_path)
 
 import lib.env
 from lib.settings_class import Settings
+
+assets_path         = os.path.join(current_folder_path, 'assets')
+icon_file_active    = os.path.join(assets_path, "toshy_app_icon_rainbow.svg")
+icon_file_grayscale = os.path.join(assets_path, "toshy_app_icon_rainbow_inverse_grayscale.svg")
+icon_file_inverse   = os.path.join(assets_path, "toshy_app_icon_rainbow_inverse.svg")
 
 # Toshy config file
 TOSHY_PART      = 'config'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
@@ -71,7 +77,7 @@ TOSHY_PART_NAME = 'Toshy Config file'
 APP_VERSION     = '2023.0604'
 
 # Settings object used to tweak preferences "live" between gui, tray and config.
-cnfg = Settings(config_dir_path)
+cnfg = Settings(current_folder_path)
 cnfg.watch_database()   # activate watchdog observer on the sqlite3 db file
 debug("")
 debug(cnfg, ctx="CG")
@@ -258,6 +264,8 @@ def negRgx(rgx_str):
 
 terminals_lod = [
     {clas:"^alacritty$"                 },
+    {clas:"^com.raggesilver.BlackBox$"  },
+    {clas:"^contour$"                   },
     {clas:"^cutefish-terminal$"         },
     {clas:"^deepin-terminal$"           },
     {clas:"^eterm$"                     },
@@ -274,6 +282,7 @@ terminals_lod = [
     {clas:"^mate-terminal$"             },
     {clas:"^org.gnome.Console$"         },
     {clas:"^org.kde.konsole$"           },
+    {clas:"^org.wezfurlong.wezterm$"    },
     {clas:"^roxterm$"                   },
     {clas:"^qterminal$"                 },
     {clas:"^st$"                        },
@@ -389,6 +398,7 @@ browsers_firefox = [
     "Firefox Developer Edition",
     "firefoxdeveloperedition",
     "LibreWolf",
+    "Mullvad Browser",
     "Navigator",
     "Waterfox",
 ]
@@ -533,6 +543,28 @@ not_win_type_rgx    = re.compile("IBM|Chromebook|Apple", re.I)
 ###                                                                                     ###
 ###                                                                                     ###
 ###########################################################################################
+
+
+def check_notify_send():
+    """check that notify-send command supports -p flag"""
+    try:
+        subprocess.run(['notify-send', '-p'], check=True, capture_output=True)
+    except subprocess.CalledProcessError as e:
+        # Check if the error message contains "Unknown option" for -p flag
+        error_output: bytes = e.stderr  # type hint to validate decode()
+        if 'Unknown option' in error_output.decode('utf-8'):
+            return False
+    return True
+
+
+is_p_option_supported = check_notify_send()
+
+ntfy_cmd        = shutil.which('notify-send')
+ntfy_prio       = '--urgency=normal' # '--urgency=critical'
+ntfy_icon       = f'--icon=\"{icon_file_active}\"'
+ntfy_title      = 'Toshy Alert'
+ntfy_id_new     = None
+ntfy_id_last    = '0' # initiate with integer string to avoid error
 
 
 def isKBtype(kbtype: str, map=None):
@@ -1031,9 +1063,7 @@ modmap("Cond modmap - Forced Numpad feature",{
     Key.KP0:                    Key.KEY_0,
     Key.KPDOT:                  Key.DOT,  
     Key.KPENTER:                Key.ENTER,
-# }, when = lambda _: forced_numpad is True)
 }, when = lambda ctx: 
-    # matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
     matchProps(not_lst=remotes_lod)(ctx) and 
     cnfg.forced_numpad is True )
 
@@ -1058,7 +1088,6 @@ modmap("Cond modmap - GTK3 numpad nav keys fix",{
 # }, when = lambda ctx: ctx.numlock_on is False and forced_numpad is False)
 # }, when = lambda ctx: ctx.numlock_on is False and cnfg.forced_numpad is False )
 }, when = lambda ctx:
-    # matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
     matchProps(not_lst=remotes_lod)(ctx) and 
     matchProps(numlk=False)(ctx) and 
     cnfg.forced_numpad is False )
@@ -1321,15 +1350,30 @@ modmap("Cond modmap - Terms - Mac kbd", {
 def forced_numpad_alert():
     """Show notification of state of Forced Numpad feature"""
     if cnfg.forced_numpad:
-        subprocess.Popen('notify-send -u critical ALERT \
-            "Forced Numpad feature is now ENABLED.\
-            \rNumlock becomes "Clear" key (Escape).\
-            \rDisable with Option+Numlock."')
+        global ntfy_id_last, ntfy_id_new
+        _ntfy_icon = f'--icon={icon_file_active}'
+        _ntfy_msg = (   'Forced Numpad feature is now ENABLED.' +
+                        '\rNumlock becomes "Clear" key (Esc).' +
+                        '\rDisable with Option+Numlock.')
+        if is_p_option_supported:
+            ntfy_id_new = subprocess.run(
+                [ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg, '-p','-r',ntfy_id_last], 
+                stdout=subprocess.PIPE).stdout.decode().strip()
+            ntfy_id_last = ntfy_id_new
+        else:
+            subprocess.run([ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg])
         debug("Forced Numpad feature is now ENABLED.")
-    if not cnfg.forced_numpad:
-        subprocess.Popen('notify-send -u critical ALERT \
-            "Forced Numpad feature is now DISABLED.\
-            \rRe-enable with Option+Numlock."')
+    else:
+        _ntfy_icon = f'--icon={icon_file_active}'
+        _ntfy_msg = (   'Forced Numpad feature is now DISABLED.' +
+                        '\rRe-enable with Option+Numlock.')
+        if is_p_option_supported:
+            ntfy_id_new = subprocess.run(
+                [ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg, '-p','-r',ntfy_id_last], 
+                stdout=subprocess.PIPE).stdout.decode().strip()
+            ntfy_id_last = ntfy_id_new
+        else:
+            subprocess.run([ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg])
         debug("Forced Numpad feature is now DISABLED.")
 
 
@@ -1370,14 +1414,19 @@ applelogoalert_enabled = True   # Default: True
 
 
 def apple_logo_alert():
-    """Show a notification about needing Baskerville Old Face 
-    font for displaying Apple logo"""
-    def _apple_logo_alert():
-        global applelogoalert_enabled
-        if applelogoalert_enabled:
-            subprocess.Popen( 'notify-send -u critical ALERT "Apple logo requires '
-                            'Baskerville Old Face font."')
-    return _apple_logo_alert
+    """Show a notification about needing Baskerville Old Face font for displaying Apple logo"""
+    global applelogoalert_enabled
+    if applelogoalert_enabled:
+        global ntfy_id_last, ntfy_id_new
+        _ntfy_icon = f'--icon={icon_file_active}'
+        _ntfy_msg = 'Apple logo requires "Baskerville Old Face" font.'
+        if is_p_option_supported:
+            ntfy_id_new = subprocess.run(
+                [ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg, '-p','-r',ntfy_id_last], 
+                stdout=subprocess.PIPE).stdout.decode().strip()
+            ntfy_id_last = ntfy_id_new
+        else:
+            subprocess.run([ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg])
 
 
 
@@ -2742,7 +2791,7 @@ keymap("OptSpecialChars - US", {
     #########################################################################################################
     # The Apple logo is at {U+F8FF} in a Unicode Private Use Area. Only at that location in Mac fonts. 
     # Symbol exists at {U+F000} in Baskerville Old Face font. 
-    C("Shift-Alt-K"):   [apple_logo_alert(),UC(0xF000)],        #  Apple logo [req's Baskerville Old Face font]
+    C("Shift-Alt-K"):   [apple_logo_alert,UC(0xF000)],          #  Apple logo [req's Baskerville Old Face font]
     C("Shift-Alt-L"):           UC(0x00D2),                     # Ò Latin Capital Letter O with Grave
     C("Shift-Alt-Semicolon"):   UC(0x00DA),                     # Ú Latin Capital Letter U with Acute
     C("Shift-Alt-Apostrophe"):  UC(0x00C6),                     # Æ Capital AE ligature
@@ -3322,7 +3371,14 @@ keymap("VSCodes", {
     C("Alt-Shift-Left"):       [C("Alt-F19"),C("C-Shift-Left")],    # Select Left of Word
     C("Alt-Shift-Right"):      [C("Alt-F19"),C("C-Shift-Right")],   # Select Right of Word
 
-    C("RC-Backspace"):          C("C-Backspace"),               # Delete Entire Line Left of Cursor
+    # To make this work, assign these shortcuts to "deleteWordPartLeft" and "deleteWordPartRight" shortcuts
+    C("Shift-Alt-Backspace"):   C("Shift-Alt-Backspace"),        # Delete word left of cursor (override GenGUI)
+    C("Shift-Alt-Delete"):      C("Shift-Alt-Delete"),           # Delete word right of cursor (override GenGUI)
+    # C("Shift-Alt-Backspace"):  [C("Alt-F19"),C("C-Backspace")], # Delete word left of cursor
+    # C("Shift-Alt-Delete"):     [C("Alt-F19"),C("C-Delete")],    # Delete word right of cursor
+    # C("RC-Backspace"):          C("C-Backspace"),               # Delete Entire Line Left of Cursor
+    C("RC-Backspace"):         [C("Shift-Home"), C("Delete")],  # Delete entire line left of cursor
+    C("RC-Delete"):            [C("Shift-End"), C("Delete")],   # Delete entire line right of cursor
 
     # C("C-PAGE_DOWN"):           ignore_combo,                   # cancel next_view
     # C("C-PAGE_UP"):             ignore_combo,                   # cancel prev_view
@@ -3508,11 +3564,10 @@ keymap("Cmd+W dialog fix - Alt+F4", {
 ### Various fixes for supporting tab navigation shortcuts like Shift+Cmd+Braces
 
 tab_UI_fix_CtrlShiftTab = [
+    {clas:"^com.raggesilver.BlackBox$"},
     {clas:"^org.gnome.Console$|^Console$"},
     {clas:"^deepin-terminal$"},
     {lst:JDownloader_lod},
-    # {clas:"^.*jDownloader.*$"},
-    # {clas:"^java-lang-Thread$", name:"^JDownloader.*$"},
     {clas:"^kitty$"},
     {clas:"^Kgx$"},
 ]
@@ -3583,6 +3638,10 @@ keymap("Kitty terminal - not tab nav", {
     C("RC-K"):                  C("C-L"),                       # Clear log (macOS)
 }, when = matchProps(clas="^kitty$"))
 
+keymap("Konsole terminal - not tab nav", {
+    C("RC-comma"):              C("Shift-RC-comma"),            # Open Preferences dialog
+}, when = matchProps(clas="^Konsole$|^org.kde.Konsole$"))
+
 
 # Overrides to General Terminals shortcuts for specific distros (or are they really just desktop environments?)
 keymap("GenTerms overrides: elementary OS", {
@@ -3600,6 +3659,7 @@ keymap("GenTerms overrides: Pop!_OS", {
 # }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DISTRO_NAME == 'popos')
 }, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_NAME == 'popos')
 keymap("GenTerms overrides: Ubuntu/Fedora", {
+    C("LC-RC-Q"):               C("Super-L"),                   # Lock screen (ubuntu/fedora)
     C("LC-Right"):              [bind,C("Super-Page_Up")],      # SL - Change workspace (ubuntu/fedora)
     C("LC-Left"):               [bind,C("Super-Page_Down")],    # SL - Change workspace (ubuntu/fedora)
 # }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DISTRO_NAME in ['ubuntu', 'fedora'] )
@@ -3684,7 +3744,7 @@ keymap("General Terminals", {
     C("RC-B"):                  C("C-Shift-B"),
     C("RC-N"):                  C("C-Shift-N"),
     C("RC-M"):                  C("C-Shift-M"),
-    C("RC-COMMA"):              C("C-Shift-COMMA"),
+    # C("RC-COMMA"):              C("C-Shift-COMMA"),             # Open Preferences
     C("RC-Dot"):                C("LC-c"),                      # Mimic macOS Cmd+Dot to cancel command
     C("RC-SLASH"):              C("C-Shift-SLASH"),
     C("RC-KPASTERISK"):         C("C-Shift-KPASTERISK"),
@@ -3743,6 +3803,7 @@ keymap("GenGUI overrides: elementary OS", {
     C("RC-LC-f"):               C("Super-Up"),                  # SL- Maximize app elementary
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'elementary' )
 keymap("GenGUI overrides: Fedora", {
+    C("Super-RC-Q"):            C("Super-L"),                   # Lock screen (fedora)
     C("RC-H"):                  C("Super-h"),                   # Default SL - Minimize app (gnome/budgie/popos/fedora) not-deepin
     C("Super-Right"):          [bind,C("Super-Page_Up")],       # SL - Change workspace (ubuntu/fedora)
     C("Super-Left"):           [bind,C("Super-Page_Down")],     # SL - Change workspace (ubuntu/fedora)
@@ -3774,8 +3835,9 @@ keymap("GenGUI overrides: Pop!_OS", {
     C("RC-Q"):                  C("Super-q"),                   # SL - Close Apps (popos)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'popos' )
 keymap("GenGUI overrides: Ubuntu", {
-    C("Super-Right"):          [bind,C("Super-Page_Up")],       # SL - Change workspace (ubuntu/fedora)
-    C("Super-Left"):           [bind,C("Super-Page_Down")],     # SL - Change workspace (ubuntu/fedora)
+    C("Super-RC-Q"):            C("Super-L"),                   # Lock screen (ubuntu)
+    C("Super-Right"):          [bind,C("Super-Page_Up")],       # SL - Change workspace (ubuntu)
+    C("Super-Left"):           [bind,C("Super-Page_Down")],     # SL - Change workspace (ubuntu)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'ubuntu' )
 
 
@@ -3873,19 +3935,21 @@ keymap("General GUI", {
     C("Shift-RC-Left"):         C("Shift-Home"),                # Select all to Beginning of Line
     C("RC-Right"):              C("End"),                       # End of Line
     C("Shift-RC-Right"):        C("Shift-End"),                 # Select all to End of Line
-    # C("RC-Left"):               C("C-LEFT_BRACE"),              # Firefox-nw - Back
-    # C("RC-Right"):              C("C-RIGHT_BRACE"),             # Firefox-nw - Forward
-    # C("RC-Left"):               C("Alt-LEFT"),                  # Chrome-nw - Back
-    # C("RC-Right"):              C("Alt-RIGHT"),                 # Chrome-nw - Forward
     C("RC-Up"):                 C("C-Home"),                    # Beginning of File
     C("Shift-RC-Up"):           C("C-Shift-Home"),              # Select all to Beginning of File
     C("RC-Down"):               C("C-End"),                     # End of File
     C("Shift-RC-Down"):         C("C-Shift-End"),               # Select all to End of File
     C("Super-Backspace"):       C("C-Backspace"),               # Delete Left Word of Cursor
     C("Super-Delete"):          C("C-Delete"),                  # Delete Right Word of Cursor
-    # C("Alt-Backspace"):         C("C-Backspace"),               # Default not-chromebook
     C("RC-Backspace"):          C("C-Shift-Backspace"),         # Delete Entire Line Left of Cursor
     C("Alt-Delete"):            C("C-Delete"),                  # Delete Right Word of Cursor
+    C("Shift-Alt-Backspace"):   C("C-Backspace"),               # Delete word left of cursor
+    C("Shift-Alt-Delete"):      C("C-Delete"),                  # Delete word right of cursor
+
+    # C("RC-Left"):               C("C-LEFT_BRACE"),              # Firefox-nw - Back
+    # C("RC-Right"):              C("C-RIGHT_BRACE"),             # Firefox-nw - Forward
+    # C("RC-Left"):               C("Alt-LEFT"),                  # Chrome-nw - Back
+    # C("RC-Right"):              C("Alt-RIGHT"),                 # Chrome-nw - Forward
     # C(""):                      ignore_combo,                   # cancel
     # C(""):                      C(""),                          #
 

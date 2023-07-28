@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/env bash
 
 
 # Start the config service, then the session monitor service
@@ -39,11 +39,11 @@ fi
 
 echo -e "\nStarting Toshy systemd services..."
 
-/usr/bin/systemctl --user start toshy-kde-dbus.service
+systemctl --user start toshy-kde-dbus.service
 sleep 0.5
-/usr/bin/systemctl --user start toshy-config.service
+systemctl --user start toshy-config.service
 sleep 0.5
-/usr/bin/systemctl --user start toshy-session-monitor.service
+systemctl --user start toshy-session-monitor.service
 
 echo -e "\nToshy systemd services started.\n\nRemember to tap a modifier key before trying shortcuts!\n"
 sleep 1

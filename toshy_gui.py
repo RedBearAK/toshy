@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/bin/env python3
 # -*- coding: utf-8 -*-
 
 # Preferences app for Toshy, using tkinter GUI and "Sun Valley" theme
@@ -97,7 +97,8 @@ if not os.path.exists(LOCK_FILE_DIR):
 
 # recursively set user's Toshy temp folder as only read/write by owner
 try:
-    os.system(f'/usr/bin/chmod 0700 {TOSHY_USER_TMP_DIR}')
+    chmod_cmd = shutil.which('chmod')
+    os.system(f'{chmod_cmd} 0700 {TOSHY_USER_TMP_DIR}')
 except Exception as e:
     error(f'NON-FATAL: Problem when setting permissions on temp folder.')
     error(e)
@@ -222,15 +223,15 @@ def check_notify_send():
 
 is_p_option_supported = check_notify_send()
 
-ntfy_cmd        = '/usr/bin/notify-send'
+ntfy_cmd        = shutil.which('notify-send')
 ntfy_prio       = '--urgency=critical'
 ntfy_icon       = f'--icon=\"{icon_file_active}\"'
 ntfy_title      = 'Toshy Alert'
 ntfy_id_new     = None
 ntfy_id_last    = '0' # initiate with integer string to avoid error
 
-user_sysctl     = '/usr/bin/systemctl --user'
-sysctl_cmd      = '/usr/bin/systemctl'
+sysctl_cmd      = f"{shutil.which('systemctl')}"
+user_sysctl     = f'{sysctl_cmd} --user'
 
 toshy_svc_sessmon   = 'toshy-session-monitor.service'
 toshy_svc_config    = 'toshy-config.service'
@@ -512,7 +513,7 @@ svc_lbl_font = tkfont.Font(**svc_lbl_font_dict)
 services_label = tk.Label(
     top_frame_left_column,
     justify=tk.CENTER,
-    text=('Toshy Services Status:'),
+    text=('Toshy Services Status:   '),
     font=svc_lbl_font
 )
 services_label.pack(padx=sw_lbl_indent, pady=btn_lbl_pady)
