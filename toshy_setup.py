@@ -491,7 +491,7 @@ distro_groups_map = {
     'tumbleweed-based':["opensuse-tumbleweed"],
     'leap-based':      ["opensuse-leap"],
     'ubuntu-based':    ["ubuntu", "mint", "popos", "elementary", "neon", "tuxedo", "zorin"],
-    'debian-based':    ["lmde", "peppermint", "debian"],
+    'debian-based':    ["lmde", "peppermint", "debian", "kali"],
     'arch-based':      ["arch", "arcolinux", "endeavouros", "manjaro"],
     'solus-based':     ["solus"],
     # Add more as needed...
