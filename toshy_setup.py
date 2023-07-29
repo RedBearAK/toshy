@@ -601,6 +601,8 @@ def install_distro_pkgs():
         # Have something come out even if package list is empty (like Arch after initial run)
         print(f'All necessary native distro packages are installed.')
 
+    distro_major_ver = cnfg.DISTRO_VER[0] if cnfg.DISTRO_VER else 'NO_VER'
+
     if cnfg.DISTRO_NAME in dnf_distros:
 
         # do extra stuff only if distro is a RHEL type (not Fedora type)
@@ -671,7 +673,19 @@ def install_distro_pkgs():
                 check_for_pkg_mgr_cmd('yum')
                 subprocess.run(['sudo', 'yum', 'install', '-y', 'dnf'])
 
-            distro_major_ver = cnfg.DISTRO_VER[0] if cnfg.DISTRO_VER else 'NO_VER'
+            # for libappindicator-gtk3: sudo dnf install -y epel-release
+            subprocess.run(['sudo', 'dnf', 'install', '-y', 'epel-release'])
+            subprocess.run(['sudo', 'dnf', 'update', '-y'])
+
+            if ( not (  cnfg.DISTRO_NAME == 'centos' and 
+                        distro_major_ver in ['7', '8']    ) and 
+                        distro_major_ver in ['9'] ):
+                #
+                # enable "CodeReady Builder" repo for 'gobject-introspection-devel' on RHEL 9.x:
+                # sudo dnf config-manager --set-enabled crb
+                subprocess.run(['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb'])
+
+            # Need to do this AFTER the 'epel-release' install
             if (  cnfg.DISTRO_NAME != 'centos' and 
                     distro_major_ver in ['8']):
                 # enable CRB repo on RHEL 8.x distros:
@@ -702,17 +716,6 @@ def install_distro_pkgs():
                     # if no suitable version was found, print an error message and exit
                     error('ERROR: Did not find any appropriate Python interpreter version.')
                     safe_shutdown(1)
-            elif ( not (  cnfg.DISTRO_NAME == 'centos' and 
-                        distro_major_ver in ['7', '8']    ) and 
-                        distro_major_ver in ['9'] ):
-                #
-                # enable "CodeReady Builder" repo for 'gobject-introspection-devel' on RHEL 9.x:
-                # sudo dnf config-manager --set-enabled crb
-                subprocess.run(['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb'])
-
-            # for libappindicator-gtk3: sudo dnf install -y epel-release
-            subprocess.run(['sudo', 'dnf', 'install', '-y', 'epel-release'])
-            subprocess.run(['sudo', 'dnf', 'update', '-y'])
 
         # finally, do the install of the main list of packages for DNF/RHEL distro types
         try:
