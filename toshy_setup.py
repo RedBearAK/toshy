@@ -484,7 +484,7 @@ def verify_user_groups():
 
 distro_groups_map = {
     # separate references for RHEL types versus Fedora types
-    'fedora-based':    ["fedora", "fedoralinux", "ultramarine", "nobara", "silverblue"],
+    'fedora-based':    ["fedora", "fedoralinux", "ultramarine", "nobara", "silverblue-experimental"],
     'rhel-based':      ["rhel", "almalinux", "rocky", "eurolinux", "centos"],
 
     # separate references for Tumbleweed types versus Leap types
@@ -535,14 +535,9 @@ pkg_groups_map = {
                         "libappindicator-gtk3", "pkg-config", "python-dbus", "python-pip",
                         "python", "libnotify", "systemd", "zenity"],
 
-    # 'solus-based':     ["gcc", "git", "libcairo-devel", "python3-devel", "python3-pip", 
-    #                     "python3-tkinter", "libappindicator-devel",
-    #                     "libnotify", "systemd-devel", "zenity"],
-
     'solus-based':     ["gcc", "git", "libcairo-devel", "python3-devel", "pip", 
                         "python3-tkinter", "python3-dbus", "python-gobject-devel",
                         "python-dbus-devel", "libayatana-appindicator",
-                        # "dbus-devel", "dbus-glib-devel", "binutils", "libappindicator-devel",
                         "libnotify", "systemd-devel", "zenity"],
 
 }
@@ -614,7 +609,7 @@ def install_distro_pkgs():
             call_attention_to_password_prompt()
 
             # do extra prep/checks if distro is CentOS Stream 8
-            if cnfg.DISTRO_NAME in ['centos'] and cnfg.DISTRO_VER in ['8']:
+            if cnfg.DISTRO_NAME in ['centos'] and cnfg.DISTRO_VER[0] in ['8']:
                 print('Doing prep/checks for CentOS Stream 8...')
                 min_minor = curr_py_rel_ver_minor - 3           # check up to 2 vers before current
                 max_minor = curr_py_rel_ver_minor + 3           # check up to 3 vers after current
@@ -643,7 +638,9 @@ def install_distro_pkgs():
                     safe_shutdown(1)
 
             # do extra prep/checks if distro is CentOS 7
-            if cnfg.DISTRO_NAME in ['centos'] and cnfg.DISTRO_VER in ['7']:
+            if (cnfg.DISTRO_NAME in ['centos'] and 
+                cnfg.DISTRO_VER and 
+                cnfg.DISTRO_VER[0] == '7'):
                 print('Doing prep/checks for CentOS 7...')
                 if py_interp_ver_tup >= (3, 8):
                     print(f"Good, Python version is 3.8 or later: "
@@ -659,12 +656,7 @@ def install_distro_pkgs():
                         # sudo yum install rh-python38-python-devel
                         subprocess.run(['sudo', 'yum', 'install', '-y', 'rh-python38-python-devel'],
                                         check=True)
-                        
-                        # THIS WILL DROP US INTO A NEW SHELL! Not what we want. 
-                        # scl enable rh-python38 bash
-                        # subprocess.run(['scl', 'enable', 'rh-python38', 'bash'],
-                        #                 check=True)
-                        
+                        #
                         # set new Python interpreter version and path to reflect what was installed
                         cnfg.py_interp_path = '/opt/rh/rh-python38/root/usr/bin/python3.8'
                         cnfg.py_interp_ver  = '3.8'
@@ -679,8 +671,40 @@ def install_distro_pkgs():
                 check_for_pkg_mgr_cmd('yum')
                 subprocess.run(['sudo', 'yum', 'install', '-y', 'dnf'])
 
-            if not (cnfg.DISTRO_NAME == 'centos' and cnfg.DISTRO_VER in ['7', '8']):
-                # enable "CodeReady Builder" repo for 'gobject-introspection-devel' on RHELs:
+            distro_major_ver = cnfg.DISTRO_VER[0] if cnfg.DISTRO_VER else 'NO_VER'
+            if (  cnfg.DISTRO_NAME != 'centos' and 
+                    distro_major_ver in ['8']):
+                # enable CRB repo on RHEL 8.x distros:
+                subprocess.run(['sudo', '/usr/bin/crb', 'enable'])
+                #
+                # define a list of potential Python versions to install
+                potential_versions = ['3.15', '3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
+                #
+                for version in potential_versions:
+                    # check if the version is already installed
+                    if shutil.which(f'python{version}'):
+                        cnfg.py_interp_path = f'/usr/bin/python{version}'
+                        cnfg.py_interp_ver  = version
+                        break
+                    # try to install the corresponding package
+                    try:
+                        subprocess.run(['sudo', 'dnf', 'install', '-y', f'python{version}'], check=True)
+                        # if the installation succeeds, set the interpreter path and version
+                        cnfg.py_interp_path = f'/usr/bin/python{version}'
+                        cnfg.py_interp_ver  = version
+                        break
+                    # if the installation fails, continue with the next version
+                    except subprocess.CalledProcessError:
+                        continue
+                else:
+                    # if no suitable version was found, print an error message and exit
+                    error('ERROR: Did not find any appropriate Python interpreter version.')
+                    safe_shutdown(1)
+            elif ( not (  cnfg.DISTRO_NAME == 'centos' and 
+                        distro_major_ver in ['7', '8']    ) and 
+                        distro_major_ver in ['9'] ):
+                #
+                # enable "CodeReady Builder" repo for 'gobject-introspection-devel' on RHEL 9.x:
                 # sudo dnf config-manager --set-enabled crb
                 subprocess.run(['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb'])
 
