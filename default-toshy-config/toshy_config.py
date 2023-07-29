@@ -869,6 +869,32 @@ def matchProps(*,
     return _matchProps      # outer function returning inner function
 
 
+# Boolean variable to toggle Enter key state between F2 and Enter
+# True = Enter key sends F2, False = Enter key sends Enter
+_enter_is_F2 = True     # DON'T CHANGE THIS! Must be set to True here. 
+
+
+def is_Enter_F2(combo_if_true, latch_or_combo_if_false):
+    """
+    Send a different combo for Enter key depending on state of _enter_is_F2 variable,\n 
+    or latch the variable to True or False to control the Enter key state on next use.
+    
+    This enables a simulation of the Finder "Enter to rename" capability.
+    """
+    def _is_Enter_F2():
+        global _enter_is_F2
+        combo_list = [combo_if_true]
+        if latch_or_combo_if_false in (True, False):    # Latch variable to given bool value
+            _enter_is_F2 = latch_or_combo_if_false
+        elif _enter_is_F2:                              # If Enter is F2 now, set to be Enter next
+            _enter_is_F2 = False
+        else:                                           # If Enter is Enter now, set to be F2 next
+            combo_list = [latch_or_combo_if_false]
+            _enter_is_F2 = True
+        return combo_list
+    return _is_Enter_F2
+
+
 def macro_tester():
     def _macro_tester(ctx: KeyContext):
         return [
@@ -1049,6 +1075,12 @@ modmap("Cond modmap - Media Arrows Fix",{
     cnfg.media_arrows_fix is True )
 
 
+# List of devices with keypads to exclude from Forced Numpad and GTK3 fix modmaps
+exclude_kpad_devs_lod = [
+    {devn:'Razer Razer Naga X'},
+]
+
+
 modmap("Cond modmap - Forced Numpad feature",{
     # Make numpad be a numpad regardless of Numlock state (like an Apple keyboard in macOS)
     Key.KP1:                    Key.KEY_1,
@@ -1064,6 +1096,7 @@ modmap("Cond modmap - Forced Numpad feature",{
     Key.KPDOT:                  Key.DOT,  
     Key.KPENTER:                Key.ENTER,
 }, when = lambda ctx: 
+    matchProps(not_lst=exclude_kpad_devs_lod)(ctx) and 
     matchProps(not_lst=remotes_lod)(ctx) and 
     cnfg.forced_numpad is True )
 
@@ -1088,6 +1121,7 @@ modmap("Cond modmap - GTK3 numpad nav keys fix",{
 # }, when = lambda ctx: ctx.numlock_on is False and forced_numpad is False)
 # }, when = lambda ctx: ctx.numlock_on is False and cnfg.forced_numpad is False )
 }, when = lambda ctx:
+    matchProps(not_lst=exclude_kpad_devs_lod)(ctx) and 
     matchProps(not_lst=remotes_lod)(ctx) and 
     matchProps(numlk=False)(ctx) and 
     cnfg.forced_numpad is False )
@@ -2926,32 +2960,6 @@ keymap("LibreOffice Writer", {
 
 ###  START OF FILE MANAGER GROUP OF KEYMAPS - FINDER MODS  ###
 
-# Boolean variable to toggle Enter key state between F2 and Enter
-# True = Enter key sends F2, False = Enter key sends Enter
-_enter_is_F2 = True     # DON'T CHANGE THIS! Must be set to True here. 
-
-
-def is_Enter_F2(combo_if_true, combo_if_false):
-    """
-    Send a different combo for Enter key depending on state of _enter_is_F2 variable,\n 
-    or latch the variable to True or False to control the Enter key state on next use.
-    
-    This enables a simulation of the Finder "Enter to rename" capability.
-    """
-    def _is_Enter_F2():
-        global _enter_is_F2
-        combo_list = [combo_if_true]
-        if combo_if_false in (True, False):                     # Latch variable to given bool value
-            _enter_is_F2 = combo_if_false
-        elif _enter_is_F2:                                      # If Enter is F2 now, set to be Enter next
-            _enter_is_F2 = False
-        else:                                                   # If Enter is Enter now, set to be F2 next
-            combo_list = [combo_if_false]
-            _enter_is_F2 = True
-        return combo_list
-    return _is_Enter_F2
-
-
 # Keybindings overrides for Caja
 # (overrides some bindings from general file manager code block below)
 keymap("Overrides for Caja - Finder Mods", {
@@ -3124,12 +3132,13 @@ keymap("General File Managers - Finder Mods", {
     ###########################################################################################################
     ###  ENTER-KEY-TO-RENAME CUSTOM FUNCTION SHORTCUTS                                                      ###
     ###########################################################################################################
-    C("Enter"):                 is_Enter_F2(C("F2"),C("Enter")),        # Send F2 to rename files, unless var is False
-    C("Shift-RC-N"):            is_Enter_F2(C("Shift-RC-N"), False),    # New folder, set Enter to Enter
-    C("RC-L"):                  is_Enter_F2(C("RC-L"), False),          # Set Enter to Enter for Location field
-    C("RC-F"):                  is_Enter_F2(C("RC-F"), False),          # Set Enter to Enter for Find field
-    C("Esc"):                   is_Enter_F2(C("Esc"), True),            # Send Escape, make sure Enter is back to F2
-    C("Tab"):                   is_Enter_F2(C("Tab"), False),           # Set Enter to Enter after using Tab key
+    C("Enter"):             is_Enter_F2(C("F2"),C("Enter")),            # Send F2 to rename files, unless var is False
+    C("Shift-RC-N"):        is_Enter_F2(C("Shift-RC-N"), False),        # New folder, set Enter to Enter
+    C("RC-L"):              is_Enter_F2(C("RC-L"), False),              # Set Enter to Enter for Location field
+    C("RC-F"):              is_Enter_F2(C("RC-F"), False),              # Set Enter to Enter for Find field
+    C("Esc"):               is_Enter_F2(C("Esc"), True),                # Send Escape, set Enter to be F2 next
+    C("Tab"):               is_Enter_F2(C("Tab"), False),               # Set Enter to Enter after using Tab key
+    C("Shift-RC-Space"):    is_Enter_F2(C("Shift-RC-Space"), False),    # Set Enter to Enter for alternate overview shortcut
     C("Shift-RC-Enter"):        C("Enter"),                             # alternative "Enter" key for unusual cases
 }, when = matchProps(clas=filemanagerStr))
 
@@ -3439,9 +3448,9 @@ keymap("Sublime Text", {
     C("C-Super-up"):            C("Alt-o"),                     # Switch file
     C("Super-RC-f"):            C("f11"),                       # toggle_full_screen
     C("C-Alt-v"):              [C("C-k"), C("C-v")],            # paste_from_history
-    C("C-up"):                  ignore_combo,                   # cancel scroll_lines up
+    # C("C-up"):                  ignore_combo,                   # cancel scroll_lines up
     C("C-Alt-up"):              C("C-up"),                      # scroll_lines up
-    C("C-down"):                ignore_combo,                   # cancel scroll_lines down
+    # C("C-down"):                ignore_combo,                   # cancel scroll_lines down
     C("C-Alt-down"):            C("C-down"),                    # scroll_lines down
     C("Super-Shift-up"):        C("Alt-Shift-up"),              # multi-cursor up
     C("Super-Shift-down"):      C("Alt-Shift-down"),            # multi-cursor down
@@ -3799,7 +3808,7 @@ keymap("GenGUI overrides: not Chromebook", {
 # Overrides to General GUI shortcuts for specific distros
 keymap("GenGUI overrides: elementary OS", {
     C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,elementary)
-    C("RC-Space"):              C("Super-Space"),               # SL - Launch Application Menu (elementary)
+    C("RC-Space"):  is_Enter_F2(C("Super-Space"), False),       # SL - Launch Application Menu (elementary)
     C("RC-LC-f"):               C("Super-Up"),                  # SL- Maximize app elementary
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'elementary' )
 keymap("GenGUI overrides: Fedora", {
@@ -3812,7 +3821,7 @@ keymap("GenGUI overrides: Manjaro GNOME", {
     C("RC-Q"):              C("Super-Q"),                       # Close window
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'manjaro' and DESKTOP_ENV == 'gnome' )
 keymap("GenGUI overrides: Manjaro Xfce", {
-    C("RC-Space"):              C("Alt-F1"),                    # Open Whisker Menu with Cmd+Space
+    C("RC-Space"):  is_Enter_F2(C("Alt-F1"), False),            # Open Whisker Menu with Cmd+Space
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'manjaro' and DESKTOP_ENV == 'xfce' )
 keymap("GenGUI overrides: Manjaro", {
     # TODO: figure out why these two are the same!
@@ -3820,7 +3829,7 @@ keymap("GenGUI overrides: Manjaro", {
     C("RC-LC-f"):               C("Super-PAGE_DOWN"),           # SL - Minimize app manjaro
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'manjaro' )
 keymap("GenGUI overrides: Mint Xfce4", {
-    C("RC-Space"):              C("Super-Space"),               # Launch Application Menu xfce4 (Linux Mint)
+    C("RC-Space"):  is_Enter_F2(C("Super-Space"), False),       # Launch Application Menu xfce4 (Linux Mint)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'mint' and DESKTOP_ENV == 'xfce' )
 keymap("GenGUI overrides: KDE Neon", {
     C("RC-Super-f"):            C("Super-Page_Up"),             # SL - Toggle maximized window state (kde_neon)
@@ -3828,7 +3837,7 @@ keymap("GenGUI overrides: KDE Neon", {
                                                                 # SL - Default SL - Change workspace (kde_neon)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'neon' )
 keymap("GenGUI overrides: Pop!_OS", {
-    C("RC-Space"):              C("Super-slash"),               # "Launch and switch applications" (popos)
+    C("RC-Space"):  is_Enter_F2(C("Super-slash"), False),       # "Launch and switch applications" (popos)
     C("RC-H"):                  C("Super-h"),                   # Default SL - Minimize app (gnome/budgie/popos/fedora) not-deepin
     C("Super-Right"):          [bind,C("Super-C-Up")],          # SL - Change workspace (popos)
     C("Super-Left"):           [bind,C("Super-C-Down")],        # SL - Change workspace (popos)
@@ -3843,20 +3852,20 @@ keymap("GenGUI overrides: Ubuntu", {
 
 # Overrides to General GUI shortcuts for specific desktop environments
 keymap("GenGUI overrides: Budgie", {
-    C("RC-Space"):              Key.LEFT_META,                  # Open panel-main-menu (Budgie menu)
+    C("RC-Space"):  is_Enter_F2(Key.LEFT_META, False),          # Open panel-main-menu (Budgie menu)
     C("Super-Right"):           C("C-Alt-Right"),               # Default SL - Change workspace (budgie)
     C("Super-Left"):            C("C-Alt-Left"),                # Default SL - Change workspace (budgie)
     C("RC-H"):                  C("Super-h"),                   # Default SL - Minimize app (gnome/budgie/popos/fedora) not-deepin
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'budgie' )
 keymap("GenGUI overrides: Cinnamon", {
-    C("RC-Space"):              C("C-Esc"),                     # Right click, configure Mint menu shortcut to Ctrl+Esc
+    C("RC-Space"):  is_Enter_F2(C("C-Esc"), False),             # Right click, configure Mint menu shortcut to Ctrl+Esc
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'cinnamon' )
 keymap("GenGUI overrides: Deepin", {
     C("RC-H"):                  C("Super-n"),                   # Default SL - Minimize app (deepin)
     C("Alt-RC-Space"):          C("Super-e"),                   # Open Finder - (deepin)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'deepin' )
 keymap("GenGUI overrides: GNOME", {
-    C("RC-Space"):              C("Super-s"),                   # Show GNOME overview/app launcher
+    C("RC-Space"):  is_Enter_F2(C("Super-s"), False),           # Show GNOME overview/app launcher
     C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,elementary)
     C("RC-Super-f"):            C("Alt-F10"),                   # Default SL - Maximize app (gnome/kde)
     C("RC-H"):                  C("Super-h"),                   # Default SL - Minimize app (gnome/budgie/popos/fedora) not-deepin
@@ -3866,10 +3875,10 @@ keymap("GenGUI overrides: GNOME", {
     C("RC-Shift-Key_5"):        C("Print"),                     # Take a screenshot interactively (gnome)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'gnome' )
 keymap("GenGUI overrides: IceWM", {
-    C("RC-Space"):              Key.LEFT_META,                  # IceWM: Win95Keys=1 (Meta shows menu)
+    C("RC-Space"):  is_Enter_F2(Key.LEFT_META, False),          # IceWM: Win95Keys=1 (Meta shows menu)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'icewm' )
 keymap("GenGUI overrides: KDE", {
-    C("RC-Space"):              C("Alt-F1"),                    # Default SL - Launch Application Menu (gnome/kde)
+    C("RC-Space"):  is_Enter_F2(C("Alt-F1"), False),            # Default SL - Launch Application Menu (gnome/kde)
     C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,elementary)
     C("RC-Super-f"):            C("Alt-F10"),                   # Default SL - Maximize app (gnome/kde)
     # Screenshot shortcuts for KDE Plasma desktops (Spectacle app)
@@ -3878,12 +3887,12 @@ keymap("GenGUI overrides: KDE", {
     C("RC-Shift-Key_5"):        C("Print"),                     # Take a screenshot interactively (kde)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'kde' )
 keymap("GenGUI overrides: MATE", {
-    C("RC-Space"):              C("Alt-Space"),                     # Right click, configure Mint menu shortcut to match
+    C("RC-Space"):  is_Enter_F2(C("Alt-Space"), False),         # Right click, configure Mint menu shortcut to match
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'mate' )
 keymap("GenGUI overrides: Xfce4", {
     C("RC-Grave"):             [bind,C("Super-Tab")],           # xfce4 Switch within app group
     C("Shift-RC-Grave"):       [bind,C("Super-Shift-Tab")],     # xfce4 Switch within app group
-    C("RC-Space"):              C("C-Esc"),                     # Launch Application Menu xfce4 (Xubuntu)
+    C("RC-Space"):  is_Enter_F2(C("C-Esc"), False),             # Launch Application Menu xfce4 (Xubuntu)
     C("RC-F3"):                 C("C-Alt-d"),                   # SL- Show Desktop xfce4
     C("RC-H"):                  C("Alt-F9"),                    # SL - Minimize app xfce4
     # Screenshot shortcuts for Xfce desktops (xfce4-screenshooter app)
@@ -3904,7 +3913,7 @@ keymap("General GUI", {
 
     C("Shift-RC-Left_Brace"):   C("C-Page_Up"),                 # Tab navigation: Go to prior (left) tab
     C("Shift-RC-Right_Brace"):  C("C-Page_Down"),               # Tab navigation: Go to next (right) tab
-    C("RC-Space"):              C("Alt-F1"),                    # Default SL - Launch Application Menu (gnome/kde)
+    C("RC-Space"):  is_Enter_F2(C("Alt-F1"), False),            # Default SL - Launch Application Menu (gnome/kde)
     C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,elementary)
     C("RC-Super-f"):            C("Alt-F10"),                   # Default SL - Maximize app (gnome/kde)
     C("RC-Q"):                  C("Alt-F4"),                    # Default SL - not-popos
