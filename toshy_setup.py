@@ -187,8 +187,8 @@ def show_reboot_prompt():
 
 
 def get_environment_info():
-    """Get back the distro name, distro version, session type and 
-        desktop environment from `env.py` module"""
+    """Get back the distro name (ID), distro version, session type and desktop 
+        environment from `env.py` module"""
     print(f'\n§  Getting environment information...\n{cnfg.separator}')
 
     known_init_systems = {
@@ -543,7 +543,7 @@ pkg_groups_map = {
 }
 
 extra_pkgs_map = {
-    # Add a distro name and its additional packages here as needed
+    # Add a distro name (ID) and its additional packages here as needed
     # 'distro_name': ["pkg1", "pkg2", ...],
 }
 
@@ -807,25 +807,27 @@ def install_distro_pkgs():
 
 
 def get_distro_names():
-    """Utility function to return list of available distro names"""
-
+    """Utility function to return list of available distro names (IDs)"""
     distro_list = []
     for group in distro_groups_map.values():
         distro_list.extend(group)
-
     sorted_distro_list = sorted(distro_list)
-
-    prev_char = sorted_distro_list[0][0]
-    distro_index = prev_char.upper() + ": "  # start with the initial letter
+    prev_char: str = sorted_distro_list[0][0]
+    # start index with the initial letter
+    distro_index = prev_char.upper() + ": "
     for distro in sorted_distro_list:
         if distro[0] != prev_char:
-            distro_index = distro_index[:-2]  # remove last comma and space from previous line
-            distro_index += "\n\t" + distro[0].upper() + ": " + distro + ", "  # start a new line with new initial letter
+            # type hint to help out VSCode syntax highlighter
+            distro: str
+            # remove last comma and space from previous line
+            distro_index = distro_index[:-2]
+            # start a new line with new initial letter
+            distro_index += "\n\t" + distro[0].upper() + ": " + distro + ", "
             prev_char = distro[0]
         else:
             distro_index += distro + ", "
-    distro_index = distro_index[:-2]  # remove last comma and space from the final line
-
+    # remove last comma and space from the final line
+    distro_index = distro_index[:-2]
     return distro_index
 
 
@@ -1708,12 +1710,12 @@ def handle_cli_arguments():
         '--override-distro',
         type=str,
         # dest='override_distro',
-        help=f'Override auto-detection of distro name/type. See "--list-distros"'
+        help=f'Override auto-detection of distro. See "--list-distros"'
     )
     parser.add_argument(
         '--list-distros',
         action='store_true',
-        help='Display list of distro names to use with "--override-distro"'
+        help='Display list of distros to use with "--override-distro"'
     )
     parser.add_argument(
         '--uninstall',
@@ -1772,7 +1774,7 @@ def handle_cli_arguments():
         safe_shutdown(0)
 
     if args.list_distros:
-        print(  f'Distro names known to the Toshy installer (use with "--override-distro" arg):'
+        print(  f'Distros known to the Toshy installer (use with "--override-distro" arg):'
                 f'\n\n\t{get_distro_names()}')
         safe_shutdown(0)
 
