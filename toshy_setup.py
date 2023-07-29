@@ -688,13 +688,15 @@ def install_distro_pkgs():
                         break
                     # try to install the corresponding package
                     try:
-                        subprocess.run(['sudo', 'dnf', 'install', '-y', f'python{version}'], check=True)
+                        subprocess.run(['sudo', 'dnf', 'install', '-y',
+                                        f'python{version}', f'python{version}-devel'], check=True)
                         # if the installation succeeds, set the interpreter path and version
                         cnfg.py_interp_path = f'/usr/bin/python{version}'
                         cnfg.py_interp_ver  = version
                         break
                     # if the installation fails, continue with the next version
                     except subprocess.CalledProcessError:
+                        print(f'No match for potential Python version {version}.')
                         continue
                 else:
                     # if no suitable version was found, print an error message and exit
