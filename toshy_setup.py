@@ -691,8 +691,8 @@ def install_distro_pkgs():
                 # enable CRB repo on RHEL 8.x distros:
                 subprocess.run(['sudo', '/usr/bin/crb', 'enable'])
                 #
-                # define a list of potential Python versions to install
-                potential_versions = ['3.15', '3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
+                # TODO: Adjust this list according to "current" stable release Python in middle
+                potential_versions = ['3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
                 #
                 for version in potential_versions:
                     # check if the version is already installed
@@ -703,7 +703,10 @@ def install_distro_pkgs():
                     # try to install the corresponding package
                     try:
                         subprocess.run(['sudo', 'dnf', 'install', '-y',
-                                        f'python{version}', f'python{version}-devel'], check=True)
+                                        f'python{version}',
+                                        f'python{version}-devel',
+                                        f'python{version}-tkinter'],
+                                        check=True)
                         # if the installation succeeds, set the interpreter path and version
                         cnfg.py_interp_path = f'/usr/bin/python{version}'
                         cnfg.py_interp_ver  = version
