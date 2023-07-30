@@ -288,7 +288,16 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - Enable the AppIndicator extension (pre-installed) for tray icon
     - Install an extension from `Requirements` if using Wayland+GNOME
 
-- [ AlmaLinux / Rocky Linux ] 9.2 (RHEL clones)
+- AlmaLinux 8.8 (RHEL clone) - Partial support:
+
+    - Tested with "Workstation" installer choice, not "Server with GUI"
+    - Default GNOME desktop tested, X11/Xorg session only
+    - Wayland+GNOME session NOT supported, because:
+        - GNOME is old, no compatible Shell extension available
+    - Install AppIndicator extension from the Software app
+    - RHEL 8.x and clones probably also work in a similar manner
+
+- [ AlmaLinux | Rocky Linux ] 9.2 (RHEL clones)
 
     - Tested with "Workstation" installer choice, not "Server with GUI"
     - Default GNOME desktop tested (Wayland session requires extension)
