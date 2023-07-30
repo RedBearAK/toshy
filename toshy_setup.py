@@ -187,8 +187,8 @@ def show_reboot_prompt():
 
 
 def get_environment_info():
-    """Get back the distro name, distro version, session type and 
-        desktop environment from `env.py` module"""
+    """Get back the distro name (ID), distro version, session type and desktop 
+        environment from `env.py` module"""
     print(f'\n§  Getting environment information...\n{cnfg.separator}')
 
     known_init_systems = {
@@ -484,7 +484,7 @@ def verify_user_groups():
 
 distro_groups_map = {
     # separate references for RHEL types versus Fedora types
-    'fedora-based':    ["fedora", "fedoralinux", "ultramarine", "nobara", "silverblue"],
+    'fedora-based':    ["fedora", "fedoralinux", "ultramarine", "nobara", "silverblue-experimental"],
     'rhel-based':      ["rhel", "almalinux", "rocky", "eurolinux", "centos"],
 
     # separate references for Tumbleweed types versus Leap types
@@ -535,20 +535,15 @@ pkg_groups_map = {
                         "libappindicator-gtk3", "pkg-config", "python-dbus", "python-pip",
                         "python", "libnotify", "systemd", "zenity"],
 
-    # 'solus-based':     ["gcc", "git", "libcairo-devel", "python3-devel", "python3-pip", 
-    #                     "python3-tkinter", "libappindicator-devel",
-    #                     "libnotify", "systemd-devel", "zenity"],
-
     'solus-based':     ["gcc", "git", "libcairo-devel", "python3-devel", "pip", 
                         "python3-tkinter", "python3-dbus", "python-gobject-devel",
                         "python-dbus-devel", "libayatana-appindicator",
-                        # "dbus-devel", "dbus-glib-devel", "binutils", "libappindicator-devel",
                         "libnotify", "systemd-devel", "zenity"],
 
 }
 
 extra_pkgs_map = {
-    # Add a distro name and its additional packages here as needed
+    # Add a distro name (ID) and its additional packages here as needed
     # 'distro_name': ["pkg1", "pkg2", ...],
 }
 
@@ -606,6 +601,8 @@ def install_distro_pkgs():
         # Have something come out even if package list is empty (like Arch after initial run)
         print(f'All necessary native distro packages are installed.')
 
+    distro_major_ver = cnfg.DISTRO_VER[0] if cnfg.DISTRO_VER else 'NO_VER'
+
     if cnfg.DISTRO_NAME in dnf_distros:
 
         # do extra stuff only if distro is a RHEL type (not Fedora type)
@@ -614,7 +611,7 @@ def install_distro_pkgs():
             call_attention_to_password_prompt()
 
             # do extra prep/checks if distro is CentOS Stream 8
-            if cnfg.DISTRO_NAME in ['centos'] and cnfg.DISTRO_VER in ['8']:
+            if cnfg.DISTRO_NAME in ['centos'] and cnfg.DISTRO_VER[0] in ['8']:
                 print('Doing prep/checks for CentOS Stream 8...')
                 min_minor = curr_py_rel_ver_minor - 3           # check up to 2 vers before current
                 max_minor = curr_py_rel_ver_minor + 3           # check up to 3 vers after current
@@ -643,7 +640,9 @@ def install_distro_pkgs():
                     safe_shutdown(1)
 
             # do extra prep/checks if distro is CentOS 7
-            if cnfg.DISTRO_NAME in ['centos'] and cnfg.DISTRO_VER in ['7']:
+            if (cnfg.DISTRO_NAME in ['centos'] and 
+                cnfg.DISTRO_VER and 
+                cnfg.DISTRO_VER[0] == '7'):
                 print('Doing prep/checks for CentOS 7...')
                 if py_interp_ver_tup >= (3, 8):
                     print(f"Good, Python version is 3.8 or later: "
@@ -659,12 +658,7 @@ def install_distro_pkgs():
                         # sudo yum install rh-python38-python-devel
                         subprocess.run(['sudo', 'yum', 'install', '-y', 'rh-python38-python-devel'],
                                         check=True)
-                        
-                        # THIS WILL DROP US INTO A NEW SHELL! Not what we want. 
-                        # scl enable rh-python38 bash
-                        # subprocess.run(['scl', 'enable', 'rh-python38', 'bash'],
-                        #                 check=True)
-                        
+                        #
                         # set new Python interpreter version and path to reflect what was installed
                         cnfg.py_interp_path = '/opt/rh/rh-python38/root/usr/bin/python3.8'
                         cnfg.py_interp_ver  = '3.8'
@@ -679,14 +673,52 @@ def install_distro_pkgs():
                 check_for_pkg_mgr_cmd('yum')
                 subprocess.run(['sudo', 'yum', 'install', '-y', 'dnf'])
 
-            if not (cnfg.DISTRO_NAME == 'centos' and cnfg.DISTRO_VER in ['7', '8']):
-                # enable "CodeReady Builder" repo for 'gobject-introspection-devel' on RHELs:
-                # sudo dnf config-manager --set-enabled crb
-                subprocess.run(['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb'])
-
             # for libappindicator-gtk3: sudo dnf install -y epel-release
             subprocess.run(['sudo', 'dnf', 'install', '-y', 'epel-release'])
             subprocess.run(['sudo', 'dnf', 'update', '-y'])
+
+            if ( not (  cnfg.DISTRO_NAME == 'centos' and 
+                        distro_major_ver in ['7', '8']    ) and 
+                        distro_major_ver in ['9'] ):
+                #
+                # enable "CodeReady Builder" repo for 'gobject-introspection-devel' on RHEL 9.x:
+                # sudo dnf config-manager --set-enabled crb
+                subprocess.run(['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb'])
+
+            # Need to do this AFTER the 'epel-release' install
+            if (  cnfg.DISTRO_NAME != 'centos' and 
+                    distro_major_ver in ['8']):
+                # enable CRB repo on RHEL 8.x distros:
+                subprocess.run(['sudo', '/usr/bin/crb', 'enable'])
+                #
+                # TODO: Adjust this list according to "current" stable release Python in middle
+                potential_versions = ['3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
+                #
+                for version in potential_versions:
+                    # check if the version is already installed
+                    if shutil.which(f'python{version}'):
+                        cnfg.py_interp_path = f'/usr/bin/python{version}'
+                        cnfg.py_interp_ver  = version
+                        break
+                    # try to install the corresponding package
+                    try:
+                        subprocess.run(['sudo', 'dnf', 'install', '-y',
+                                        f'python{version}',
+                                        f'python{version}-devel',
+                                        f'python{version}-tkinter'],
+                                        check=True)
+                        # if the installation succeeds, set the interpreter path and version
+                        cnfg.py_interp_path = f'/usr/bin/python{version}'
+                        cnfg.py_interp_ver  = version
+                        break
+                    # if the installation fails, continue with the next version
+                    except subprocess.CalledProcessError:
+                        print(f'No match for potential Python version {version}.')
+                        continue
+                else:
+                    # if no suitable version was found, print an error message and exit
+                    error('ERROR: Did not find any appropriate Python interpreter version.')
+                    safe_shutdown(1)
 
         # finally, do the install of the main list of packages for DNF/RHEL distro types
         try:
@@ -775,25 +807,27 @@ def install_distro_pkgs():
 
 
 def get_distro_names():
-    """Utility function to return list of available distro names"""
-
+    """Utility function to return list of available distro names (IDs)"""
     distro_list = []
     for group in distro_groups_map.values():
         distro_list.extend(group)
-
     sorted_distro_list = sorted(distro_list)
-
-    prev_char = sorted_distro_list[0][0]
-    distro_index = prev_char.upper() + ": "  # start with the initial letter
+    prev_char: str = sorted_distro_list[0][0]
+    # start index with the initial letter
+    distro_index = prev_char.upper() + ": "
     for distro in sorted_distro_list:
         if distro[0] != prev_char:
-            distro_index = distro_index[:-2]  # remove last comma and space from previous line
-            distro_index += "\n\t" + distro[0].upper() + ": " + distro + ", "  # start a new line with new initial letter
+            # type hint to help out VSCode syntax highlighter
+            distro: str
+            # remove last comma and space from previous line
+            distro_index = distro_index[:-2]
+            # start a new line with new initial letter
+            distro_index += "\n\t" + distro[0].upper() + ": " + distro + ", "
             prev_char = distro[0]
         else:
             distro_index += distro + ", "
-    distro_index = distro_index[:-2]  # remove last comma and space from the final line
-
+    # remove last comma and space from the final line
+    distro_index = distro_index[:-2]
     return distro_index
 
 
@@ -1676,12 +1710,12 @@ def handle_cli_arguments():
         '--override-distro',
         type=str,
         # dest='override_distro',
-        help=f'Override auto-detection of distro name/type. See "--list-distros"'
+        help=f'Override auto-detection of distro. See "--list-distros"'
     )
     parser.add_argument(
         '--list-distros',
         action='store_true',
-        help='Display list of distro names to use with "--override-distro"'
+        help='Display list of distros to use with "--override-distro"'
     )
     parser.add_argument(
         '--uninstall',
@@ -1740,7 +1774,7 @@ def handle_cli_arguments():
         safe_shutdown(0)
 
     if args.list_distros:
-        print(  f'Distro names known to the Toshy installer (use with "--override-distro" arg):'
+        print(  f'Distros known to the Toshy installer (use with "--override-distro" arg):'
                 f'\n\n\t{get_distro_names()}')
         safe_shutdown(0)
 
