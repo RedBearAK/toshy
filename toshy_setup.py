@@ -1,4 +1,4 @@
-#!/bin/env python3
+#!/usr/bin/env python3
 
 import os
 os.environ['PYTHONDONTWRITEBYTECODE'] = '1'     # prevent this script from creating cache files
@@ -490,6 +490,9 @@ distro_groups_map = {
     # separate references for Tumbleweed types versus Leap types
     'tumbleweed-based':["opensuse-tumbleweed"],
     'leap-based':      ["opensuse-leap"],
+
+    'pclinuxos-based': ["pclinuxos"],
+
     'ubuntu-based':    ["ubuntu", "mint", "popos", "elementary", "neon", "tuxedo", "zorin"],
     'debian-based':    ["lmde", "peppermint", "debian", "kali"],
     'arch-based':      ["arch", "arcolinux", "endeavouros", "manjaro"],
@@ -513,6 +516,11 @@ pkg_groups_map = {
                         "gobject-introspection-devel", "libappindicator3-devel", "tk",
                         "libnotify-tools", "typelib-1_0-AyatanaAppIndicator3-0_1",
                         "systemd-devel", "zenity"],
+
+    'pclinuxos-based': ["gcc", "git", "cairo-devel", "cairo-gobject-devel", "dbus-devel", 
+                        "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter", 
+                        "gobject-introspection-devel", "libappindicator3-devel", "xset", 
+                        "libnotify", "systemd-devel", "zenity"],
 
     # TODO: update Leap Python package versions as it makes newer Python available
     'leap-based':      ["gcc", "git", "cairo-devel",  "dbus-1-devel", "python311-tk",
