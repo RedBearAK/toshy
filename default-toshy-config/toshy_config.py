@@ -1135,15 +1135,15 @@ modmap("Cond modmap - GTK3 numpad nav keys fix",{
 # })
 
 
-# EXPERIMENTAL!!!!
-multipurpose_modmap("Block Mod when alone", {
-    Key.LEFT_META:              [Key.RESERVED, Key.LEFT_META],
-    Key.RIGHT_META:             [Key.RESERVED, Key.RIGHT_META],
-    # Key.LEFT_ALT:               [Key.RESERVED, Key.LEFT_ALT],
-    # Key.RIGHT_ALT:              [Key.RESERVED, Key.RIGHT_ALT],
-}, when = lambda ctx:
-    # matchProps(not_lst=terminals_and_remotes_lod)(ctx) )
-    matchProps(not_lst=remotes_lod)(ctx) )
+# # EXPERIMENTAL!!!!
+# multipurpose_modmap("Block Mod when alone", {
+#     Key.LEFT_META:              [Key.RESERVED, Key.LEFT_META],
+#     Key.RIGHT_META:             [Key.RESERVED, Key.RIGHT_META],
+#     # Key.LEFT_ALT:               [Key.RESERVED, Key.LEFT_ALT],
+#     # Key.RIGHT_ALT:              [Key.RESERVED, Key.RIGHT_ALT],
+# }, when = lambda ctx:
+#     # matchProps(not_lst=terminals_and_remotes_lod)(ctx) )
+#     matchProps(not_lst=remotes_lod)(ctx) )
 
 
 multipurpose_modmap("Enter2Cmd", {
