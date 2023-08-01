@@ -147,6 +147,7 @@ class InstallerSettings:
         self.input_group_name       = 'input'
         self.user_name              = pwd.getpwuid(os.getuid()).pw_name
 
+        self.barebones_config           = None
         self.fancy_pants            = None
         self.tweak_applied          = None
         self.remind_extensions      = None
@@ -1746,9 +1747,14 @@ def handle_cli_arguments():
         help='Remove desktop environment tweaks only, no install'
     )
     parser.add_argument(
+        '--barebones-config',
+        action='store_true',
+        help='Install with mostly empty/blank keymapper config file.'
+    )
+    parser.add_argument(
         '--fancy-pants',
         action='store_true',
-        help='Optional: install font, KDE task switcher, etc...'
+        help='See README for more info on this option.'
     )
 
     args = parser.parse_args()
@@ -1763,6 +1769,7 @@ def handle_cli_arguments():
         '--apply-tweaks':       args.apply_tweaks,
         '--remove-tweaks':      args.remove_tweaks,
         '--override-distro':    bool(args.override_distro),
+        '--empty-config':       args.empty_config,
         '--fancy-pants':        args.fancy_pants,
         **exit_args_dct
     }
@@ -1785,6 +1792,10 @@ def handle_cli_arguments():
         print(  f'Distros known to the Toshy installer (use with "--override-distro" arg):'
                 f'\n\n\t{get_distro_names()}')
         safe_shutdown(0)
+
+    if args.bareboes_config:
+        cnfg.barebones_config = True
+        raise NotImplementedError
 
     if args.fancy_pants:
         cnfg.fancy_pants = True
