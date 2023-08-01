@@ -1821,11 +1821,11 @@ def main(cnfg: InstallerSettings):
 
     elevate_privileges()
 
+    install_distro_pkgs()
+
     load_uinput_module()
     install_udev_rules()
     verify_user_groups()
-
-    install_distro_pkgs()
 
     clone_keyszer_branch()
 
