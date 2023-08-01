@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 
 
 # Remove the Toshy desktop entry files so that app launchers and menus do not

@@ -1,4 +1,4 @@
-#!/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # Indicator tray icon menu app for Toshy, using pygobject/gi

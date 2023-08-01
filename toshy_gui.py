@@ -1,4 +1,4 @@
-#!/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # Preferences app for Toshy, using tkinter GUI and "Sun Valley" theme
