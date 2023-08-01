@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 
 
 # Stop the Toshy services. First session monitor so that it doesn't try 

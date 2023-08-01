@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 
 # Tell the user how to activate the Toshy Python virtual environment
 

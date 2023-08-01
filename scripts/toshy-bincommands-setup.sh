@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 
 
 # "Install" the bin commands as symlinks in user-local bin location.

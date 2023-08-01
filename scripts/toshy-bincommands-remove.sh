@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 
 
 # Remove the Toshy bin command symlinks from user-local bin location.

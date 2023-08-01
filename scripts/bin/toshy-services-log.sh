@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 
 
 # Show the journalctl output of the Toshy systemd services (session monitor and config).

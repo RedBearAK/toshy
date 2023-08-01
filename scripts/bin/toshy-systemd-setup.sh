@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 
 
 # Set up the Toshy systemd services (session monitor and config).
