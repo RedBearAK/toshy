@@ -1793,7 +1793,7 @@ def handle_cli_arguments():
                 f'\n\n\t{get_distro_names()}')
         safe_shutdown(0)
 
-    if args.bareboes_config:
+    if args.barebones_config:
         cnfg.barebones_config = True
         raise NotImplementedError
 
