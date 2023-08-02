@@ -25,7 +25,7 @@ emergency_eject_key(Key.F16)    # default key: F16
 
 timeouts(
     multipurpose        = 1,        # default: 1 sec
-    suspend             = 1,        # default: 1 sec, try 0.1 sec for touchpads
+    suspend             = 0.1,        # default: 1 sec, try 0.1 sec for touchpads
 )
 
 # Delays often needed for Wayland (at least in GNOME using shell extensions)
