@@ -879,7 +879,7 @@ def extract_slices(data: str) -> Dict[str, str]:
     # Protect the barebones config file if a slice tagged with "barebones" found, 
     if 'barebones_user_cfg' in slices or any('barebones' in key for key in slices):
         cnfg.barebones_config = True
-        print(f'Found "barebones" type config file.')
+        print(f'Found "barebones" type config file. Will upgrade with same type.')
     # Confirm replacement of regular config file with barebones config if CLI option is used
     # and there is a non-barebones existing config file. 
     elif cnfg.barebones_config:
@@ -961,6 +961,8 @@ def backup_toshy_config():
                     cnfg.existing_cfg_slices = extract_slices(cnfg.existing_cfg_data)
                 except ValueError as value_err:
                     error(f'Problem extracting marked slices from existing config.\n\t{value_err}')
+        else:
+            print(f"No existing config file found in {cnfg.toshy_dir_path}.")
 
         if os.path.isfile(cnfg.db_file_path):
             try:
@@ -970,6 +972,8 @@ def backup_toshy_config():
                 shutil.copy(cnfg.db_file_path, f'{cnfg.run_tmp_dir}/')
             except (FileNotFoundError, PermissionError, OSError) as file_err:
                 error(f"Problem copying preferences db file to '{cnfg.run_tmp_dir}':\n\t{file_err}")
+        else:
+            print(f'No existing preferences db file found in {cnfg.toshy_dir_path}.')
         try:
             # Define the ignore function
             def ignore_venv(dirname, filenames):
