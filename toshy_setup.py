@@ -1769,7 +1769,7 @@ def handle_cli_arguments():
         '--apply-tweaks':       args.apply_tweaks,
         '--remove-tweaks':      args.remove_tweaks,
         '--override-distro':    bool(args.override_distro),
-        '--empty-config':       args.empty_config,
+        '--barebones-config':   args.barebones_config,
         '--fancy-pants':        args.fancy_pants,
         **exit_args_dct
     }
