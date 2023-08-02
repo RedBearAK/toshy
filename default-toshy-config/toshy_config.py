@@ -1078,10 +1078,12 @@ modmap("Cond modmap - Media Arrows Fix",{
 ###  SLICE_MARK_START: exclude_kpad_devs  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 
 # List of devices to add to the device exclusion list below this slice
+# How to use this list to exclude additional keypad devices:
+# Put device names in individual Python "{dictionaries}".
+# Make the dictionaries look exactly like the given example, 
+# including the comma after each dictionary.
+
 exclude_kpad_devs_UserCustom_lod = [
-    # How to use this list to exclude additional keypad devices:
-    # Put device names in individual Python "{dictionaries}".
-    # Make the dictionaries look exactly like this, including the comma:
     # {devn:'My Keyboard Device'},
     #
 ]
