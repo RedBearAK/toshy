@@ -877,8 +877,9 @@ def extract_slices(data: str) -> Dict[str, str]:
         slice_end           = end.start()
         slices[slice_name]  = data[slice_start:slice_end]
     # Protect the barebones config file if a slice tagged with "barebones" found, 
-    if 'barebones' in slices:
+    if 'barebones_user_cfg' in slices or any('barebones' in key for key in slices):
         cnfg.barebones_config = True
+        print(f'Found "barebones" type config file.')
     # Confirm replacement of regular config file with barebones config if CLI option is used
     # and there is a non-barebones existing config file. 
     elif cnfg.barebones_config:
