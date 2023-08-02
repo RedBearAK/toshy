@@ -1068,16 +1068,31 @@ modmap("Cond modmap - Media Arrows Fix",{
     Key.STOPCD:                 Key.PAGE_DOWN,
     Key.PREVIOUSSONG:           Key.HOME,
     Key.NEXTSONG:               Key.END,
-# }, when = lambda _: media_arrows_fix is True)
 }, when = lambda ctx:
-    # matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
     matchProps(not_lst=remotes_lod)(ctx) and 
     cnfg.media_arrows_fix is True )
+
+
+###################################################################################################
+###  SLICE_MARK_START: exclude_kpad_devs  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
+
+# List of devices to add to the device exclusion list below this slice
+exclude_kpad_devs_UserCustom_lod = [
+    # How to use this list to exclude additional keypad devices:
+    # Put device names in individual Python "{dictionaries}".
+    # Make the dictionaries look exactly like this, including the comma:
+    # {devn:'My Keyboard Device'},
+    #
+]
+
+###  SLICE_MARK_END: exclude_kpad_devs  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
+###################################################################################################
 
 
 # List of devices with keypads to exclude from Forced Numpad and GTK3 fix modmaps
 exclude_kpad_devs_lod = [
     {devn:'Razer Razer Naga X'},
+    *exclude_kpad_devs_UserCustom_lod,
 ]
 
 
