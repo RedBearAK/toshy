@@ -147,7 +147,7 @@ class InstallerSettings:
         self.input_group_name       = 'input'
         self.user_name              = pwd.getpwuid(os.getuid()).pw_name
 
-        self.barebones_config           = None
+        self.barebones_config       = None
         self.fancy_pants            = None
         self.tweak_applied          = None
         self.remind_extensions      = None
