@@ -397,6 +397,7 @@ browsers_firefox = [
     "Firefox",
     "Firefox Developer Edition",
     "firefoxdeveloperedition",
+    "floorp",
     "LibreWolf",
     "Mullvad Browser",
     "Navigator",
@@ -447,6 +448,10 @@ dialogs_Escape_lod = [
     {clas:"^epiphany$|^org.gnome.Epiphany$", name:"^Preferences$"},
     {clas:"^Angry.*IP.*Scanner$",
         name:"^IP.*address.*details.*$|^Preferences.*$|^Scan.*Statistics.*$|^Edit.*openers.*$"},
+    # TODO: add or change Atoms class to "pm.mirko.Atoms" if the app gets updated
+    # TODO: remove "atoms" from "name:" entry patterns if "Shortcuts" dialog gets updated
+    # Reference: https://github.com/AtomsDevs/Atoms/issues/61
+    {clas:"^atoms$", name:"^Preferences$|^Shortcuts$|^About$|^atoms$"},
 ]
 
 ### dialogs_CloseWin_lod = send these windows the "Close window" combo for Cmd+W
@@ -1068,16 +1073,33 @@ modmap("Cond modmap - Media Arrows Fix",{
     Key.STOPCD:                 Key.PAGE_DOWN,
     Key.PREVIOUSSONG:           Key.HOME,
     Key.NEXTSONG:               Key.END,
-# }, when = lambda _: media_arrows_fix is True)
 }, when = lambda ctx:
-    # matchProps(not_lst=terminals_and_remotes_lod)(ctx) and 
     matchProps(not_lst=remotes_lod)(ctx) and 
     cnfg.media_arrows_fix is True )
+
+
+###################################################################################################
+###  SLICE_MARK_START: exclude_kpad_devs  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
+
+# List of devices to add to the device exclusion list below this slice
+# How to use this list to exclude additional keypad devices:
+# Put device names in individual Python "{dictionaries}".
+# Make the dictionaries look exactly like the given example, 
+# including the comma after each dictionary.
+
+exclude_kpad_devs_UserCustom_lod = [
+    # {devn:'My Keyboard Device'},
+    #
+]
+
+###  SLICE_MARK_END: exclude_kpad_devs  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
+###################################################################################################
 
 
 # List of devices with keypads to exclude from Forced Numpad and GTK3 fix modmaps
 exclude_kpad_devs_lod = [
     {devn:'Razer Razer Naga X'},
+    *exclude_kpad_devs_UserCustom_lod,
 ]
 
 
@@ -1133,18 +1155,6 @@ modmap("Cond modmap - GTK3 numpad nav keys fix",{
 #     # {Key.LEFT_META:             [Key.ESC, Key.RIGHT_CTRL]       # Caps2Esc - Chromebook
 #     {                                                             # Placeholder
 # })
-
-
-# EXPERIMENTAL!!!!
-multipurpose_modmap("Block Mod when alone", {
-    Key.LEFT_META:              [Key.RESERVED, Key.LEFT_META],
-    Key.RIGHT_META:             [Key.RESERVED, Key.RIGHT_META],
-    # Key.LEFT_ALT:               [Key.RESERVED, Key.LEFT_ALT],
-    # Key.RIGHT_ALT:              [Key.RESERVED, Key.RIGHT_ALT],
-}, when = lambda ctx:
-    # matchProps(not_lst=terminals_and_remotes_lod)(ctx) )
-    matchProps(not_lst=remotes_lod)(ctx) )
-
 
 multipurpose_modmap("Enter2Cmd", {
     Key.ENTER:                  [Key.ENTER, Key.RIGHT_CTRL]     # Enter2Cmd

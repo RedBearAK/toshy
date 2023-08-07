@@ -188,7 +188,7 @@ There is a weird bug with searching for the `Xremap` extension on newer versions
 
 1. Download the latest zip from the big green `Code ˇ` button near the top of the page.  
 1. Unzip the archive, and open a terminal in the resulting folder.  
-1. Run the `toshy_setup.py` script in the terminal.  
+1. Run the `toshy_setup.py` script in the terminal, like this:  
 
 ```sh
 ./toshy_setup.py
@@ -196,7 +196,13 @@ There is a weird bug with searching for the `Xremap` extension on newer versions
 
 ### Options for installer
 
-The installer has a couple of options available:  
+The installer has a few different options available, as shown in this section. Some can be combined, others (like `--show-env` or `--list-distros`) are exclusive and will raise an error if they are not used alone.  
+
+```sh
+./toshy_setup.py --help
+```
+
+Shows a short description of all available options.  
 
 ```sh
 ./toshy_setup.py --show-env
@@ -208,7 +214,7 @@ This will just show what the installer will see as the environment when you try 
 ./toshy_setup.py --list-distros
 ```
 
-This will print out a list of the distros that the Toshy installer theoretically "knows" how to deal with, as far as knowing the correct package manager to use and having a list of package names that would actually work. This can be used with:  
+This will print out a list of the distros that the Toshy installer theoretically "knows" how to deal with, as far as knowing the correct package manager to use and having a list of package names that would actually work. Names from the list can be used with:  
 
 ```sh
 ./toshy_setup.py --override-distro distro_name
@@ -232,7 +238,15 @@ Just applies the "desktop tweaks" for the environment, does not do the full inst
 
 Just removes the "desktop tweaks" the installer applied.  
 
-And finally:  
+```sh
+./toshy_setup.py --barebones-config
+```
+
+This special option will install a "barebones" config file that does no modmapping or keymapping by default (besides a simple example keymap that gives access to a couple of currency symbols, as a demo). The option will also convert an existing Toshy config into a "barebones" config file, but will ask for explicit confirmation. This config will of course not provide any of the features that a normal Toshy config would, other than the ability to use the keymapper in any of the compatible environments (X11/Xorg, Wayland+GNOME, Wayland+KDE).  
+
+The Toshy installer should try to retain your changes inside any of the editable "slices" of the barebones config file, and avoid replacing your barebones config with a regular Toshy config file, even if you don't use the same CLI option the next time you run the installer. Submit an issue if it doesn't respect your barebones config. Even if that happens, the previous config file should be in the timestamped backup folder that the installer always creates.  
+
+Last, but definitely not least, the "extra" installer option:  
 
 ```sh
 ./toshy_setup.py --fancy-pants
@@ -269,7 +283,7 @@ This is a list of Linux distributions and desktop variants I've been able to tes
 
 As noted elsewhere in the README, there is no Windows version of Toshy, unlike Kinto.  
 
-### Red Hat and similar distros
+### Red Hat and other RPM-based distros
 
 - Fedora 36/37/38 (upstream of CentOS Stream and RHEL)
 
@@ -288,6 +302,14 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - Enable the AppIndicator extension (pre-installed) for tray icon
     - Install an extension from `Requirements` if using Wayland+GNOME
 
+- [ AlmaLinux | Rocky Linux ] 9.2 (RHEL clones)
+
+    - Tested with "Workstation" installer choice, not "Server with GUI"
+    - Default GNOME desktop tested (Wayland session requires extension)
+    - KDE Plasma desktop tested (Wayland+KDE supported)
+    - Some non-default (but official) repos like CRB will be enabled
+    - NB: There is no journal for "user" services, for some reason
+
 - AlmaLinux 8.8 (RHEL clone) - Partial support:
 
     - Tested with "Workstation" installer choice, not "Server with GUI"
@@ -296,14 +318,6 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
         - GNOME is old, no compatible Shell extension available
     - Install AppIndicator extension from the Software app
     - RHEL 8.x and clones probably also work in a similar manner
-
-- [ AlmaLinux | Rocky Linux ] 9.2 (RHEL clones)
-
-    - Tested with "Workstation" installer choice, not "Server with GUI"
-    - Default GNOME desktop tested (Wayland session requires extension)
-    - KDE Plasma desktop tested (Wayland+KDE supported)
-    - Some non-default (but official) repos like CRB will be enabled
-    - NB: There is no journal for "user" services, for some reason
 
 - Eurolinux 9.2 (RHEL clone)
 

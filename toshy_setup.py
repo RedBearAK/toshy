@@ -147,6 +147,7 @@ class InstallerSettings:
         self.input_group_name       = 'input'
         self.user_name              = pwd.getpwuid(os.getuid()).pw_name
 
+        self.barebones_config       = None
         self.fancy_pants            = None
         self.tweak_applied          = None
         self.remind_extensions      = None
@@ -860,7 +861,7 @@ def clone_keyszer_branch():
 
 def extract_slices(data: str) -> Dict[str, str]:
     """Utility function to store user content slices from existing config file data"""
-    slices = {}
+    slices              = {}
     pattern_start       = r'###  SLICE_MARK_START: (\w+)  ###.*'
     pattern_end         = r'###  SLICE_MARK_END: (\w+)  ###.*'
     matches_start       = list(re.finditer(pattern_start, data))
@@ -872,34 +873,62 @@ def extract_slices(data: str) -> Dict[str, str]:
         slice_name = begin.group(1)
         if end.group(1) != slice_name:
             raise ValueError(f'Mismatched slice markers in config file:\n\t{slice_name}')
-        slice_start     = begin.end()
-        slice_end       = end.start()
-        slices[slice_name] = data[slice_start:slice_end]
-    
+        slice_start         = begin.end()
+        slice_end           = end.start()
+        slices[slice_name]  = data[slice_start:slice_end]
+    # Protect the barebones config file if a slice tagged with "barebones" found, 
+    if 'barebones_user_cfg' in slices or any('barebones' in key for key in slices):
+        cnfg.barebones_config = True
+        print(f'Found "barebones" type config file. Will upgrade with same type.')
+    # Confirm replacement of regular config file with barebones config if CLI option is used
+    # and there is a non-barebones existing config file. 
+    elif cnfg.barebones_config:
+        for attempt in range(3):
+            response = input(
+                f'\n'
+                f'ALERT:\n'
+                f'Existing config file is not a barebones config, but the barebones CLI \n'
+                f'option was specified. Do you want to proceed and replace the existing \n'
+                f'config with a barebones config? This will discard all existing settings. \n'
+                f'A timestamped backup of the existing config folder will still be made. \n'
+                f'Enter "YES" to proceed or "N" to exit:'
+            )
+            if response.lower() not in ['n', 'yes']: continue
+            if response.lower() == 'yes':
+                # User confirmed to replace the existing config with a barebones config.
+                # So, return an empty slices dictionary.
+                return {}
+            elif response.lower() == 'n':
+                print(f'User chose to exit installer...')
+                safe_shutdown(0)
+        # If user didn't confirm after 3 attempts, exit the program.
+        print('User input invalid. Exiting...')
+        safe_shutdown(1)
+    # 
     return slices
 
 
 def merge_slices(data: str, slices: Dict[str, str]) -> str:
     """Utility function to merge stored slices into new config file data"""
-    pattern_start = r'###  SLICE_MARK_START: (\w+)  ###.*'
-    pattern_end = r'###  SLICE_MARK_END: (\w+)  ###.*'
-    matches_start = list(re.finditer(pattern_start, data))
-    matches_end = list(re.finditer(pattern_end, data))
-    data_slices = []
-    previous_end = 0
+    pattern_start   = r'###  SLICE_MARK_START: (\w+)  ###.*'
+    pattern_end     = r'###  SLICE_MARK_END: (\w+)  ###.*'
+    matches_start   = list(re.finditer(pattern_start, data))
+    matches_end     = list(re.finditer(pattern_end, data))
+    data_slices     = []
+    previous_end    = 0
     for begin, end in zip(matches_start, matches_end):
         slice_name = begin.group(1)
         if end.group(1) != slice_name:
             raise ValueError(f'Mismatched slice markers in config file:\n\t{slice_name}')
-        slice_start = begin.end()
-        slice_end = end.start()
+        slice_start     = begin.end()
+        slice_end       = end.start()
         # add the part of the data before the slice, and the slice itself
         data_slices.extend([data[previous_end:slice_start], 
                             slices.get(slice_name, data[slice_start:slice_end])])
         previous_end = slice_end
     # add the part of the data after the last slice
     data_slices.append(data[previous_end:])
-
+    # 
     return "".join(data_slices)
 
 
@@ -932,6 +961,8 @@ def backup_toshy_config():
                     cnfg.existing_cfg_slices = extract_slices(cnfg.existing_cfg_data)
                 except ValueError as value_err:
                     error(f'Problem extracting marked slices from existing config.\n\t{value_err}')
+        else:
+            print(f"No existing config file found in {cnfg.toshy_dir_path}.")
 
         if os.path.isfile(cnfg.db_file_path):
             try:
@@ -941,6 +972,8 @@ def backup_toshy_config():
                 shutil.copy(cnfg.db_file_path, f'{cnfg.run_tmp_dir}/')
             except (FileNotFoundError, PermissionError, OSError) as file_err:
                 error(f"Problem copying preferences db file to '{cnfg.run_tmp_dir}':\n\t{file_err}")
+        else:
+            print(f'No existing preferences db file found in {cnfg.toshy_dir_path}.')
         try:
             # Define the ignore function
             def ignore_venv(dirname, filenames):
@@ -968,7 +1001,7 @@ def install_toshy_files():
     try:
         if os.path.exists(cnfg.toshy_dir_path):
             try:
-                shutil.rmtree(cnfg.toshy_dir_path) # , ignore_errors=True)
+                shutil.rmtree(cnfg.toshy_dir_path)
             except (OSError, PermissionError, FileNotFoundError) as file_err:
                 error(f'Problem removing existing Toshy config folder after backup:\n\t{file_err}')
         # Copy files recursively from source to destination
@@ -991,11 +1024,23 @@ def install_toshy_files():
         print(f"Failed to copy directory: {copy_error}")
     except OSError as os_error:
         print(f"Failed to create backup directory: {os_error}")
-    toshy_default_cfg = os.path.join(
-        cnfg.toshy_dir_path, 'default-toshy-config', 'toshy_config.py')
-    shutil.copy(toshy_default_cfg, cnfg.toshy_dir_path)
+    if cnfg.barebones_config is True:
+        toshy_default_cfg_barebones = os.path.join(
+            cnfg.toshy_dir_path, 'default-toshy-config', 'toshy_config_barebones.py')
+        toshy_new_cfg = os.path.join(
+            cnfg.toshy_dir_path, 'toshy_config.py')
+        shutil.copy(toshy_default_cfg_barebones, toshy_new_cfg)
+        print(f'Installed default "barebones" Toshy config file.')
+    else:
+        toshy_default_cfg = os.path.join(
+            cnfg.toshy_dir_path, 'default-toshy-config', 'toshy_config.py')
+        toshy_new_cfg = os.path.join(
+            cnfg.toshy_dir_path, 'toshy_config.py')
+        shutil.copy(toshy_default_cfg, toshy_new_cfg)
+        print(f'Installed default Toshy config file.')
     print(f"Toshy files installed in '{cnfg.toshy_dir_path}'.")
 
+    # Copy the existing user prefs database file
     if os.path.isfile(f'{cnfg.run_tmp_dir}/{cnfg.db_file_name}'):
         try:
             shutil.copy(f'{cnfg.run_tmp_dir}/{cnfg.db_file_name}', cnfg.toshy_dir_path)
@@ -1746,9 +1791,14 @@ def handle_cli_arguments():
         help='Remove desktop environment tweaks only, no install'
     )
     parser.add_argument(
+        '--barebones-config',
+        action='store_true',
+        help='Install with mostly empty/blank keymapper config file.'
+    )
+    parser.add_argument(
         '--fancy-pants',
         action='store_true',
-        help='Optional: install font, KDE task switcher, etc...'
+        help='See README for more info on this option.'
     )
 
     args = parser.parse_args()
@@ -1763,6 +1813,7 @@ def handle_cli_arguments():
         '--apply-tweaks':       args.apply_tweaks,
         '--remove-tweaks':      args.remove_tweaks,
         '--override-distro':    bool(args.override_distro),
+        '--barebones-config':   args.barebones_config,
         '--fancy-pants':        args.fancy_pants,
         **exit_args_dct
     }
@@ -1785,6 +1836,9 @@ def handle_cli_arguments():
         print(  f'Distros known to the Toshy installer (use with "--override-distro" arg):'
                 f'\n\n\t{get_distro_names()}')
         safe_shutdown(0)
+
+    if args.barebones_config:
+        cnfg.barebones_config = True
 
     if args.fancy_pants:
         cnfg.fancy_pants = True
