@@ -448,6 +448,10 @@ dialogs_Escape_lod = [
     {clas:"^epiphany$|^org.gnome.Epiphany$", name:"^Preferences$"},
     {clas:"^Angry.*IP.*Scanner$",
         name:"^IP.*address.*details.*$|^Preferences.*$|^Scan.*Statistics.*$|^Edit.*openers.*$"},
+    # TODO: add or change Atoms class to "pm.mirko.Atoms" if the app gets updated
+    # TODO: remove "atoms" from "name:" entry patterns if "Shortcuts" dialog gets updated
+    # Reference: https://github.com/AtomsDevs/Atoms/issues/61
+    {clas:"^atoms$", name:"^Preferences$|^Shortcuts$|^About$|^atoms$"},
 ]
 
 ### dialogs_CloseWin_lod = send these windows the "Close window" combo for Cmd+W
@@ -1151,18 +1155,6 @@ modmap("Cond modmap - GTK3 numpad nav keys fix",{
 #     # {Key.LEFT_META:             [Key.ESC, Key.RIGHT_CTRL]       # Caps2Esc - Chromebook
 #     {                                                             # Placeholder
 # })
-
-
-# # EXPERIMENTAL!!!!
-# multipurpose_modmap("Block Mod when alone", {
-#     Key.LEFT_META:              [Key.RESERVED, Key.LEFT_META],
-#     Key.RIGHT_META:             [Key.RESERVED, Key.RIGHT_META],
-#     # Key.LEFT_ALT:               [Key.RESERVED, Key.LEFT_ALT],
-#     # Key.RIGHT_ALT:              [Key.RESERVED, Key.RIGHT_ALT],
-# }, when = lambda ctx:
-#     # matchProps(not_lst=terminals_and_remotes_lod)(ctx) )
-#     matchProps(not_lst=remotes_lod)(ctx) )
-
 
 multipurpose_modmap("Enter2Cmd", {
     Key.ENTER:                  [Key.ENTER, Key.RIGHT_CTRL]     # Enter2Cmd
