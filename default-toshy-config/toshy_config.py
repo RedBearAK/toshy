@@ -282,6 +282,7 @@ terminals_lod = [
     {clas:"^mate-terminal$"             },
     {clas:"^org.gnome.Console$"         },
     {clas:"^org.kde.konsole$"           },
+    {clas:"^org.kde.yakuake$"           },
     {clas:"^org.wezfurlong.wezterm$"    },
     {clas:"^roxterm$"                   },
     {clas:"^qterminal$"                 },
