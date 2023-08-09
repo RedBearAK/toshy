@@ -1564,12 +1564,12 @@ def get_dead_key_char():
 
 
 def setDK(*args, **kwargs):
-    """wrapper for `set_dead_key_char` function"""
+    """wrapper for `set_dead_key_char` function, to provide shorter name"""
     return set_dead_key_char(*args, **kwargs)
 
 
 def getDK():
-    """wrapper for `get_dead_key_char` function"""
+    """wrapper for `get_dead_key_char` function, to provide shorter name"""
     return get_dead_key_char()
 
 
