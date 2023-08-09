@@ -940,6 +940,16 @@ def is_Enter_F2(combo_if_true, latch_or_combo_if_false,
     return _is_Enter_F2
 
 
+def iEF2(*args, **kwargs):
+    """wrapper to shorten name of `is_Enter_F2` function"""
+    return is_Enter_F2(*args, **kwargs)
+
+
+def iEF2NT():
+    """fee `is_Enter_F2` function `None` and `True` as arguments, with short name"""
+    return is_Enter_F2(None, True)
+
+
 def macro_tester():
     def _macro_tester(ctx: KeyContext):
         return [
@@ -3842,9 +3852,9 @@ keymap("Cmd+Dot not in terminals", {
 # Overrides to General GUI shortcuts for specific keyboard types
 keymap("GenGUI overrides: Chromebook/IBM", {
     # In-App Tab switching
-    C("Alt-Tab"):              [bind,C("C-Tab")],               # Chromebook/IBM - In-App Tab switching
-    C("Alt-Shift-Tab"):        [bind,C("C-Shift-Tab")],         # Chromebook/IBM - In-App Tab switching
-    C("Alt-Grave") :           [bind,C("C-Shift-Tab")],         # Chromebook/IBM - In-App Tab switching
+    C("Alt-Tab"):              [iEF2NT(),bind,C("C-Tab")],               # Chromebook/IBM - In-App Tab switching
+    C("Alt-Shift-Tab"):        [iEF2NT(),bind,C("C-Shift-Tab")],         # Chromebook/IBM - In-App Tab switching
+    C("Alt-Grave") :           [iEF2NT(),bind,C("C-Shift-Tab")],         # Chromebook/IBM - In-App Tab switching
     C("RAlt-Backspace"):        C("Delete"),                    # Chromebook/IBM - Delete
     C("LAlt-Backspace"):        C("C-Backspace"),               # Chromebook/IBM - Delete Left Word of Cursor
 }, when = lambda ctx:
@@ -3853,8 +3863,8 @@ keymap("GenGUI overrides: Chromebook/IBM", {
         isKBtype('IBM', map="gengui ovr ibm")(ctx) ) )
 keymap("GenGUI overrides: not Chromebook", {
     # In-App Tab switching
-    C("Super-Tab"):            [bind,C("LC-Tab")],              # Default not-chromebook
-    C("Super-Shift-Tab"):      [bind,C("Shift-LC-Tab")],        # Default not-chromebook
+    C("Super-Tab"):            [iEF2NT(),bind,C("LC-Tab")],              # Default not-chromebook
+    C("Super-Shift-Tab"):      [iEF2NT(),bind,C("Shift-LC-Tab")],        # Default not-chromebook
     C("Alt-Backspace"):         C("C-Backspace"),               # Default not-chromebook
 }, when = lambda ctx:
     matchProps(not_lst=remotes_lod)(ctx) and 
@@ -3957,13 +3967,6 @@ keymap("GenGUI overrides: Xfce4", {
     C("RC-Shift-Key_5"):        C("Shift-Print"),               # Take a screenshot interactively (xfce4)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'xfce' )
 
-def iEF2(*args, **kwargs):
-    """wrapper to shorten name of `is_Enter_F2` function"""
-    return is_Enter_F2(*args, **kwargs)
-
-def iEF2NT():
-    """fee `is_Enter_F2` function `None` and `True` as arguments, with short name"""
-    return is_Enter_F2(None, True)
 
 # None referenced here originally
 # - but remote clients and VM software ought to be set here
