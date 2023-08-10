@@ -437,7 +437,7 @@ filemanagerStr = "|".join('^'+x+'$' for x in filemanagers)
 
 ### dialogs_Escape_lod = send these windows the Escape key for Cmd+W
 dialogs_Escape_lod = [
-    {clas:"^.*nautilus$", name:"^.*Properties$|^Preferences$|^Create Archive$"},
+    {clas:"^.*nautilus$", name:"^.*Properties$|^Preferences$|^Create Archive$|^Rename.*Files$"},
     {clas:"^Transmission-gtk$|^com.transmissionbt.Transmission.*$", not_name:"^Transmission$"},
     {clas:"^org.gnome.Software$", not_name:"^Software$"},
     {clas:"^gnome-text-editor$|^org.gnome.TextEditor$", name:"^Preferences$"},
@@ -581,7 +581,7 @@ def isKBtype(kbtype: str, map=None):
     kbtype_cf = kbtype.casefold()
     KBTYPE_cf = KBTYPE.casefold() if isinstance(KBTYPE, str) else None
 
-    def _isKBtype(ctx):
+    def _isKBtype(ctx: KeyContext):
         # debug(f"KBTYPE: '{KBTYPE}' | isKBtype check from map: '{map}'")
         return kbtype_cf == KBTYPE_cf
     return _isKBtype
@@ -880,12 +880,49 @@ def matchProps(*,
 _enter_is_F2 = True     # DON'T CHANGE THIS! Must be set to True here. 
 
 
-def is_Enter_F2(combo_if_true, latch_or_combo_if_false):
-    """
-    Send a different combo for Enter key depending on state of _enter_is_F2 variable,\n 
-    or latch the variable to True or False to control the Enter key state on next use.
+# def is_Enter_F2(combo_if_true, latch_or_combo_if_false):
+#     """
+#     Send a different combo for Enter key depending on state of _enter_is_F2 variable,\n 
+#     or latch the variable to True or False to control the Enter key state on next use.
     
-    This enables a simulation of the Finder "Enter to rename" capability.
+#     This enables a simulation of the Finder "Enter to rename" capability.
+#     """
+#     def _is_Enter_F2():
+#         global _enter_is_F2
+#         combo_list = [combo_if_true]
+#         if latch_or_combo_if_false in (True, False):    # Latch variable to given bool value
+#             _enter_is_F2 = latch_or_combo_if_false
+#         elif _enter_is_F2:                              # If Enter is F2 now, set to be Enter next
+#             _enter_is_F2 = False
+#         else:                                           # If Enter is Enter now, set to be F2 next
+#             combo_list = [latch_or_combo_if_false]
+#             _enter_is_F2 = True
+#         return combo_list
+#     return _is_Enter_F2
+
+
+def is_Enter_F2(combo_if_true, latch_or_combo_if_false, 
+                keep_value_if_true=False, keep_value_if_false=False):
+    """
+    Send a different combo for the Enter key based on the state of the _enter_is_F2 variable,
+    or latch the variable to True or False to control the Enter key output on the next use.
+    
+    Args:
+        combo_if_true:              The combo to send if _enter_is_F2 is True.
+        latch_or_combo_if_false:    The combo to send if _enter_is_F2 is False, or
+                                    a Boolean to latch _enter_is_F2 to a specific value.
+        keep_value_if_true (opt.):  If True, _enter_is_F2 will be kept True if it is currently True.
+                                    If False, _enter_is_F2 will be set to False if it is currently True.
+        keep_value_if_false (opt.): If True, _enter_is_F2 will be kept False if it is currently False.
+                                    If False, _enter_is_F2 will be set to True if it is currently False.
+    
+    Returns:
+        A function that, when called, returns the appropriate combo based on the current
+        state of _enter_is_F2 and the provided parameters, and updates _enter_is_F2
+        based on the provided parameters.
+    
+    This enables a simulation of the Finder "Enter to rename" capability, allowing
+    for complex control over the Enter key's behavior in various scenarios.
     """
     def _is_Enter_F2():
         global _enter_is_F2
@@ -893,12 +930,24 @@ def is_Enter_F2(combo_if_true, latch_or_combo_if_false):
         if latch_or_combo_if_false in (True, False):    # Latch variable to given bool value
             _enter_is_F2 = latch_or_combo_if_false
         elif _enter_is_F2:                              # If Enter is F2 now, set to be Enter next
-            _enter_is_F2 = False
+            if keep_value_if_true is False:
+                _enter_is_F2 = False
         else:                                           # If Enter is Enter now, set to be F2 next
             combo_list = [latch_or_combo_if_false]
-            _enter_is_F2 = True
+            if keep_value_if_false is False:
+                _enter_is_F2 = True
         return combo_list
     return _is_Enter_F2
+
+
+def iEF2(*args, **kwargs):
+    """wrapper to shorten name of `is_Enter_F2` function"""
+    return is_Enter_F2(*args, **kwargs)
+
+
+def iEF2NT():
+    """fee `is_Enter_F2` function `None` and `True` as arguments, with short name"""
+    return is_Enter_F2(None, True)
 
 
 def macro_tester():
@@ -1510,7 +1559,7 @@ def set_dead_key_char(hex_unicode_addr):
         if hex_unicode_addr:
             _ac_Chr_copy = hex_unicode_addr
         ac_Chr_main = hex_unicode_addr
-
+    #
     return _set_dead_key_char
 
 
@@ -1520,12 +1569,22 @@ def get_dead_key_char():
     def _get_dead_key_char():
         global _ac_Chr_copy
         return UC(_ac_Chr_copy)
-
+    #
     return _get_dead_key_char
 
 
-setDK = set_dead_key_char
-getDK = get_dead_key_char
+def setDK(*args, **kwargs):
+    """wrapper for `set_dead_key_char` function, to provide shorter name"""
+    return set_dead_key_char(*args, **kwargs)
+
+
+def getDK():
+    """wrapper for `get_dead_key_char` function, to provide shorter name"""
+    return get_dead_key_char()
+
+
+# setDK = set_dead_key_char
+# getDK = get_dead_key_char
 
 deadkeys_ABC = [
     # Dead keys on ABC Extended keyboard layout (25, plus substitutes for problematic chars)
@@ -3054,7 +3113,7 @@ keymap("Overrides for SpaceFM Find Files dialog - Finder Mods", {
     C("Enter"):                 C("Enter"),                     # Use Enter as Enter in the Find dialog
     C("Esc"):                   C("Alt-F4"),                    # Close Find Files dialog with Escape
     C("RC-W"):                  C("Alt-F4"),                    # Close Find Files dialog with Cmd+W
-}, when = matchProps(clas="^SpaceFM$", name="Find FiLes"))
+}, when = matchProps(clas="^SpaceFM$", name="Find Files"))
 
 keymap("Overrides for SpaceFM - Finder Mods", {
     C("RC-Page_Up"):            C("C-Shift-Tab"),               # Go to prior tab
@@ -3122,18 +3181,25 @@ keymap("General File Managers - Finder Mods", {
     ###########################################################################################################
     ###  Navigation                                                                                         ###
     ###########################################################################################################
-    C("RC-Left_Brace"):         C("Alt-Left"),                  # Go Back
-    C("RC-Right_Brace"):        C("Alt-Right"),                 # Go Forward
-    C("RC-Left"):               C("Alt-Left"),                  # Go Back
-    C("RC-Right"):              C("Alt-Right"),                 # Go Forward
-    C("RC-Up"):                 C("Alt-Up"),                    # Go Up dir
-    # C("RC-Down"):               C("Alt-Down"),                  # Go Down dir (only works on folders) [not universal]
-    # C("RC-Down"):               C("RC-O"),                      # Go Down dir (open folder/file) [not universal]
-    C("RC-Down"):               C("Enter"),                     # Go Down dir (open folder/file) [universal]
     C("Shift-RC-Left_Brace"):   C("C-Page_Up"),                 # Go to prior tab
     C("Shift-RC-Right_Brace"):  C("C-Page_Down"),               # Go to next tab
     C("Shift-RC-Left"):         C("C-Page_Up"),                 # Go to prior tab
     C("Shift-RC-Right"):        C("C-Page_Down"),               # Go to next tab
+    C("RC-Left_Brace"):         C("Alt-Left"),                  # Go Back
+    C("RC-Right_Brace"):        C("Alt-Right"),                 # Go Forward
+    #
+    # C("RC-Left"):               C("Alt-Left"),                  # Go Back
+    # C("RC-Right"):              C("Alt-Right"),                 # Go Forward
+    # C("RC-Up"):                 C("Alt-Up"),                    # Go Up dir
+    # C("RC-Down"):               C("Enter"),                     # Go Down dir (open folder/file) [universal]
+    # EXPERIMENTAL: Attempt to get wordwise Cmd+Left/Right to work while renaming, but otherwise be navigation
+    C("RC-Left"):           is_Enter_F2(C("Alt-Left"), C("Home"), True, True),      # Go Back
+    C("RC-Right"):          is_Enter_F2(C("Alt-Right"), C("End"), True, True),      # Go Forward
+    C("RC-Up"):             is_Enter_F2(C("Alt-Up"), True),        # Go Up dir
+    C("RC-Down"):           is_Enter_F2(C("Enter"), True),          # Go Down dir (open folder/file) [universal]
+    #
+    # C("RC-Down"):               C("Alt-Down"),                  # Go Down dir (only works on folders) [not universal]
+    # C("RC-Down"):               C("RC-O"),                      # Go Down dir (open folder/file) [not universal]
     ###########################################################################################################
     ###  Open in New Window | Move to Trash                                                                 ###
     ###########################################################################################################
@@ -3394,9 +3460,6 @@ keymap("VSCodes", {
     # To make this work, assign these shortcuts to "deleteWordPartLeft" and "deleteWordPartRight" shortcuts
     C("Shift-Alt-Backspace"):   C("Shift-Alt-Backspace"),        # Delete word left of cursor (override GenGUI)
     C("Shift-Alt-Delete"):      C("Shift-Alt-Delete"),           # Delete word right of cursor (override GenGUI)
-    # C("Shift-Alt-Backspace"):  [C("Alt-F19"),C("C-Backspace")], # Delete word left of cursor
-    # C("Shift-Alt-Delete"):     [C("Alt-F19"),C("C-Delete")],    # Delete word right of cursor
-    # C("RC-Backspace"):          C("C-Backspace"),               # Delete Entire Line Left of Cursor
     C("RC-Backspace"):         [C("Shift-Home"), C("Delete")],  # Delete entire line left of cursor
     C("RC-Delete"):            [C("Shift-End"), C("Delete")],   # Delete entire line right of cursor
 
@@ -3419,16 +3482,6 @@ keymap("VSCodes", {
     C("C-g"):                   C("f3"),                        # find_next
     C("Shift-f3"):              ignore_combo,                   # cancel find_prev
     C("C-Shift-g"):             C("Shift-f3"),                  # find_prev
-    # C("Super-c"):               C("LC-c"),                      # Default - Terminal - Sigint
-    # C("Super-x"):               C("LC-x"),                      # Default - Terminal - Exit nano
-    # C("Alt-c"):                 C("LC-c"),                      #  Chromebook/IBM - Terminal - Sigint
-    # C("Alt-x"):                 C("LC-x"),                      #  Chromebook/IBM - Terminal - Exit nano
-    # C("Super-C-g"):             C("C-f2"),                      # Default - Sublime - find_all_under
-    # C("C-Alt-g"):               C("C-f2"),                      # Chromebook/IBM - Sublime - find_all_under
-    # C("Super-Shift-up"):        C("Alt-Shift-up"),              # multi-cursor up - Sublime
-    # C("Super-Shift-down"):      C("Alt-Shift-down"),            # multi-cursor down - Sublime
-    # C(""):                      ignore_combo,                   # cancel
-    # C(""):                      C(""),                          #
 }, when = matchProps(clas=vscodeStr))
 
 # Keybindings for Sublime Text
@@ -3554,17 +3607,19 @@ keymap("KWrite text editor", {
 ### dialogs_CloseWin_lod = send these windows the "Close window" shortcut for Cmd+W
 
 keymap("Cmd+W dialog fix - send Escape", {
-    C("RC-W"):                  C("Esc"),
+    C("RC-W"):                  is_Enter_F2(C("Esc"), True),
 }, when = matchProps(lst=dialogs_Escape_lod))
 
-
+# This keymap for Manjaro GNOME will override the same shortcut from the keymap just below it,
+# sending Super+Q to close the dialogs in the matchProps list, instead of sending Alt+F4.
 keymap("Cmd+W dialog fix - Super+Q Manjaro GNOME", {
-    C("RC-W"):                  C("Super-Q"),
+    C("RC-W"):                  is_Enter_F2(C("Super-Q"), True),
 }, when = lambda ctx:
     matchProps(lst=dialogs_CloseWin_lod)(ctx) and
     ( DISTRO_NAME == 'manjaro' and DESKTOP_ENV == 'gnome' ) )
+
 keymap("Cmd+W dialog fix - Alt+F4", {
-    C("RC-W"):                  C("Alt-F4"),
+    C("RC-W"):                  is_Enter_F2(C("Alt-F4"), True),
 }, when = lambda ctx:
     matchProps(lst=dialogs_CloseWin_lod)(ctx) )
 
@@ -3797,9 +3852,9 @@ keymap("Cmd+Dot not in terminals", {
 # Overrides to General GUI shortcuts for specific keyboard types
 keymap("GenGUI overrides: Chromebook/IBM", {
     # In-App Tab switching
-    C("Alt-Tab"):              [bind,C("C-Tab")],               # Chromebook/IBM - In-App Tab switching
-    C("Alt-Shift-Tab"):        [bind,C("C-Shift-Tab")],         # Chromebook/IBM - In-App Tab switching
-    C("Alt-Grave") :           [bind,C("C-Shift-Tab")],         # Chromebook/IBM - In-App Tab switching
+    C("Alt-Tab"):              [iEF2NT(),bind,C("C-Tab")],               # Chromebook/IBM - In-App Tab switching
+    C("Alt-Shift-Tab"):        [iEF2NT(),bind,C("C-Shift-Tab")],         # Chromebook/IBM - In-App Tab switching
+    C("Alt-Grave") :           [iEF2NT(),bind,C("C-Shift-Tab")],         # Chromebook/IBM - In-App Tab switching
     C("RAlt-Backspace"):        C("Delete"),                    # Chromebook/IBM - Delete
     C("LAlt-Backspace"):        C("C-Backspace"),               # Chromebook/IBM - Delete Left Word of Cursor
 }, when = lambda ctx:
@@ -3808,8 +3863,8 @@ keymap("GenGUI overrides: Chromebook/IBM", {
         isKBtype('IBM', map="gengui ovr ibm")(ctx) ) )
 keymap("GenGUI overrides: not Chromebook", {
     # In-App Tab switching
-    C("Super-Tab"):            [bind,C("LC-Tab")],              # Default not-chromebook
-    C("Super-Shift-Tab"):      [bind,C("Shift-LC-Tab")],        # Default not-chromebook
+    C("Super-Tab"):            [iEF2NT(),bind,C("LC-Tab")],              # Default not-chromebook
+    C("Super-Shift-Tab"):      [iEF2NT(),bind,C("Shift-LC-Tab")],        # Default not-chromebook
     C("Alt-Backspace"):         C("C-Backspace"),               # Default not-chromebook
 }, when = lambda ctx:
     matchProps(not_lst=remotes_lod)(ctx) and 
@@ -3918,21 +3973,22 @@ keymap("GenGUI overrides: Xfce4", {
 # These are the typical remaps for ALL GUI based apps
 keymap("General GUI", {
 
-    C("Alt-Numlock"):           toggle_forced_numpad,         # Turn the Forced Numpad feature on and off
-    C("Fn-Numlock"):            toggle_forced_numpad,         # Turn the Forced Numpad feature on and off
-    C("Numlock"):               isNumlockClearKey,            # Numlock key is "Clear" (Esc) if cnfg.forced_numpad is True
+    C("Alt-Numlock"):           toggle_forced_numpad,           # Turn the Forced Numpad feature on and off
+    C("Fn-Numlock"):            toggle_forced_numpad,           # Turn the Forced Numpad feature on and off
+    C("Numlock"):               isNumlockClearKey,              # Numlock key is "Clear" (Esc) if cnfg.forced_numpad is True
 
     C("Shift-RC-Left_Brace"):   C("C-Page_Up"),                 # Tab navigation: Go to prior (left) tab
     C("Shift-RC-Right_Brace"):  C("C-Page_Down"),               # Tab navigation: Go to next (right) tab
-    C("RC-Space"):  is_Enter_F2(C("Alt-F1"), False),            # Default SL - Launch Application Menu (gnome/kde)
+    C("RC-Space"):              iEF2(C("Alt-F1"), False),       # Default SL - Launch Application Menu (gnome/kde)
     C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,elementary)
     C("RC-Super-f"):            C("Alt-F10"),                   # Default SL - Maximize app (gnome/kde)
     C("RC-Q"):                  C("Alt-F4"),                    # Default SL - not-popos
     C("Alt-Tab"):               ignore_combo,                   # Default - Cmd Tab - App Switching Default
-    C("RC-Tab"):               [bind, C("Alt-Tab")],            # Default - Cmd Tab - App Switching Default
-    C("Shift-RC-Tab"):         [bind, C("Alt-Shift-Tab")],      # Default - Cmd Tab - App Switching Default
-    C("RC-Grave"):             [bind, C("Alt-Grave")],          # Default not-xfce4 - Cmd ` - Same App Switching
-    C("Shift-RC-Grave"):       [bind, C("Alt-Shift-Grave")],    # Default not-xfce4 - Cmd ` - Same App Switching
+
+    C("RC-Tab"):            [iEF2NT(),bind, C("Alt-Tab")],           # Default - Cmd Tab - App Switching Default
+    C("Shift-RC-Tab"):      [iEF2NT(),bind, C("Alt-Shift-Tab")],     # Default - Cmd Tab - App Switching Default
+    C("RC-Grave"):          [iEF2NT(),bind, C("Alt-Grave")],         # Default not-xfce4 - Cmd ` - Same App Switching
+    C("Shift-RC-Grave"):    [iEF2NT(),bind, C("Alt-Shift-Grave")],   # Default not-xfce4 - Cmd ` - Same App Switching
 
     # Fn to Alt style remaps
     C("RAlt-Enter"):            C("insert"),                    # Insert
