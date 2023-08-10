@@ -3786,43 +3786,44 @@ keymap("General Terminals", {
     # C("RC-Tab"):                C("Alt-Tab"),                   # Default - Cmd Tab - App Switching Default
     # C("Shift-RC-Tab"):          C("Alt-Shift-Tab"),             # Default - Cmd Tab - App Switching Default
     # Converts Cmd to use Ctrl-Shift
-    C("RC-MINUS"):              C("C-MINUS"),
-    C("RC-EQUAL"):              C("C-Shift-EQUAL"),
-    # C("RC-BACKSPACE"):          C("C-Shift-BACKSPACE"),           # Conflicts with wordwise shortcut above
-    C("RC-W"):                  C("C-Shift-W"),
-    C("RC-E"):                  C("C-Shift-E"),
-    C("RC-R"):                  C("C-Shift-R"),
-    C("RC-T"):                  C("C-Shift-t"),
-    C("RC-Y"):                  C("C-Shift-Y"),
-    C("RC-U"):                  C("C-Shift-U"),
-    C("RC-I"):                  C("C-Shift-I"),
-    C("RC-O"):                  C("C-Shift-O"),
-    C("RC-P"):                  C("C-Shift-P"),
+    C("RC-MINUS"):              C("C-MINUS"),                   # Reduce font size
+    C("RC-EQUAL"):              C("C-Shift-EQUAL"),             # Increase font size
+    # C("RC-BACKSPACE"):          C("C-Shift-BACKSPACE"),         # Conflicts with wordwise shortcut above
+    C("RC-W"):                  C("C-Shift-W"),                 # Close tab/window
+    # C("RC-E"):                  C("C-Shift-E"),                 # No function - RE-ENABLE IF SOMEONE REPORTS
+    # C("RC-R"):                  C("C-Shift-R"),                 # No function - RE-ENABLE IF SOMEONE REPORTS
+    C("RC-T"):                  C("C-Shift-t"),                 # Open new tab in many terminals
+    # C("RC-Y"):                  C("C-Shift-Y"),                 # No function - RE-ENABLE IF SOMEONE REPORTS
+    # C("RC-U"):                  C("C-Shift-U"),                 # No function - RE-ENABLE IF SOMEONE REPORTS
+    # C("RC-I"):                  C("C-Shift-I"),                 # No function - RE-ENABLE IF SOMEONE REPORTS
+    # C("RC-O"):                  C("C-Shift-O"),                 # No function - RE-ENABLE IF SOMEONE REPORTS
+    # C("RC-P"):                  C("C-Shift-P"),                 # No function - RE-ENABLE IF SOMEONE REPORTS
     C("RC-LEFT_BRACE"):         C("C-Shift-LEFT_BRACE"),
     C("RC-RIGHT_BRACE"):        C("C-Shift-RIGHT_BRACE"),
-    C("RC-A"):                  C("C-Shift-A"),
-    C("RC-S"):                  C("C-Shift-S"),
-    C("RC-D"):                  C("C-Shift-D"),
-    C("RC-F"):                  C("C-Shift-F"),
-    C("RC-G"):                  C("C-Shift-G"),
-    C("RC-H"):                  C("C-Shift-H"),
-    C("RC-J"):                  C("C-Shift-J"),
-    C("RC-K"):                  C("C-Shift-K"),
-    C("RC-L"):                  C("C-Shift-L"),
-    C("RC-SEMICOLON"):          C("C-Shift-SEMICOLON"),
-    C("RC-APOSTROPHE"):         C("C-Shift-APOSTROPHE"),
+    # If focused app is terminal, this stops Cmd+A from working in GNOME overview search field
+    # C("RC-A"):                  C("C-Shift-A"),                 # No function - RE-ENABLE IF SOMEONE REPORTS
+    C("RC-S"):                  C("C-Shift-S"),                 # Save file in some terminals
+    C("RC-D"):                  C("C-Shift-D"),                 # Split horizontal in some terminals
+    C("RC-F"):                  C("C-Shift-F"),                 # Find text in some terminals
+    # C("RC-G"):                  C("C-Shift-G"),                 # No function - RE-ENABLE IF SOMEONE REPORTS
+    # C("RC-H"):                  C("C-Shift-H"),                 # No function - RE-ENABLE IF SOMEONE REPORTS
+    # C("RC-J"):                  C("C-Shift-J"),                 # No function - RE-ENABLE IF SOMEONE REPORTS
+    # C("RC-K"):                  C("C-Shift-K"),                 # No function - RE-ENABLE IF SOMEONE REPORTS
+    C("RC-L"):                  C("C-Shift-L"),                 # Clear screen in some terminals
+    # C("RC-SEMICOLON"):          C("C-Shift-SEMICOLON"),         # No function - RE-ENABLE IF SOMEONE REPORTS
+    # C("RC-APOSTROPHE"):         C("C-Shift-APOSTROPHE"),        # No function - RE-ENABLE IF SOMEONE REPORTS
     # C("RC-GRAVE"):              C("C-Shift-GRAVE"),             # Conflicts with General GUI window switching
-    C("RC-Z"):                  C("C-Shift-Z"),
-    C("RC-X"):                  C("C-Shift-X"),
-    C("RC-C"):                  C("C-Shift-C"),
-    C("RC-V"):                  C("C-Shift-V"),
-    C("RC-B"):                  C("C-Shift-B"),
-    C("RC-N"):                  C("C-Shift-N"),
-    C("RC-M"):                  C("C-Shift-M"),
-    # C("RC-COMMA"):              C("C-Shift-COMMA"),             # Open Preferences
+    # C("RC-Z"):                  C("C-Shift-Z"),                 # No function - RE-ENABLE IF SOMEONE REPORTS
+    # C("RC-X"):                  C("C-Shift-X"),                 # No function - RE-ENABLE IF SOMEONE REPORTS
+    C("RC-C"):                  C("C-Shift-C"),                 # Copy text in many terminals
+    C("RC-V"):                  C("C-Shift-V"),                 # Paste text in many terminals
+    # C("RC-B"):                  C("C-Shift-B"),                 # No function - RE-ENABLE IF SOMEONE REPORTS
+    C("RC-N"):                  C("C-Shift-N"),                 # Open new window in many terminals
+    # C("RC-M"):                  C("C-Shift-M"),                 # No function - RE-ENABLE IF SOMEONE REPORTS
+    # C("RC-COMMA"):              C("C-Shift-COMMA"),             # Open Preferences (Replaced by per-app remaps if needed)
     C("RC-Dot"):                C("LC-c"),                      # Mimic macOS Cmd+Dot to cancel command
-    C("RC-SLASH"):              C("C-Shift-SLASH"),
-    C("RC-KPASTERISK"):         C("C-Shift-KPASTERISK"),
+    # C("RC-SLASH"):              C("C-Shift-SLASH"),             # No function - RE-ENABLE IF SOMEONE REPORTS
+    # C("RC-KPASTERISK"):         C("C-Shift-KPASTERISK"),        # No function - RE-ENABLE IF SOMEONE REPORTS
 
 # }, when = matchProps(clas=termStr))
 }, when = matchProps(lst=terminals_lod))
