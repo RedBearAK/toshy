@@ -3875,7 +3875,7 @@ keymap("GenGUI overrides: not Chromebook", {
 # Overrides to General GUI shortcuts for specific distros
 keymap("GenGUI overrides: elementary OS", {
     C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,elementary)
-    C("RC-Space"):  is_Enter_F2(C("Super-Space"), False),       # SL - Launch Application Menu (elementary)
+    C("RC-Space"):             [iEF2NT(),C("Super-Space")],     # SL - Launch Application Menu (elementary)
     C("RC-LC-f"):               C("Super-Up"),                  # SL- Maximize app elementary
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'elementary' )
 keymap("GenGUI overrides: Fedora", {
@@ -3888,7 +3888,7 @@ keymap("GenGUI overrides: Manjaro GNOME", {
     C("RC-Q"):              C("Super-Q"),                       # Close window
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'manjaro' and DESKTOP_ENV == 'gnome' )
 keymap("GenGUI overrides: Manjaro Xfce", {
-    C("RC-Space"):  is_Enter_F2(C("Alt-F1"), False),            # Open Whisker Menu with Cmd+Space
+    C("RC-Space"):             [iEF2NT(),C("Alt-F1")],          # Open Whisker Menu with Cmd+Space
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'manjaro' and DESKTOP_ENV == 'xfce' )
 keymap("GenGUI overrides: Manjaro", {
     # TODO: figure out why these two are the same!
@@ -3896,7 +3896,7 @@ keymap("GenGUI overrides: Manjaro", {
     C("RC-LC-f"):               C("Super-PAGE_DOWN"),           # SL - Minimize app manjaro
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'manjaro' )
 keymap("GenGUI overrides: Mint Xfce4", {
-    C("RC-Space"):  is_Enter_F2(C("Super-Space"), False),       # Launch Application Menu xfce4 (Linux Mint)
+    C("RC-Space"):             [iEF2NT(),C("Super-Space")],     # Launch Application Menu xfce4 (Linux Mint)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'mint' and DESKTOP_ENV == 'xfce' )
 keymap("GenGUI overrides: KDE Neon", {
     C("RC-Super-f"):            C("Super-Page_Up"),             # SL - Toggle maximized window state (kde_neon)
@@ -3904,7 +3904,7 @@ keymap("GenGUI overrides: KDE Neon", {
                                                                 # SL - Default SL - Change workspace (kde_neon)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'neon' )
 keymap("GenGUI overrides: Pop!_OS", {
-    C("RC-Space"):  is_Enter_F2(C("Super-slash"), False),       # "Launch and switch applications" (popos)
+    C("RC-Space"):             [iEF2NT(),C("Super-slash")],     # "Launch and switch applications" (popos)
     C("RC-H"):                  C("Super-h"),                   # Default SL - Minimize app (gnome/budgie/popos/fedora) not-deepin
     C("Super-Right"):          [bind,C("Super-C-Up")],          # SL - Change workspace (popos)
     C("Super-Left"):           [bind,C("Super-C-Down")],        # SL - Change workspace (popos)
@@ -3919,20 +3919,20 @@ keymap("GenGUI overrides: Ubuntu", {
 
 # Overrides to General GUI shortcuts for specific desktop environments
 keymap("GenGUI overrides: Budgie", {
-    C("RC-Space"):  is_Enter_F2(Key.LEFT_META, False),          # Open panel-main-menu (Budgie menu)
+    C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # Open panel-main-menu (Budgie menu)
     C("Super-Right"):           C("C-Alt-Right"),               # Default SL - Change workspace (budgie)
     C("Super-Left"):            C("C-Alt-Left"),                # Default SL - Change workspace (budgie)
     C("RC-H"):                  C("Super-h"),                   # Default SL - Minimize app (gnome/budgie/popos/fedora) not-deepin
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'budgie' )
 keymap("GenGUI overrides: Cinnamon", {
-    C("RC-Space"):  is_Enter_F2(C("C-Esc"), False),             # Right click, configure Mint menu shortcut to Ctrl+Esc
+    C("RC-Space"):             [iEF2NT(),C("C-Esc")],           # Right click, configure Mint menu shortcut to Ctrl+Esc
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'cinnamon' )
 keymap("GenGUI overrides: Deepin", {
     C("RC-H"):                  C("Super-n"),                   # Default SL - Minimize app (deepin)
     C("Alt-RC-Space"):          C("Super-e"),                   # Open Finder - (deepin)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'deepin' )
 keymap("GenGUI overrides: GNOME", {
-    C("RC-Space"):  is_Enter_F2(C("Super-s"), False),           # Show GNOME overview/app launcher
+    C("RC-Space"):             [iEF2NT(),C("Super-s")],         # Show GNOME overview/app launcher
     C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,elementary)
     C("RC-Super-f"):            C("Alt-F10"),                   # Default SL - Maximize app (gnome/kde)
     C("RC-H"):                  C("Super-h"),                   # Default SL - Minimize app (gnome/budgie/popos/fedora) not-deepin
@@ -3942,10 +3942,10 @@ keymap("GenGUI overrides: GNOME", {
     C("RC-Shift-Key_5"):        C("Print"),                     # Take a screenshot interactively (gnome)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'gnome' )
 keymap("GenGUI overrides: IceWM", {
-    C("RC-Space"):  is_Enter_F2(Key.LEFT_META, False),          # IceWM: Win95Keys=1 (Meta shows menu)
+    C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # IceWM: Win95Keys=1 (Meta shows menu)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'icewm' )
 keymap("GenGUI overrides: KDE", {
-    C("RC-Space"):  is_Enter_F2(C("Alt-F1"), False),            # Default SL - Launch Application Menu (gnome/kde)
+    C("RC-Space"):             [iEF2NT(),C("Alt-F1")],          # Default SL - Launch Application Menu (gnome/kde)
     C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,elementary)
     C("RC-Super-f"):            C("Alt-F10"),                   # Default SL - Maximize app (gnome/kde)
     # Screenshot shortcuts for KDE Plasma desktops (Spectacle app)
@@ -3954,12 +3954,12 @@ keymap("GenGUI overrides: KDE", {
     C("RC-Shift-Key_5"):        C("Print"),                     # Take a screenshot interactively (kde)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'kde' )
 keymap("GenGUI overrides: MATE", {
-    C("RC-Space"):  is_Enter_F2(C("Alt-Space"), False),         # Right click, configure Mint menu shortcut to match
+    C("RC-Space"):             [iEF2NT(),C("Alt-Space")],       # Right click, configure Mint menu shortcut to match
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'mate' )
 keymap("GenGUI overrides: Xfce4", {
     C("RC-Grave"):             [bind,C("Super-Tab")],           # xfce4 Switch within app group
     C("Shift-RC-Grave"):       [bind,C("Super-Shift-Tab")],     # xfce4 Switch within app group
-    C("RC-Space"):  is_Enter_F2(C("C-Esc"), False),             # Launch Application Menu xfce4 (Xubuntu)
+    C("RC-Space"):             [iEF2NT(),C("C-Esc")],           # Launch Application Menu xfce4 (Xubuntu)
     C("RC-F3"):                 C("C-Alt-d"),                   # SL- Show Desktop xfce4
     C("RC-H"):                  C("Alt-F9"),                    # SL - Minimize app xfce4
     # Screenshot shortcuts for Xfce desktops (xfce4-screenshooter app)
@@ -3980,7 +3980,7 @@ keymap("General GUI", {
 
     C("Shift-RC-Left_Brace"):   C("C-Page_Up"),                 # Tab navigation: Go to prior (left) tab
     C("Shift-RC-Right_Brace"):  C("C-Page_Down"),               # Tab navigation: Go to next (right) tab
-    C("RC-Space"):              iEF2(C("Alt-F1"), False),       # Default SL - Launch Application Menu (gnome/kde)
+    C("RC-Space"):             [iEF2NT(),C("Alt-F1")],            # Default SL - Launch Application Menu (gnome/kde)
     C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,elementary)
     C("RC-Super-f"):            C("Alt-F10"),                   # Default SL - Maximize app (gnome/kde)
     C("RC-Q"):                  C("Alt-F4"),                    # Default SL - not-popos
