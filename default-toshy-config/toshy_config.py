@@ -3214,7 +3214,7 @@ keymap("General File Managers - Finder Mods", {
     C("RC-L"):              is_Enter_F2(C("RC-L"), False),              # Set Enter to Enter for Location field
     C("RC-F"):              is_Enter_F2(C("RC-F"), False),              # Set Enter to Enter for Find field
     C("Esc"):               is_Enter_F2(C("Esc"), True),                # Send Escape, set Enter to be F2 next
-    C("Tab"):               is_Enter_F2(C("Tab"), False),               # Set Enter to Enter after using Tab key
+    # C("Tab"):               iEF2(C("Tab"), C("Tab"), True, True),       # Set Enter to Enter after using Tab key
     C("Shift-RC-Space"):    is_Enter_F2(C("Shift-RC-Space"), False),    # Set Enter to Enter for alternate overview shortcut
     C("Shift-RC-Enter"):        C("Enter"),                             # alternative "Enter" key for unusual cases
 }, when = matchProps(clas=filemanagerStr))
