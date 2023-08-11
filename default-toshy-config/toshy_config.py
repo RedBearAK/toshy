@@ -901,9 +901,10 @@ _enter_is_F2 = True     # DON'T CHANGE THIS! Must be set to True here.
 #     return _is_Enter_F2
 
 
-def is_Enter_F2(combo_if_true, latch_or_combo_if_false, 
+def iEF2(combo_if_true, latch_or_combo_if_false, 
                 keep_value_if_true=False, keep_value_if_false=False):
     """
+    Formerly 'is_Enter_F2'
     Send a different combo for the Enter key based on the state of the _enter_is_F2 variable,
     or latch the variable to True or False to control the Enter key output on the next use.
     
@@ -940,14 +941,14 @@ def is_Enter_F2(combo_if_true, latch_or_combo_if_false,
     return _is_Enter_F2
 
 
-def iEF2(*args, **kwargs):
-    """wrapper to shorten name of `is_Enter_F2` function"""
-    return is_Enter_F2(*args, **kwargs)
+# def iEF2(*args, **kwargs):
+#     """wrapper to shorten name of `is_Enter_F2` function"""
+#     return is_Enter_F2(*args, **kwargs)
 
 
 def iEF2NT():
     """fee `is_Enter_F2` function `None` and `True` as arguments, with short name"""
-    return is_Enter_F2(None, True)
+    return iEF2(None, True)
 
 
 def macro_tester():
@@ -3059,7 +3060,7 @@ keymap("Overrides for Dolphin - Finder Mods", {
     ### in Dolphin's keyboard shortcuts. There is no default shortcut set for this function.
     ##########################################################################################
     C("RC-Super-o"):            C("Shift-RC-o"),                # Open in new window (or new tab, user's choice, see above)
-    C("Shift-RC-N"):            is_Enter_F2(C("F10"), False),   # Create new folder (F10), toggle Enter to be Enter
+    C("Shift-RC-N"):            iEF2(C("F10"), False),          # Create new folder (F10), toggle Enter to be Enter
     C("RC-comma"):              C("Shift-RC-comma"),            # Open preferences dialog
 }, when = matchProps(clas="^dolphin|org.kde.dolphin$"))
 
@@ -3092,7 +3093,7 @@ keymap("Overrides for Nautilus - Finder Mods", {
 # Keybindings overrides for Nemo
 # (overrides some bindings from general file manager code block below)
 keymap("Overrides for Nemo - Finder Mods", {
-    C("RC-Backspace"):          is_Enter_F2(C("Delete"), False),  # Set Enter to Enter for Cmd+Delete confirmation
+    C("RC-Backspace"):          iEF2(C("Delete"), False),       # Set Enter to Enter for Cmd+Delete confirmation
 }, when = matchProps(clas="^nemo$"))
 
 # Keybindings overrides for PCManFM and PCManFM-Qt
@@ -3122,7 +3123,7 @@ keymap("Overrides for SpaceFM - Finder Mods", {
     C("Shift-RC-Right_Brace"):  C("C-Tab"),                     # Go to next tab
     C("Shift-RC-Left"):         C("C-Shift-Tab"),               # Go to prior tab
     C("Shift-RC-Right"):        C("C-Tab"),                     # Go to next tab
-    C("Shift-RC-N"):    is_Enter_F2(C("RC-F"), False),          # Switch Enter to Enter. New folder is Ctrl+F(???)
+    C("Shift-RC-N"):            iEF2(C("RC-F"), False),         # Switch Enter to Enter. New folder is Ctrl+F(???)
     # Need to catch WM_NAME of "Find Files" and override Enter key state back to being Enter. See above keymap.
     C("RC-F"):                  None,                           # No direct shortcut available and menu macros don't work in SpaceFM.
     C("RC-Backspace"):         [C("Delete"),C("Space")],        # Move to Trash (delete, bypass dialog)
@@ -3193,10 +3194,10 @@ keymap("General File Managers - Finder Mods", {
     # C("RC-Up"):                 C("Alt-Up"),                    # Go Up dir
     # C("RC-Down"):               C("Enter"),                     # Go Down dir (open folder/file) [universal]
     # EXPERIMENTAL: Attempt to get wordwise Cmd+Left/Right to work while renaming, but otherwise be navigation
-    C("RC-Left"):           is_Enter_F2(C("Alt-Left"), C("Home"), True, True),      # Go Back
-    C("RC-Right"):          is_Enter_F2(C("Alt-Right"), C("End"), True, True),      # Go Forward
-    C("RC-Up"):             is_Enter_F2(C("Alt-Up"), True),        # Go Up dir
-    C("RC-Down"):           is_Enter_F2(C("Enter"), True),          # Go Down dir (open folder/file) [universal]
+    C("RC-Left"):           iEF2(C("Alt-Left"), C("Home"), True, True),      # Go Back
+    C("RC-Right"):          iEF2(C("Alt-Right"), C("End"), True, True),      # Go Forward
+    C("RC-Up"):             iEF2(C("Alt-Up"), True),            # Go Up dir
+    C("RC-Down"):           iEF2(C("Enter"), True),             # Go Down dir (open folder/file) [universal]
     #
     # C("RC-Down"):               C("Alt-Down"),                  # Go Down dir (only works on folders) [not universal]
     # C("RC-Down"):               C("RC-O"),                      # Go Down dir (open folder/file) [not universal]
@@ -3209,13 +3210,13 @@ keymap("General File Managers - Finder Mods", {
     ###########################################################################################################
     ###  ENTER-KEY-TO-RENAME CUSTOM FUNCTION SHORTCUTS                                                      ###
     ###########################################################################################################
-    C("Enter"):             is_Enter_F2(C("F2"),C("Enter")),            # Send F2 to rename files, unless var is False
-    C("Shift-RC-N"):        is_Enter_F2(C("Shift-RC-N"), False),        # New folder, set Enter to Enter
-    C("RC-L"):              is_Enter_F2(C("RC-L"), False),              # Set Enter to Enter for Location field
-    C("RC-F"):              is_Enter_F2(C("RC-F"), False),              # Set Enter to Enter for Find field
-    C("Esc"):               is_Enter_F2(C("Esc"), True),                # Send Escape, set Enter to be F2 next
+    C("Enter"):             iEF2(C("F2"),C("Enter")),           # Send F2 to rename files, unless var is False
+    C("Shift-RC-N"):        iEF2(C("Shift-RC-N"), False),       # New folder, set Enter to Enter
+    C("RC-L"):              iEF2(C("RC-L"), False),             # Set Enter to Enter for Location field
+    C("RC-F"):              iEF2(C("RC-F"), False),             # Set Enter to Enter for Find field
+    C("Esc"):               iEF2(C("Esc"), True),               # Send Escape, set Enter to be F2 next
     # C("Tab"):               iEF2(C("Tab"), C("Tab"), True, True),       # Set Enter to Enter after using Tab key
-    C("Shift-RC-Space"):    is_Enter_F2(C("Shift-RC-Space"), False),    # Set Enter to Enter for alternate overview shortcut
+    C("Shift-RC-Space"):    iEF2(C("Shift-RC-Space"), False),   # Set Enter to Enter for alternate overview shortcut
     C("Shift-RC-Enter"):        C("Enter"),                             # alternative "Enter" key for unusual cases
 }, when = matchProps(clas=filemanagerStr))
 
@@ -3607,19 +3608,19 @@ keymap("KWrite text editor", {
 ### dialogs_CloseWin_lod = send these windows the "Close window" shortcut for Cmd+W
 
 keymap("Cmd+W dialog fix - send Escape", {
-    C("RC-W"):                  is_Enter_F2(C("Esc"), True),
+    C("RC-W"):                  iEF2(C("Esc"), True),
 }, when = matchProps(lst=dialogs_Escape_lod))
 
 # This keymap for Manjaro GNOME will override the same shortcut from the keymap just below it,
 # sending Super+Q to close the dialogs in the matchProps list, instead of sending Alt+F4.
 keymap("Cmd+W dialog fix - Super+Q Manjaro GNOME", {
-    C("RC-W"):                  is_Enter_F2(C("Super-Q"), True),
+    C("RC-W"):                  iEF2(C("Super-Q"), True),
 }, when = lambda ctx:
     matchProps(lst=dialogs_CloseWin_lod)(ctx) and
     ( DISTRO_NAME == 'manjaro' and DESKTOP_ENV == 'gnome' ) )
 
 keymap("Cmd+W dialog fix - Alt+F4", {
-    C("RC-W"):                  is_Enter_F2(C("Alt-F4"), True),
+    C("RC-W"):                  iEF2(C("Alt-F4"), True),
 }, when = lambda ctx:
     matchProps(lst=dialogs_CloseWin_lod)(ctx) )
 
@@ -3642,6 +3643,7 @@ tab_UI_fix_CtrlShiftTab = [
     {clas:"^com.raggesilver.BlackBox$"},
     {clas:"^org.gnome.Console$|^Console$"},
     {clas:"^deepin-terminal$"},
+    {clas:"^hyper$"},
     {lst:JDownloader_lod},
     {clas:"^kitty$"},
     {clas:"^Kgx$"},
@@ -3707,6 +3709,12 @@ keymap("Deepin Terminal overrides", {
     C("RC-minus"):              C("C-minus"),                   # Decrease font size/zoom out 
     C("RC-equal"):              C("C-equal"),                   # Increase font size/zoom in
 }, when = matchProps(clas="^deepin-terminal$"))
+
+keymap("Hyper terminal tab switching", {
+    C("RC-Equal"):              C("C-Equal"),                   # Increase font size [override general terminals remap]
+    C("Shift-LC-Tab"):          C("Shift-LC-Tab"),              # Tab nav: Go to prior tab (left) [override general remap]
+    C("LC-Tab"):                C("LC-Tab"),                    # Tab nav: Go to next tab (right) [override general remap]
+}, when = matchProps(clas="^hyper$"))
 
 keymap("Kitty terminal - not tab nav", {
     C("RC-L"):                  C("C-L"),                       # Clear log
