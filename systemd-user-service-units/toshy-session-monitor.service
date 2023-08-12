@@ -1,6 +1,5 @@
 [Unit]
 Description=Toshy Session Monitor
-# Wants=default.target
 After=default.target
 
 [Service]
