@@ -112,28 +112,6 @@ def main():
             error(f'{LOG_PFX}: Error while running KWin reconfigure.\n\t{proc_error}')
 
 
-    # def kwin_responding():
-    #     # Use qdbus to send a simple command to KWin and check the response
-    #     try:
-    #         output: bytes = subprocess.check_output([  qdbus_cmd,
-    #                                             kwin_dbus_obj,
-    #                                             kwin_kwin_path,
-    #                                             'org.kde.KWin.currentDesktop'])
-    #         return output.decode().strip() != ""
-    #     except subprocess.CalledProcessError:
-    #         return False
-
-
-    # # Wait for KWin to be ready for a D-Bus conversation about the KWin script
-    # loop_ct = 0
-    # while True and loop_ct < 9:
-    #     loop_ct += 1
-    #     if kwin_responding():
-    #         break
-    #     else:
-    #         time.sleep(1)
-
-
     def is_kwin_script_loaded():
         try:
             output: bytes = subprocess.check_output([  qdbus_cmd,

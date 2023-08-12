@@ -73,6 +73,21 @@ while true
 
         sleep 2
 
+        # Get a count of all sessions for the user.
+        # We are trying to check whether user is completely logged out.
+        # Systemd user services don't automatically stop when user logs out!
+        SESSION_COUNT=$(loginctl list-sessions -p UserName | grep -c "${USER}")
+
+        # If no sessions are found, stop all the Toshy user services
+        if [ "$SESSION_COUNT" -eq 0 ]
+            then
+                systemctl --user stop toshy-config.service
+                systemctl --user stop toshy-kde-dbus.service
+                # User is logged out entirely if there are no sessions, 
+                # so stop session monitor too:
+                systemctl --user stop toshy-session-monitor.service
+        fi
+
         # get the current session ID (number)
         SESSION_ID="$(loginctl session-status | head -n1 | cut -d' ' -f1)"
 
