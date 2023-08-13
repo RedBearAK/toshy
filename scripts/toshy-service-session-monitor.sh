@@ -25,7 +25,7 @@ fi
 
 # If XDG_RUNTIME_DIR is not set or is empty
 if [ -z "${XDG_RUNTIME_DIR}" ]; then
-    echo "Toshy SessMon Svc: XDG_RUNTIME_DIR not set. Unable to determine where to store the marker file."
+    echo "SESSMON_SVC: XDG_RUNTIME_DIR not set. Unable to determine where to store the marker file."
     # exit 1
 else
     # Full path to the marker file
@@ -61,7 +61,7 @@ while true; do
         sleep 2
         ((retry++))
         if [[ $retry -gt 10 ]]; then
-            echo "Attempt to use loginctl failed after 10 attempts. Exiting."
+            echo "SESSMON_SVC: Attempt to use loginctl failed after 10 attempts. Exiting."
             exit 1
         fi
     fi
@@ -121,7 +121,7 @@ while true
                 # echo "Session for user $USER is NOT active right now. $(date +%F_%H%M%S)" | tee -a /tmp/user-$USER.txt
                 if [[ "$SERVICE_STATUS" == "active" ]]
                     then
-                        echo "SESSMON: Stopping config service because session is inactive."
+                        echo "SESSMON_SVC: Stopping config service because session is inactive."
                         systemctl --user stop toshy-config.service > /dev/null 2>&1
                         # also stop KDE D-Bus service (unnecessary if config is not running)
                         systemctl --user stop toshy-kde-dbus.service > /dev/null 2>&1
