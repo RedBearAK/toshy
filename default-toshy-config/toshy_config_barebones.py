@@ -65,6 +65,7 @@ sys.path.insert(0, current_folder_path)
 
 import lib.env
 from lib.settings_class import Settings
+from lib.notification_manager import NotificationManager
 
 assets_path         = os.path.join(current_folder_path, 'assets')
 icon_file_active    = os.path.join(assets_path, "toshy_app_icon_rainbow.svg")
@@ -308,26 +309,8 @@ not_win_type_rgx    = re.compile("IBM|Chromebook|Apple", re.I)
 ###########################################################################################
 
 
-def check_notify_send():
-    """check that notify-send command supports -p flag"""
-    try:
-        subprocess.run(['notify-send', '-p'], check=True, capture_output=True)
-    except subprocess.CalledProcessError as e:
-        # Check if the error message contains "Unknown option" for -p flag
-        error_output: bytes = e.stderr  # type hint to validate decode()
-        if 'Unknown option' in error_output.decode('utf-8'):
-            return False
-    return True
-
-
-is_p_option_supported = check_notify_send()
-
-ntfy_cmd        = shutil.which('notify-send')
-ntfy_prio       = '--urgency=normal' # '--urgency=critical'
-ntfy_icon       = f'--icon=\"{icon_file_active}\"'
-ntfy_title      = 'Toshy Alert'
-ntfy_id_new     = None
-ntfy_id_last    = '0' # initiate with integer string to avoid error
+# Instantiate a useful notification object class instance, to make notifications easier
+ntfy = NotificationManager(icon_file_active, title='Toshy Alert')
 
 
 def isKBtype(kbtype: str, map=None):

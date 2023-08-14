@@ -65,6 +65,7 @@ sys.path.insert(0, current_folder_path)
 
 import lib.env
 from lib.settings_class import Settings
+from lib.notification_manager import NotificationManager
 
 assets_path         = os.path.join(current_folder_path, 'assets')
 icon_file_active    = os.path.join(assets_path, "toshy_app_icon_rainbow.svg")
@@ -181,6 +182,10 @@ tapTime1 = time.time()
 tapInterval = 0.24
 tapCount = 0
 last_dt_combo = None
+
+# Set this variable to False to disable the alert that appears 
+# when using Apple logo shortcut (Shift+Option+K)
+applelogoalert_enabled = True   # Default: True
 
 
 
@@ -551,26 +556,9 @@ not_win_type_rgx    = re.compile("IBM|Chromebook|Apple", re.I)
 ###########################################################################################
 
 
-def check_notify_send():
-    """check that notify-send command supports -p flag"""
-    try:
-        subprocess.run(['notify-send', '-p'], check=True, capture_output=True)
-    except subprocess.CalledProcessError as e:
-        # Check if the error message contains "Unknown option" for -p flag
-        error_output: bytes = e.stderr  # type hint to validate decode()
-        if 'Unknown option' in error_output.decode('utf-8'):
-            return False
-    return True
 
-
-is_p_option_supported = check_notify_send()
-
-ntfy_cmd        = shutil.which('notify-send')
-ntfy_prio       = '--urgency=normal' # '--urgency=critical'
-ntfy_icon       = f'--icon=\"{icon_file_active}\"'
-ntfy_title      = 'Toshy Alert'
-ntfy_id_new     = None
-ntfy_id_last    = '0' # initiate with integer string to avoid error
+# Instantiate a useful notification object class instance, to make notifications easier
+ntfy = NotificationManager(icon_file_active, title='Toshy Alert')
 
 
 def isKBtype(kbtype: str, map=None):
@@ -947,11 +935,13 @@ def iEF2(combo_if_true, latch_or_combo_if_false,
 
 
 def iEF2NT():
-    """fee `is_Enter_F2` function `None` and `True` as arguments, with short name"""
+    """Feed `is_Enter_F2` function `None` and `True` as arguments, with short name"""
     return iEF2(None, True)
 
 
 def macro_tester():
+    """Type out a macro with useful info and a Unicode test.
+        WARNING: Safe only for use in apps that accept text blocks/typing of many characters."""
     def _macro_tester(ctx: KeyContext):
         return [
                     C("Enter"),
@@ -976,105 +966,25 @@ try:
 except subprocess.CalledProcessError:
     pass  # zenity --help-info failed, assume icon is not supported
 
+
 def notify_context():
     """pop up a notification with context info"""
     def _notify_context(ctx: KeyContext):
         global zenity_icon_option
+        message = ( f"Appl. Class   = '{ctx.wm_class}'"
+                    f"\nWndw. Title = '{ctx.wm_name}'"
+                    f"\nKbd. Device = '{ctx.device_name}'" )
         zenity_cmd = [  'zenity', '--info', '--no-wrap', 
                         '--title=Toshy Context Info',
-                        (
-                        '--text='
-                        f"Appl. Class   = '{ctx.wm_class}'"
-                        f"\nWndw. Title = '{ctx.wm_name}'"
-                        f"\nKbd. Device = '{ctx.device_name}'"
-                        )]
+                        '--text=' + message
+                        ]
         # insert the icon argument if it's supported
         if zenity_icon_option is not None:
             zenity_cmd.insert(3, zenity_icon_option)
         subprocess.Popen(zenity_cmd, cwd=icons_dir, stderr=DEVNULL, stdout=DEVNULL)
+        # Optionally, also send a system notification:
+        # ntfy.send_notification(message)
     return _notify_context
-
-
-# # DEPRECATED: old form of isKBtype()
-# def XisKBtype(kbtype: str, map=None):
-#     """
-#     ### Match on the keyboard type for conditional modmaps and keymaps
-    
-#     #### Valid Types
-    
-#     - IBM | Chromebook | Windows | Apple
-    
-#     #### Hierarchy of validations:
-    
-#     1. Check if the device name is in the keyboards_UserCustom_dct dictionary.
-#     2. Is device name in keyboard type list matching `kbtype` arg?
-#     3. Is `kbtype` string in the device name string?
-#     4. Is `kbtype` "Windows" and other type strings _not_ in device name
-#         and device name _not_ in `all_keyboards` list?
-#     """
-
-#     # guard against failure to give valid type arg
-#     if kbtype not in ['IBM', 'Chromebook', 'Windows', 'Apple']:
-#         raise ValueError(  f"Invalid type given to isKBtype() function: '{kbtype}'"
-#                 f'\n\t Valid keyboard types (case sensitive): IBM | Chromebook | Windows | Apple')
-
-#     # Create a "UserCustom" keyboard dictionary with casefolded keys
-#     kbds_UserCustom_lower_dct   = {k.casefold(): v for k, v in keyboards_UserCustom_dct.items()}
-#     kbtype_cf                   = kbtype.casefold()
-#     regex_lst                   = kbtype_lists_rgx.get(kbtype, [])
-#     not_win_type_rgx            = re.compile("IBM|Chromebook|Apple", re.I)
-#     all_kbds_rgx                = re.compile(toRgxStr(all_keyboards), re.I)
-
-#     def _isKBtype(ctx: KeyContext):
-#         logging_enabled = True
-#         kb_dev_name = ctx.device_name.casefold()
-
-#         # get custom type for device, if there is one
-#         custom_kbtype   = str(kbds_UserCustom_lower_dct.get(kb_dev_name, ''))
-#         cust_kbtype_cf  = custom_kbtype.casefold()
-#         # check that a valid type is being given in custom dict
-#         if custom_kbtype and custom_kbtype not in ['IBM', 'Chromebook', 'Windows', 'Apple']:
-#             raise ValueError(  f"Invalid custom keyboard type: '{custom_kbtype}'"
-#                     f'\n\t Valid keyboard types (case sensitive): IBM | Chromebook | Windows | Apple')
-#             return False
-#         # check for type match/mismatch only if custom type is truthy (no regex, literal string)
-#         if cust_kbtype_cf and cust_kbtype_cf == kbtype_cf:
-#             if logging_enabled:
-#                 debug(f"KB_TYPE: '{kbtype}' | Type override given for device: '{ctx.device_name}'")
-#             return True
-#         elif cust_kbtype_cf and cust_kbtype_cf != kbtype_cf:
-#             return False
-
-#         for rgx in regex_lst:
-#             match = rgx.search(kb_dev_name)
-#             if match:
-#                 if logging_enabled:
-#                     debug(f"KB_TYPE: '{kbtype}' | Regex matched on device name: '{ctx.device_name}'")
-#                 return True
-
-#         if kbtype_cf == 'apple' and 'magic' in kb_dev_name and 'keyboard' in kb_dev_name:
-#             if logging_enabled:
-#                 debug(f"KB_TYPE: '{kbtype}' | Identified as Magic Keyboard: '{ctx.device_name}' ")
-#             return True
-
-#         if kbtype_cf in kb_dev_name:
-#             if logging_enabled:
-#                 debug(f"KB_TYPE: '{kbtype}' | Type found in device name: '{ctx.device_name}'")
-#             return True
-
-#         if kbtype_cf == 'windows':
-#             # check there are no non-Windows type keywords in the device name
-#             if not_win_type_rgx.search(kb_dev_name):
-#                 return False
-#             # check device name is not in any existing default list
-#             # this seems unnecessary and redundant if regex matching is working...
-#             if not all_kbds_rgx.search(kb_dev_name):
-#                 if logging_enabled:
-#                     debug(f"KB_TYPE: '{kbtype}' | Device given default type: '{ctx.device_name}'")
-#                 return True
-#         return False
-
-#     return _isKBtype    # return the inner function
 
 
 
@@ -1442,41 +1352,12 @@ modmap("Cond modmap - Terms - Mac kbd", {
 # Apple keyboards that have Fn key)
 
 
-def forced_numpad_alert():
-    """Show notification of state of Forced Numpad feature"""
-    if cnfg.forced_numpad:
-        global ntfy_id_last, ntfy_id_new
-        _ntfy_icon = f'--icon={icon_file_active}'
-        _ntfy_msg = (   'Forced Numpad feature is now ENABLED.' +
-                        '\rNumlock becomes "Clear" key (Esc).' +
-                        '\rDisable with Option+Numlock.')
-        if is_p_option_supported:
-            ntfy_id_new = subprocess.run(
-                [ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg, '-p','-r',ntfy_id_last], 
-                stdout=subprocess.PIPE).stdout.decode().strip()
-            ntfy_id_last = ntfy_id_new
-        else:
-            subprocess.run([ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg])
-        debug("Forced Numpad feature is now ENABLED.")
-    else:
-        _ntfy_icon = f'--icon={icon_file_active}'
-        _ntfy_msg = (   'Forced Numpad feature is now DISABLED.' +
-                        '\rRe-enable with Option+Numlock.')
-        if is_p_option_supported:
-            ntfy_id_new = subprocess.run(
-                [ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg, '-p','-r',ntfy_id_last], 
-                stdout=subprocess.PIPE).stdout.decode().strip()
-            ntfy_id_last = ntfy_id_new
-        else:
-            subprocess.run([ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg])
-        debug("Forced Numpad feature is now DISABLED.")
-
-
 def toggle_forced_numpad():
     """Toggle the Forced Numpad feature on or off."""
     cnfg.forced_numpad = not cnfg.forced_numpad
     cnfg.save_settings()
-    forced_numpad_alert()
+    # forced_numpad_alert()
+    ntfy.forced_numpad(cnfg.forced_numpad)
 
 
 def isNumlockClearKey():
@@ -1503,25 +1384,10 @@ def isNumlockClearKey():
 ### https://github.org/RedBearAK/optspecialchars
 
 
-# Set this variable to False to disable the alert that appears 
-# when using Apple logo shortcut (Shift+Option+K)
-applelogoalert_enabled = True   # Default: True
-
-
 def apple_logo_alert():
     """Show a notification about needing Baskerville Old Face font for displaying Apple logo"""
-    global applelogoalert_enabled
     if applelogoalert_enabled:
-        global ntfy_id_last, ntfy_id_new
-        _ntfy_icon = f'--icon={icon_file_active}'
-        _ntfy_msg = 'Apple logo requires "Baskerville Old Face" font.'
-        if is_p_option_supported:
-            ntfy_id_new = subprocess.run(
-                [ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg, '-p','-r',ntfy_id_last], 
-                stdout=subprocess.PIPE).stdout.decode().strip()
-            ntfy_id_last = ntfy_id_new
-        else:
-            subprocess.run([ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg])
+        ntfy.apple_logo()
 
 
 
@@ -3988,7 +3854,7 @@ keymap("General GUI", {
 
     C("Shift-RC-Left_Brace"):   C("C-Page_Up"),                 # Tab navigation: Go to prior (left) tab
     C("Shift-RC-Right_Brace"):  C("C-Page_Down"),               # Tab navigation: Go to next (right) tab
-    C("RC-Space"):             [iEF2NT(),C("Alt-F1")],            # Default SL - Launch Application Menu (gnome/kde)
+    C("RC-Space"):             [iEF2NT(),C("Alt-F1")],          # Default SL - Launch Application Menu (gnome/kde)
     C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,elementary)
     C("RC-Super-f"):            C("Alt-F10"),                   # Default SL - Maximize app (gnome/kde)
     C("RC-Q"):                  C("Alt-F4"),                    # Default SL - not-popos
@@ -4038,12 +3904,12 @@ keymap("General GUI", {
     # C(""):                      ignore_combo,                   # cancel
     # C(""):                      C(""),                          #
 
-# }, when = lambda ctx: ctx.wm_class.casefold() not in remotes) # original conditional
-# }, when = matchProps(not_clas=remoteStr))                      # matchProps with regex string
+# }, when = lambda ctx: ctx.wm_class.casefold() not in remotes)   # original conditional
+# }, when = matchProps(not_clas=remoteStr))                       # matchProps with regex string
 }, when = matchProps(not_lst=remotes_lod))                      # matchProps with list-of-dicts
 
 
 keymap("Diagnostics", {
-    C("RC-Shift-Alt-i"):        isDoubleTap(notify_context),
-    C("RC-Shift-Alt-t"):        isDoubleTap(macro_tester),
+    C("Shift-Alt-RC-i"):        isDoubleTap(notify_context),
+    C("Shift-Alt-RC-t"):        isDoubleTap(macro_tester),
 }, when = lambda ctx: ctx is ctx )
