@@ -9,6 +9,7 @@ APP_VERSION     = '2023.0709'
 # -------- COMMON COMPONENTS --------------------------------------------------
 
 import os
+import re
 import sys
 import time
 import dbus
@@ -38,6 +39,28 @@ home_local_bin = os.path.join(home_dir, '.local', 'bin')
 local_site_packages_dir = os.path.join(home_dir, f".local/lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages")
 # parent_folder_path  = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 current_folder_path = os.path.abspath(os.path.dirname(__file__))
+
+def pattern_found_in_module(pattern, module_path):
+    try:
+        with open(module_path, 'r', encoding='utf-8') as file:
+            content = file.read()
+            return bool(re.search(pattern, content))
+    except FileNotFoundError as file_err:
+        print(f"Error: The file {module_path} was not found.\n\t {file_err}")
+        return False
+    except IOError as io_err:
+        print(f"Error: An issue occurred while reading the file {module_path}.\n\t {io_err}")
+        return False
+
+pattern = 'SLICE_MARK_START: barebones_user_cfg'
+module_path = os.path.abspath(os.path.join(current_folder_path, 'toshy_config.py'))
+
+# check if the config file is a "barebones" type
+if pattern_found_in_module(pattern, module_path):
+    barebones_config = True
+else:
+    barebones_config = False
+
 
 sys.path.insert(0, local_site_packages_dir)
 sys.path.insert(0, current_folder_path)
@@ -530,111 +553,113 @@ menu.append(stop_toshy_script_item)
 separator_below_script_item = Gtk.SeparatorMenuItem()
 menu.append(separator_below_script_item)  #-------------------------------------#
 
-def load_prefs_submenu_settings():
-    cnfg.load_settings()
-    forced_numpad_item.set_active(cnfg.forced_numpad)
-    media_arrows_fix_item.set_active(cnfg.media_arrows_fix)
-    multi_lang_item.set_active(cnfg.multi_lang)
-    ST3_in_VSCode_item.set_active(cnfg.ST3_in_VSCode)
-    Caps2Cmd_item.set_active(cnfg.Caps2Cmd)
-    Caps2Esc_Cmd_item.set_active(cnfg.Caps2Esc_Cmd)
-    Enter2Ent_Cmd_item.set_active(cnfg.Enter2Ent_Cmd)
+if not barebones_config:
 
-def save_prefs_settings(widget):
-    cnfg.forced_numpad      = forced_numpad_item.get_active()
-    cnfg.media_arrows_fix   = media_arrows_fix_item.get_active()
-    cnfg.multi_lang         = multi_lang_item.get_active()
-    cnfg.ST3_in_VSCode      = ST3_in_VSCode_item.get_active()
-    cnfg.Caps2Cmd           = Caps2Cmd_item.get_active()
-    cnfg.Caps2Esc_Cmd       = Caps2Esc_Cmd_item.get_active()
-    cnfg.Enter2Ent_Cmd      = Enter2Ent_Cmd_item.get_active()
-    cnfg.save_settings()
+    def load_prefs_submenu_settings():
+        cnfg.load_settings()
+        forced_numpad_item.set_active(cnfg.forced_numpad)
+        media_arrows_fix_item.set_active(cnfg.media_arrows_fix)
+        multi_lang_item.set_active(cnfg.multi_lang)
+        ST3_in_VSCode_item.set_active(cnfg.ST3_in_VSCode)
+        Caps2Cmd_item.set_active(cnfg.Caps2Cmd)
+        Caps2Esc_Cmd_item.set_active(cnfg.Caps2Esc_Cmd)
+        Enter2Ent_Cmd_item.set_active(cnfg.Enter2Ent_Cmd)
 
-###############################################################
-# Preferences submenu
-
-prefs_submenu = Gtk.Menu()
-prefs_submenu_item = Gtk.MenuItem(label="Preferences")
-prefs_submenu_item.set_submenu(prefs_submenu)
-menu.append(prefs_submenu_item)
-
-multi_lang_item = Gtk.CheckMenuItem(label='Alt_Gr on Right Cmd')
-multi_lang_item.set_active(cnfg.multi_lang)
-multi_lang_item.connect('toggled', save_prefs_settings)
-prefs_submenu.append(multi_lang_item)
-
-Caps2Cmd_item = Gtk.CheckMenuItem(label='CapsLock is Cmd')
-Caps2Cmd_item.set_active(cnfg.Caps2Cmd)
-Caps2Cmd_item.connect('toggled', save_prefs_settings)
-prefs_submenu.append(Caps2Cmd_item)
-
-Caps2Esc_Cmd_item = Gtk.CheckMenuItem(label='CapsLock is Esc & Cmd')
-Caps2Esc_Cmd_item.set_active(cnfg.Caps2Esc_Cmd)
-Caps2Esc_Cmd_item.connect('toggled', save_prefs_settings)
-prefs_submenu.append(Caps2Esc_Cmd_item)
-
-Enter2Ent_Cmd_item = Gtk.CheckMenuItem(label='Enter is Ent & Cmd')
-Enter2Ent_Cmd_item.set_active(cnfg.Enter2Ent_Cmd)
-Enter2Ent_Cmd_item.connect('toggled', save_prefs_settings)
-prefs_submenu.append(Enter2Ent_Cmd_item)
-
-ST3_in_VSCode_item = Gtk.CheckMenuItem(label='Sublime3 in VSCode')
-ST3_in_VSCode_item.set_active(cnfg.ST3_in_VSCode)
-ST3_in_VSCode_item.connect('toggled', save_prefs_settings)
-prefs_submenu.append(ST3_in_VSCode_item)
-
-forced_numpad_item = Gtk.CheckMenuItem(label='Forced Numpad')
-forced_numpad_item.set_active(cnfg.forced_numpad)
-forced_numpad_item.connect('toggled', save_prefs_settings)
-prefs_submenu.append(forced_numpad_item)
-
-media_arrows_fix_item = Gtk.CheckMenuItem(label='Media Arrows Fix')
-media_arrows_fix_item.set_active(cnfg.media_arrows_fix)
-media_arrows_fix_item.connect('toggled', save_prefs_settings)
-prefs_submenu.append(media_arrows_fix_item)
-
-# End of Preferences submenu
-###############################################################
-
-def load_optspec_layout_submenu_settings():
-    cnfg.load_settings()
-    optspec_us_item.set_active(cnfg.optspec_layout == 'US')
-    optspec_abc_extended_item.set_active(cnfg.optspec_layout == 'ABC')
-    optspec_disabled_item.set_active(cnfg.optspec_layout == 'Disabled')
-
-def save_optspec_layout_setting(menu_item, layout):
-    if menu_item.get_active():
-        cnfg.optspec_layout = layout
+    def save_prefs_settings(widget):
+        cnfg.forced_numpad      = forced_numpad_item.get_active()
+        cnfg.media_arrows_fix   = media_arrows_fix_item.get_active()
+        cnfg.multi_lang         = multi_lang_item.get_active()
+        cnfg.ST3_in_VSCode      = ST3_in_VSCode_item.get_active()
+        cnfg.Caps2Cmd           = Caps2Cmd_item.get_active()
+        cnfg.Caps2Esc_Cmd       = Caps2Esc_Cmd_item.get_active()
+        cnfg.Enter2Ent_Cmd      = Enter2Ent_Cmd_item.get_active()
         cnfg.save_settings()
-        load_optspec_layout_submenu_settings()
+
+    ###############################################################
+    # Preferences submenu
+
+    prefs_submenu = Gtk.Menu()
+    prefs_submenu_item = Gtk.MenuItem(label="Preferences")
+    prefs_submenu_item.set_submenu(prefs_submenu)
+    menu.append(prefs_submenu_item)
+
+    multi_lang_item = Gtk.CheckMenuItem(label='Alt_Gr on Right Cmd')
+    multi_lang_item.set_active(cnfg.multi_lang)
+    multi_lang_item.connect('toggled', save_prefs_settings)
+    prefs_submenu.append(multi_lang_item)
+
+    Caps2Cmd_item = Gtk.CheckMenuItem(label='CapsLock is Cmd')
+    Caps2Cmd_item.set_active(cnfg.Caps2Cmd)
+    Caps2Cmd_item.connect('toggled', save_prefs_settings)
+    prefs_submenu.append(Caps2Cmd_item)
+
+    Caps2Esc_Cmd_item = Gtk.CheckMenuItem(label='CapsLock is Esc & Cmd')
+    Caps2Esc_Cmd_item.set_active(cnfg.Caps2Esc_Cmd)
+    Caps2Esc_Cmd_item.connect('toggled', save_prefs_settings)
+    prefs_submenu.append(Caps2Esc_Cmd_item)
+
+    Enter2Ent_Cmd_item = Gtk.CheckMenuItem(label='Enter is Ent & Cmd')
+    Enter2Ent_Cmd_item.set_active(cnfg.Enter2Ent_Cmd)
+    Enter2Ent_Cmd_item.connect('toggled', save_prefs_settings)
+    prefs_submenu.append(Enter2Ent_Cmd_item)
+
+    ST3_in_VSCode_item = Gtk.CheckMenuItem(label='Sublime3 in VSCode')
+    ST3_in_VSCode_item.set_active(cnfg.ST3_in_VSCode)
+    ST3_in_VSCode_item.connect('toggled', save_prefs_settings)
+    prefs_submenu.append(ST3_in_VSCode_item)
+
+    forced_numpad_item = Gtk.CheckMenuItem(label='Forced Numpad')
+    forced_numpad_item.set_active(cnfg.forced_numpad)
+    forced_numpad_item.connect('toggled', save_prefs_settings)
+    prefs_submenu.append(forced_numpad_item)
+
+    media_arrows_fix_item = Gtk.CheckMenuItem(label='Media Arrows Fix')
+    media_arrows_fix_item.set_active(cnfg.media_arrows_fix)
+    media_arrows_fix_item.connect('toggled', save_prefs_settings)
+    prefs_submenu.append(media_arrows_fix_item)
+
+    # End of Preferences submenu
+    ###############################################################
+
+    def load_optspec_layout_submenu_settings():
+        cnfg.load_settings()
+        optspec_us_item.set_active(cnfg.optspec_layout == 'US')
+        optspec_abc_extended_item.set_active(cnfg.optspec_layout == 'ABC')
+        optspec_disabled_item.set_active(cnfg.optspec_layout == 'Disabled')
+
+    def save_optspec_layout_setting(menu_item, layout):
+        if menu_item.get_active():
+            cnfg.optspec_layout = layout
+            cnfg.save_settings()
+            load_optspec_layout_submenu_settings()
 
 
-###############################################################
-# OptSpec layout submenu
-optspec_layout_submenu = Gtk.Menu()
-optspec_layout_item = Gtk.MenuItem(label='OptSpec Layout')
-optspec_layout_item.set_submenu(optspec_layout_submenu)
-menu.append(optspec_layout_item)
+    ###############################################################
+    # OptSpec layout submenu
+    optspec_layout_submenu = Gtk.Menu()
+    optspec_layout_item = Gtk.MenuItem(label='OptSpec Layout')
+    optspec_layout_item.set_submenu(optspec_layout_submenu)
+    menu.append(optspec_layout_item)
 
-# create submenu items for each layout option
-optspec_us_item = Gtk.CheckMenuItem(label='US*')
-optspec_us_item.connect('toggled', save_optspec_layout_setting, 'US')
-optspec_layout_submenu.append(optspec_us_item)
+    # create submenu items for each layout option
+    optspec_us_item = Gtk.CheckMenuItem(label='US*')
+    optspec_us_item.connect('toggled', save_optspec_layout_setting, 'US')
+    optspec_layout_submenu.append(optspec_us_item)
 
-optspec_abc_extended_item = Gtk.CheckMenuItem(label='ABC Extended')
-optspec_abc_extended_item.connect('toggled', save_optspec_layout_setting, 'ABC')
-optspec_layout_submenu.append(optspec_abc_extended_item)
+    optspec_abc_extended_item = Gtk.CheckMenuItem(label='ABC Extended')
+    optspec_abc_extended_item.connect('toggled', save_optspec_layout_setting, 'ABC')
+    optspec_layout_submenu.append(optspec_abc_extended_item)
 
-optspec_disabled_item = Gtk.CheckMenuItem(label='Disabled')
-optspec_disabled_item.connect('toggled', save_optspec_layout_setting, 'Disabled')
-optspec_layout_submenu.append(optspec_disabled_item)
+    optspec_disabled_item = Gtk.CheckMenuItem(label='Disabled')
+    optspec_disabled_item.connect('toggled', save_optspec_layout_setting, 'Disabled')
+    optspec_layout_submenu.append(optspec_disabled_item)
 
-separator_below_prefs_submenu_item = Gtk.SeparatorMenuItem()
-menu.append(separator_below_prefs_submenu_item)  #-------------------------------------#
+    separator_below_prefs_submenu_item = Gtk.SeparatorMenuItem()
+    menu.append(separator_below_prefs_submenu_item)  #-------------------------------------#
 
-preferences_item = Gtk.MenuItem(label="Open Preferences App")
-preferences_item.connect("activate", fn_open_preferences)
-menu.append(preferences_item)
+    preferences_item = Gtk.MenuItem(label="Open Preferences App")
+    preferences_item.connect("activate", fn_open_preferences)
+    menu.append(preferences_item)
 
 open_config_folder_item = Gtk.MenuItem(label="Open Config Folder")
 open_config_folder_item.connect("activate", fn_open_config_folder)
@@ -690,10 +715,11 @@ def main():
     monitor_internal_settings_thread.daemon = True
     monitor_internal_settings_thread.start()
 
-    # load the settings for the preferences submenu toggle items
-    load_prefs_submenu_settings()
-    # load the settings for the optspec layout submenu
-    load_optspec_layout_submenu_settings()
+    if not barebones_config:
+        # load the settings for the preferences submenu toggle items
+        load_prefs_submenu_settings()
+        # load the settings for the optspec layout submenu
+        load_optspec_layout_submenu_settings()
 
     # GUI loop event
     loop = GLib.MainLoop()
