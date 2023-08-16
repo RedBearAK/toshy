@@ -148,6 +148,7 @@ class InstallerSettings:
         self.user_name              = pwd.getpwuid(os.getuid()).pw_name
 
         self.barebones_config       = None
+        self.skip_native            = None
         self.fancy_pants            = None
         self.tweak_applied          = None
         self.remind_extensions      = None
@@ -493,7 +494,7 @@ distro_groups_map = {
     'leap-based':      ["opensuse-leap"],
 
     'ubuntu-based':    ["ubuntu", "mint", "popos", "elementary", "neon", "tuxedo", "zorin"],
-    'debian-based':    ["lmde", "peppermint", "debian", "kali"],
+    'debian-based':    ["lmde", "peppermint", "debian", "kali", "q4os"],
     'arch-based':      ["arch", "arcolinux", "endeavouros", "manjaro"],
     'solus-based':     ["solus"],
     # Add more as needed...
@@ -1791,6 +1792,11 @@ def handle_cli_arguments():
         help='Install with mostly empty/blank keymapper config file.'
     )
     parser.add_argument(
+        '--skip-native',
+        action='store_true',
+        help='Skip the install of native packages (for debugging installer).'
+    )
+    parser.add_argument(
         '--fancy-pants',
         action='store_true',
         help='See README for more info on this option.'
@@ -1809,6 +1815,7 @@ def handle_cli_arguments():
         '--remove-tweaks':      args.remove_tweaks,
         '--override-distro':    bool(args.override_distro),
         '--barebones-config':   args.barebones_config,
+        '--skip-native':        args.skip_native,
         '--fancy-pants':        args.fancy_pants,
         **exit_args_dct
     }
@@ -1834,6 +1841,9 @@ def handle_cli_arguments():
 
     if args.barebones_config:
         cnfg.barebones_config = True
+
+    if args.skip_native:
+        cnfg.skip_native = True
 
     if args.fancy_pants:
         cnfg.fancy_pants = True
@@ -1878,7 +1888,8 @@ def main(cnfg: InstallerSettings):
 
     elevate_privileges()
 
-    install_distro_pkgs()
+    if not cnfg.skip_native:
+        install_distro_pkgs()
 
     load_uinput_module()
     install_udev_rules()
