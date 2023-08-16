@@ -18,6 +18,7 @@ import shutil
 import signal
 import threading
 import subprocess
+from subprocess import DEVNULL
 
 # Local imports
 from lib.logger import *
@@ -32,6 +33,7 @@ if not str(sys.platform) == "linux":
 
 # Add paths to avoid errors like ModuleNotFoundError or ImportError
 home_dir = os.path.expanduser("~")
+home_local_bin = os.path.join(home_dir, '.local', 'bin')
 local_site_packages_dir = os.path.join(home_dir, f".local/lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages")
 # parent_folder_path  = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 current_folder_path = os.path.abspath(os.path.dirname(__file__))
@@ -182,6 +184,10 @@ cnfg.watch_database()
 debug("")
 debug(cnfg)   # prints out the __str__ method of Settings class
 
+# Notification handler object setup
+from lib.notification_manager import NotificationManager
+ntfy = NotificationManager(icon_file_active, title='Toshy Alert (GUI)')
+
 
 def get_settings_list(settings_obj):
     # get all attributes from the object
@@ -208,27 +214,6 @@ def fn_monitor_internal_settings():
             load_switch_settings(cnfg)
             last_settings_list = get_settings_list(cnfg)
 
-
-def check_notify_send():
-    try:
-        # Run the notify-send command with the -p flag
-        subprocess.run(['notify-send', '-p'], check=True, capture_output=True)
-    except subprocess.CalledProcessError as e:
-        # Check if the error message contains "Unknown option" for -p flag
-        error_output: bytes = e.stderr  # type hint to validate decode()
-        if 'Unknown option' in error_output.decode('utf-8'):
-            return False
-    return True
-
-
-is_p_option_supported = check_notify_send()
-
-ntfy_cmd        = shutil.which('notify-send')
-ntfy_prio       = '--urgency=critical'
-ntfy_icon       = f'--icon=\"{icon_file_active}\"'
-ntfy_title      = 'Toshy Alert'
-ntfy_id_new     = None
-ntfy_id_last    = '0' # initiate with integer string to avoid error
 
 sysctl_cmd      = f"{shutil.which('systemctl')}"
 user_sysctl     = f'{sysctl_cmd} --user'
@@ -335,41 +320,23 @@ def fn_monitor_toshy_services():
 
 
 def fn_restart_toshy_services():
-    """(Re)Start config service first, then session monitor"""
-    os.system(f'{sysctl_cmd} --user restart {toshy_svc_config}')
-    time.sleep(0.2)
-    os.system(f'{sysctl_cmd} --user restart {toshy_svc_sessmon}')
-    time.sleep(0.2)
-    _ntfy_icon = f'--icon={icon_file_active}'
+    """(Re)Start Toshy services with CLI command"""
+    toshy_svcs_restart_cmd = os.path.join(home_local_bin, 'toshy-services-restart')
+    subprocess.Popen([toshy_svcs_restart_cmd], stdout=DEVNULL, stderr=DEVNULL)
+    time.sleep(3)
+    _ntfy_icon_file = icon_file_active
     _ntfy_msg = 'Toshy systemd services (re)started.\nTap any modifier key before trying shortcuts.'
-
-    if is_p_option_supported:
-        global ntfy_id_last, ntfy_id_new
-        ntfy_id_new = subprocess.run(
-            [ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg, '-p','-r',ntfy_id_last], 
-            stdout=subprocess.PIPE).stdout.decode().strip()
-        ntfy_id_last = ntfy_id_new
-    else:
-        subprocess.run([ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg])
+    ntfy.send_notification(_ntfy_msg, _ntfy_icon_file)
 
 
 def fn_stop_toshy_services():
-    """Stop session monitor, then config service"""
-    os.system(f'{sysctl_cmd} --user stop {toshy_svc_sessmon}')
-    time.sleep(0.2)
-    os.system(f'{sysctl_cmd} --user stop {toshy_svc_config}')
-    time.sleep(0.2)
-    _ntfy_icon = f'--icon={icon_file_inverse}'
+    """Stop Toshy services with CLI command"""
+    toshy_svcs_stop_cmd = os.path.join(home_local_bin, 'toshy-services-stop')
+    subprocess.Popen([toshy_svcs_stop_cmd], stdout=DEVNULL, stderr=DEVNULL)
+    time.sleep(3)
+    _ntfy_icon_file = icon_file_inverse
     _ntfy_msg = 'Toshy systemd services stopped.'
-
-    if is_p_option_supported:
-        global ntfy_id_last, ntfy_id_new
-        ntfy_id_new = subprocess.run(
-            [ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg, '-p','-r',ntfy_id_last], 
-            stdout=subprocess.PIPE).stdout.decode().strip()
-        ntfy_id_last = ntfy_id_new
-    else:
-        subprocess.run([ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg])
+    ntfy.send_notification(_ntfy_msg, _ntfy_icon_file)
 
 
 ####################################################
