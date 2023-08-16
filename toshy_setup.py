@@ -527,7 +527,8 @@ pkg_groups_map = {
     'ubuntu-based':    ["curl", "git", "input-utils", "libcairo2-dev", "libnotify-bin",
                         "python3-dbus", "python3-dev", "python3-pip", "python3-venv",
                         "python3-tk", "libdbus-1-dev", "libgirepository1.0-dev",
-                        "gir1.2-appindicator3-0.1", "libsystemd-dev", "zenity"],
+                        # "gir1.2-appindicator3-0.1", "libsystemd-dev", "zenity"],
+                        "gir1.2-ayatanaappindicator3-0.1", "libsystemd-dev", "zenity"],
 
     'debian-based':    ["curl", "git", "input-utils", "libcairo2-dev", "libnotify-bin", 
                         "python3-dbus", "python3-dev", "python3-pip", "python3-venv",
