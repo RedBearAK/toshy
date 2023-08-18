@@ -536,9 +536,11 @@ pkg_groups_map = {
                         "gcc",
                         "git",
                         "cairo-devel",
+                        "dbus-daemon",
                         "dbus-devel",
                         "gobject-introspection-devel",
                         "lib64ayatana-appindicator3_1",
+                        "lib64ayatana-appindicator3-gir0.1",
                         "lib64cairo-gobject2",
                         "lib64python-devel",
                         "lib64systemd-devel",
@@ -1558,10 +1560,13 @@ def apply_tweaks_KDE():
         # Restart Plasma shell to make the new setting active
         # killall plasmashell && kstart5 plasmashell
         try:
-            print('Stopping Plasma shell... ', flush=True, end='')
-            subprocess.run(['kquitapp5', 'plasmashell'], check=True,
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            print('Plasma shell stopped.')
+            if shutil.which('kquitapp5'):
+                print('Stopping Plasma shell... ', flush=True, end='')
+                subprocess.run(['kquitapp5', 'plasmashell'], check=True,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                print('Plasma shell stopped.')
+            else:
+                error('The "kquitapp5" command is not found. Skipping plasmashell restart.')
         except subprocess.CalledProcessError as proc_err:
             err_output: bytes = proc_err.stderr             # type hint error output
             error(f'\nProblem while stopping Plasma shell:\n\t{err_output.decode()}')
