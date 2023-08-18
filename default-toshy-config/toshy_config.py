@@ -391,10 +391,12 @@ browsers_chrome = [
     "Brave-browser",
     "Chromium",
     "Chromium-browser",
+    "Falkon",
     "Google-chrome",
     "microsoft-edge",
     "microsoft-edge-dev",
     "org.deepin.browser",
+    "org.kde.falkon",
 ]
 browsers_chrome         = [x.casefold() for x in browsers_chrome]
 browsers_chromeStr      = "|".join('^'+x+'$' for x in browsers_chrome)
@@ -558,7 +560,7 @@ not_win_type_rgx    = re.compile("IBM|Chromebook|Apple", re.I)
 
 
 # Instantiate a useful notification object class instance, to make notifications easier
-ntfy = NotificationManager(icon_file_active, title='Toshy Alert')
+ntfy = NotificationManager(icon_file_active, title='Toshy Alert (Config)')
 
 
 def isKBtype(kbtype: str, map=None):
@@ -3107,6 +3109,11 @@ keymap("Firefox Browsers Overrides", {
     C("RC-Backspace"):         [C("Shift-Home"), C("Backspace")],     # Delete Entire Line Left of Cursor
     C("RC-Delete"):            [C("Shift-End"), C("Delete")],         # Delete Entire Line Right of Cursor
 }, when = matchProps(clas=browsers_firefoxStr))
+
+# Falkon is a Chromium based web browser
+keymap("Overrides for Falkon browser", {
+    C("RC-comma"):              C("Shift-C-comma"),             # Open preferences
+}, when = matchProps(clas="^org.kde.falkon$|^Falkon$"))
 
 keymap("Chrome Browsers Overrides", {
     C("C-comma"):              [C("Alt-e"), C("s"),C("Enter")], # Open preferences
