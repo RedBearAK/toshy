@@ -452,6 +452,7 @@ dialogs_Escape_lod = [
     {clas:"^konsole$|^org.kde.konsole$", name:"^Configure.*Konsole$|^Edit Profile.*Konsole$"},
     {clas:"^org.kde.KWrite$", name:"^Configure.*KWrite$"},
     {clas:"^org.kde.Dolphin$", name:"^Configure.*Dolphin$|^Properties.*Dolphin$"},
+    {clas:"^org.kde.falkon$|^Falkon$", name:"^Preferences.*Falkon$"},
     {clas:"^xfce4-terminal$", name:"^Terminal Preferences$"},
     {clas:"^epiphany$|^org.gnome.Epiphany$", name:"^Preferences$"},
     {clas:"^Angry.*IP.*Scanner$",
