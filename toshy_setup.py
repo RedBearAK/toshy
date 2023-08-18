@@ -533,7 +533,10 @@ pkg_groups_map = {
                         "systemd-devel", "zenity"],
 
     'mandriva-based':  [
-                        "gcc",
+                        # "gcc",
+                        # "gcc-c++",
+                        # "clang",
+                        # "llvm",
                         "git",
                         "cairo-devel",
                         "dbus-daemon",
@@ -549,6 +552,7 @@ pkg_groups_map = {
                         "python-dbus",
                         "python-ensurepip",
                         "python3-pip",
+                        "task-devel",
                         "tkinter",
                         "xset",
                         "zenity"
