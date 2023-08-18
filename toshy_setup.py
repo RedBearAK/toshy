@@ -532,10 +532,25 @@ pkg_groups_map = {
                         "libnotify-tools", "typelib-1_0-AyatanaAppIndicator3-0_1",
                         "systemd-devel", "zenity"],
 
-    'mandriva-based':  ["gcc", "git", "cairo-devel", "cairo-gobject-devel", "dbus-devel",
-                        "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
-                        "gobject-introspection-devel", "libappindicator-gtk3", "xset",
-                        "libnotify", "systemd-devel", "zenity"],
+    'mandriva-based':  [
+                        "gcc",
+                        "git",
+                        "cairo-devel",
+                        "dbus-devel",
+                        "gobject-introspection-devel",
+                        "lib64ayatana-appindicator3_1",
+                        "lib64cairo-gobject2",
+                        "lib64python-devel",
+                        "libnotify",
+                        "python-dbus-devel",
+                        "python-dbus",
+                        "python-ensurepip",
+                        "python3-pip",
+                        "systemd-devel",
+                        "tkinter",
+                        "xset",
+                        "zenity"
+                        ],
 
     'ubuntu-based':    ["curl", "git", "input-utils", "libcairo2-dev", "libnotify-bin",
                         "python3-dbus", "python3-dev", "python3-pip", "python3-venv",
@@ -1135,7 +1150,7 @@ def install_toshy_files():
 def setup_python_virt_env():
     """Setup a virtual environment to install Python packages"""
     print(f'\n\n§  Setting up the Python virtual environment...\n{cnfg.separator}')
-
+    #
     # Create the virtual environment if it doesn't exist
     if not os.path.exists(cnfg.venv_path):
         # change the Python interpreter path to use current release version from pkg list
@@ -1149,8 +1164,16 @@ def setup_python_virt_env():
                         f'({curr_py_rel_ver}) not found. ')
         else:
             print(f'Using Python version {cnfg.py_interp_ver}.')
-        subprocess.run([cnfg.py_interp_path, '-m', 'venv', cnfg.venv_path])
-
+        try:
+            venv_cmd_lst = [cnfg.py_interp_path, '-m', 'venv', cnfg.venv_path]
+            subprocess.run(venv_cmd_lst, check=True)
+            # need to run the same command twice on OpenMandriva, for some reason
+            if cnfg.DISTRO_NAME in ['openmandriva']:
+                subprocess.run(venv_cmd_lst, check=True)
+        except subprocess.CalledProcessError as proc_err:
+            error(f'ERROR: Problem creating the Python virtual environment:\n\t{proc_err}')
+            safe_shutdown(1)
+    #
     # We do not need to "activate" the venv right now, just create it
     print(f'Python virtual environment setup complete.')
 
