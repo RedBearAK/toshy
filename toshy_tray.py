@@ -4,11 +4,12 @@
 # Indicator tray icon menu app for Toshy, using pygobject/gi
 TOSHY_PART      = 'tray'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Tray Icon app'
-APP_VERSION     = '2023.0709'
+APP_VERSION     = '2023.0816'
 
 # -------- COMMON COMPONENTS --------------------------------------------------
 
 import os
+import re
 import sys
 import time
 import dbus
@@ -38,6 +39,28 @@ home_local_bin = os.path.join(home_dir, '.local', 'bin')
 local_site_packages_dir = os.path.join(home_dir, f".local/lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages")
 # parent_folder_path  = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 current_folder_path = os.path.abspath(os.path.dirname(__file__))
+
+def pattern_found_in_module(pattern, module_path):
+    try:
+        with open(module_path, 'r', encoding='utf-8') as file:
+            content = file.read()
+            return bool(re.search(pattern, content))
+    except FileNotFoundError as file_err:
+        print(f"Error: The file {module_path} was not found.\n\t {file_err}")
+        return False
+    except IOError as io_err:
+        print(f"Error: An issue occurred while reading the file {module_path}.\n\t {io_err}")
+        return False
+
+pattern = 'SLICE_MARK_START: barebones_user_cfg'
+module_path = os.path.abspath(os.path.join(current_folder_path, 'toshy_config.py'))
+
+# check if the config file is a "barebones" type
+if pattern_found_in_module(pattern, module_path):
+    barebones_config = True
+else:
+    barebones_config = False
+
 
 sys.path.insert(0, local_site_packages_dir)
 sys.path.insert(0, current_folder_path)
@@ -180,6 +203,10 @@ config_dir_path = current_folder_path
 cnfg = Settings(config_dir_path)
 cnfg.watch_database()   # start watching the preferences file for changes
 
+# Notification handler object setup
+from lib.notification_manager import NotificationManager
+ntfy = NotificationManager(icon_file_active, title='Toshy Alert (Tray)')
+
 
 def get_settings_list(settings_obj):
     # get all attributes from the object
@@ -206,27 +233,6 @@ def fn_monitor_internal_settings():
             load_optspec_layout_submenu_settings()
             load_prefs_submenu_settings()
 
-
-def check_notify_send():
-    try:
-        # Run the notify-send command with the -p flag
-        subprocess.run(['notify-send', '-p'], check=True, capture_output=True)
-    except subprocess.CalledProcessError as e:
-        # Check if the error message contains "Unknown option" for -p flag
-        error_output: bytes = e.stderr  # type hint to validate decode()
-        if 'Unknown option' in error_output.decode('utf-8'):
-            return False
-    return True
-
-
-is_p_option_supported = check_notify_send()
-
-ntfy_cmd        = shutil.which('notify-send')
-ntfy_prio       = '--urgency=critical'
-ntfy_icon       = f'--icon=\"{icon_file_active}\"'
-ntfy_title      = 'Toshy Alert'
-ntfy_id_new     = None
-ntfy_id_last    = '0' # initiate with integer string to avoid error
 
 sysctl_cmd      = f"{shutil.which('systemctl')}"
 user_sysctl     = f'{sysctl_cmd} --user'
@@ -401,34 +407,19 @@ def fn_restart_toshy_services(widget):
     toshy_svcs_restart_cmd = os.path.join(home_local_bin, 'toshy-services-restart')
     subprocess.Popen([toshy_svcs_restart_cmd], stdout=DEVNULL, stderr=DEVNULL)
     time.sleep(3)
-    _ntfy_icon = f'--icon={icon_file_active}'
+    _ntfy_icon_file = icon_file_active
     _ntfy_msg = 'Toshy systemd services (re)started.\nTap any modifier key before trying shortcuts.'
-
-    if is_p_option_supported:
-        global ntfy_id_last, ntfy_id_new
-        ntfy_id_new = subprocess.run(
-            [ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg, '-p','-r',ntfy_id_last], 
-            stdout=subprocess.PIPE).stdout.decode().strip()
-        ntfy_id_last = ntfy_id_new
-    else:
-        subprocess.run([ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg])
+    ntfy.send_notification(_ntfy_msg, _ntfy_icon_file)
 
 def fn_stop_toshy_services(widget):
     """Stop Toshy services with CLI command"""
     toshy_svcs_stop_cmd = os.path.join(home_local_bin, 'toshy-services-stop')
     subprocess.Popen([toshy_svcs_stop_cmd], stdout=DEVNULL, stderr=DEVNULL)
     time.sleep(3)
-    _ntfy_icon = f'--icon={icon_file_inverse}'
+    _ntfy_icon_file = icon_file_inverse
     _ntfy_msg = 'Toshy systemd services stopped.'
+    ntfy.send_notification(_ntfy_msg, _ntfy_icon_file)
 
-    if is_p_option_supported:
-        global ntfy_id_last, ntfy_id_new
-        ntfy_id_new = subprocess.run(
-            [ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg, '-p','-r',ntfy_id_last], 
-            stdout=subprocess.PIPE).stdout.decode().strip()
-        ntfy_id_last = ntfy_id_new
-    else:
-        subprocess.run([ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg])
 
 def fn_restart_toshy_script(widget):
     """Start the manual run config script"""
@@ -453,7 +444,7 @@ def fn_open_config_folder(widget):
 
 def run_cmd_in_terminal(command):
     # List of common terminal emulators in descending order of commonness.
-    terminal_apps = [
+    terminal_app_cmd_lst = [
         ("gnome-terminal", ["--"]),
         ("konsole", ["-e"]),
         ("xfce4-terminal", ["-e"]),
@@ -462,22 +453,16 @@ def run_cmd_in_terminal(command):
         ("rxvt", ["-e"]),
         ("urxvt", ["-e"]),
     ]
-    for terminal, terminal_args in terminal_apps:
+    for terminal, terminal_args in terminal_app_cmd_lst:
         terminal_path = shutil.which(terminal)
         if terminal_path is not None:
             # run the terminal emulator with the command
             subprocess.Popen([terminal_path] + terminal_args + [command])
             return
-    _ntfy_icon = f'--icon={icon_file_inverse}'
-    _ntfy_msg = "ERROR: No suitable terminal emulator found."
-    if is_p_option_supported:
-        global ntfy_id_last, ntfy_id_new
-        ntfy_id_new = subprocess.run(
-            [ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg, '-p','-r',ntfy_id_last], 
-            stdout=subprocess.PIPE).stdout.decode().strip()
-        ntfy_id_last = ntfy_id_new
-    else:
-        subprocess.run([ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg])
+    _ntfy_icon_file = icon_file_inverse
+    _ntfy_msg = "ERROR: No suitable terminal emulator found.\nFile an issue on GitHub."
+    ntfy.send_notification(_ntfy_msg, _ntfy_icon_file)
+
 
 def fn_show_services_log(widget):
     run_cmd_in_terminal('toshy-services-log')
@@ -530,111 +515,113 @@ menu.append(stop_toshy_script_item)
 separator_below_script_item = Gtk.SeparatorMenuItem()
 menu.append(separator_below_script_item)  #-------------------------------------#
 
-def load_prefs_submenu_settings():
-    cnfg.load_settings()
-    forced_numpad_item.set_active(cnfg.forced_numpad)
-    media_arrows_fix_item.set_active(cnfg.media_arrows_fix)
-    multi_lang_item.set_active(cnfg.multi_lang)
-    ST3_in_VSCode_item.set_active(cnfg.ST3_in_VSCode)
-    Caps2Cmd_item.set_active(cnfg.Caps2Cmd)
-    Caps2Esc_Cmd_item.set_active(cnfg.Caps2Esc_Cmd)
-    Enter2Ent_Cmd_item.set_active(cnfg.Enter2Ent_Cmd)
+if not barebones_config:
 
-def save_prefs_settings(widget):
-    cnfg.forced_numpad      = forced_numpad_item.get_active()
-    cnfg.media_arrows_fix   = media_arrows_fix_item.get_active()
-    cnfg.multi_lang         = multi_lang_item.get_active()
-    cnfg.ST3_in_VSCode      = ST3_in_VSCode_item.get_active()
-    cnfg.Caps2Cmd           = Caps2Cmd_item.get_active()
-    cnfg.Caps2Esc_Cmd       = Caps2Esc_Cmd_item.get_active()
-    cnfg.Enter2Ent_Cmd      = Enter2Ent_Cmd_item.get_active()
-    cnfg.save_settings()
+    def load_prefs_submenu_settings():
+        cnfg.load_settings()
+        forced_numpad_item.set_active(cnfg.forced_numpad)
+        media_arrows_fix_item.set_active(cnfg.media_arrows_fix)
+        multi_lang_item.set_active(cnfg.multi_lang)
+        ST3_in_VSCode_item.set_active(cnfg.ST3_in_VSCode)
+        Caps2Cmd_item.set_active(cnfg.Caps2Cmd)
+        Caps2Esc_Cmd_item.set_active(cnfg.Caps2Esc_Cmd)
+        Enter2Ent_Cmd_item.set_active(cnfg.Enter2Ent_Cmd)
 
-###############################################################
-# Preferences submenu
-
-prefs_submenu = Gtk.Menu()
-prefs_submenu_item = Gtk.MenuItem(label="Preferences")
-prefs_submenu_item.set_submenu(prefs_submenu)
-menu.append(prefs_submenu_item)
-
-multi_lang_item = Gtk.CheckMenuItem(label='Alt_Gr on Right Cmd')
-multi_lang_item.set_active(cnfg.multi_lang)
-multi_lang_item.connect('toggled', save_prefs_settings)
-prefs_submenu.append(multi_lang_item)
-
-Caps2Cmd_item = Gtk.CheckMenuItem(label='CapsLock is Cmd')
-Caps2Cmd_item.set_active(cnfg.Caps2Cmd)
-Caps2Cmd_item.connect('toggled', save_prefs_settings)
-prefs_submenu.append(Caps2Cmd_item)
-
-Caps2Esc_Cmd_item = Gtk.CheckMenuItem(label='CapsLock is Esc & Cmd')
-Caps2Esc_Cmd_item.set_active(cnfg.Caps2Esc_Cmd)
-Caps2Esc_Cmd_item.connect('toggled', save_prefs_settings)
-prefs_submenu.append(Caps2Esc_Cmd_item)
-
-Enter2Ent_Cmd_item = Gtk.CheckMenuItem(label='Enter is Ent & Cmd')
-Enter2Ent_Cmd_item.set_active(cnfg.Enter2Ent_Cmd)
-Enter2Ent_Cmd_item.connect('toggled', save_prefs_settings)
-prefs_submenu.append(Enter2Ent_Cmd_item)
-
-ST3_in_VSCode_item = Gtk.CheckMenuItem(label='Sublime3 in VSCode')
-ST3_in_VSCode_item.set_active(cnfg.ST3_in_VSCode)
-ST3_in_VSCode_item.connect('toggled', save_prefs_settings)
-prefs_submenu.append(ST3_in_VSCode_item)
-
-forced_numpad_item = Gtk.CheckMenuItem(label='Forced Numpad')
-forced_numpad_item.set_active(cnfg.forced_numpad)
-forced_numpad_item.connect('toggled', save_prefs_settings)
-prefs_submenu.append(forced_numpad_item)
-
-media_arrows_fix_item = Gtk.CheckMenuItem(label='Media Arrows Fix')
-media_arrows_fix_item.set_active(cnfg.media_arrows_fix)
-media_arrows_fix_item.connect('toggled', save_prefs_settings)
-prefs_submenu.append(media_arrows_fix_item)
-
-# End of Preferences submenu
-###############################################################
-
-def load_optspec_layout_submenu_settings():
-    cnfg.load_settings()
-    optspec_us_item.set_active(cnfg.optspec_layout == 'US')
-    optspec_abc_extended_item.set_active(cnfg.optspec_layout == 'ABC')
-    optspec_disabled_item.set_active(cnfg.optspec_layout == 'Disabled')
-
-def save_optspec_layout_setting(menu_item, layout):
-    if menu_item.get_active():
-        cnfg.optspec_layout = layout
+    def save_prefs_settings(widget):
+        cnfg.forced_numpad      = forced_numpad_item.get_active()
+        cnfg.media_arrows_fix   = media_arrows_fix_item.get_active()
+        cnfg.multi_lang         = multi_lang_item.get_active()
+        cnfg.ST3_in_VSCode      = ST3_in_VSCode_item.get_active()
+        cnfg.Caps2Cmd           = Caps2Cmd_item.get_active()
+        cnfg.Caps2Esc_Cmd       = Caps2Esc_Cmd_item.get_active()
+        cnfg.Enter2Ent_Cmd      = Enter2Ent_Cmd_item.get_active()
         cnfg.save_settings()
-        load_optspec_layout_submenu_settings()
+
+    ###############################################################
+    # Preferences submenu
+
+    prefs_submenu = Gtk.Menu()
+    prefs_submenu_item = Gtk.MenuItem(label="Preferences")
+    prefs_submenu_item.set_submenu(prefs_submenu)
+    menu.append(prefs_submenu_item)
+
+    multi_lang_item = Gtk.CheckMenuItem(label='Alt_Gr on Right Cmd')
+    multi_lang_item.set_active(cnfg.multi_lang)
+    multi_lang_item.connect('toggled', save_prefs_settings)
+    prefs_submenu.append(multi_lang_item)
+
+    Caps2Cmd_item = Gtk.CheckMenuItem(label='CapsLock is Cmd')
+    Caps2Cmd_item.set_active(cnfg.Caps2Cmd)
+    Caps2Cmd_item.connect('toggled', save_prefs_settings)
+    prefs_submenu.append(Caps2Cmd_item)
+
+    Caps2Esc_Cmd_item = Gtk.CheckMenuItem(label='CapsLock is Esc & Cmd')
+    Caps2Esc_Cmd_item.set_active(cnfg.Caps2Esc_Cmd)
+    Caps2Esc_Cmd_item.connect('toggled', save_prefs_settings)
+    prefs_submenu.append(Caps2Esc_Cmd_item)
+
+    Enter2Ent_Cmd_item = Gtk.CheckMenuItem(label='Enter is Ent & Cmd')
+    Enter2Ent_Cmd_item.set_active(cnfg.Enter2Ent_Cmd)
+    Enter2Ent_Cmd_item.connect('toggled', save_prefs_settings)
+    prefs_submenu.append(Enter2Ent_Cmd_item)
+
+    ST3_in_VSCode_item = Gtk.CheckMenuItem(label='Sublime3 in VSCode')
+    ST3_in_VSCode_item.set_active(cnfg.ST3_in_VSCode)
+    ST3_in_VSCode_item.connect('toggled', save_prefs_settings)
+    prefs_submenu.append(ST3_in_VSCode_item)
+
+    forced_numpad_item = Gtk.CheckMenuItem(label='Forced Numpad')
+    forced_numpad_item.set_active(cnfg.forced_numpad)
+    forced_numpad_item.connect('toggled', save_prefs_settings)
+    prefs_submenu.append(forced_numpad_item)
+
+    media_arrows_fix_item = Gtk.CheckMenuItem(label='Media Arrows Fix')
+    media_arrows_fix_item.set_active(cnfg.media_arrows_fix)
+    media_arrows_fix_item.connect('toggled', save_prefs_settings)
+    prefs_submenu.append(media_arrows_fix_item)
+
+    # End of Preferences submenu
+    ###############################################################
+
+    def load_optspec_layout_submenu_settings():
+        cnfg.load_settings()
+        optspec_us_item.set_active(cnfg.optspec_layout == 'US')
+        optspec_abc_extended_item.set_active(cnfg.optspec_layout == 'ABC')
+        optspec_disabled_item.set_active(cnfg.optspec_layout == 'Disabled')
+
+    def save_optspec_layout_setting(menu_item, layout):
+        if menu_item.get_active():
+            cnfg.optspec_layout = layout
+            cnfg.save_settings()
+            load_optspec_layout_submenu_settings()
 
 
-###############################################################
-# OptSpec layout submenu
-optspec_layout_submenu = Gtk.Menu()
-optspec_layout_item = Gtk.MenuItem(label='OptSpec Layout')
-optspec_layout_item.set_submenu(optspec_layout_submenu)
-menu.append(optspec_layout_item)
+    ###############################################################
+    # OptSpec layout submenu
+    optspec_layout_submenu = Gtk.Menu()
+    optspec_layout_item = Gtk.MenuItem(label='OptSpec Layout')
+    optspec_layout_item.set_submenu(optspec_layout_submenu)
+    menu.append(optspec_layout_item)
 
-# create submenu items for each layout option
-optspec_us_item = Gtk.CheckMenuItem(label='US*')
-optspec_us_item.connect('toggled', save_optspec_layout_setting, 'US')
-optspec_layout_submenu.append(optspec_us_item)
+    # create submenu items for each layout option
+    optspec_us_item = Gtk.CheckMenuItem(label='US*')
+    optspec_us_item.connect('toggled', save_optspec_layout_setting, 'US')
+    optspec_layout_submenu.append(optspec_us_item)
 
-optspec_abc_extended_item = Gtk.CheckMenuItem(label='ABC Extended')
-optspec_abc_extended_item.connect('toggled', save_optspec_layout_setting, 'ABC')
-optspec_layout_submenu.append(optspec_abc_extended_item)
+    optspec_abc_extended_item = Gtk.CheckMenuItem(label='ABC Extended')
+    optspec_abc_extended_item.connect('toggled', save_optspec_layout_setting, 'ABC')
+    optspec_layout_submenu.append(optspec_abc_extended_item)
 
-optspec_disabled_item = Gtk.CheckMenuItem(label='Disabled')
-optspec_disabled_item.connect('toggled', save_optspec_layout_setting, 'Disabled')
-optspec_layout_submenu.append(optspec_disabled_item)
+    optspec_disabled_item = Gtk.CheckMenuItem(label='Disabled')
+    optspec_disabled_item.connect('toggled', save_optspec_layout_setting, 'Disabled')
+    optspec_layout_submenu.append(optspec_disabled_item)
 
-separator_below_prefs_submenu_item = Gtk.SeparatorMenuItem()
-menu.append(separator_below_prefs_submenu_item)  #-------------------------------------#
+    separator_below_prefs_submenu_item = Gtk.SeparatorMenuItem()
+    menu.append(separator_below_prefs_submenu_item)  #-------------------------------------#
 
-preferences_item = Gtk.MenuItem(label="Open Preferences App")
-preferences_item.connect("activate", fn_open_preferences)
-menu.append(preferences_item)
+    preferences_item = Gtk.MenuItem(label="Open Preferences App")
+    preferences_item.connect("activate", fn_open_preferences)
+    menu.append(preferences_item)
 
 open_config_folder_item = Gtk.MenuItem(label="Open Config Folder")
 open_config_folder_item.connect("activate", fn_open_config_folder)
@@ -690,10 +677,11 @@ def main():
     monitor_internal_settings_thread.daemon = True
     monitor_internal_settings_thread.start()
 
-    # load the settings for the preferences submenu toggle items
-    load_prefs_submenu_settings()
-    # load the settings for the optspec layout submenu
-    load_optspec_layout_submenu_settings()
+    if not barebones_config:
+        # load the settings for the preferences submenu toggle items
+        load_prefs_submenu_settings()
+        # load the settings for the optspec layout submenu
+        load_optspec_layout_submenu_settings()
 
     # GUI loop event
     loop = GLib.MainLoop()

@@ -4,11 +4,12 @@
 # Preferences app for Toshy, using tkinter GUI and "Sun Valley" theme
 TOSHY_PART      = 'gui'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Preferences app'  # pretty name to print out
-APP_VERSION     = '2023.0417'
+APP_VERSION     = '2023.0816'
 
 # -------- COMMON COMPONENTS --------------------------------------------------
 
 import os
+import re
 import sys
 import time
 import dbus
@@ -18,6 +19,7 @@ import shutil
 import signal
 import threading
 import subprocess
+from subprocess import DEVNULL
 
 # Local imports
 from lib.logger import *
@@ -32,9 +34,32 @@ if not str(sys.platform) == "linux":
 
 # Add paths to avoid errors like ModuleNotFoundError or ImportError
 home_dir = os.path.expanduser("~")
+home_local_bin = os.path.join(home_dir, '.local', 'bin')
 local_site_packages_dir = os.path.join(home_dir, f".local/lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages")
 # parent_folder_path  = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 current_folder_path = os.path.abspath(os.path.dirname(__file__))
+
+def pattern_found_in_module(pattern, module_path):
+    try:
+        with open(module_path, 'r', encoding='utf-8') as file:
+            content = file.read()
+            return bool(re.search(pattern, content))
+    except FileNotFoundError as file_err:
+        print(f"Error: The file {module_path} was not found.\n\t {file_err}")
+        return False
+    except IOError as io_err:
+        print(f"Error: An issue occurred while reading the file {module_path}.\n\t {io_err}")
+        return False
+
+pattern = 'SLICE_MARK_START: barebones_user_cfg'
+module_path = os.path.abspath(os.path.join(current_folder_path, 'toshy_config.py'))
+
+# check if the config file is a "barebones" type
+if pattern_found_in_module(pattern, module_path):
+    barebones_config = True
+else:
+    barebones_config = False
+
 
 sys.path.insert(0, local_site_packages_dir)
 sys.path.insert(0, current_folder_path)
@@ -182,6 +207,10 @@ cnfg.watch_database()
 debug("")
 debug(cnfg)   # prints out the __str__ method of Settings class
 
+# Notification handler object setup
+from lib.notification_manager import NotificationManager
+ntfy = NotificationManager(icon_file_active, title='Toshy Alert (GUI)')
+
 
 def get_settings_list(settings_obj):
     # get all attributes from the object
@@ -208,27 +237,6 @@ def fn_monitor_internal_settings():
             load_switch_settings(cnfg)
             last_settings_list = get_settings_list(cnfg)
 
-
-def check_notify_send():
-    try:
-        # Run the notify-send command with the -p flag
-        subprocess.run(['notify-send', '-p'], check=True, capture_output=True)
-    except subprocess.CalledProcessError as e:
-        # Check if the error message contains "Unknown option" for -p flag
-        error_output: bytes = e.stderr  # type hint to validate decode()
-        if 'Unknown option' in error_output.decode('utf-8'):
-            return False
-    return True
-
-
-is_p_option_supported = check_notify_send()
-
-ntfy_cmd        = shutil.which('notify-send')
-ntfy_prio       = '--urgency=critical'
-ntfy_icon       = f'--icon=\"{icon_file_active}\"'
-ntfy_title      = 'Toshy Alert'
-ntfy_id_new     = None
-ntfy_id_last    = '0' # initiate with integer string to avoid error
 
 sysctl_cmd      = f"{shutil.which('systemctl')}"
 user_sysctl     = f'{sysctl_cmd} --user'
@@ -335,41 +343,23 @@ def fn_monitor_toshy_services():
 
 
 def fn_restart_toshy_services():
-    """(Re)Start config service first, then session monitor"""
-    os.system(f'{sysctl_cmd} --user restart {toshy_svc_config}')
-    time.sleep(0.2)
-    os.system(f'{sysctl_cmd} --user restart {toshy_svc_sessmon}')
-    time.sleep(0.2)
-    _ntfy_icon = f'--icon={icon_file_active}'
+    """(Re)Start Toshy services with CLI command"""
+    toshy_svcs_restart_cmd = os.path.join(home_local_bin, 'toshy-services-restart')
+    subprocess.Popen([toshy_svcs_restart_cmd], stdout=DEVNULL, stderr=DEVNULL)
+    time.sleep(3)
+    _ntfy_icon_file = icon_file_active
     _ntfy_msg = 'Toshy systemd services (re)started.\nTap any modifier key before trying shortcuts.'
-
-    if is_p_option_supported:
-        global ntfy_id_last, ntfy_id_new
-        ntfy_id_new = subprocess.run(
-            [ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg, '-p','-r',ntfy_id_last], 
-            stdout=subprocess.PIPE).stdout.decode().strip()
-        ntfy_id_last = ntfy_id_new
-    else:
-        subprocess.run([ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg])
+    ntfy.send_notification(_ntfy_msg, _ntfy_icon_file)
 
 
 def fn_stop_toshy_services():
-    """Stop session monitor, then config service"""
-    os.system(f'{sysctl_cmd} --user stop {toshy_svc_sessmon}')
-    time.sleep(0.2)
-    os.system(f'{sysctl_cmd} --user stop {toshy_svc_config}')
-    time.sleep(0.2)
-    _ntfy_icon = f'--icon={icon_file_inverse}'
+    """Stop Toshy services with CLI command"""
+    toshy_svcs_stop_cmd = os.path.join(home_local_bin, 'toshy-services-stop')
+    subprocess.Popen([toshy_svcs_stop_cmd], stdout=DEVNULL, stderr=DEVNULL)
+    time.sleep(3)
+    _ntfy_icon_file = icon_file_inverse
     _ntfy_msg = 'Toshy systemd services stopped.'
-
-    if is_p_option_supported:
-        global ntfy_id_last, ntfy_id_new
-        ntfy_id_new = subprocess.run(
-            [ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg, '-p','-r',ntfy_id_last], 
-            stdout=subprocess.PIPE).stdout.decode().strip()
-        ntfy_id_last = ntfy_id_new
-    else:
-        subprocess.run([ntfy_cmd, ntfy_prio, _ntfy_icon, ntfy_title, _ntfy_msg])
+    ntfy.send_notification(_ntfy_msg, _ntfy_icon_file)
 
 
 ####################################################
@@ -559,7 +549,6 @@ svc_status_sessmon_btn.pack(anchor=tk.W, padx=sw_lbl_indent, pady=svc_btn_pady)
 ###############################################################################
 # START of Switches and description labels for options
 
-
 ###############################################################################
 # Left column stuff
 
@@ -570,7 +559,6 @@ multi_lang_switch       = ttk.Checkbutton(
     style='Switch.TCheckbutton',
     variable=multi_lang_switch_var
 )
-multi_lang_switch.pack(anchor=tk.W, padx=sw_padx, pady=btn_pady)
 
 multi_lang_label = tk.Label(
     left_column,
@@ -581,7 +569,6 @@ multi_lang_label = tk.Label(
     wraplength=wrap_len,
     fg=sw_lbl_font_color
 )
-multi_lang_label.pack(anchor=tk.W, padx=sw_lbl_indent, pady=btn_lbl_pady)
 
 ST3_in_VSCode_switch_var = tk.BooleanVar(value=False)
 ST3_in_VSCode_switch     = ttk.Checkbutton(
@@ -590,7 +577,6 @@ ST3_in_VSCode_switch     = ttk.Checkbutton(
     style='Switch.TCheckbutton', 
     variable=ST3_in_VSCode_switch_var
 )
-ST3_in_VSCode_switch.pack(anchor=tk.W, padx=sw_padx, pady=btn_pady)
 
 ST3_in_VSCode_label = tk.Label(
     left_column,
@@ -601,7 +587,6 @@ ST3_in_VSCode_label = tk.Label(
     wraplength=wrap_len,
     fg=sw_lbl_font_color
 )
-ST3_in_VSCode_label.pack(anchor=tk.W, padx=sw_lbl_indent, pady=btn_lbl_pady)
 
 Caps2Cmd_switch_var = tk.BooleanVar(value=False)
 Caps2Cmd_switch     = ttk.Checkbutton(
@@ -610,7 +595,6 @@ Caps2Cmd_switch     = ttk.Checkbutton(
     style='Switch.TCheckbutton', 
     variable=Caps2Cmd_switch_var
 )
-Caps2Cmd_switch.pack(anchor=tk.W, padx=sw_padx, pady=btn_pady)
 
 Caps2Cmd_label = tk.Label(
     left_column,
@@ -620,7 +604,6 @@ Caps2Cmd_label = tk.Label(
     wraplength=wrap_len,
     fg=sw_lbl_font_color
 )
-Caps2Cmd_label.pack(anchor=tk.W, padx=sw_lbl_indent, pady=btn_lbl_pady)
 
 Caps2Esc_Cmd_switch_var    = tk.BooleanVar(value=False)
 Caps2Esc_Cmd_switch        = ttk.Checkbutton(
@@ -629,7 +612,6 @@ Caps2Esc_Cmd_switch        = ttk.Checkbutton(
     style='Switch.TCheckbutton', 
     variable=Caps2Esc_Cmd_switch_var
 )
-Caps2Esc_Cmd_switch.pack(anchor=tk.W, padx=sw_padx, pady=btn_pady)
 
 Caps2Esc_Cmd_switch_label = tk.Label(
     left_column,
@@ -641,7 +623,6 @@ Caps2Esc_Cmd_switch_label = tk.Label(
     wraplength=wrap_len,
     fg=sw_lbl_font_color
 )
-Caps2Esc_Cmd_switch_label.pack(anchor=tk.W, padx=sw_lbl_indent, pady=btn_lbl_pady)
 
 Enter2Ent_Cmd_switch_var = tk.BooleanVar(value=False)
 Enter2Enter_Cmd_switch = ttk.Checkbutton(
@@ -650,7 +631,6 @@ Enter2Enter_Cmd_switch = ttk.Checkbutton(
     style='Switch.TCheckbutton',
     variable=Enter2Ent_Cmd_switch_var
 )
-Enter2Enter_Cmd_switch.pack(anchor=tk.W, padx=sw_padx, pady=btn_pady)
 
 Enter2Ent_Cmd_label = tk.Label(
     left_column,
@@ -662,7 +642,19 @@ Enter2Ent_Cmd_label = tk.Label(
     wraplength=wrap_len,
     fg=sw_lbl_font_color
 )
-Enter2Ent_Cmd_label.pack(anchor=tk.W, padx=sw_lbl_indent, pady=btn_lbl_pady)
+
+# Do not pack these items into left column if using "barebones" config file
+if not barebones_config:
+    multi_lang_switch.pack(anchor=tk.W, padx=sw_padx, pady=btn_pady)
+    multi_lang_label.pack(anchor=tk.W, padx=sw_lbl_indent, pady=btn_lbl_pady)
+    ST3_in_VSCode_switch.pack(anchor=tk.W, padx=sw_padx, pady=btn_pady)
+    ST3_in_VSCode_label.pack(anchor=tk.W, padx=sw_lbl_indent, pady=btn_lbl_pady)
+    Caps2Cmd_switch.pack(anchor=tk.W, padx=sw_padx, pady=btn_pady)
+    Caps2Cmd_label.pack(anchor=tk.W, padx=sw_lbl_indent, pady=btn_lbl_pady)
+    Caps2Esc_Cmd_switch.pack(anchor=tk.W, padx=sw_padx, pady=btn_pady)
+    Caps2Esc_Cmd_switch_label.pack(anchor=tk.W, padx=sw_lbl_indent, pady=btn_lbl_pady)
+    Enter2Enter_Cmd_switch.pack(anchor=tk.W, padx=sw_padx, pady=btn_pady)
+    Enter2Ent_Cmd_label.pack(anchor=tk.W, padx=sw_lbl_indent, pady=btn_lbl_pady)
 
 
 ###############################################################################
@@ -753,7 +745,6 @@ forced_numpad_switch       = ttk.Checkbutton(
     style='Switch.TCheckbutton',
     variable=forced_numpad_switch_var
 )
-forced_numpad_switch.pack(anchor=tk.W, padx=sw_padx, pady=btn_pady)
 
 forced_numpad_label = tk.Label(
     mid_right_column,
@@ -766,7 +757,6 @@ forced_numpad_label = tk.Label(
     wraplength=wrap_len,
     fg=sw_lbl_font_color
 )
-forced_numpad_label.pack(anchor=tk.W, padx=sw_lbl_indent, pady=btn_lbl_pady)
 
 media_arrows_fix_switch_var = tk.BooleanVar(value=False)
 media_arrows_fix_switch     = ttk.Checkbutton(
@@ -775,7 +765,6 @@ media_arrows_fix_switch     = ttk.Checkbutton(
     style='Switch.TCheckbutton',
     variable=media_arrows_fix_switch_var
 )
-media_arrows_fix_switch.pack(anchor=tk.W, padx=sw_padx, pady=btn_pady)
 
 media_arrows_fix_label = tk.Label(
     mid_right_column,
@@ -786,7 +775,6 @@ media_arrows_fix_label = tk.Label(
     wraplength=wrap_len,
     fg=sw_lbl_font_color
 )
-media_arrows_fix_label.pack(anchor=tk.W, padx=sw_lbl_indent, pady=btn_lbl_pady)
 
 # Option-key special character radio button group
 optspec_var = tk.StringVar(value="US") # default value
@@ -799,7 +787,6 @@ optspec_US_radio_btn = ttk.Radiobutton(
     variable=optspec_var, 
     value="US"
 )
-optspec_US_radio_btn.pack(anchor=tk.W, padx=rad_btn_padx, pady=btn_pady)
 
 optspec_ABC_radio_btn = ttk.Radiobutton(
     mid_right_column,
@@ -808,7 +795,6 @@ optspec_ABC_radio_btn = ttk.Radiobutton(
     variable=optspec_var, 
     value="ABC"
 )
-optspec_ABC_radio_btn.pack(anchor=tk.W, padx=rad_btn_padx, pady=btn_pady)
 
 optspec_Disabled_radio_btn = ttk.Radiobutton(
     mid_right_column,
@@ -817,7 +803,6 @@ optspec_Disabled_radio_btn = ttk.Radiobutton(
     variable=optspec_var, 
     value="Disabled"
 )
-optspec_Disabled_radio_btn.pack(anchor=tk.W, padx=rad_btn_padx, pady=btn_pady)
 
 optspec_label = tk.Label(
     mid_right_column,
@@ -830,7 +815,17 @@ optspec_label = tk.Label(
     wraplength=wrap_len,
     fg=sw_lbl_font_color
 )
-optspec_label.pack(anchor=tk.W, padx=sw_lbl_indent, pady=btn_lbl_pady)
+
+# Do not pack these items into right column if using "barebones" config file
+if not barebones_config:
+    forced_numpad_switch.pack(anchor=tk.W, padx=sw_padx, pady=btn_pady)
+    forced_numpad_label.pack(anchor=tk.W, padx=sw_lbl_indent, pady=btn_lbl_pady)
+    media_arrows_fix_switch.pack(anchor=tk.W, padx=sw_padx, pady=btn_pady)
+    media_arrows_fix_label.pack(anchor=tk.W, padx=sw_lbl_indent, pady=btn_lbl_pady)
+    optspec_US_radio_btn.pack(anchor=tk.W, padx=rad_btn_padx, pady=btn_pady)
+    optspec_ABC_radio_btn.pack(anchor=tk.W, padx=rad_btn_padx, pady=btn_pady)
+    optspec_Disabled_radio_btn.pack(anchor=tk.W, padx=rad_btn_padx, pady=btn_pady)
+    optspec_label.pack(anchor=tk.W, padx=sw_lbl_indent, pady=btn_lbl_pady)
 
 # left column stuff commands
 multi_lang_switch.config(

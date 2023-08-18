@@ -75,7 +75,7 @@ icon_file_inverse   = os.path.join(assets_path, "toshy_app_icon_rainbow_inverse.
 # Toshy config file
 TOSHY_PART      = 'config'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Config file'
-APP_VERSION     = '2023.0604'
+APP_VERSION     = '2023.0816'
 
 # Settings object used to tweak preferences "live" between gui, tray and config.
 cnfg = Settings(current_folder_path)
@@ -391,10 +391,12 @@ browsers_chrome = [
     "Brave-browser",
     "Chromium",
     "Chromium-browser",
+    "Falkon",
     "Google-chrome",
     "microsoft-edge",
     "microsoft-edge-dev",
     "org.deepin.browser",
+    "org.kde.falkon",
 ]
 browsers_chrome         = [x.casefold() for x in browsers_chrome]
 browsers_chromeStr      = "|".join('^'+x+'$' for x in browsers_chrome)
@@ -450,6 +452,7 @@ dialogs_Escape_lod = [
     {clas:"^konsole$|^org.kde.konsole$", name:"^Configure.*Konsole$|^Edit Profile.*Konsole$"},
     {clas:"^org.kde.KWrite$", name:"^Configure.*KWrite$"},
     {clas:"^org.kde.Dolphin$", name:"^Configure.*Dolphin$|^Properties.*Dolphin$"},
+    {clas:"^org.kde.falkon$|^Falkon$", name:"^Preferences.*Falkon$"},
     {clas:"^xfce4-terminal$", name:"^Terminal Preferences$"},
     {clas:"^epiphany$|^org.gnome.Epiphany$", name:"^Preferences$"},
     {clas:"^Angry.*IP.*Scanner$",
@@ -558,7 +561,7 @@ not_win_type_rgx    = re.compile("IBM|Chromebook|Apple", re.I)
 
 
 # Instantiate a useful notification object class instance, to make notifications easier
-ntfy = NotificationManager(icon_file_active, title='Toshy Alert')
+ntfy = NotificationManager(icon_file_active, title='Toshy Alert (Config)')
 
 
 def isKBtype(kbtype: str, map=None):
@@ -3108,6 +3111,11 @@ keymap("Firefox Browsers Overrides", {
     C("RC-Delete"):            [C("Shift-End"), C("Delete")],         # Delete Entire Line Right of Cursor
 }, when = matchProps(clas=browsers_firefoxStr))
 
+# Falkon is a Chromium based web browser
+keymap("Overrides for Falkon browser", {
+    C("RC-comma"):              C("Shift-C-comma"),             # Open preferences
+}, when = matchProps(clas="^org.kde.falkon$|^Falkon$"))
+
 keymap("Chrome Browsers Overrides", {
     C("C-comma"):              [C("Alt-e"), C("s"),C("Enter")], # Open preferences
     C("RC-q"):                  C("Alt-F4"),                    # Quit Chrome(s) browsers with Cmd+Q
@@ -3830,6 +3838,9 @@ keymap("GenGUI overrides: KDE", {
 keymap("GenGUI overrides: MATE", {
     C("RC-Space"):             [iEF2NT(),C("Alt-Space")],       # Right click, configure Mint menu shortcut to match
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'mate' )
+keymap("GenGUI overrides: Trinity desktop", {
+    C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # Trinity desktop (Q4OS)
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'trinity' )
 keymap("GenGUI overrides: Xfce4", {
     C("RC-Grave"):             [bind,C("Super-Tab")],           # xfce4 Switch within app group
     C("Shift-RC-Grave"):       [bind,C("Super-Shift-Tab")],     # xfce4 Switch within app group
