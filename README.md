@@ -374,6 +374,13 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - KDE desktop works (X11/Xorg or Wayland)
     - Other desktop choices should work, if session is X11/Xorg
 
+### OpenMandriva (DNF/RPM-based packaging system)
+
+- OpenMandriva ROME 2023.8
+
+    - Wayland+KDE may have issues with GTK "portal" service
+    - May need to restart the Toshy services after logging in
+
 ### Ubuntu variants and Ubuntu-based distros
 
 - Ubuntu official variants tested:
