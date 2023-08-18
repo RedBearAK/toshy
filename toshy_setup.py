@@ -541,12 +541,12 @@ pkg_groups_map = {
                         "lib64ayatana-appindicator3_1",
                         "lib64cairo-gobject2",
                         "lib64python-devel",
+                        "lib64systemd-devel",
                         "libnotify",
                         "python-dbus-devel",
                         "python-dbus",
                         "python-ensurepip",
                         "python3-pip",
-                        "systemd-devel",
                         "tkinter",
                         "xset",
                         "zenity"
