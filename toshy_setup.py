@@ -510,9 +510,9 @@ pkg_groups_map = {
     'test-based':      ["git"],
 
     'fedora-based':    ["gcc", "git", "cairo-devel", "cairo-gobject-devel", "dbus-devel",
-                        "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
-                        "gobject-introspection-devel", "libappindicator-gtk3", "xset",
-                        "libnotify", "systemd-devel", "zenity", "evtest"],
+                        "dbus-daemon", "python3-dbus", "python3-devel", "python3-pip",
+                        "python3-tkinter", "gobject-introspection-devel", "libappindicator-gtk3",
+                        "xset", "libnotify", "systemd-devel", "zenity", "evtest"],
 
     'rhel-based':      ["gcc", "git", "cairo-devel", "cairo-gobject-devel", "dbus-devel",
                         "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
