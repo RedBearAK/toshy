@@ -1,4 +1,4 @@
-# Current status: Stable-ish Beta (Please Read)
+# Current status: Stable Beta (Please Read)
 
 WARNING: There is a very annoying "bug" going around where there is a problem with the `xdg-desktop-portal` and `xdg-desktop-portal-gnome` services causing very long delays with launching certain applications (particularly GTK apps like Firefox, but also reportedly Qt apps sometimes) in a Wayland session. Some distros seem to have a fix for this, others have not fixed it yet.  
 
@@ -28,7 +28,7 @@ Go to the FAQ entry for more info:
 
 - The Wayland+KDE (Plasma) solution is better now. It should be possible to install under some desktop that is not KDE, then log into KDE on the same system and have Toshy working. If you're not having the issue described above.  
 
-- Some distros have no `journal` output for the user services, for unknown reasons. I've seen this on Arcolinux, the RHEL clones.  
+- Some distros have no `journalctl` output for the user services, for unknown reasons. I've seen this on Arcolinux, the RHEL clones.  
 
 - On a dual-init distro like MX Linux, if you install Toshy while using SysVinit it will avoid installing the `systemd` packages and services. If you then switch to `systemd` at the boot screen you'll need to re-run the Toshy installer once under `systemd` to make it work automatically like it does on other distros using `systemd`.  
 
