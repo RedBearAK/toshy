@@ -536,8 +536,8 @@ pkg_groups_map = {
                         "gobject-introspection-devel", "lib64ayatana-appindicator3_1",
                         "lib64ayatana-appindicator3-gir0.1", "lib64cairo-gobject2",
                         "lib64python-devel", "lib64systemd-devel", "libnotify",
-                        "python-dbus-devel", "python-dbus", "python-ensurepip", "python3-pip",
-                        "task-devel", "tkinter", "xset", "zenity"],
+                        "python-dbus-devel", "python-dbus", "python-ensurepip",
+                        "python3-pip", "task-devel", "tkinter", "xset", "zenity"],
 
     'ubuntu-based':    ["curl", "git", "input-utils", "libcairo2-dev", "libnotify-bin",
                         "python3-dbus", "python3-dev", "python3-pip", "python3-venv",
