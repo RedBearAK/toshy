@@ -529,13 +529,21 @@ pkg_groups_map = {
                         "xset",
                         "zenity"],
 
+    # openSUSE:
+    # How to get rid of the need to use specific version numbers in packages: 
+    # pkgconfig(packagename)>=N.nn (version symbols optional)
+    # How to query a package to see what the equivalent pkgconfig(packagename) syntax would be:
+    # rpm -q --provides packagename | grep -i pkgconfig
     'tumbleweed-based':["cairo-devel",
                         "dbus-1-daemon", "dbus-1-devel",
                         "gcc", "git", "gobject-introspection-devel",
                         "libappindicator3-devel", "libnotify-tools",
-                        f"python{py_pkg_ver}-dbus-python-devel",
-                        f"python{py_pkg_ver}-devel",
-                        f"python{py_pkg_ver}-tk",
+                        # f"python{py_pkg_ver}-dbus-python-devel",
+                        "python3-dbus-python-devel",
+                        # f"python{py_pkg_ver}-devel",
+                        "python3-devel",
+                        # f"python{py_pkg_ver}-tk",
+                        "python3-tk",
                         "systemd-devel",
                         "tk", "typelib-1_0-AyatanaAppIndicator3-0_1",
                         "zenity"],
@@ -545,7 +553,13 @@ pkg_groups_map = {
                         "dbus-1-devel",
                         "gcc", "git", "gobject-introspection-devel",
                         "libappindicator3-devel", "libnotify-tools",
-                        "python3-dbus-python-devel", "python311", "python311-devel", "python311-tk",
+                        "python3-dbus-python-devel",
+                        # "python311",
+                        "pkgconfig(python3)",
+                        # "python311-devel",
+                        "pkgconfig(python3-devel)",
+                        # "python311-tk",
+                        "pkgconfig(python3-tk)",
                         "systemd-devel",
                         "tk", "typelib-1_0-AyatanaAppIndicator3-0_1",
                         "zenity"],
