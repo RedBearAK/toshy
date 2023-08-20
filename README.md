@@ -350,6 +350,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 - CentOS 7 (RHEL 7 clone) - Partial support:
 
     - You must first install `python3` to run `toshy_setup.py`
+    - GUI preferences app will not work (Tk too old for `sv_ttk` theme)
     - systemd "user" services are not supported in CentOS/RHEL 7
     - Auto-start at login with systemd services not available
     - Cmd+Space (Alt+F1) shortcut must be assigned to app launcher menu
