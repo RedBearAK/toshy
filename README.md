@@ -811,6 +811,8 @@ In the case that the path was already added to the RC file, another way of getti
 
 ### Touchpads/Trackpads and `keyszer` Suspend Timer
 
+UPDATE: Some users have expressed that they have this problem even with a mouse device, which may come down to the keymapper just not grabbing the mouse device for some reason (so it can't see the "click" events and terminate the suspend timer). The rest of the text below this was written from my experience having this issue with touchpads, where the input events are slightly different.  
+
 The `keyszer` (fork of `xkeysnail`) keymapper is pretty good, but there is an issue with [modifier key] + [tap or click] when using a touchpad versus a mouse. The keymapper uses a technique that "suspends" modifier key presses briefly (default is 1 second) to try and keep certain applications from seeing those modifier presses and performing some unwanted action. Notable apps that have issues with doing the wrong thing just from seeing a modifier key press are Visual Studio Code (and it's more Open Source variants VSCodium and Code - OSS) and the Firefox web browser. They will frequently focus or open items on the menu bar then they see the `Option/Alt` key in any way.  
 
 The suspend timer scheme works well for mouse usage, letting you do things like `Alt+click`, `Ctrl+click/Cmd+click` and `Shift+click`, but with a touchpad, you may need to reduce the one-second timer to zero or 0.1 seconds in order for those operations to work as you would expect. Look for this near the top of the `toshy_config.py` file:  
