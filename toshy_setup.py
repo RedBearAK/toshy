@@ -433,7 +433,7 @@ def verify_user_groups():
     """Check if the `input` group exists and user is in group"""
     print(f'\n\n§  Checking if user is in "input" group...\n{cnfg.separator}')
     
-    if cnfg.DISTRO_NAME == 'silverblue':
+    if cnfg.DISTRO_NAME == 'silverblue-experimental':
         # https://docs.fedoraproject.org/en-US/fedora-silverblue/troubleshooting/
         # Special command to make Fedora Silverblue/uBlue work, or usermod will fail: 
         # grep -E '^input:' /usr/lib/group | sudo tee -a /etc/group
@@ -818,7 +818,7 @@ def install_distro_pkgs():
         if cnfg.DISTRO_NAME in distro_groups_map['rhel-based'] + distro_groups_map['fedora-based']:
             try:
                 call_attention_to_password_prompt()
-                if cnfg.DISTRO_NAME == 'silverblue':
+                if cnfg.DISTRO_NAME == 'silverblue-experimental':
                     check_for_pkg_mgr_cmd('rpm-ostree')
                     print(f'Distro is Silverblue type. Using "rpm-ostree" instead of DNF.')
 
