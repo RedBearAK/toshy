@@ -629,7 +629,7 @@ def install_distro_pkgs():
         print(f'Try some options in "./toshy_setup.py --help"')
         safe_shutdown(1)
 
-    cnfg.pkgs_for_distro = pkg_groups_map[pkg_group]
+    cnfg.pkgs_for_distro: list = pkg_groups_map[pkg_group]
 
     # Add extra packages for specific distros
     if cnfg.DISTRO_NAME in extra_pkgs_map:
@@ -749,6 +749,13 @@ def install_distro_pkgs():
                 cnfg.DISTRO_VER and 
                 cnfg.DISTRO_VER[0] == '7'):
                 print('Doing prep/checks for CentOS 7...')
+                # remove 'dbus-daemon' from package list, not available on CentOS 7
+                # cnfg.pkgs_for_distro
+                pkgs_to_remove = ['dbus-daemon']
+                for pkg in pkgs_to_remove:
+                    if pkg in cnfg.pkgs_for_distro:
+                        cnfg.pkgs_for_distro.remove(pkg)
+
                 if py_interp_ver_tup >= (3, 8):
                     print(f"Good, Python version is 3.8 or later: "
                             f"'{cnfg.py_interp_ver}'")
