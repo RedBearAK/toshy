@@ -8,6 +8,7 @@
 *.env
 *.pyc
 .pytest_cache/
+
 # Supposed to be able to use `**` but it doesn't work for me
 __pycache__/
 */__pycache__/
