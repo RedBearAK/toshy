@@ -750,7 +750,6 @@ def install_distro_pkgs():
                 cnfg.DISTRO_VER[0] == '7'):
                 print('Doing prep/checks for CentOS 7...')
                 # remove 'dbus-daemon' from package list, not available on CentOS 7
-                # cnfg.pkgs_for_distro
                 pkgs_to_remove = ['dbus-daemon']
                 for pkg in pkgs_to_remove:
                     if pkg in cnfg.pkgs_for_distro:
