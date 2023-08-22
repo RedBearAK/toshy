@@ -433,7 +433,7 @@ def verify_user_groups():
     """Check if the `input` group exists and user is in group"""
     print(f'\n\n§  Checking if user is in "input" group...\n{cnfg.separator}')
     
-    if cnfg.DISTRO_NAME == 'silverblue':
+    if cnfg.DISTRO_NAME == 'silverblue-experimental':
         # https://docs.fedoraproject.org/en-US/fedora-silverblue/troubleshooting/
         # Special command to make Fedora Silverblue/uBlue work, or usermod will fail: 
         # grep -E '^input:' /usr/lib/group | sudo tee -a /etc/group
@@ -509,55 +509,101 @@ pkg_groups_map = {
     # 'test-based':      ["git"],
     'test-based':      ["git"],
 
-    'fedora-based':    ["gcc", "git", "cairo-devel", "cairo-gobject-devel", "dbus-devel",
+    'fedora-based':    ["cairo-devel", "cairo-gobject-devel",
+                        "evtest",
+                        "gcc", "git",
+                        "dbus-daemon", "dbus-devel",
+                        "gobject-introspection-devel",
+                        "libappindicator-gtk3", "libnotify",
                         "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
-                        "gobject-introspection-devel", "libappindicator-gtk3", "xset",
-                        "libnotify", "systemd-devel", "zenity", "evtest"],
+                        "systemd-devel",
+                        "xset",
+                        "zenity"],
 
-    'rhel-based':      ["gcc", "git", "cairo-devel", "cairo-gobject-devel", "dbus-devel",
+    'rhel-based':      ["cairo-devel", "cairo-gobject-devel",
+                        "dbus-daemon", "dbus-devel",
+                        "gcc", "git", "gobject-introspection-devel",
+                        "libappindicator-gtk3", "libnotify",
                         "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
-                        "gobject-introspection-devel", "libappindicator-gtk3", "xset",
-                        "libnotify", "systemd-devel", "zenity"],
+                        "systemd-devel",
+                        "xset",
+                        "zenity"],
 
-    'tumbleweed-based':["gcc", "git", "cairo-devel",  "dbus-1-devel", f"python{py_pkg_ver}-tk",
-                        f"python{py_pkg_ver}-dbus-python-devel", f"python{py_pkg_ver}-devel",
-                        "gobject-introspection-devel", "libappindicator3-devel", "tk",
-                        "libnotify-tools", "typelib-1_0-AyatanaAppIndicator3-0_1",
-                        "systemd-devel", "zenity"],
+    # openSUSE:
+    # How to get rid of the need to use specific version numbers in packages: 
+    # pkgconfig(packagename)>=N.nn (version symbols optional)
+    # How to query a package to see what the equivalent pkgconfig(packagename) syntax would be:
+    # rpm -q --provides packagename | grep -i pkgconfig
+    'tumbleweed-based':["cairo-devel",
+                        "dbus-1-daemon", "dbus-1-devel",
+                        "gcc", "git", "gobject-introspection-devel",
+                        "libappindicator3-devel", "libnotify-tools",
+                        # f"python{py_pkg_ver}-dbus-python-devel",
+                        "python3-dbus-python-devel",
+                        # f"python{py_pkg_ver}-devel",
+                        "python3-devel",
+                        # f"python{py_pkg_ver}-tk",
+                        "python3-tk",
+                        "systemd-devel",
+                        "tk", "typelib-1_0-AyatanaAppIndicator3-0_1",
+                        "zenity"],
 
     # TODO: update Leap Python package versions as it makes newer Python available
-    'leap-based':      ["gcc", "git", "cairo-devel",  "dbus-1-devel", "python311-tk",
-                        "python3-dbus-python-devel", "python311-devel", "python311",
-                        "gobject-introspection-devel", "libappindicator3-devel", "tk",
-                        "libnotify-tools", "typelib-1_0-AyatanaAppIndicator3-0_1",
-                        "systemd-devel", "zenity"],
+    'leap-based':      ["cairo-devel",
+                        "dbus-1-devel",
+                        "gcc", "git", "gobject-introspection-devel",
+                        "libappindicator3-devel", "libnotify-tools",
+                        "python3-dbus-python-devel",
+                        "python311",
+                        "python311-devel",
+                        "python311-tk",
+                        "systemd-devel",
+                        "tk", "typelib-1_0-AyatanaAppIndicator3-0_1",
+                        "zenity"],
 
-    'mandriva-based':  ["git", "cairo-devel", "dbus-daemon", "dbus-devel",
-                        "gobject-introspection-devel", "lib64ayatana-appindicator3_1",
-                        "lib64ayatana-appindicator3-gir0.1", "lib64cairo-gobject2",
-                        "lib64python-devel", "lib64systemd-devel", "libnotify",
-                        "python-dbus-devel", "python-dbus", "python-ensurepip",
-                        "python3-pip", "task-devel", "tkinter", "xset", "zenity"],
+    'mandriva-based':  ["cairo-devel",
+                        "dbus-daemon", "dbus-devel",
+                        "git", "gobject-introspection-devel",
+                        "lib64ayatana-appindicator3_1", "lib64ayatana-appindicator3-gir0.1",
+                        "lib64cairo-gobject2", "lib64python-devel", "lib64systemd-devel",
+                        "libnotify",
+                        "python-dbus", "python-dbus-devel", "python-ensurepip", "python3-pip",
+                        "task-devel", "tkinter",
+                        "xset",
+                        "zenity"],
 
-    'ubuntu-based':    ["curl", "git", "input-utils", "libcairo2-dev", "libnotify-bin",
-                        "python3-dbus", "python3-dev", "python3-pip", "python3-venv",
-                        "python3-tk", "libdbus-1-dev", "libgirepository1.0-dev",
-                        # "gir1.2-appindicator3-0.1", "libsystemd-dev", "zenity"],
-                        "gir1.2-ayatanaappindicator3-0.1", "libsystemd-dev", "zenity"],
+    'ubuntu-based':    ["curl",
+                        "git", "gir1.2-ayatanaappindicator3-0.1",
+                        "input-utils",
+                        "libcairo2-dev", "libdbus-1-dev", "libgirepository1.0-dev",
+                        "libnotify-bin", "libsystemd-dev",
+                        "python3-dbus", "python3-dev", "python3-pip", "python3-tk", "python3-venv",
+                        "zenity"],
 
-    'debian-based':    ["curl", "git", "input-utils", "libcairo2-dev", "libnotify-bin", 
-                        "python3-dbus", "python3-dev", "python3-pip", "python3-venv",
-                        "python3-tk", "libdbus-1-dev", "libgirepository1.0-dev", 
-                        "gir1.2-ayatanaappindicator3-0.1", "libsystemd-dev", "zenity"],
+    'debian-based':    ["curl",
+                        "git", "gir1.2-ayatanaappindicator3-0.1",
+                        "input-utils",
+                        "libcairo2-dev", "libdbus-1-dev", "libgirepository1.0-dev",
+                        "libnotify-bin", "libsystemd-dev",
+                        "python3-dbus", "python3-dev", "python3-pip", "python3-tk", "python3-venv",
+                        "zenity"],
 
-    'arch-based':      ["cairo", "dbus", "evtest", "git", "gobject-introspection", "tk",
-                        "libappindicator-gtk3", "pkg-config", "python-dbus", "python-pip",
-                        "python", "libnotify", "systemd", "zenity"],
+    'arch-based':      ["cairo",
+                        "dbus",
+                        "evtest",
+                        "git", "gobject-introspection",
+                        "libappindicator-gtk3", "libnotify",
+                        "pkg-config", "python", "python-dbus", "python-pip",
+                        "systemd",
+                        "tk",
+                        "zenity"],
 
-    'solus-based':     ["gcc", "git", "libcairo-devel", "python3-devel", "pip", 
-                        "python3-tkinter", "python3-dbus", "python-gobject-devel",
-                        "python-dbus-devel", "libayatana-appindicator",
-                        "libnotify", "systemd-devel", "zenity"],
+    'solus-based':     ["gcc", "git",
+                        "libayatana-appindicator", "libcairo-devel", "libnotify",
+                        "pip", "python3-dbus", "python3-devel", "python3-tkinter",
+                        "python-dbus-devel", "python-gobject-devel",
+                        "systemd-devel",
+                        "zenity"],
 }
 
 extra_pkgs_map = {
@@ -583,7 +629,7 @@ def install_distro_pkgs():
         print(f'Try some options in "./toshy_setup.py --help"')
         safe_shutdown(1)
 
-    cnfg.pkgs_for_distro = pkg_groups_map[pkg_group]
+    cnfg.pkgs_for_distro: list = pkg_groups_map[pkg_group]
 
     # Add extra packages for specific distros
     if cnfg.DISTRO_NAME in extra_pkgs_map:
@@ -703,6 +749,12 @@ def install_distro_pkgs():
                 cnfg.DISTRO_VER and 
                 cnfg.DISTRO_VER[0] == '7'):
                 print('Doing prep/checks for CentOS 7...')
+                # remove 'dbus-daemon' from package list, not available on CentOS 7
+                pkgs_to_remove = ['dbus-daemon']
+                for pkg in pkgs_to_remove:
+                    if pkg in cnfg.pkgs_for_distro:
+                        cnfg.pkgs_for_distro.remove(pkg)
+
                 if py_interp_ver_tup >= (3, 8):
                     print(f"Good, Python version is 3.8 or later: "
                             f"'{cnfg.py_interp_ver}'")
@@ -716,6 +768,9 @@ def install_distro_pkgs():
                                         check=True)
                         # sudo yum install rh-python38-python-devel
                         subprocess.run(['sudo', 'yum', 'install', '-y', 'rh-python38-python-devel'],
+                                        check=True)
+                        # sudo yum install rh-python38-python-tkinter
+                        subprocess.run(['sudo', 'yum', 'install', '-y', 'rh-python38-python-tkinter'],
                                         check=True)
                         #
                         # set new Python interpreter version and path to reflect what was installed
@@ -783,7 +838,7 @@ def install_distro_pkgs():
         if cnfg.DISTRO_NAME in distro_groups_map['rhel-based'] + distro_groups_map['fedora-based']:
             try:
                 call_attention_to_password_prompt()
-                if cnfg.DISTRO_NAME == 'silverblue':
+                if cnfg.DISTRO_NAME == 'silverblue-experimental':
                     check_for_pkg_mgr_cmd('rpm-ostree')
                     print(f'Distro is Silverblue type. Using "rpm-ostree" instead of DNF.')
 

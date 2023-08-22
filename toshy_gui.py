@@ -370,6 +370,8 @@ from tkinter import ttk
 import tkinter.font as tkfont
 import sv_ttk   # "Sun Valley" tkinter theme module
 
+# CentOS 7 can't handle the PNG icon file, so use Pillow to open it
+from PIL import Image, ImageTk
 
 TOSHY_GUI_APP_CLASSNAME = 'Toshy-Prefs'
 
@@ -395,8 +397,13 @@ root.config(padx=20, pady=20)
 # (desktop entry file shows nice icon in launcher but doesn't set icon in task switcher)
 icon_file = os.path.join(current_folder_path, 'assets', 'toshy_app_icon_rainbow_512px.png')
 
-app_icon_image_path = tk.PhotoImage(file = icon_file)
-root.wm_iconphoto(False, app_icon_image_path)
+# app_icon_image_path = tk.PhotoImage(file = icon_file)
+# root.wm_iconphoto(False, app_icon_image_path)
+
+# Use Pillow to open the image, to make it work on CentOS 7
+image = Image.open(icon_file)
+app_icon_image = ImageTk.PhotoImage(image)
+root.wm_iconphoto(False, app_icon_image)
 
 # Set a font style to use for switch text
 switch_text_font_dict = {"family": "Helvetica", "size": 13}

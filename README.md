@@ -350,6 +350,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 - CentOS 7 (RHEL 7 clone) - Partial support:
 
     - You must first install `python3` to run `toshy_setup.py`
+    - GUI preferences app will not work (Tk too old for `sv_ttk` theme)
     - systemd "user" services are not supported in CentOS/RHEL 7
     - Auto-start at login with systemd services not available
     - Cmd+Space (Alt+F1) shortcut must be assigned to app launcher menu
@@ -809,11 +810,17 @@ Which RC file you need to `source` depends on your shell.
 
 In the case that the path was already added to the RC file, another way of getting a new environment where you can see the `toshy-*` commands is to just close your terminal window (or tab) and open a new one.  
 
-### Touchpads/Trackpads and `keyszer` Suspend Timer
+### Mod+clicking blocked by `keyszer` Suspend Timeout
 
-The `keyszer` (fork of `xkeysnail`) keymapper is pretty good, but there is an issue with [modifier key] + [tap or click] when using a touchpad versus a mouse. The keymapper uses a technique that "suspends" modifier key presses briefly (default is 1 second) to try and keep certain applications from seeing those modifier presses and performing some unwanted action. Notable apps that have issues with doing the wrong thing just from seeing a modifier key press are Visual Studio Code (and it's more Open Source variants VSCodium and Code - OSS) and the Firefox web browser. They will frequently focus or open items on the menu bar then they see the `Option/Alt` key in any way.  
+The `keyszer` (fork of `xkeysnail`) keymapper is pretty good, but there can be an issue with [modifier key] + [tap or click], depending on the type of pointing device you're using, and whether the keymapper automatically "grabs" it at startup.  
 
-The suspend timer scheme works well for mouse usage, letting you do things like `Alt+click`, `Ctrl+click/Cmd+click` and `Shift+click`, but with a touchpad, you may need to reduce the one-second timer to zero or 0.1 seconds in order for those operations to work as you would expect. Look for this near the top of the `toshy_config.py` file:  
+The keymapper uses a technique that "suspends" modifier key presses briefly (default is 1 second) to try and keep certain applications from seeing the original (pre-modmapped) physical modifier key press event, and performing some unwanted action. Notable apps that have issues with doing the wrong thing just from seeing a modifier key press are `Visual Studio Code` (and its more Open Source variants `VSCodium` and `Code - OSS`) and the `Firefox` web browser. They will frequently focus or open items on the menu bar then they see the `Option/Alt` key in any way.  
+
+If the modifier key press is combined with a non-modifier key, the suspend timeout is immediately broken, and the app will see the combo. The suspend timeout is only in effect as long as the modifier is by itself, as happens in a Mod+click situation.  
+
+If the suspend timeout scheme is not working for you, you may need to reduce the timeout length to zero or 0.1 seconds in order for Mod+click operations (Shift+Cmd+click, Cmd+click, Shift+click, Alt+click, anything like that) to work as you would expect.  
+
+Look for this API function near the top of the `toshy_config.py` file:  
 
 ```py
 timeouts(
