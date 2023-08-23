@@ -659,7 +659,8 @@ def install_distro_pkgs():
                         subprocess.run(yum_cmd_lst + scl_repo, check=True)
                         py38_pkgs = [   'rh-python38',
                                         'rh-python38-python-devel',
-                                        'rh-python38-python-tkinter'    ]
+                                        'rh-python38-python-tkinter',
+                                        'rh-python38-python-wheel-wheel'    ]
                         subprocess.run(yum_cmd_lst + py38_pkgs, check=True)
                         #
                         # set new Python interpreter version and path to reflect what was installed
