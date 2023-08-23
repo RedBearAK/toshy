@@ -655,9 +655,12 @@ def install_distro_pkgs():
                             f"'{cnfg.py_interp_ver}'")
                 else:
                     try:
-                        centos7_pkgs = ['centos-release-scl', 'rh-python38',
-                                        'rh-python38-python-devel', 'rh-python38-python-tkinter']
-                        subprocess.run(yum_cmd_lst + centos7_pkgs, check=True)
+                        scl_repo = ['centos-release-scl']
+                        subprocess.run(yum_cmd_lst + scl_repo, check=True)
+                        py38_pkgs = [   'rh-python38',
+                                        'rh-python38-python-devel',
+                                        'rh-python38-python-tkinter'    ]
+                        subprocess.run(yum_cmd_lst + py38_pkgs, check=True)
                         #
                         # set new Python interpreter version and path to reflect what was installed
                         cnfg.py_interp_path = '/opt/rh/rh-python38/root/usr/bin/python3.8'
