@@ -338,6 +338,498 @@ def do_kwin_reconfigure():
         error(f'Error while running KWin reconfigure.\n\t{proc_err}')
 
 
+distro_groups_map = {
+    # 'test-based':      ["test"],
+    'test-based':      ["test"],
+
+    # separate references for RHEL types versus Fedora types
+    'fedora-based':    ["fedora", "fedoralinux", "ultramarine", "nobara", "silverblue-experimental"],
+    'rhel-based':      ["rhel", "almalinux", "rocky", "eurolinux", "centos"],
+
+    # separate references for Tumbleweed types versus Leap types
+    'tumbleweed-based':["opensuse-tumbleweed"],
+    'leap-based':      ["opensuse-leap"],
+
+    'mandriva-based':  ["openmandriva", "mageia"],
+
+    'ubuntu-based':    ["ubuntu", "mint", "popos", "elementary", "neon", "tuxedo", "zorin"],
+    'debian-based':    ["lmde", "peppermint", "debian", "kali", "q4os"],
+
+    'arch-based':      ["arch", "arcolinux", "endeavouros", "manjaro"],
+    'solus-based':     ["solus"],
+    # Add more as needed...
+}
+
+pkg_groups_map = {
+    # 'test-based':      ["git"],
+    'test-based':      ["git"],
+
+    'fedora-based':    ["cairo-devel", "cairo-gobject-devel",
+                        "evtest",
+                        "gcc", "git",
+                        "dbus-daemon", "dbus-devel",
+                        "gobject-introspection-devel",
+                        "libappindicator-gtk3", "libnotify",
+                        "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
+                        "systemd-devel",
+                        "xset",
+                        "zenity"],
+
+    'rhel-based':      ["cairo-devel", "cairo-gobject-devel",
+                        "dbus-daemon", "dbus-devel",
+                        "gcc", "git", "gobject-introspection-devel",
+                        "libappindicator-gtk3", "libnotify",
+                        "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
+                        "systemd-devel",
+                        "xset",
+                        "zenity"],
+
+    # openSUSE (Tumbleweed, not applicable to Leap):
+    # How to get rid of the need to use specific version numbers in packages: 
+    # pkgconfig(packagename)>=N.nn (version symbols optional)
+    # How to query a package to see what the equivalent pkgconfig(packagename) syntax would be:
+    # rpm -q --provides packagename | grep -i pkgconfig
+    'tumbleweed-based':["cairo-devel",
+                        "dbus-1-daemon", "dbus-1-devel",
+                        "gcc", "git", "gobject-introspection-devel",
+                        "libappindicator3-devel", "libnotify-tools",
+                        # f"python{py_pkg_ver}-dbus-python-devel",
+                        "python3-dbus-python-devel",
+                        # f"python{py_pkg_ver}-devel",
+                        "python3-devel",
+                        # f"python{py_pkg_ver}-tk",
+                        "python3-tk",
+                        "systemd-devel",
+                        "tk", "typelib-1_0-AyatanaAppIndicator3-0_1",
+                        "zenity"],
+
+    # TODO: update Leap Python package versions as it makes newer Python available
+    'leap-based':      ["cairo-devel",
+                        "dbus-1-devel",
+                        "gcc", "git", "gobject-introspection-devel",
+                        "libappindicator3-devel", "libnotify-tools",
+                        "python3-dbus-python-devel",
+                        "python311",
+                        "python311-devel",
+                        "python311-tk",
+                        "systemd-devel",
+                        "tk", "typelib-1_0-AyatanaAppIndicator3-0_1",
+                        "zenity"],
+
+    'mandriva-based':  ["cairo-devel",
+                        "dbus-daemon", "dbus-devel",
+                        "git", "gobject-introspection-devel",
+                        "lib64ayatana-appindicator3_1", "lib64ayatana-appindicator3-gir0.1",
+                        "lib64cairo-gobject2", "lib64python-devel", "lib64systemd-devel",
+                        "libnotify",
+                        "python-dbus", "python-dbus-devel", "python-ensurepip", "python3-pip",
+                        "task-devel", "tkinter",
+                        "xset",
+                        "zenity"],
+
+    # TODO: see if this needs "dbus-daemon" added as dependency (for containers)
+    'ubuntu-based':    ["curl",
+                        "git", "gir1.2-ayatanaappindicator3-0.1",
+                        "input-utils",
+                        "libcairo2-dev", "libdbus-1-dev", "libgirepository1.0-dev",
+                        "libnotify-bin", "libsystemd-dev",
+                        "python3-dbus", "python3-dev", "python3-pip", "python3-tk", "python3-venv",
+                        "zenity"],
+
+    # TODO: see if this needs "dbus-daemon" added as dependency (for containers)
+    'debian-based':    ["curl",
+                        "git", "gir1.2-ayatanaappindicator3-0.1",
+                        "input-utils",
+                        "libcairo2-dev", "libdbus-1-dev", "libgirepository1.0-dev",
+                        "libnotify-bin", "libsystemd-dev",
+                        "python3-dbus", "python3-dev", "python3-pip", "python3-tk", "python3-venv",
+                        "zenity"],
+
+    # TODO: see if this needs "dbus-daemon" added as dependency (for containers)
+    'arch-based':      ["cairo",
+                        "dbus",
+                        "evtest",
+                        "git", "gobject-introspection",
+                        "libappindicator-gtk3", "libnotify",
+                        "pkg-config", "python", "python-dbus", "python-pip",
+                        "systemd",
+                        "tk",
+                        "zenity"],
+
+    # TODO: see if this needs "dbus-daemon" added as dependency (for containers)
+    'solus-based':     ["gcc", "git",
+                        "libayatana-appindicator", "libcairo-devel", "libnotify",
+                        "pip", "python3-dbus", "python3-devel", "python3-tkinter",
+                        "python-dbus-devel", "python-gobject-devel",
+                        "systemd-devel",
+                        "zenity"],
+}
+
+extra_pkgs_map = {
+    # Add a distro name (ID) and its additional packages here as needed
+    # 'distro_name': ["pkg1", "pkg2", ...],
+}
+
+
+def get_distro_names():
+    """Utility function to return list of available distro names (IDs)"""
+    distro_list = []
+    for group in distro_groups_map.values():
+        distro_list.extend(group)
+    sorted_distro_list = sorted(distro_list)
+    prev_char: str = sorted_distro_list[0][0]
+    # start index with the initial letter
+    distro_index = prev_char.upper() + ": "
+    for distro in sorted_distro_list:
+        if distro[0] != prev_char:
+            # type hint to help out VSCode syntax highlighter
+            distro: str
+            # remove last comma and space from previous line
+            distro_index = distro_index[:-2]
+            # start a new line with new initial letter
+            distro_index += "\n\t" + distro[0].upper() + ": " + distro + ", "
+            prev_char = distro[0]
+        else:
+            distro_index += distro + ", "
+    # remove last comma and space from the final line
+    distro_index = distro_index[:-2]
+    return distro_index
+
+
+def exit_with_invalid_distro_error():
+    print()
+    error(f"ERROR: Installer does not know how to handle distro: {cnfg.DISTRO_NAME}")
+    print(f'Try some options in "./toshy_setup.py --help".')
+    print(f'Maybe try one of these with "--override-distro" option:\n\t{get_distro_names()}')
+    safe_shutdown(1)
+
+
+def install_distro_pkgs():
+    """Install needed packages from list for distro type"""
+    print(f'\n\n§  Installing native packages for this distro type...\n{cnfg.separator}')
+
+    pkg_group = None
+    for group, distros in distro_groups_map.items():
+        if cnfg.DISTRO_NAME in distros:
+            pkg_group = group
+            break
+
+    if pkg_group is None:
+        print()
+        print(f"ERROR: No list of packages found for this distro: '{cnfg.DISTRO_NAME}'")
+        print(f'Installation cannot proceed without a list of packages. Sorry.')
+        print(f'Try some options in "./toshy_setup.py --help"')
+        safe_shutdown(1)
+
+    cnfg.pkgs_for_distro: list = pkg_groups_map[pkg_group]
+
+    # Add extra packages for specific distros
+    if cnfg.DISTRO_NAME in extra_pkgs_map:
+        cnfg.pkgs_for_distro.extend(extra_pkgs_map[cnfg.DISTRO_NAME])
+
+    # Filter out systemd packages if not present
+    cnfg.pkgs_for_distro = [
+        pkg for pkg in cnfg.pkgs_for_distro 
+        if cnfg.systemctl_present or 'systemd' not in pkg
+    ]
+
+    # test_distros    = distro_groups_map['test-based']
+    # dnf_distros     = distro_groups_map['fedora-based'] + distro_groups_map['rhel-based'] + distro_groups_map['mandriva-based']
+    # zypper_distros  = distro_groups_map['tumbleweed-based'] + distro_groups_map['leap-based']
+    # apt_distros     = distro_groups_map['ubuntu-based'] + distro_groups_map['debian-based']
+    # pacman_distros  = distro_groups_map['arch-based']
+    # eopkg_distros   = distro_groups_map['solus-based']
+
+    test_distros        = []
+    dnf_distros         = []
+    zypper_distros      = []
+    apt_distros         = []
+    pacman_distros      = []
+    eopkg_distros       = []
+
+    test_distros        += distro_groups_map['test-based']
+    dnf_distros         += distro_groups_map['fedora-based']
+    dnf_distros         += distro_groups_map['rhel-based']
+    dnf_distros         += distro_groups_map['mandriva-based']
+    zypper_distros      += distro_groups_map['tumbleweed-based']
+    zypper_distros      += distro_groups_map['leap-based']
+    apt_distros         += distro_groups_map['ubuntu-based']
+    apt_distros         += distro_groups_map['debian-based']
+    pacman_distros      += distro_groups_map['arch-based']
+    eopkg_distros       += distro_groups_map['solus-based']
+
+    def check_for_pkg_mgr_cmd(command):
+        """make sure native package installer command exists before using it, or exit"""
+        pkg_mgr_cmd = command
+        if not shutil.which(pkg_mgr_cmd):
+            print()
+            error(f'Package manager command ({pkg_mgr_cmd}) not available. Unable to continue.')
+            safe_shutdown(1)
+
+    def exit_with_pkg_install_error(proc_err):
+        """shutdown with error message if there is a problem with installing package list"""
+        print()
+        error(f'ERROR: Problem installing package list for distro type:\n\t{proc_err}')
+        safe_shutdown(1)
+
+    def show_pkg_install_success():
+        # Have something come out even if package list is empty (like Arch after initial run)
+        print('All necessary native distro packages are installed.')
+
+    distro_major_ver = cnfg.DISTRO_VER[0] if cnfg.DISTRO_VER else 'NO_VER'
+
+    # if cnfg.DISTRO_NAME in test_distros:
+    #     print(f"Identified a distro named: '{cnfg.DISTRO_NAME}'")
+    #     call_attention_to_password_prompt()
+    #     # add new installer logic here to test an unknown distro type
+    #     check_for_pkg_mgr_cmd('package_manager_command')
+    #     command_lst = ['sudo', 'package_manager_command', 'arg1', 'arg2']
+    #     try:
+    #         subprocess.run(command_lst + cnfg.pkgs_for_distro, check=True)
+    #     except subprocess.CalledProcessError as proc_err:
+    #         exit_with_pkg_install_error(proc_err)
+
+    if cnfg.DISTRO_NAME in test_distros:
+        print(f"Identified a distro named: '{cnfg.DISTRO_NAME}'")
+        call_attention_to_password_prompt()
+        # add new installer logic here to test an unknown distro type
+        check_for_pkg_mgr_cmd('package_manager_command')
+        command_lst = ['sudo', 'package_manager_command', 'arg1', 'arg2']
+        try:
+            subprocess.run(command_lst + cnfg.pkgs_for_distro, check=True)
+        except subprocess.CalledProcessError as proc_err:
+            exit_with_pkg_install_error(proc_err)
+
+    if cnfg.DISTRO_NAME in dnf_distros:
+
+        # do extra stuff only if distro is a RHEL type (not Fedora type)
+        if cnfg.DISTRO_NAME in distro_groups_map['rhel-based']:
+            print('Doing prep/checks for RHEL-type distro...')
+            call_attention_to_password_prompt()
+
+            # do extra prep/checks if distro is CentOS Stream 8
+            if cnfg.DISTRO_NAME in ['centos'] and cnfg.DISTRO_VER[0] in ['8']:
+                print('Doing prep/checks for CentOS Stream 8...')
+                min_minor = curr_py_rel_ver_minor - 3           # check up to 3 vers before current
+                max_minor = curr_py_rel_ver_minor + 3           # check up to 3 vers after current
+                py_minor_ver_rng = range(max_minor, min_minor, -1)
+                if py_interp_ver_tup < curr_py_rel_ver_tup:
+                    print(f"Checking for appropriate Python version on system...")
+                    for check_py_minor_ver in py_minor_ver_rng:
+                        if shutil.which(f'python3.{check_py_minor_ver}'):
+                            cnfg.py_interp_path = shutil.which(f'python3.{check_py_minor_ver}')
+                            cnfg.py_interp_ver = f'3.{check_py_minor_ver}'
+                            print(f'Found Python version {cnfg.py_interp_ver} available.')
+                            break
+                    else:
+                        error(  f'ERROR: Did not find any appropriate Python interpreter version.')
+                        safe_shutdown(1)
+                try:
+                    # for dbus-python
+                    subprocess.run(['sudo', 'dnf', 'install', '-y',
+                                    f'python{cnfg.py_interp_ver}-devel'], check=True)
+                    # for Toshy Preferences GUI app
+                    subprocess.run(['sudo', 'dnf', 'install', '-y',
+                                    f'python{cnfg.py_interp_ver}-tkinter'], check=True)
+                except subprocess.CalledProcessError as proc_err:
+                    error(f'ERROR: Problem installing necessary packages on CentOS Stream 8:'
+                            f'\n\t{proc_err}')
+                    safe_shutdown(1)
+
+            # do extra prep/checks if distro is CentOS 7
+            if (cnfg.DISTRO_NAME in ['centos'] and 
+                cnfg.DISTRO_VER and 
+                cnfg.DISTRO_VER[0] == '7'):
+                print('Doing prep/checks for CentOS 7...')
+
+                # remove 'dbus-daemon' from package list, not available on CentOS 7
+                pkgs_to_remove = ['dbus-daemon']
+                for pkg in pkgs_to_remove:
+                    if pkg in cnfg.pkgs_for_distro:
+                        cnfg.pkgs_for_distro.remove(pkg)
+
+                check_for_pkg_mgr_cmd('yum')
+                yum_cmd_lst = ['sudo', 'yum', 'install', '-y']
+                if py_interp_ver_tup >= (3, 8):
+                    print(f"Good, Python version is 3.8 or later: "
+                            f"'{cnfg.py_interp_ver}'")
+                else:
+                    try:
+                        scl_repo = ['centos-release-scl']
+                        subprocess.run(yum_cmd_lst + scl_repo, check=True)
+                        py38_pkgs = [   'rh-python38',
+                                        'rh-python38-python-devel',
+                                        'rh-python38-python-tkinter',
+                                        'rh-python38-python-wheel-wheel'    ]
+                        subprocess.run(yum_cmd_lst + py38_pkgs, check=True)
+                        #
+                        # set new Python interpreter version and path to reflect what was installed
+                        cnfg.py_interp_path = '/opt/rh/rh-python38/root/usr/bin/python3.8'
+                        cnfg.py_interp_ver  = '3.8'
+                        # avoid using systemd packages/services for CentOS
+                        cnfg.systemctl_present = False
+                    except subprocess.CalledProcessError as proc_err:
+                        print()
+                        error(f'ERROR: (CentOS 7-specific) Problem installing/enabling Python 3.8:'
+                                f'\n\t{proc_err}')
+                        safe_shutdown(1)
+                # use yum to install dnf package manager
+                try:
+                    subprocess.run(yum_cmd_lst + ['dnf'], check=True)
+                except subprocess.CalledProcessError as proc_err:
+                    print()
+                    error(f'ERROR: Failed to install DNF package manager.\n\t{proc_err}')
+                    safe_shutdown(1)
+
+            # for libappindicator-gtk3: sudo dnf install -y epel-release
+            try:
+                check_for_pkg_mgr_cmd('dnf')
+                subprocess.run(['sudo', 'dnf', 'install', '-y', 'epel-release'], check=True)
+                # subprocess.run(['sudo', 'dnf', 'update', '-y'], check=True)
+                subprocess.run(['sudo', 'dnf', 'makecache'], check=True)
+            except subprocess.CalledProcessError as proc_err:
+                print()
+                error(f'ERROR: Failed to add "epel-release" repo.\n\t{proc_err}')
+                safe_shutdown(1)
+
+            if ( not (  cnfg.DISTRO_NAME == 'centos' and 
+                        distro_major_ver in ['7', '8']    ) and 
+                        distro_major_ver in ['9'] ):
+                #
+                # enable "CodeReady Builder" repo for 'gobject-introspection-devel' only on RHEL 9.x:
+                # sudo dnf config-manager --set-enabled crb
+                subprocess.run(['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb'])
+
+            # Need to do this AFTER the 'epel-release' install
+            if (  cnfg.DISTRO_NAME != 'centos' and 
+                    distro_major_ver in ['8']):
+                # enable CRB repo on RHEL 8.x distros:
+                subprocess.run(['sudo', '/usr/bin/crb', 'enable'])
+                #
+                # TODO: Adjust this list according to "current" stable release Python in middle
+                potential_versions = ['3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
+                #
+                for version in potential_versions:
+                    # check if the version is already installed
+                    if shutil.which(f'python{version}'):
+                        cnfg.py_interp_path = f'/usr/bin/python{version}'
+                        cnfg.py_interp_ver  = version
+                        break
+                    # try to install the corresponding package
+                    try:
+                        subprocess.run(['sudo', 'dnf', 'install', '-y',
+                                        f'python{version}',
+                                        f'python{version}-devel',
+                                        f'python{version}-tkinter'],
+                                        check=True)
+                        # if the installation succeeds, set the interpreter path and version
+                        cnfg.py_interp_path = f'/usr/bin/python{version}'
+                        cnfg.py_interp_ver  = version
+                        break
+                    # if the installation fails, continue with the next version
+                    except subprocess.CalledProcessError:
+                        print(f'No match for potential Python version {version}.')
+                        continue
+                else:
+                    # if no suitable version was found, print an error message and exit
+                    error('ERROR: Did not find any appropriate Python interpreter version.')
+                    safe_shutdown(1)
+
+        # finally, do the install of the main list of packages for Fedora/RHEL distro types
+        if cnfg.DISTRO_NAME in distro_groups_map['rhel-based'] + distro_groups_map['fedora-based']:
+            try:
+                call_attention_to_password_prompt()
+                if cnfg.DISTRO_NAME == 'silverblue-experimental':
+                    check_for_pkg_mgr_cmd('rpm-ostree')
+                    print(f'Distro is Silverblue type. Using "rpm-ostree" instead of DNF.')
+
+                    # set up a toolbox to install software inside (the normal way) on Silverblue types
+                    # all launcher shell scripts will need to be changed to "enter" the named toolbox!
+                    
+                    # toolbox_name = "toshy_toolbox"
+                    # subprocess.run(["toolbox", "create", "-y", "-c", toolbox_name])
+                    # subprocess.run(["toolbox", "run", "-c", toolbox_name, "dnf", "install", "-y", "python3-dbus", "python3-devel"])
+
+                    subprocess.run(['sudo', 'rpm-ostree', 'install', 
+                                    '--idempotent', '--allow-inactive', 
+                                    '--apply-live', '-y'] + cnfg.pkgs_for_distro, check=True)
+                else:
+                    check_for_pkg_mgr_cmd('dnf')    # if we get here, 'dnf' should also exist on CentOS 7
+                    subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro,
+                                    check=True)
+                show_pkg_install_success()
+                return
+            except subprocess.CalledProcessError as proc_err:
+                exit_with_pkg_install_error(proc_err)
+                
+        if cnfg.DISTRO_NAME in distro_groups_map['mandriva-based']:
+            try:
+                call_attention_to_password_prompt()
+                check_for_pkg_mgr_cmd('dnf')
+                cmd_lst = ['sudo', 'dnf', 'install', '-y']
+                subprocess.run(cmd_lst + cnfg.pkgs_for_distro, check=True)
+            except subprocess.CalledProcessError as proc_err:
+                exit_with_pkg_install_error(proc_err)
+            show_pkg_install_success()
+            return
+
+    elif cnfg.DISTRO_NAME in zypper_distros:
+        check_for_pkg_mgr_cmd('zypper')
+        call_attention_to_password_prompt()
+        try:
+            subprocess.run(['sudo', 'zypper', '--non-interactive', 'install'] + cnfg.pkgs_for_distro,
+                            check=True)
+            show_pkg_install_success()
+            return
+        except subprocess.CalledProcessError as proc_err:
+            exit_with_pkg_install_error(proc_err)
+
+    elif cnfg.DISTRO_NAME in apt_distros:
+        check_for_pkg_mgr_cmd('apt')
+        call_attention_to_password_prompt()
+        try:
+            subprocess.run(['sudo', 'apt', 'install', '-y'] + cnfg.pkgs_for_distro, check=True)
+            show_pkg_install_success()
+            return
+        except subprocess.CalledProcessError as proc_err:
+            exit_with_pkg_install_error(proc_err)
+
+    elif cnfg.DISTRO_NAME in pacman_distros:
+        check_for_pkg_mgr_cmd('pacman')
+
+        def is_pkg_installed_pacman(package):
+            result = subprocess.run(['pacman', '-Q', package], stdout=DEVNULL, stderr=DEVNULL)
+            return result.returncode == 0
+
+        pkgs_to_install = [
+            pkg
+            for pkg in cnfg.pkgs_for_distro
+            if not is_pkg_installed_pacman(pkg)
+        ]
+        if pkgs_to_install:
+            call_attention_to_password_prompt()
+            try:
+                subprocess.run(['sudo', 'pacman', '-S', '--noconfirm'] + pkgs_to_install, check=True)
+                show_pkg_install_success()
+                return
+            except subprocess.CalledProcessError as proc_err:
+                exit_with_pkg_install_error(proc_err)
+
+    elif cnfg.DISTRO_NAME in eopkg_distros:
+        check_for_pkg_mgr_cmd('eopkg')
+        call_attention_to_password_prompt()
+        try:
+            subprocess.run(['sudo', 'eopkg', 'install', '-y', '-c', 'system.devel'], check=True)
+            subprocess.run(['sudo', 'eopkg', 'install', '-y'] + cnfg.pkgs_for_distro, check=True)
+            show_pkg_install_success()
+            return
+        except subprocess.CalledProcessError as proc_err:
+            exit_with_pkg_install_error(proc_err)
+
+    else:
+        exit_with_invalid_distro_error()
+
+
 def load_uinput_module():
     """Check to see if `uinput` kernel module is loaded"""
 
@@ -484,477 +976,29 @@ def verify_user_groups():
         prompt_for_reboot()
 
 
-distro_groups_map = {
-    # 'test-based':      ["test"],
-    'test-based':      ["test"],
-
-    # separate references for RHEL types versus Fedora types
-    'fedora-based':    ["fedora", "fedoralinux", "ultramarine", "nobara", "silverblue-experimental"],
-    'rhel-based':      ["rhel", "almalinux", "rocky", "eurolinux", "centos"],
-
-    # separate references for Tumbleweed types versus Leap types
-    'tumbleweed-based':["opensuse-tumbleweed"],
-    'leap-based':      ["opensuse-leap"],
-
-    'mandriva-based':  ["openmandriva", "mageia"],
-
-    'ubuntu-based':    ["ubuntu", "mint", "popos", "elementary", "neon", "tuxedo", "zorin"],
-    'debian-based':    ["lmde", "peppermint", "debian", "kali", "q4os"],
-    'arch-based':      ["arch", "arcolinux", "endeavouros", "manjaro"],
-    'solus-based':     ["solus"],
-    # Add more as needed...
-}
-
-pkg_groups_map = {
-    # 'test-based':      ["git"],
-    'test-based':      ["git"],
-
-    'fedora-based':    ["cairo-devel", "cairo-gobject-devel",
-                        "evtest",
-                        "gcc", "git",
-                        "dbus-daemon", "dbus-devel",
-                        "gobject-introspection-devel",
-                        "libappindicator-gtk3", "libnotify",
-                        "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
-                        "systemd-devel",
-                        "xset",
-                        "zenity"],
-
-    'rhel-based':      ["cairo-devel", "cairo-gobject-devel",
-                        "dbus-daemon", "dbus-devel",
-                        "gcc", "git", "gobject-introspection-devel",
-                        "libappindicator-gtk3", "libnotify",
-                        "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
-                        "systemd-devel",
-                        "xset",
-                        "zenity"],
-
-    # openSUSE:
-    # How to get rid of the need to use specific version numbers in packages: 
-    # pkgconfig(packagename)>=N.nn (version symbols optional)
-    # How to query a package to see what the equivalent pkgconfig(packagename) syntax would be:
-    # rpm -q --provides packagename | grep -i pkgconfig
-    'tumbleweed-based':["cairo-devel",
-                        "dbus-1-daemon", "dbus-1-devel",
-                        "gcc", "git", "gobject-introspection-devel",
-                        "libappindicator3-devel", "libnotify-tools",
-                        # f"python{py_pkg_ver}-dbus-python-devel",
-                        "python3-dbus-python-devel",
-                        # f"python{py_pkg_ver}-devel",
-                        "python3-devel",
-                        # f"python{py_pkg_ver}-tk",
-                        "python3-tk",
-                        "systemd-devel",
-                        "tk", "typelib-1_0-AyatanaAppIndicator3-0_1",
-                        "zenity"],
-
-    # TODO: update Leap Python package versions as it makes newer Python available
-    'leap-based':      ["cairo-devel",
-                        "dbus-1-devel",
-                        "gcc", "git", "gobject-introspection-devel",
-                        "libappindicator3-devel", "libnotify-tools",
-                        "python3-dbus-python-devel",
-                        "python311",
-                        "python311-devel",
-                        "python311-tk",
-                        "systemd-devel",
-                        "tk", "typelib-1_0-AyatanaAppIndicator3-0_1",
-                        "zenity"],
-
-    'mandriva-based':  ["cairo-devel",
-                        "dbus-daemon", "dbus-devel",
-                        "git", "gobject-introspection-devel",
-                        "lib64ayatana-appindicator3_1", "lib64ayatana-appindicator3-gir0.1",
-                        "lib64cairo-gobject2", "lib64python-devel", "lib64systemd-devel",
-                        "libnotify",
-                        "python-dbus", "python-dbus-devel", "python-ensurepip", "python3-pip",
-                        "task-devel", "tkinter",
-                        "xset",
-                        "zenity"],
-
-    'ubuntu-based':    ["curl",
-                        "git", "gir1.2-ayatanaappindicator3-0.1",
-                        "input-utils",
-                        "libcairo2-dev", "libdbus-1-dev", "libgirepository1.0-dev",
-                        "libnotify-bin", "libsystemd-dev",
-                        "python3-dbus", "python3-dev", "python3-pip", "python3-tk", "python3-venv",
-                        "zenity"],
-
-    'debian-based':    ["curl",
-                        "git", "gir1.2-ayatanaappindicator3-0.1",
-                        "input-utils",
-                        "libcairo2-dev", "libdbus-1-dev", "libgirepository1.0-dev",
-                        "libnotify-bin", "libsystemd-dev",
-                        "python3-dbus", "python3-dev", "python3-pip", "python3-tk", "python3-venv",
-                        "zenity"],
-
-    'arch-based':      ["cairo",
-                        "dbus",
-                        "evtest",
-                        "git", "gobject-introspection",
-                        "libappindicator-gtk3", "libnotify",
-                        "pkg-config", "python", "python-dbus", "python-pip",
-                        "systemd",
-                        "tk",
-                        "zenity"],
-
-    'solus-based':     ["gcc", "git",
-                        "libayatana-appindicator", "libcairo-devel", "libnotify",
-                        "pip", "python3-dbus", "python3-devel", "python3-tkinter",
-                        "python-dbus-devel", "python-gobject-devel",
-                        "systemd-devel",
-                        "zenity"],
-}
-
-extra_pkgs_map = {
-    # Add a distro name (ID) and its additional packages here as needed
-    # 'distro_name': ["pkg1", "pkg2", ...],
-}
-
-
-def install_distro_pkgs():
-    """Install needed packages from list for distro type"""
-    print(f'\n\n§  Installing native packages for this distro type...\n{cnfg.separator}')
-
-    pkg_group = None
-    for group, distros in distro_groups_map.items():
-        if cnfg.DISTRO_NAME in distros:
-            pkg_group = group
-            break
-
-    if pkg_group is None:
-        print()
-        print(f"ERROR: No list of packages found for this distro: '{cnfg.DISTRO_NAME}'")
-        print(f'Installation cannot proceed without a list of packages. Sorry.')
-        print(f'Try some options in "./toshy_setup.py --help"')
-        safe_shutdown(1)
-
-    cnfg.pkgs_for_distro: list = pkg_groups_map[pkg_group]
-
-    # Add extra packages for specific distros
-    if cnfg.DISTRO_NAME in extra_pkgs_map:
-        cnfg.pkgs_for_distro.extend(extra_pkgs_map[cnfg.DISTRO_NAME])
-
-    # Filter out systemd packages if not present
-    cnfg.pkgs_for_distro = [
-        pkg for pkg in cnfg.pkgs_for_distro 
-        if cnfg.systemctl_present or 'systemd' not in pkg
-    ]
-
-    # test_distros    = distro_groups_map['test-based']
-    # dnf_distros     = distro_groups_map['fedora-based'] + distro_groups_map['rhel-based'] + distro_groups_map['mandriva-based']
-    # zypper_distros  = distro_groups_map['tumbleweed-based'] + distro_groups_map['leap-based']
-    # apt_distros     = distro_groups_map['ubuntu-based'] + distro_groups_map['debian-based']
-    # pacman_distros  = distro_groups_map['arch-based']
-    # eopkg_distros   = distro_groups_map['solus-based']
-
-    test_distros        = []
-    dnf_distros         = []
-    zypper_distros      = []
-    apt_distros         = []
-    pacman_distros      = []
-    eopkg_distros       = []
-
-    test_distros        += distro_groups_map['test-based']
-    dnf_distros         += distro_groups_map['fedora-based']
-    dnf_distros         += distro_groups_map['rhel-based']
-    dnf_distros         += distro_groups_map['mandriva-based']
-    zypper_distros      += distro_groups_map['tumbleweed-based']
-    zypper_distros      += distro_groups_map['leap-based']
-    apt_distros         += distro_groups_map['ubuntu-based']
-    apt_distros         += distro_groups_map['debian-based']
-    pacman_distros      += distro_groups_map['arch-based']
-    eopkg_distros       += distro_groups_map['solus-based']
-
-    def check_for_pkg_mgr_cmd(command):
-        """make sure native package installer command exists before using it, or exit"""
-        pkg_mgr_cmd = command
-        if not shutil.which(pkg_mgr_cmd):
-            print()
-            error(f'Package manager command ({pkg_mgr_cmd}) not available. Unable to continue.')
-            safe_shutdown(1)
-
-    def exit_with_pkg_install_error(proc_err):
-        """shutdown with error message if there is a problem with installing package list"""
-        print()
-        error(f'ERROR: Problem installing package list for distro type:\n\t{proc_err}')
-        safe_shutdown(1)
-
-    def show_pkg_install_success():
-        # Have something come out even if package list is empty (like Arch after initial run)
-        print('All necessary native distro packages are installed.')
-
-    distro_major_ver = cnfg.DISTRO_VER[0] if cnfg.DISTRO_VER else 'NO_VER'
-
-    # if cnfg.DISTRO_NAME in test_distros:
-    #     print(f"Identified a distro named: '{cnfg.DISTRO_NAME}'")
-    #     call_attention_to_password_prompt()
-    #     # add new installer logic here to test an unknown distro type
-    #     check_for_pkg_mgr_cmd('package_manager_command')
-    #     command_lst = ['sudo', 'package_manager_command', 'arg1', 'arg2']
-    #     try:
-    #         subprocess.run(command_lst + cnfg.pkgs_for_distro, check=True)
-    #     except subprocess.CalledProcessError as proc_err:
-    #         exit_with_pkg_install_error(proc_err)
-
-    if cnfg.DISTRO_NAME in test_distros:
-        print(f"Identified a distro named: '{cnfg.DISTRO_NAME}'")
-        call_attention_to_password_prompt()
-        # add new installer logic here to test an unknown distro type
-        check_for_pkg_mgr_cmd('package_manager_command')
-        command_lst = ['sudo', 'package_manager_command', 'arg1', 'arg2']
-        try:
-            subprocess.run(command_lst + cnfg.pkgs_for_distro, check=True)
-        except subprocess.CalledProcessError as proc_err:
-            exit_with_pkg_install_error(proc_err)
-
-    if cnfg.DISTRO_NAME in dnf_distros:
-
-        # do extra stuff only if distro is a RHEL type (not Fedora type)
-        if cnfg.DISTRO_NAME in distro_groups_map['rhel-based']:
-            print('Doing prep/checks for RHEL-type distro...')
-            call_attention_to_password_prompt()
-
-            # do extra prep/checks if distro is CentOS Stream 8
-            if cnfg.DISTRO_NAME in ['centos'] and cnfg.DISTRO_VER[0] in ['8']:
-                print('Doing prep/checks for CentOS Stream 8...')
-                min_minor = curr_py_rel_ver_minor - 3           # check up to 3 vers before current
-                max_minor = curr_py_rel_ver_minor + 3           # check up to 3 vers after current
-                py_minor_ver_rng = range(max_minor, min_minor, -1)
-                if py_interp_ver_tup < curr_py_rel_ver_tup:
-                    print(f"Checking for appropriate Python version on system...")
-                    for check_py_minor_ver in py_minor_ver_rng:
-                        if shutil.which(f'python3.{check_py_minor_ver}'):
-                            cnfg.py_interp_path = shutil.which(f'python3.{check_py_minor_ver}')
-                            cnfg.py_interp_ver = f'3.{check_py_minor_ver}'
-                            print(f'Found Python version {cnfg.py_interp_ver} available.')
-                            break
-                    else:
-                        error(  f'ERROR: Did not find any appropriate Python interpreter version.')
-                        safe_shutdown(1)
-                try:
-                    # for dbus-python
-                    subprocess.run(['sudo', 'dnf', 'install', '-y',
-                                    f'python{cnfg.py_interp_ver}-devel'], check=True)
-                    # for Toshy Preferences GUI app
-                    subprocess.run(['sudo', 'dnf', 'install', '-y',
-                                    f'python{cnfg.py_interp_ver}-tkinter'], check=True)
-                except subprocess.CalledProcessError as proc_err:
-                    error(f'ERROR: Problem installing necessary packages on CentOS Stream 8:'
-                            f'\n\t{proc_err}')
-                    safe_shutdown(1)
-
-            # do extra prep/checks if distro is CentOS 7
-            if (cnfg.DISTRO_NAME in ['centos'] and 
-                cnfg.DISTRO_VER and 
-                cnfg.DISTRO_VER[0] == '7'):
-                print('Doing prep/checks for CentOS 7...')
-                # remove 'dbus-daemon' from package list, not available on CentOS 7
-                pkgs_to_remove = ['dbus-daemon']
-                for pkg in pkgs_to_remove:
-                    if pkg in cnfg.pkgs_for_distro:
-                        cnfg.pkgs_for_distro.remove(pkg)
-
-                if py_interp_ver_tup >= (3, 8):
-                    print(f"Good, Python version is 3.8 or later: "
-                            f"'{cnfg.py_interp_ver}'")
-                else:
-                    try:
-                        # sudo yum install -y centos-release-scl
-                        subprocess.run(['sudo', 'yum', 'install', '-y', 'centos-release-scl'],
-                                        check=True)
-                        # sudo yum install -y rh-python38
-                        subprocess.run(['sudo', 'yum', 'install', '-y', 'rh-python38'],
-                                        check=True)
-                        # sudo yum install rh-python38-python-devel
-                        subprocess.run(['sudo', 'yum', 'install', '-y', 'rh-python38-python-devel'],
-                                        check=True)
-                        # sudo yum install rh-python38-python-tkinter
-                        subprocess.run(['sudo', 'yum', 'install', '-y', 'rh-python38-python-tkinter'],
-                                        check=True)
-                        #
-                        # set new Python interpreter version and path to reflect what was installed
-                        cnfg.py_interp_path = '/opt/rh/rh-python38/root/usr/bin/python3.8'
-                        cnfg.py_interp_ver  = '3.8'
-                        # avoid using systemd packages/services for CentOS
-                        cnfg.systemctl_present = False
-                    except subprocess.CalledProcessError as proc_err:
-                        print()
-                        error(f'ERROR: (CentOS 7-specific) Problem installing/enabling Python 3.8:'
-                                f'\n\t{proc_err}')
-                        safe_shutdown(1)
-                # use yum to install dnf package manager
-                check_for_pkg_mgr_cmd('yum')
-                subprocess.run(['sudo', 'yum', 'install', '-y', 'dnf'])
-
-            # for libappindicator-gtk3: sudo dnf install -y epel-release
-            subprocess.run(['sudo', 'dnf', 'install', '-y', 'epel-release'])
-            subprocess.run(['sudo', 'dnf', 'update', '-y'])
-
-            if ( not (  cnfg.DISTRO_NAME == 'centos' and 
-                        distro_major_ver in ['7', '8']    ) and 
-                        distro_major_ver in ['9'] ):
-                #
-                # enable "CodeReady Builder" repo for 'gobject-introspection-devel' on RHEL 9.x:
-                # sudo dnf config-manager --set-enabled crb
-                subprocess.run(['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb'])
-
-            # Need to do this AFTER the 'epel-release' install
-            if (  cnfg.DISTRO_NAME != 'centos' and 
-                    distro_major_ver in ['8']):
-                # enable CRB repo on RHEL 8.x distros:
-                subprocess.run(['sudo', '/usr/bin/crb', 'enable'])
-                #
-                # TODO: Adjust this list according to "current" stable release Python in middle
-                potential_versions = ['3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
-                #
-                for version in potential_versions:
-                    # check if the version is already installed
-                    if shutil.which(f'python{version}'):
-                        cnfg.py_interp_path = f'/usr/bin/python{version}'
-                        cnfg.py_interp_ver  = version
-                        break
-                    # try to install the corresponding package
-                    try:
-                        subprocess.run(['sudo', 'dnf', 'install', '-y',
-                                        f'python{version}',
-                                        f'python{version}-devel',
-                                        f'python{version}-tkinter'],
-                                        check=True)
-                        # if the installation succeeds, set the interpreter path and version
-                        cnfg.py_interp_path = f'/usr/bin/python{version}'
-                        cnfg.py_interp_ver  = version
-                        break
-                    # if the installation fails, continue with the next version
-                    except subprocess.CalledProcessError:
-                        print(f'No match for potential Python version {version}.')
-                        continue
-                else:
-                    # if no suitable version was found, print an error message and exit
-                    error('ERROR: Did not find any appropriate Python interpreter version.')
-                    safe_shutdown(1)
-
-        # finally, do the install of the main list of packages for Fedora/RHEL distro types
-        if cnfg.DISTRO_NAME in distro_groups_map['rhel-based'] + distro_groups_map['fedora-based']:
-            try:
-                call_attention_to_password_prompt()
-                if cnfg.DISTRO_NAME == 'silverblue-experimental':
-                    check_for_pkg_mgr_cmd('rpm-ostree')
-                    print(f'Distro is Silverblue type. Using "rpm-ostree" instead of DNF.')
-
-                    # set up a toolbox to install software inside (the normal way) on Silverblue types
-                    # all launcher shell scripts will need to be changed to "enter" the named toolbox!
-                    
-                    # toolbox_name = "toshy_toolbox"
-                    # subprocess.run(["toolbox", "create", "-y", "-c", toolbox_name])
-                    # subprocess.run(["toolbox", "run", "-c", toolbox_name, "dnf", "install", "-y", "python3-dbus", "python3-devel"])
-
-                    subprocess.run(['sudo', 'rpm-ostree', 'install', 
-                                    '--idempotent', '--allow-inactive', 
-                                    '--apply-live', '-y'] + cnfg.pkgs_for_distro, check=True)
-                else:
-                    check_for_pkg_mgr_cmd('dnf')    # if we get here, 'dnf' should also exist on CentOS 7
-                    subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro,
-                                    check=True)
-                show_pkg_install_success()
-                return
-            except subprocess.CalledProcessError as proc_err:
-                exit_with_pkg_install_error(proc_err)
-                
-        if cnfg.DISTRO_NAME in distro_groups_map['mandriva-based']:
-            try:
-                call_attention_to_password_prompt()
-                check_for_pkg_mgr_cmd('dnf')
-                cmd_lst = ['sudo', 'dnf', 'install', '-y']
-                subprocess.run(cmd_lst + cnfg.pkgs_for_distro, check=True)
-            except subprocess.CalledProcessError as proc_err:
-                exit_with_pkg_install_error(proc_err)
-            show_pkg_install_success()
-            return
-
-    elif cnfg.DISTRO_NAME in zypper_distros:
-        check_for_pkg_mgr_cmd('zypper')
-        call_attention_to_password_prompt()
-        try:
-            subprocess.run(['sudo', 'zypper', '--non-interactive', 'install'] + cnfg.pkgs_for_distro,
-                            check=True)
-            show_pkg_install_success()
-            return
-        except subprocess.CalledProcessError as proc_err:
-            exit_with_pkg_install_error(proc_err)
-
-    elif cnfg.DISTRO_NAME in apt_distros:
-        check_for_pkg_mgr_cmd('apt')
-        call_attention_to_password_prompt()
-        try:
-            subprocess.run(['sudo', 'apt', 'install', '-y'] + cnfg.pkgs_for_distro, check=True)
-            show_pkg_install_success()
-            return
-        except subprocess.CalledProcessError as proc_err:
-            exit_with_pkg_install_error(proc_err)
-
-    elif cnfg.DISTRO_NAME in pacman_distros:
-        check_for_pkg_mgr_cmd('pacman')
-
-        def is_pkg_installed_pacman(package):
-            result = subprocess.run(['pacman', '-Q', package], stdout=DEVNULL, stderr=DEVNULL)
-            return result.returncode == 0
-
-        pkgs_to_install = [
-            pkg
-            for pkg in cnfg.pkgs_for_distro
-            if not is_pkg_installed_pacman(pkg)
-        ]
-        if pkgs_to_install:
-            call_attention_to_password_prompt()
-            try:
-                subprocess.run(['sudo', 'pacman', '-S', '--noconfirm'] + pkgs_to_install, check=True)
-                show_pkg_install_success()
-                return
-            except subprocess.CalledProcessError as proc_err:
-                exit_with_pkg_install_error(proc_err)
-
-    elif cnfg.DISTRO_NAME in eopkg_distros:
-        check_for_pkg_mgr_cmd('eopkg')
-        call_attention_to_password_prompt()
-        try:
-            subprocess.run(['sudo', 'eopkg', 'install', '-y', '-c', 'system.devel'], check=True)
-            subprocess.run(['sudo', 'eopkg', 'install', '-y'] + cnfg.pkgs_for_distro, check=True)
-            show_pkg_install_success()
-            return
-        except subprocess.CalledProcessError as proc_err:
-            exit_with_pkg_install_error(proc_err)
-
-    else:
-        print()
-        error(f"ERROR: Installer does not know how to handle distro: {cnfg.DISTRO_NAME}")
-        print(f'Try some options in "./toshy_setup.py --help".')
-        safe_shutdown(1)
-
-
-def get_distro_names():
-    """Utility function to return list of available distro names (IDs)"""
-    distro_list = []
-    for group in distro_groups_map.values():
-        distro_list.extend(group)
-    sorted_distro_list = sorted(distro_list)
-    prev_char: str = sorted_distro_list[0][0]
-    # start index with the initial letter
-    distro_index = prev_char.upper() + ": "
-    for distro in sorted_distro_list:
-        if distro[0] != prev_char:
-            # type hint to help out VSCode syntax highlighter
-            distro: str
-            # remove last comma and space from previous line
-            distro_index = distro_index[:-2]
-            # start a new line with new initial letter
-            distro_index += "\n\t" + distro[0].upper() + ": " + distro + ", "
-            prev_char = distro[0]
-        else:
-            distro_index += distro + ", "
-    # remove last comma and space from the final line
-    distro_index = distro_index[:-2]
-    return distro_index
+# def get_distro_names():
+#     """Utility function to return list of available distro names (IDs)"""
+#     distro_list = []
+#     for group in distro_groups_map.values():
+#         distro_list.extend(group)
+#     sorted_distro_list = sorted(distro_list)
+#     prev_char: str = sorted_distro_list[0][0]
+#     # start index with the initial letter
+#     distro_index = prev_char.upper() + ": "
+#     for distro in sorted_distro_list:
+#         if distro[0] != prev_char:
+#             # type hint to help out VSCode syntax highlighter
+#             distro: str
+#             # remove last comma and space from previous line
+#             distro_index = distro_index[:-2]
+#             # start a new line with new initial letter
+#             distro_index += "\n\t" + distro[0].upper() + ": " + distro + ", "
+#             prev_char = distro[0]
+#         else:
+#             distro_index += distro + ", "
+#     # remove last comma and space from the final line
+#     distro_index = distro_index[:-2]
+#     return distro_index
 
 
 def clone_keyszer_branch():
@@ -1189,7 +1233,7 @@ def install_toshy_files():
             print(f"Existing user customizations applied to the new config file.")
 
 
-def setup_python_virt_env():
+def setup_python_vir_env():
     """Setup a virtual environment to install Python packages"""
     print(f'\n\n§  Setting up the Python virtual environment...\n{cnfg.separator}')
     #
@@ -2011,12 +2055,8 @@ def main(cnfg: InstallerSettings):
 
     get_environment_info()
 
-    valid_distro_names = get_distro_names()
-    if cnfg.DISTRO_NAME not in valid_distro_names:
-        print()
-        print(f"Installer does not know how to deal with distro '{cnfg.DISTRO_NAME}'\n")
-        print(f'Maybe try one of these with "--override-distro" option:\n\t{valid_distro_names}')
-        safe_shutdown(1)
+    if cnfg.DISTRO_NAME not in get_distro_names():
+        exit_with_invalid_distro_error()
 
     elevate_privileges()
 
@@ -2032,7 +2072,7 @@ def main(cnfg: InstallerSettings):
     backup_toshy_config()
     install_toshy_files()
 
-    setup_python_virt_env()
+    setup_python_vir_env()
     install_pip_packages()
 
     install_bin_commands()
