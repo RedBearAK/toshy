@@ -513,6 +513,7 @@ keyboards_Apple = [
     'Mitsumi Electric Apple Extended USB Keyboard',
     'Magic Keyboard with Numeric Keypad',
     'Magic Keyboard',
+    'MX Keys Mac Keyboard',
 ]
 
 kbtype_lists = {
