@@ -347,7 +347,7 @@ distro_groups_map = {
     'tumbleweed-based':["opensuse-tumbleweed"],
     'leap-based':      ["opensuse-leap"],
 
-    'mandriva-based':  ["openmandriva", "mageia"],
+    'mandriva-based':  ["openmandriva"],
 
     'ubuntu-based':    ["ubuntu", "mint", "popos", "elementary", "neon", "tuxedo", "zorin"],
     'debian-based':    ["lmde", "peppermint", "debian", "kali", "q4os"],
