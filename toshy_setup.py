@@ -752,45 +752,16 @@ def install_distro_pkgs():
                 install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
                 return
 
-                # try:
-                #     call_attention_to_password_prompt()
-                #     check_for_pkg_mgr_cmd('rpm-ostree')
-                #     cmd_lst = ['sudo', 'rpm-ostree', 'install', '--idempotent',
-                #                 '--allow-inactive', '--apply-live', '-y']
-                #     subprocess.run(cmd_lst + cnfg.pkgs_for_distro, check=True)
-                #     show_pkg_install_success()
-                #     return
-                # except subprocess.CalledProcessError as proc_err:
-                #     exit_with_pkg_install_error(proc_err)
             else:
                 cmd_lst = ['sudo', 'dnf', 'install', '-y']
                 install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
                 return
-
-                # try:
-                #     check_for_pkg_mgr_cmd('dnf')    # if we get here, 'dnf' should also exist on CentOS 7
-                #     cmd_lst = ['sudo', 'dnf', 'install', '-y']
-                #     subprocess.run(cmd_lst + cnfg.pkgs_for_distro, check=True)
-                #     show_pkg_install_success()
-                #     return
-                # except subprocess.CalledProcessError as proc_err:
-                #     exit_with_pkg_install_error(proc_err)
 
         # OpenMandriva uses DNF, so it's here in the "dnf_distros" block
         if cnfg.DISTRO_NAME in distro_groups_map['mandriva-based']:
             cmd_lst = ['sudo', 'dnf', 'install', '-y']
             install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
             return
-
-            # try:
-            #     call_attention_to_password_prompt()
-            #     check_for_pkg_mgr_cmd('dnf')
-            #     cmd_lst = ['sudo', 'dnf', 'install', '-y']
-            #     subprocess.run(cmd_lst + cnfg.pkgs_for_distro, check=True)
-            #     show_pkg_install_success()
-            #     return
-            # except subprocess.CalledProcessError as proc_err:
-            #     exit_with_pkg_install_error(proc_err)
 
     ###########################################################################
     ###  ZYPPER DISTROS  ######################################################
@@ -800,16 +771,6 @@ def install_distro_pkgs():
         install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
         return
 
-        # call_attention_to_password_prompt()
-        # check_for_pkg_mgr_cmd('zypper')
-        # try:
-        #     cmd_lst = ['sudo', 'zypper', '--non-interactive', 'install']
-        #     subprocess.run(cmd_lst + cnfg.pkgs_for_distro, check=True)
-        #     show_pkg_install_success()
-        #     return
-        # except subprocess.CalledProcessError as proc_err:
-        #     exit_with_pkg_install_error(proc_err)
-
     ###########################################################################
     ###  APT DISTROS  #########################################################
     ###########################################################################
@@ -817,16 +778,6 @@ def install_distro_pkgs():
         cmd_lst = ['sudo', 'apt', 'install', '-y']
         install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
         return
-
-        # call_attention_to_password_prompt()
-        # check_for_pkg_mgr_cmd('apt')
-        # try:
-        #     cmd_lst = ['sudo', 'apt', 'install', '-y']
-        #     subprocess.run(cmd_lst + cnfg.pkgs_for_distro, check=True)
-        #     show_pkg_install_success()
-        #     return
-        # except subprocess.CalledProcessError as proc_err:
-        #     exit_with_pkg_install_error(proc_err)
 
     ###########################################################################
     ###  PACMAN DISTROS  ######################################################
@@ -849,16 +800,6 @@ def install_distro_pkgs():
             install_pkg_list(cmd_lst, pkgs_to_install)
             return
 
-            # try:
-            #     # Only need to prompt for password again if there are packages to install
-            #     call_attention_to_password_prompt()
-            #     cmd_lst = ['sudo', 'pacman', '-S', '--noconfirm']
-            #     subprocess.run(cmd_lst + pkgs_to_install, check=True)
-            #     show_pkg_install_success()
-            #     return
-            # except subprocess.CalledProcessError as proc_err:
-            #     exit_with_pkg_install_error(proc_err)
-
     ###########################################################################
     ###  EOPKG DISTROS  #######################################################
     ###########################################################################
@@ -866,27 +807,8 @@ def install_distro_pkgs():
         dev_cmd_lst = ['sudo', 'eopkg', 'install', '-y', '-c']
         dev_pkg_lst = ['system.devel']
         install_pkg_list(dev_cmd_lst, dev_pkg_lst)
-
-        # check_for_pkg_mgr_cmd('eopkg')
-        # call_attention_to_password_prompt()
-        # try:
-        #     dev_cmd_lst = ['sudo', 'eopkg', 'install', '-y', '-c', 'system.devel']
-        #     subprocess.run(dev_cmd_lst, check=True)
-        # except subprocess.CalledProcessError as proc_err:
-        #     exit_with_pkg_install_error(proc_err)
-
         cmd_lst = ['sudo', 'eopkg', 'install', '-y']
         install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
-
-        # try:
-        #     dev_cmd_lst = ['sudo', 'eopkg', 'install', '-y', '-c', 'system.devel']
-        #     subprocess.run(dev_cmd_lst, check=True)
-        #     cmd_lst = ['sudo', 'eopkg', 'install', '-y']
-        #     subprocess.run(cmd_lst + cnfg.pkgs_for_distro, check=True)
-        #     show_pkg_install_success()
-        #     return
-        # except subprocess.CalledProcessError as proc_err:
-        #     exit_with_pkg_install_error(proc_err)
 
     else:
         exit_with_invalid_distro_error()
