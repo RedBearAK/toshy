@@ -492,11 +492,15 @@ def get_distro_names():
     return distro_index
 
 
-def exit_with_invalid_distro_error():
+def exit_with_invalid_distro_error(pkg_mgr_err=None):
     print()
-    error(f"ERROR: Installer does not know how to handle distro: {cnfg.DISTRO_NAME}")
+    error(f'ERROR: Installer does not know how to handle distro: "{cnfg.DISTRO_NAME}"')
+    if pkg_mgr_err:
+        error('ERROR: No valid package manager logic was encountered for this distro.')
+    print()
     print(f'Try some options in "./toshy_setup.py --help".')
-    print(f'Maybe try one of these with "--override-distro" option:\n\t{get_distro_names()}')
+    print()
+    print(f'Maybe try one of these with "--override-distro" option:\n\n\t{get_distro_names()}')
     safe_shutdown(1)
 
 
@@ -811,7 +815,7 @@ def install_distro_pkgs():
         install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
     else:
-        exit_with_invalid_distro_error()
+        exit_with_invalid_distro_error(pkg_mgr_err=True)
 
 
 def load_uinput_module():
