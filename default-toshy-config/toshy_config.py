@@ -75,7 +75,7 @@ icon_file_inverse   = os.path.join(assets_path, "toshy_app_icon_rainbow_inverse.
 # Toshy config file
 TOSHY_PART      = 'config'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Config file'
-APP_VERSION     = '2023.0816'
+APP_VERSION     = '2023.0826'
 
 # Settings object used to tweak preferences "live" between gui, tray and config.
 cnfg = Settings(current_folder_path)
@@ -478,8 +478,8 @@ dialogs_CloseWin_lod = [
 ###  SLICE_MARK_START: kbtype_override  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 
 keyboards_UserCustom_dct = {
-    # Add your keyboard device here if its type is misidentified by isKBtype() function
-    # Valid types to map device to: Apple, Windows, IBM, Chromebook
+    # Add your keyboard device here if its type is misidentified.
+    # Valid types to map device to: Apple, Windows, IBM, Chromebook (case sensitive)
     # Example:
     'My Keyboard Device Name': 'Apple',
 }
@@ -598,28 +598,38 @@ def getKBtype():
     4. Check if the device name indicates a "Windows" keyboard by excluding other types.
     """
 
+    valid_kbtypes = ['IBM', 'Chromebook', 'Windows', 'Apple']
+
     def _getKBtype(ctx: KeyContext):
+        # debug(f"Entering getKBtype with override value: '{cnfg.override_kbtype}'")
         global KBTYPE
         kbd_dev_name = ctx.device_name
 
-        def log_kbtype(msg=None, cache_dev=True):
+        def log_kbtype(msg, cache_dev):
             debug(f"KBTYPE: '{KBTYPE}' | {msg}: '{kbd_dev_name}'")
             if cache_dev:
                 kbtype_cache_dct[kbd_dev_name] = (KBTYPE, msg)
 
+        # If user wants to override, apply override and return.
+        # Breaks per-device adaptatation capability while engaged!
+        if cnfg.override_kbtype in valid_kbtypes:
+            KBTYPE = cnfg.override_kbtype
+            log_kbtype(f"WARNING: Override applied! Dev", cache_dev=False)
+            return
+
         # Check in the kbtype cache dict for the device
         if kbd_dev_name in kbtype_cache_dct:
             KBTYPE, cached_msg = kbtype_cache_dct[kbd_dev_name]
-            log_kbtype(f'{cached_msg} (cached)', cache_dev=False)
+            log_kbtype(f'(CACHED) {cached_msg}', cache_dev=False)
             return
 
         kbd_dev_name_cf = ctx.device_name.casefold()
 
         # Check if there is a custom type for the device
         custom_kbtype = kbds_UserCustom_dct_cf.get(kbd_dev_name_cf, '')
-        if custom_kbtype and custom_kbtype in ['IBM', 'Chromebook', 'Windows', 'Apple']:
+        if custom_kbtype and custom_kbtype in valid_kbtypes:
             KBTYPE = custom_kbtype
-            log_kbtype('Custom type for dev')
+            log_kbtype('Custom type for dev', cache_dev=True)
             return
 
         # Check against the keyboard type lists
@@ -627,14 +637,14 @@ def getKBtype():
             for rgx in regex_lst:
                 if rgx.search(kbd_dev_name_cf):
                     KBTYPE = kbtype
-                    log_kbtype('Rgx matched on dev')
+                    log_kbtype('Rgx matched on dev', cache_dev=True)
                     return
 
         # Check if any keyboard type string is found in the device name
         for kbtype in ['IBM', 'Chromebook', 'Windows', 'Apple']:
             if kbtype.casefold() in kbd_dev_name_cf:
                 KBTYPE = kbtype
-                log_kbtype('Type in dev name')
+                log_kbtype('Type in dev name', cache_dev=True)
                 return
 
         # Check if the device name indicates a "Windows" keyboard
@@ -642,7 +652,7 @@ def getKBtype():
             and not not_win_type_rgx.search(kbd_dev_name_cf) 
             and not all_kbds_rgx.search(kbd_dev_name_cf) ):
             KBTYPE = 'Windows'
-            log_kbtype('Default type for dev')
+            log_kbtype('Default type for dev', cache_dev=True)
             return
 
         # Default to None if no matching keyboard type is found

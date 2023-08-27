@@ -1,6 +1,6 @@
 import os
-import sqlite3
 import inspect
+import sqlite3
 
 from typing import List, Dict, Optional, Tuple, Union
 from watchdog.observers import Observer
@@ -25,15 +25,16 @@ class Settings:
         calling_module          = os.path.split(calling_file_path)[1]
         self.calling_module     = calling_module
         # settings defaults
-        self.gui_dark_theme     = True      # Default: True
-        self.optspec_layout     = 'US'      # Default: 'US'
-        self.forced_numpad      = True      # Default: True
-        self.media_arrows_fix   = False     # Default: False
-        self.multi_lang         = False     # Default: False
-        self.Caps2Cmd           = False     # Default: False
-        self.Caps2Esc_Cmd       = False     # Default: False
-        self.Enter2Ent_Cmd      = False     # Default: False
-        self.ST3_in_VSCode      = False     # Default: False
+        self.gui_dark_theme     = True              # Default: True
+        self.override_kbtype    = 'Auto-Adapt'      # Default: 'Auto-Adapt'
+        self.optspec_layout     = 'US'              # Default: 'US'
+        self.forced_numpad      = True              # Default: True
+        self.media_arrows_fix   = False             # Default: False
+        self.multi_lang         = False             # Default: False
+        self.Caps2Cmd           = False             # Default: False
+        self.Caps2Esc_Cmd       = False             # Default: False
+        self.Enter2Ent_Cmd      = False             # Default: False
+        self.ST3_in_VSCode      = False             # Default: False
         # Load user's custom settings from database (defaults will be saved if no DB)
         self.load_settings()
 
@@ -58,6 +59,7 @@ class Settings:
         sql_query = "INSERT OR REPLACE INTO config_preferences (name, value) VALUES (?, ?)"
         # Execute the SQL query with different parameters
         db_cursor.execute(sql_query, ('gui_dark_theme',     str(self.gui_dark_theme)    ))
+        db_cursor.execute(sql_query, ('override_kbtype',    str(self.override_kbtype)   ))
         db_cursor.execute(sql_query, ('optspec_layout',     str(self.optspec_layout)    ))
         db_cursor.execute(sql_query, ('forced_numpad',      str(self.forced_numpad)     ))
         db_cursor.execute(sql_query, ('media_arrows_fix',   str(self.media_arrows_fix)  ))
@@ -84,6 +86,7 @@ class Settings:
             setting_value = row[1].lower() == 'true'
             if True is False: pass  # dummy first `if` line so other rows line up
             elif row[0] == 'gui_dark_theme'     :   self.gui_dark_theme     = setting_value
+            elif row[0] == 'override_kbtype'    :   self.override_kbtype    = row[1]
             elif row[0] == 'optspec_layout'     :   self.optspec_layout     = row[1]
             elif row[0] == 'forced_numpad'      :   self.forced_numpad      = setting_value
             elif row[0] == 'media_arrows_fix'   :   self.media_arrows_fix   = setting_value
@@ -127,6 +130,8 @@ class Settings:
         db_file_path        = '{self.db_file_path}'
         -------------------------------------------
         gui_dark_theme      = {self.gui_dark_theme}
+        -------------------------------------------
+        override_kbtype     = '{self.override_kbtype}'
         -------------------------------------------
         optspec_layout      = '{self.optspec_layout}'
         -------------------------------------------
