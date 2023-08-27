@@ -744,7 +744,7 @@ There is an `include()` function in `keyszer` that theoretically allows separate
 
 #### NEW UPDATE: Temporary override feature implemented
 
-The Toshy tray icon menu should now show a submenu called "Keyboard Type", where you can choose to change the option from the default "Auto-Adapt" option to one of the available keyboard types, statically overriding the keyboard type. This will apply to all devices and **_disable_** Toshy's ability to adapt to different keyboard types on-the-fly, and is only meant as a **_temporary_** convenience for getting the keyboard to work correctly while you perform the main custom override (see below) for the specific device that is being misidentified.  
+The Toshy tray icon menu should now show a submenu labeled "Keyboard Type", where you can choose to change the option from the default "Auto-Adapt" option to one of the available keyboard types, statically overriding the keyboard type. This will apply to all devices and **_disable_** Toshy's ability to adapt to different keyboard types on-the-fly, and is only meant as a **_temporary_** convenience for getting the keyboard to work correctly while you perform the main custom override (see below) for the specific device that is being misidentified.  
 
 #### UPDATE: Override the keyboard type for a device in config
 
