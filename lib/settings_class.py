@@ -14,8 +14,8 @@ from keyszer.lib.logger import debug
 class Settings:
     def __init__(self, config_dir_path: str = '..') -> None:
         self.config_dir_path    = config_dir_path
-        self.db_file_path       = os.path.join(
-                                    self.config_dir_path, 'toshy_user_preferences.sqlite')
+        self.db_file_name       = 'toshy_user_preferences.sqlite'
+        self.db_file_path       = os.path.join(self.config_dir_path, self.db_file_name)
         self.first_run          = True
         self.last_settings      = None
         self.current_settings   = None
@@ -122,11 +122,14 @@ class Settings:
 
     def __str__(self):
         return f"""Current settings:
-        calling_module      = {self.calling_module}
-        db_file_path        = {self.db_file_path}
+        -------------------------------------------
+        calling_module      = '{self.calling_module}'
+        db_file_path        = '{self.db_file_path}'
+        -------------------------------------------
         gui_dark_theme      = {self.gui_dark_theme}
         -------------------------------------------
         optspec_layout      = '{self.optspec_layout}'
+        -------------------------------------------
         forced_numpad       = {self.forced_numpad}
         media_arrows_fix    = {self.media_arrows_fix}
         multi_lang          = {self.multi_lang}
