@@ -18,6 +18,7 @@ Go to the FAQ entry for more info:
 
 [Keyboard Type Not Correct](#my-keyboard-is-not-recognized-as-the-correct-type)  
 
+> [!NOTE]  
 > Please take the time to FILE AN ISSUE if you encounter this, whether or not you are able to fix it on your own. Include your device name and what type it should be. The goal is to populate the default keyboard name lists so that this becomes a very unusual problem going forward. The bigger goal of Toshy has been to allow a mixed-type environment where you can use any combination of Apple, Windows (PC), IBM or Chromebook keyboards together without thinking about switching types.  
 
 - May have issues installing on distros not on the "tested" list below. Try the `--list-distros` and `--override-distro` options (separately) with the installer, if you think your distro is closely related to one on the list.  
@@ -375,9 +376,9 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - KDE desktop works (X11/Xorg or Wayland)
     - Other desktop choices should work, if session is X11/Xorg
 
-### OpenMandriva (DNF/RPM-based packaging system)
+### OpenMandriva (DNF/RPM-based, descended from Mandriva, Mandrake)
 
-- OpenMandriva ROME 2023.8
+- OpenMandriva ROME 2023.08
 
     - Wayland+KDE may have issues with GTK "portal" service
     - May need to restart the Toshy services after logging in
@@ -431,6 +432,10 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
     - New release based on Debian 12 tested
     - Desktop is Xfce4 v4.18
+
+- Q4OS 5.2 (Debian-based)
+
+    - Trinity desktop ISO tested.
 
 - antiX 22.x (Debian-based, related to MX Linux)
 
@@ -734,9 +739,14 @@ There is an `include()` function in `keyszer` that theoretically allows separate
 
 ### My keyboard is not recognized as the correct type
 
-> **_NOTE! If you have this problem, please submit an issue report about it, so the device name can be added to the default Toshy config!_**  
+> [!NOTE]  
+> If you have this problem, please submit an issue report about it, so the device name can be added to the default Toshy config!  
 
-#### UPDATE: There is now a way to override the keyboard type
+#### NEW UPDATE: Temporary override feature implemented
+
+The Toshy tray icon menu should now show a submenu called "Keyboard Type", where you can choose to change the option from the default "Auto-Adapt" option to one of the available keyboard types, statically overriding the keyboard type. This will apply to all devices and **_disable_** Toshy's ability to adapt to different keyboard types on-the-fly, and is only meant as a **_temporary_** convenience for getting the keyboard to work correctly while you perform the main custom override (see below) for the specific device that is being misidentified.  
+
+#### UPDATE: Override the keyboard type for a device in config
 
 Use the verbose manual config command below, and look for lines with `KB_TYPE:` to see your keyboard device name, as seen by the keymapper and the function that tries to identify the keyboard type. You can also find it in the list output from the terminal command `toshy-devices`.  
 
@@ -752,8 +762,6 @@ keyboards_UserCustom_dct = {
 ```
 
 This will force the keyboard to be treated as the 'type' you put after the colon.  
-
-> **_NOTE! If you have this problem, please submit an issue report about it, so the device name can be added to the default Toshy config!_**  
 
 **_Original content of this FAQ is below:_** 
 
