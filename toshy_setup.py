@@ -118,14 +118,14 @@ class InstallerSettings:
         self.DISTRO_VER             = None
         self.SESSION_TYPE           = None
         self.DESKTOP_ENV            = None
-        
+
         self.systemctl_present      = shutil.which('systemctl') is not None
         self.init_system            = None
 
         self.pkgs_for_distro        = None
         self.pip_pkgs               = None
         self.qdbus                  = 'qdbus-qt5' if shutil.which('qdbus-qt5') else 'qdbus'
-        
+
         self.py_interp_ver          = f'{py_ver_major}.{py_ver_minor}'
         self.py_interp_path         = shutil.which('python3')
 
@@ -167,9 +167,8 @@ class InstallerSettings:
 
 def safe_shutdown(exit_code: int):
     """do some stuff on the way out"""
-
     # good place to do some file cleanup?
-
+    # 
     # invalidate the sudo ticket, don't leave system in "superuser" state
     subprocess.run(['sudo', '-k'])
     print()                         # avoid crowding the prompt on exit
@@ -216,7 +215,6 @@ def get_environment_info():
             print(f"Init system process unknown: '{cnfg.init_system}'")
     else:
         error("ERROR: Init system (process 1) could not be determined. (See above error.)")
-
     print()   # blank line after init system message
 
     cnfg.env_info_dct   = env.get_env_info()
@@ -226,10 +224,10 @@ def get_environment_info():
         cnfg.DISTRO_NAME    = str(cnfg.override_distro).casefold()
     else:
         cnfg.DISTRO_NAME    = str(cnfg.env_info_dct.get('DISTRO_NAME',  'keymissing')).casefold()
-
     cnfg.DISTRO_VER     = str(cnfg.env_info_dct.get('DISTRO_VER',   'keymissing')).casefold()
     cnfg.SESSION_TYPE   = str(cnfg.env_info_dct.get('SESSION_TYPE', 'keymissing')).casefold()
     cnfg.DESKTOP_ENV    = str(cnfg.env_info_dct.get('DESKTOP_ENV',  'keymissing')).casefold()
+
     debug('Toshy installer sees this environment:'
         f"\n\t DISTRO_NAME  = '{cnfg.DISTRO_NAME}'"
         f"\n\t DISTRO_VER   = '{cnfg.DISTRO_VER}'"
@@ -243,7 +241,7 @@ def call_attention_to_password_prompt():
     try:
         subprocess.run( ['sudo', '-n', 'true'], stdout=DEVNULL, stderr=DEVNULL, check=True)
     except subprocess.CalledProcessError:
-        # sudo requires a password
+        # sudo ticket not valid, requires a password, so get user attention
         print()
         print('  -- PASSWORD REQUIRED TO CONTINUE --  ')
         print()
@@ -258,7 +256,9 @@ def prompt_for_reboot():
 
 def dot_Xmodmap_warning():
     """Check for '.Xmodmap' file in user's home folder, show warning about mod key remaps"""
+
     xmodmap_file_path = os.path.realpath(os.path.join(os.path.expanduser('~'), '.Xmodmap'))
+
     if os.path.isfile(xmodmap_file_path):
         print()
         print(f'{cnfg.separator}')
@@ -297,7 +297,6 @@ def ask_is_distro_updated():
     debug('NOTICE: It is ESSENTIAL to have your system completely updated.', ctx="!!")
     print()
     response = input('Have you updated your system recently? [y/N]: ')
-
     if response not in ['y', 'Y']:
         print()
         error("Try the installer again after you've done a full system update. Exiting.")
@@ -324,7 +323,6 @@ def ask_add_home_local_bin():
 
 def elevate_privileges():
     """Elevate privileges early in the installer process"""
-
     call_attention_to_password_prompt()
     subprocess.run(['sudo', 'bash', '-c', 'echo -e "\nUsing elevated privileges..."'], check=True)
 
@@ -340,7 +338,6 @@ def do_kwin_reconfigure():
 
 distro_groups_map = {
     # 'test-based':      ["test"],
-    'test-based':      ["test"],
 
     # separate references for RHEL types versus Fedora types
     'fedora-based':    ["fedora", "fedoralinux", "ultramarine", "nobara", "silverblue-experimental"],
@@ -350,7 +347,7 @@ distro_groups_map = {
     'tumbleweed-based':["opensuse-tumbleweed"],
     'leap-based':      ["opensuse-leap"],
 
-    'mandriva-based':  ["openmandriva", "mageia"],
+    'mandriva-based':  ["openmandriva"],
 
     'ubuntu-based':    ["ubuntu", "mint", "popos", "elementary", "neon", "tuxedo", "zorin"],
     'debian-based':    ["lmde", "peppermint", "debian", "kali", "q4os"],
@@ -362,7 +359,6 @@ distro_groups_map = {
 
 pkg_groups_map = {
     # 'test-based':      ["git"],
-    'test-based':      ["git"],
 
     'fedora-based':    ["cairo-devel", "cairo-gobject-devel",
                         "evtest",
@@ -496,11 +492,15 @@ def get_distro_names():
     return distro_index
 
 
-def exit_with_invalid_distro_error():
+def exit_with_invalid_distro_error(pkg_mgr_err=None):
     print()
-    error(f"ERROR: Installer does not know how to handle distro: {cnfg.DISTRO_NAME}")
+    error(f'ERROR: Installer does not know how to handle distro: "{cnfg.DISTRO_NAME}"')
+    if pkg_mgr_err:
+        error('ERROR: No valid package manager logic was encountered for this distro.')
+    print()
     print(f'Try some options in "./toshy_setup.py --help".')
-    print(f'Maybe try one of these with "--override-distro" option:\n\t{get_distro_names()}')
+    print()
+    print(f'Maybe try one of these with "--override-distro" option:\n\n\t{get_distro_names()}')
     safe_shutdown(1)
 
 
@@ -533,21 +533,14 @@ def install_distro_pkgs():
         if cnfg.systemctl_present or 'systemd' not in pkg
     ]
 
-    # test_distros    = distro_groups_map['test-based']
-    # dnf_distros     = distro_groups_map['fedora-based'] + distro_groups_map['rhel-based'] + distro_groups_map['mandriva-based']
-    # zypper_distros  = distro_groups_map['tumbleweed-based'] + distro_groups_map['leap-based']
-    # apt_distros     = distro_groups_map['ubuntu-based'] + distro_groups_map['debian-based']
-    # pacman_distros  = distro_groups_map['arch-based']
-    # eopkg_distros   = distro_groups_map['solus-based']
-
-    test_distros        = []
+    # test_distros        = []
     dnf_distros         = []
     zypper_distros      = []
     apt_distros         = []
     pacman_distros      = []
     eopkg_distros       = []
 
-    test_distros        += distro_groups_map['test-based']
+    # test_distros        += distro_groups_map['test-based']
     dnf_distros         += distro_groups_map['fedora-based']
     dnf_distros         += distro_groups_map['rhel-based']
     dnf_distros         += distro_groups_map['mandriva-based']
@@ -576,6 +569,26 @@ def install_distro_pkgs():
         # Have something come out even if package list is empty (like Arch after initial run)
         print('All necessary native distro packages are installed.')
 
+    def install_pkg_list(cmd_lst, pkg_lst):
+        """Install packages using the given package manager command list and package list."""
+        
+        # Extract the package manager command to check
+        pkg_mgr_cmd = next((cmd for cmd in cmd_lst if cmd != 'sudo'), None)
+        # If we couldn't extract the command, exit with an error
+        if not pkg_mgr_cmd:
+            error('Provided command list does not contain a valid package manager command.')
+            safe_shutdown(1)
+        
+        call_attention_to_password_prompt()
+        check_for_pkg_mgr_cmd(pkg_mgr_cmd)
+        
+        # Execute the package installation command
+        try:
+            subprocess.run(cmd_lst + pkg_lst, check=True)
+            show_pkg_install_success()
+        except subprocess.CalledProcessError as proc_err:
+            exit_with_pkg_install_error(proc_err)
+
     distro_major_ver = cnfg.DISTRO_VER[0] if cnfg.DISTRO_VER else 'NO_VER'
 
     # if cnfg.DISTRO_NAME in test_distros:
@@ -589,17 +602,9 @@ def install_distro_pkgs():
     #     except subprocess.CalledProcessError as proc_err:
     #         exit_with_pkg_install_error(proc_err)
 
-    if cnfg.DISTRO_NAME in test_distros:
-        print(f"Identified a distro named: '{cnfg.DISTRO_NAME}'")
-        call_attention_to_password_prompt()
-        # add new installer logic here to test an unknown distro type
-        check_for_pkg_mgr_cmd('package_manager_command')
-        command_lst = ['sudo', 'package_manager_command', 'arg1', 'arg2']
-        try:
-            subprocess.run(command_lst + cnfg.pkgs_for_distro, check=True)
-        except subprocess.CalledProcessError as proc_err:
-            exit_with_pkg_install_error(proc_err)
-
+    ###########################################################################
+    ###  DNF DISTROS  #########################################################
+    ###########################################################################
     if cnfg.DISTRO_NAME in dnf_distros:
 
         # do extra stuff only if distro is a RHEL type (not Fedora type)
@@ -610,7 +615,7 @@ def install_distro_pkgs():
             # do extra prep/checks if distro is CentOS Stream 8
             if cnfg.DISTRO_NAME in ['centos'] and cnfg.DISTRO_VER[0] in ['8']:
                 print('Doing prep/checks for CentOS Stream 8...')
-                min_minor = curr_py_rel_ver_minor - 3           # check up to 3 vers before current
+                min_minor = curr_py_rel_ver_minor - 3           # check up to 2 vers before current
                 max_minor = curr_py_rel_ver_minor + 3           # check up to 3 vers after current
                 py_minor_ver_rng = range(max_minor, min_minor, -1)
                 if py_interp_ver_tup < curr_py_rel_ver_tup:
@@ -737,67 +742,55 @@ def install_distro_pkgs():
 
         # finally, do the install of the main list of packages for Fedora/RHEL distro types
         if cnfg.DISTRO_NAME in distro_groups_map['rhel-based'] + distro_groups_map['fedora-based']:
-            try:
-                call_attention_to_password_prompt()
-                if cnfg.DISTRO_NAME == 'silverblue-experimental':
-                    check_for_pkg_mgr_cmd('rpm-ostree')
-                    print(f'Distro is Silverblue type. Using "rpm-ostree" instead of DNF.')
-
-                    # set up a toolbox to install software inside (the normal way) on Silverblue types
-                    # all launcher shell scripts will need to be changed to "enter" the named toolbox!
-                    
-                    # toolbox_name = "toshy_toolbox"
-                    # subprocess.run(["toolbox", "create", "-y", "-c", toolbox_name])
-                    # subprocess.run(["toolbox", "run", "-c", toolbox_name, "dnf", "install", "-y", "python3-dbus", "python3-devel"])
-
-                    subprocess.run(['sudo', 'rpm-ostree', 'install', 
-                                    '--idempotent', '--allow-inactive', 
-                                    '--apply-live', '-y'] + cnfg.pkgs_for_distro, check=True)
-                else:
-                    check_for_pkg_mgr_cmd('dnf')    # if we get here, 'dnf' should also exist on CentOS 7
-                    subprocess.run(['sudo', 'dnf', 'install', '-y'] + cnfg.pkgs_for_distro,
-                                    check=True)
-                show_pkg_install_success()
-                return
-            except subprocess.CalledProcessError as proc_err:
-                exit_with_pkg_install_error(proc_err)
+            if cnfg.DISTRO_NAME == 'silverblue-experimental':
+                print(f'Distro is Silverblue type. Using "rpm-ostree" instead of DNF.')
+                # set up a toolbox to install software inside (the normal way) on Silverblue types
+                # all launcher shell scripts will need to be changed to "enter" the named toolbox!
                 
-        if cnfg.DISTRO_NAME in distro_groups_map['mandriva-based']:
-            try:
-                call_attention_to_password_prompt()
-                check_for_pkg_mgr_cmd('dnf')
+                # toolbox_name = "toshy_toolbox"
+                # subprocess.run(["toolbox", "create", "-y", "-c", toolbox_name])
+                # subprocess.run(["toolbox", "run", "-c", toolbox_name, "dnf", "install", "-y", "python3-dbus", "python3-devel"])
+
+                cmd_lst = ['sudo', 'rpm-ostree', 'install', '--idempotent',
+                            '--allow-inactive', '--apply-live', '-y']
+                install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+                return
+
+            else:
                 cmd_lst = ['sudo', 'dnf', 'install', '-y']
-                subprocess.run(cmd_lst + cnfg.pkgs_for_distro, check=True)
-            except subprocess.CalledProcessError as proc_err:
-                exit_with_pkg_install_error(proc_err)
-            show_pkg_install_success()
+                install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+                return
+
+        # OpenMandriva uses DNF, so it's here in the "dnf_distros" block
+        if cnfg.DISTRO_NAME in distro_groups_map['mandriva-based']:
+            cmd_lst = ['sudo', 'dnf', 'install', '-y']
+            install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
             return
 
+    ###########################################################################
+    ###  ZYPPER DISTROS  ######################################################
+    ###########################################################################
     elif cnfg.DISTRO_NAME in zypper_distros:
-        check_for_pkg_mgr_cmd('zypper')
-        call_attention_to_password_prompt()
-        try:
-            subprocess.run(['sudo', 'zypper', '--non-interactive', 'install'] + cnfg.pkgs_for_distro,
-                            check=True)
-            show_pkg_install_success()
-            return
-        except subprocess.CalledProcessError as proc_err:
-            exit_with_pkg_install_error(proc_err)
+        cmd_lst = ['sudo', 'zypper', '--non-interactive', 'install']
+        install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+        return
 
+    ###########################################################################
+    ###  APT DISTROS  #########################################################
+    ###########################################################################
     elif cnfg.DISTRO_NAME in apt_distros:
-        check_for_pkg_mgr_cmd('apt')
-        call_attention_to_password_prompt()
-        try:
-            subprocess.run(['sudo', 'apt', 'install', '-y'] + cnfg.pkgs_for_distro, check=True)
-            show_pkg_install_success()
-            return
-        except subprocess.CalledProcessError as proc_err:
-            exit_with_pkg_install_error(proc_err)
+        cmd_lst = ['sudo', 'apt', 'install', '-y']
+        install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+        return
 
+    ###########################################################################
+    ###  PACMAN DISTROS  ######################################################
+    ###########################################################################
     elif cnfg.DISTRO_NAME in pacman_distros:
         check_for_pkg_mgr_cmd('pacman')
 
         def is_pkg_installed_pacman(package):
+            """utility function to help avoid 'reinstalling' existing packages on Arch"""
             result = subprocess.run(['pacman', '-Q', package], stdout=DEVNULL, stderr=DEVNULL)
             return result.returncode == 0
 
@@ -807,27 +800,22 @@ def install_distro_pkgs():
             if not is_pkg_installed_pacman(pkg)
         ]
         if pkgs_to_install:
-            call_attention_to_password_prompt()
-            try:
-                subprocess.run(['sudo', 'pacman', '-S', '--noconfirm'] + pkgs_to_install, check=True)
-                show_pkg_install_success()
-                return
-            except subprocess.CalledProcessError as proc_err:
-                exit_with_pkg_install_error(proc_err)
-
-    elif cnfg.DISTRO_NAME in eopkg_distros:
-        check_for_pkg_mgr_cmd('eopkg')
-        call_attention_to_password_prompt()
-        try:
-            subprocess.run(['sudo', 'eopkg', 'install', '-y', '-c', 'system.devel'], check=True)
-            subprocess.run(['sudo', 'eopkg', 'install', '-y'] + cnfg.pkgs_for_distro, check=True)
-            show_pkg_install_success()
+            cmd_lst = ['sudo', 'pacman', '-S', '--noconfirm']
+            install_pkg_list(cmd_lst, pkgs_to_install)
             return
-        except subprocess.CalledProcessError as proc_err:
-            exit_with_pkg_install_error(proc_err)
+
+    ###########################################################################
+    ###  EOPKG DISTROS  #######################################################
+    ###########################################################################
+    elif cnfg.DISTRO_NAME in eopkg_distros:
+        dev_cmd_lst = ['sudo', 'eopkg', 'install', '-y', '-c']
+        dev_pkg_lst = ['system.devel']
+        install_pkg_list(dev_cmd_lst, dev_pkg_lst)
+        cmd_lst = ['sudo', 'eopkg', 'install', '-y']
+        install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
     else:
-        exit_with_invalid_distro_error()
+        exit_with_invalid_distro_error(pkg_mgr_err=True)
 
 
 def load_uinput_module():
@@ -875,6 +863,7 @@ def load_uinput_module():
 
 
 def reload_udev_rules():
+    """utility function to reload udev rules in case of changes to rules file"""
     try:
         call_attention_to_password_prompt()
         subprocess.run(['sudo', 'udevadm', 'control', '--reload-rules'], check=True)
@@ -924,14 +913,14 @@ def install_udev_rules():
 def verify_user_groups():
     """Check if the `input` group exists and user is in group"""
     print(f'\n\n§  Checking if user is in "input" group...\n{cnfg.separator}')
-    
+    #
     if cnfg.DISTRO_NAME == 'silverblue-experimental':
         # https://docs.fedoraproject.org/en-US/fedora-silverblue/troubleshooting/
         # Special command to make Fedora Silverblue/uBlue work, or usermod will fail: 
         # grep -E '^input:' /usr/lib/group | sudo tee -a /etc/group
         command = "grep -E '^input:' /usr/lib/group | sudo tee -a /etc/group >/dev/null"
         subprocess.run(command, shell=True, check=True)
-    
+    #
     try:
         grp.getgrnam(cnfg.input_group_name)
     except KeyError:
@@ -949,7 +938,7 @@ def verify_user_groups():
             print()
             error(f'ERROR: Install failed.')
             safe_shutdown(1)
-
+    #
     # Check if the user is already in the `input` group
     group_info = grp.getgrnam(cnfg.input_group_name)
     if cnfg.user_name in group_info.gr_mem:
@@ -971,34 +960,9 @@ def verify_user_groups():
             print()
             error(f'ERROR: Install failed.')
             safe_shutdown(1)
-
+        #
         print(f'User "{cnfg.user_name}" added to group "{cnfg.input_group_name}".')
         prompt_for_reboot()
-
-
-# def get_distro_names():
-#     """Utility function to return list of available distro names (IDs)"""
-#     distro_list = []
-#     for group in distro_groups_map.values():
-#         distro_list.extend(group)
-#     sorted_distro_list = sorted(distro_list)
-#     prev_char: str = sorted_distro_list[0][0]
-#     # start index with the initial letter
-#     distro_index = prev_char.upper() + ": "
-#     for distro in sorted_distro_list:
-#         if distro[0] != prev_char:
-#             # type hint to help out VSCode syntax highlighter
-#             distro: str
-#             # remove last comma and space from previous line
-#             distro_index = distro_index[:-2]
-#             # start a new line with new initial letter
-#             distro_index += "\n\t" + distro[0].upper() + ": " + distro + ", "
-#             prev_char = distro[0]
-#         else:
-#             distro_index += distro + ", "
-#     # remove last comma and space from the final line
-#     distro_index = distro_index[:-2]
-#     return distro_index
 
 
 def clone_keyszer_branch():

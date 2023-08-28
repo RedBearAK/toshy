@@ -4,7 +4,7 @@
 # Indicator tray icon menu app for Toshy, using pygobject/gi
 TOSHY_PART      = 'tray'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Tray Icon app'
-APP_VERSION     = '2023.0816'
+APP_VERSION     = '2023.0826'
 
 # -------- COMMON COMPONENTS --------------------------------------------------
 
@@ -230,8 +230,9 @@ def fn_monitor_internal_settings():
         if last_settings_list != get_settings_list(cnfg):
             # debug(f'settings list changed...')
             last_settings_list = get_settings_list(cnfg)
-            load_optspec_layout_submenu_settings()
             load_prefs_submenu_settings()
+            load_optspec_layout_submenu_settings()
+            load_kbtype_submenu_settings()
 
 
 sysctl_cmd      = f"{shutil.which('systemctl')}"
@@ -616,8 +617,59 @@ if not barebones_config:
     optspec_disabled_item.connect('toggled', save_optspec_layout_setting, 'Disabled')
     optspec_layout_submenu.append(optspec_disabled_item)
 
-    separator_below_prefs_submenu_item = Gtk.SeparatorMenuItem()
-    menu.append(separator_below_prefs_submenu_item)  #-------------------------------------#
+    # separator_below_prefs_submenu_item = Gtk.SeparatorMenuItem()
+    # menu.append(separator_below_prefs_submenu_item)  #-------------------------------------#
+
+    def load_kbtype_submenu_settings():
+        cnfg.load_settings()
+        kbtype_auto_adapt_item.set_active(cnfg.override_kbtype == 'Auto-Adapt')
+        kbtype_apple_item.set_active(cnfg.override_kbtype == 'Apple')
+        kbtype_chromebook_item.set_active(cnfg.override_kbtype == 'Chromebook')
+        kbtype_ibm_item.set_active(cnfg.override_kbtype == 'IBM')
+        kbtype_windows_item.set_active(cnfg.override_kbtype == 'Windows')
+
+    def save_kbtype_setting(menu_item, kbtype):
+        valid_kbtypes = ['IBM', 'Chromebook', 'Windows', 'Apple']
+        if menu_item.get_active():
+            cnfg.override_kbtype = kbtype
+            cnfg.save_settings()
+            load_kbtype_submenu_settings()
+            if cnfg.override_kbtype in valid_kbtypes:
+                # Remind user this is not the intended way of fixing the problem.
+                message = ('Overriding keyboard type disables auto-adaptation.\r'
+                            'This is meant as a temporary fix only! See README.')
+                ntfy.send_notification(message, icon_file_grayscale, urgency='critical')
+
+    ###############################################################
+    # Keyboard Type submenu
+    kbtype_submenu = Gtk.Menu()
+    kbtype_item = Gtk.MenuItem(label='Keyboard Type')
+    kbtype_item.set_submenu(kbtype_submenu)
+    menu.append(kbtype_item)
+
+    # create submenu items for each keyboard type option
+    kbtype_auto_adapt_item = Gtk.CheckMenuItem(label='Auto-Adapt*')
+    kbtype_auto_adapt_item.connect('toggled', save_kbtype_setting, 'Auto-Adapt')
+    kbtype_submenu.append(kbtype_auto_adapt_item)
+
+    kbtype_apple_item = Gtk.CheckMenuItem(label='Apple')
+    kbtype_apple_item.connect('toggled', save_kbtype_setting, 'Apple')
+    kbtype_submenu.append(kbtype_apple_item)
+
+    kbtype_chromebook_item = Gtk.CheckMenuItem(label='Chromebook')
+    kbtype_chromebook_item.connect('toggled', save_kbtype_setting, 'Chromebook')
+    kbtype_submenu.append(kbtype_chromebook_item)
+
+    kbtype_ibm_item = Gtk.CheckMenuItem(label='IBM')
+    kbtype_ibm_item.connect('toggled', save_kbtype_setting, 'IBM')
+    kbtype_submenu.append(kbtype_ibm_item)
+
+    kbtype_windows_item = Gtk.CheckMenuItem(label='Windows')
+    kbtype_windows_item.connect('toggled', save_kbtype_setting, 'Windows')
+    kbtype_submenu.append(kbtype_windows_item)
+
+    separator_below_kbtype_submenu_item = Gtk.SeparatorMenuItem()
+    menu.append(separator_below_kbtype_submenu_item)  #-------------------------------------#
 
     preferences_item = Gtk.MenuItem(label="Open Preferences App")
     preferences_item.connect("activate", fn_open_preferences)
@@ -682,6 +734,8 @@ def main():
         load_prefs_submenu_settings()
         # load the settings for the optspec layout submenu
         load_optspec_layout_submenu_settings()
+        # load the settings for the keyboard type submenu
+        load_kbtype_submenu_settings()
 
     # GUI loop event
     loop = GLib.MainLoop()
