@@ -592,10 +592,12 @@ def getKBtype():
     
     #### Hierarchy of validations:
     
-    1. Check if the device name is in the keyboards_UserCustom_dct dictionary.
-    2. Check if the device name matches any keyboard type list.
-    3. Check if any keyboard type string is found in the device name string.
-    4. Check if the device name indicates a "Windows" keyboard by excluding other types.
+    - Check if a forced override of keyboard type is applied by user preference.
+    - Check cache dictionary for device name stored from previous run of function.
+    - Check if the device name is in the keyboards_UserCustom_dct dictionary.
+    - Check if the device name matches any keyboard type list.
+    - Check if any keyboard type string is found in the device name string.
+    - Check if the device name indicates a "Windows" keyboard by excluding other types.
     """
 
     valid_kbtypes = ['IBM', 'Chromebook', 'Windows', 'Apple']
