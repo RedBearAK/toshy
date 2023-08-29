@@ -123,7 +123,7 @@ class InstallerSettings:
         self.init_system            = None
 
         self.pkgs_for_distro        = None
-        self.pip_pkgs               = None
+
         self.qdbus                  = 'qdbus-qt5' if shutil.which('qdbus-qt5') else 'qdbus'
 
         self.py_interp_ver          = f'{py_ver_major}.{py_ver_minor}'
@@ -1235,7 +1235,7 @@ def install_pip_packages():
     venv_pip_cmd    = os.path.join(cnfg.venv_path, 'bin', 'pip')
     
     # everything from 'inotify-simple' to 'six' is just to make `keyszer` install smoother
-    cnfg.pip_pkgs   = [
+    pip_pkgs   = [
         "lockfile", "dbus-python", "systemd-python", "pygobject", "tk", "sv_ttk", "psutil",
         # TODO: Check on 'python-xlib' project by early-mid 2024 to see if this bug is fixed:
         #   [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']
@@ -1244,8 +1244,8 @@ def install_pip_packages():
     ]
 
     # Filter out systemd packages if no 'systemctl' present
-    cnfg.pip_pkgs   = [
-        pkg for pkg in cnfg.pip_pkgs 
+    filtered_pip_pkgs   = [
+        pkg for pkg in pip_pkgs 
         if cnfg.systemctl_present or 'systemd' not in pkg
     ]
 
@@ -1254,7 +1254,7 @@ def install_pip_packages():
         [venv_pip_cmd, 'install', '--upgrade', 'wheel'],
         [venv_pip_cmd, 'install', '--upgrade', 'setuptools'],
         [venv_pip_cmd, 'install', '--upgrade', 'pillow'],
-        [venv_pip_cmd, 'install', '--upgrade'] + cnfg.pip_pkgs
+        [venv_pip_cmd, 'install', '--upgrade'] + filtered_pip_pkgs
     ]
     for command in commands:
         result = subprocess.run(command)
