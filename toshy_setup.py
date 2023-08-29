@@ -1237,7 +1237,10 @@ def install_pip_packages():
     # everything from 'inotify-simple' to 'six' is just to make `keyszer` install smoother
     cnfg.pip_pkgs   = [
         "lockfile", "dbus-python", "systemd-python", "pygobject", "tk", "sv_ttk", "psutil",
-        "watchdog", "inotify-simple", "evdev", "appdirs", "ordered-set", "python-xlib", "six"
+        # TODO: Check on 'python-xlib' project by early-mid 2024 to see if this bug is fixed:
+        #   [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']
+        # If the bug is fixed, remove pinning to v0.31 here:
+        "watchdog", "inotify-simple", "evdev", "appdirs", "ordered-set", "python-xlib==0.31", "six"
     ]
 
     # Filter out systemd packages if no 'systemctl' present
