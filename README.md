@@ -54,6 +54,13 @@ All of this basic functionality is inherited from Kinto. Toshy just tries to be 
 
 If an app that you use frequently in Linux has some shortcut behavior that still doesn't match what you'd expect from the same application (or a similar application) in macOS, after Toshy's general remapping of the modifier keys, you can add a keymap that matches the app's "class" and/or "name/title" window attributes, to make that application behave as expected. By adding it to the default config file, every user will benefit!  
 
+> [!NOTE]  
+> There's an easier way now, that works in both X11/Xorg and Wayland sessions:  
+> `Shift+Opt+Cmd+I,I` (quickly double-tap the "I" key)  
+> This brings up a dialog showing app/window/keyboard info.  
+
+Still relevant, but unnecessary with the diagnostic tool in the note above:  
+
 To do this, on X11 you need the tool `xprop` which lets you retrieve the window attributes by clicking on the window with the mouse. Use this command to get only the relevant attributes:  
 
 ```sh
