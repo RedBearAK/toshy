@@ -450,7 +450,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - Use `toshy-config-start` or `toshy-config-verbose-start` for manual start.
     - Only "rox-icewm" desktop verified/tested.
 
-- MX Linux 21.x (Debian-based, related to antiX)
+- MX Linux 21.x/23.x (Debian-based, related to antiX)
 
     - Preliminary support, no SysVinit services yet, so no auto-start.
     - Starting only the "config script" from the tray icon menu should work now.
