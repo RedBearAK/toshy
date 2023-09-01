@@ -443,8 +443,9 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
     - Trinity desktop ISO tested.
 
-- antiX 22.x (Debian-based, related to MX Linux)
+- antiX 22.x/23.x (Debian-based, related to MX Linux)
 
+    - For 32-bit ISO: `sudo apt install libjpeg-dev` before running Toshy installer!
     - Preliminary support, no SysVinit services yet, so no auto-start.
     - Starting only the "config script" from the tray icon menu should work now.
     - Use `toshy-config-start` or `toshy-config-verbose-start` for manual start.
