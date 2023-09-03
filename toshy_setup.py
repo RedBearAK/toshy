@@ -2058,9 +2058,13 @@ def main(cnfg: InstallerSettings):
 
     if cnfg.DESKTOP_ENV == 'gnome':
         def is_extension_enabled(extension_uuid):
-            output = subprocess.check_output(
-                        ['gsettings', 'get', 'org.gnome.shell', 'enabled-extensions'])
-            extensions = output.decode().strip().replace("'", "").split(",")
+            try:
+                output = subprocess.check_output(
+                            ['gsettings', 'get', 'org.gnome.shell', 'enabled-extensions'])
+                extensions = output.decode().strip().replace("'", "").split(",")
+            except subprocess.CalledProcessError as proc_err:
+                error(f"Unable to check enabled extensions:\n\t{proc_err}")
+                return False
             return extension_uuid in extensions
 
         if is_extension_enabled("appindicatorsupport@rgcjonas.gmail.com"):
