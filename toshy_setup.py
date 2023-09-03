@@ -2080,14 +2080,6 @@ def main(cnfg: InstallerSettings):
         # create reboot reminder temp file, in case installer is run again before a reboot
         if not os.path.exists(cnfg.reboot_tmp_file):
             os.mknod(cnfg.reboot_tmp_file)
-        # print()
-        # print()
-        # print()
-        # print(cnfg.separator)
-        # print(cnfg.separator)
-        # print(cnfg.reboot_ascii_art)
-        # print(cnfg.separator)
-        # print(cnfg.separator)
         show_reboot_prompt()
         print(f'{cnfg.sep_char * 2}  Toshy install complete. Report issues on the GitHub repo.')
         print(f'{cnfg.sep_char * 2}  https://github.com/RedBearAK/toshy/issues/')
