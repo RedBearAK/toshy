@@ -6,7 +6,6 @@ import re
 import sys
 import pwd
 import grp
-import time
 import random
 import string
 import signal
