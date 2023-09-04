@@ -450,6 +450,7 @@ pkg_groups_map = {
                         "pkg-config", "python", "python-dbus", "python-pip",
                         "systemd",
                         "tk",
+                        'xf86-input-evdev',
                         "zenity"],
 
     # TODO: see if this needs "dbus-daemon" added as dependency (for containers)
