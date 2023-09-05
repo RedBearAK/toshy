@@ -140,6 +140,7 @@ class InstallerSettings:
         self.keyszer_tmp_path       = os.path.join(installer_dir_path, 'keyszer-temp')
 
         self.keyszer_branch         = 'environ_api_kde'
+        # self.keyszer_branch         = 'environ_api_hyprland'
         self.keyszer_url            = 'https://github.com/RedBearAK/keyszer.git'
         self.keyszer_clone_cmd      = f'git clone -b {self.keyszer_branch} {self.keyszer_url}'
 
