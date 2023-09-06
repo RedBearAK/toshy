@@ -971,33 +971,40 @@ def macro_tester():
     return _macro_tester
 
 
+zenity_cmd = shutil.which('zenity')
 zenity_icon_option = None
-try:
-    zenity_help_output = subprocess.check_output(['zenity', '--help-info'])
-    help_text = str(zenity_help_output)
-    if '--icon=' in help_text:
-        zenity_icon_option = '--icon=toshy_app_icon_rainbow'
-    elif '--icon-name=' in help_text:
-        zenity_icon_option = '--icon-name=toshy_app_icon_rainbow'
-except subprocess.CalledProcessError:
-    pass  # zenity --help-info failed, assume icon is not supported
+
+if zenity_cmd:
+    try:
+        zenity_help_output = subprocess.check_output([zenity_cmd, '--help-info'])
+        help_text = str(zenity_help_output)
+        if '--icon=' in help_text:
+            zenity_icon_option = '--icon=toshy_app_icon_rainbow'
+        elif '--icon-name=' in help_text:
+            zenity_icon_option = '--icon-name=toshy_app_icon_rainbow'
+    except subprocess.CalledProcessError:
+        pass  # zenity --help-info failed, assume icon is not supported
+else:
+    error('ERROR: Zenity command is missing! Diagnostic dialog not available!')
 
 
 def notify_context():
     """pop up a notification with context info"""
     def _notify_context(ctx: KeyContext):
-        global zenity_icon_option
+        if not zenity_cmd:
+            return
+        # global zenity_icon_option
         message = ( f"Appl. Class   = '{ctx.wm_class}'"
                     f"\nWndw. Title = '{ctx.wm_name}'"
                     f"\nKbd. Device = '{ctx.device_name}'" )
-        zenity_cmd = [  'zenity', '--info', '--no-wrap', 
-                        '--title=Toshy Context Info',
-                        '--text=' + message
-                        ]
+        zenity_cmd_lst = [  zenity_cmd, '--info', '--no-wrap', 
+                            '--title=Toshy Context Info',
+                            '--text=' + message
+                            ]
         # insert the icon argument if it's supported
         if zenity_icon_option is not None:
-            zenity_cmd.insert(3, zenity_icon_option)
-        subprocess.Popen(zenity_cmd, cwd=icons_dir, stderr=DEVNULL, stdout=DEVNULL)
+            zenity_cmd_lst.insert(3, zenity_icon_option)
+        subprocess.Popen(zenity_cmd_lst, cwd=icons_dir, stderr=DEVNULL, stdout=DEVNULL)
         # Optionally, also send a system notification:
         # ntfy.send_notification(message)
     return _notify_context
