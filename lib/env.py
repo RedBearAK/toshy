@@ -212,7 +212,7 @@ def get_env_info():
         'Deepin':                   'deepin',
         'Enlightenment':            'enlightenment',
         'GNOME':                    'gnome',
-        'Hyprland':                 'hypr',
+        'Hyprland':                 'hyprland',
         'IceWM':                    'icewm',
         'KDE':                      'kde',
         'LXDE':                     'lxde',
@@ -260,7 +260,8 @@ def get_env_info():
         processes = {
             'kde': ['plasmashell', 'kwin_ft', 'kwin_wayland', 'kwin_x11'],
             'gnome': ['gnome-shell'],
-            'sway': ['sway']
+            'sway': ['sway'],
+            'hyprland': ['hyprland']
         }
 
         for desktop_env, process_names in processes.items():
