@@ -622,10 +622,15 @@ if not barebones_config:
 
     def load_kbtype_submenu_settings():
         cnfg.load_settings()
+        time.sleep(0.01)
         kbtype_auto_adapt_item.set_active(cnfg.override_kbtype == 'Auto-Adapt')
+        time.sleep(0.01)
         kbtype_apple_item.set_active(cnfg.override_kbtype == 'Apple')
+        time.sleep(0.01)
         kbtype_chromebook_item.set_active(cnfg.override_kbtype == 'Chromebook')
+        time.sleep(0.01)
         kbtype_ibm_item.set_active(cnfg.override_kbtype == 'IBM')
+        time.sleep(0.01)
         kbtype_windows_item.set_active(cnfg.override_kbtype == 'Windows')
 
     def save_kbtype_setting(menu_item, kbtype):
@@ -633,6 +638,7 @@ if not barebones_config:
         if menu_item.get_active():
             cnfg.override_kbtype = kbtype
             cnfg.save_settings()
+            time.sleep(0.01)
             load_kbtype_submenu_settings()
             if cnfg.override_kbtype in valid_kbtypes:
                 # Remind user this is not the intended way of fixing the problem.
