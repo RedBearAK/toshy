@@ -682,19 +682,39 @@ if not barebones_config:
         #                     'This is meant as a temporary fix only! See README.')
         #         ntfy.send_notification(message, icon_file_grayscale, urgency='critical')
 
+    # def load_kbtype_submenu_settings():
+    #     cnfg.load_settings()
+    #     kbtype = cnfg.override_kbtype
+    #     if kbtype == 'Auto-Adapt':
+    #         kbtype_auto_adapt_item.set_active(True)
+    #     elif kbtype == 'Apple':
+    #         kbtype_apple_item.set_active(True)
+    #     elif kbtype == 'Chromebook':
+    #         kbtype_chromebook_item.set_active(True)
+    #     elif kbtype == 'IBM':
+    #         kbtype_ibm_item.set_active(True)
+    #     elif kbtype == 'Windows':
+    #         kbtype_windows_item.set_active(True)
+
+    def set_item_active_with_retry(menu_item, active=True, max_retries=10):
+        """Attempt to set the menu item's active state with retries."""
+        for _ in range(max_retries):
+            menu_item.set_active(active)
+            # Confirm if the active state is set correctly
+            if menu_item.get_active() == active:
+                return
+            # Introduce a small delay before retrying
+            time.sleep(0.05)
+        print(f"Error: Failed to set menu item '{menu_item.get_label()}' to active.")
+
     def load_kbtype_submenu_settings():
         cnfg.load_settings()
         kbtype = cnfg.override_kbtype
-        if kbtype == 'Auto-Adapt':
-            kbtype_auto_adapt_item.set_active(True)
-        elif kbtype == 'Apple':
-            kbtype_apple_item.set_active(True)
-        elif kbtype == 'Chromebook':
-            kbtype_chromebook_item.set_active(True)
-        elif kbtype == 'IBM':
-            kbtype_ibm_item.set_active(True)
-        elif kbtype == 'Windows':
-            kbtype_windows_item.set_active(True)
+        if kbtype == 'Auto-Adapt':      set_item_active_with_retry(kbtype_auto_adapt_item, True)
+        elif kbtype == 'Apple':         set_item_active_with_retry(kbtype_apple_item, True)
+        elif kbtype == 'Chromebook':    set_item_active_with_retry(kbtype_chromebook_item, True)
+        elif kbtype == 'IBM':           set_item_active_with_retry(kbtype_ibm_item, True)
+        elif kbtype == 'Windows':       set_item_active_with_retry(kbtype_windows_item, True)
 
     def save_kbtype_setting(menu_item, kbtype):
         if not menu_item.get_active():
