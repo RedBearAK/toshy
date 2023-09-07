@@ -661,6 +661,27 @@ if not barebones_config:
     # separator_below_prefs_submenu_item = Gtk.SeparatorMenuItem()
     # menu.append(separator_below_prefs_submenu_item)  #-------------------------------------#
 
+    # def load_kbtype_submenu_settings():
+    #     cnfg.load_settings()
+    #     kbtype = cnfg.override_kbtype
+        # kbtype_auto_adapt_item.set_active(cnfg.override_kbtype == 'Auto-Adapt')
+        # kbtype_apple_item.set_active(cnfg.override_kbtype == 'Apple')
+        # kbtype_chromebook_item.set_active(cnfg.override_kbtype == 'Chromebook')
+        # kbtype_ibm_item.set_active(cnfg.override_kbtype == 'IBM')
+        # kbtype_windows_item.set_active(cnfg.override_kbtype == 'Windows')
+
+    # def save_kbtype_setting(menu_item, kbtype):
+        # valid_kbtypes = ['IBM', 'Chromebook', 'Windows', 'Apple']
+        # if menu_item.get_active():
+        #     cnfg.override_kbtype = kbtype
+        #     cnfg.save_settings()
+        #     load_kbtype_submenu_settings()
+        #     if cnfg.override_kbtype in valid_kbtypes:
+        #         # Remind user this is not the intended way of fixing the problem.
+        #         message = ('Overriding keyboard type disables auto-adaptation.\r'
+        #                     'This is meant as a temporary fix only! See README.')
+        #         ntfy.send_notification(message, icon_file_grayscale, urgency='critical')
+
     def load_kbtype_submenu_settings():
         cnfg.load_settings()
         kbtype = cnfg.override_kbtype
@@ -674,11 +695,6 @@ if not barebones_config:
             kbtype_ibm_item.set_active(True)
         elif kbtype == 'Windows':
             kbtype_windows_item.set_active(True)
-        # kbtype_auto_adapt_item.set_active(cnfg.override_kbtype == 'Auto-Adapt')
-        # kbtype_apple_item.set_active(cnfg.override_kbtype == 'Apple')
-        # kbtype_chromebook_item.set_active(cnfg.override_kbtype == 'Chromebook')
-        # kbtype_ibm_item.set_active(cnfg.override_kbtype == 'IBM')
-        # kbtype_windows_item.set_active(cnfg.override_kbtype == 'Windows')
 
     def save_kbtype_setting(menu_item, kbtype):
         if not menu_item.get_active():
@@ -694,16 +710,6 @@ if not barebones_config:
             message = ('Overriding keyboard type disables auto-adaptation.\r'
                     'This is meant as a temporary fix only! See README.')
             ntfy.send_notification(message, icon_file_grayscale, urgency='critical')
-        # valid_kbtypes = ['IBM', 'Chromebook', 'Windows', 'Apple']
-        # if menu_item.get_active():
-        #     cnfg.override_kbtype = kbtype
-        #     cnfg.save_settings()
-        #     load_kbtype_submenu_settings()
-        #     if cnfg.override_kbtype in valid_kbtypes:
-        #         # Remind user this is not the intended way of fixing the problem.
-        #         message = ('Overriding keyboard type disables auto-adaptation.\r'
-        #                     'This is meant as a temporary fix only! See README.')
-        #         ntfy.send_notification(message, icon_file_grayscale, urgency='critical')
 
     ###############################################################
     # Keyboard Type submenu
