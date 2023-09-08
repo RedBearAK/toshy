@@ -412,6 +412,7 @@ def fn_restart_toshy_services(widget):
     _ntfy_msg = 'Toshy systemd services (re)started.\nTap any modifier key before trying shortcuts.'
     ntfy.send_notification(_ntfy_msg, _ntfy_icon_file)
 
+
 def fn_stop_toshy_services(widget):
     """Stop Toshy services with CLI command"""
     toshy_svcs_stop_cmd = os.path.join(home_local_bin, 'toshy-services-stop')
@@ -427,13 +428,16 @@ def fn_restart_toshy_script(widget):
     toshy_cfg_restart_cmd = os.path.join(home_local_bin, 'toshy-config-restart')
     subprocess.Popen([toshy_cfg_restart_cmd], stdout=DEVNULL, stderr=DEVNULL)
 
+
 def fn_stop_toshy_script(widget):
     """Stop the manual run config script"""
     toshy_cfg_stop_cmd = os.path.join(home_local_bin, 'toshy-config-stop')
     subprocess.Popen([toshy_cfg_stop_cmd], stdout=DEVNULL, stderr=DEVNULL)
 
+
 def fn_open_preferences(widget):
     subprocess.Popen(['toshy-gui'])
+
 
 def fn_open_config_folder(widget):
     try:
@@ -442,6 +446,7 @@ def fn_open_config_folder(widget):
     except FileNotFoundError as e:
         error('File not found. I have no idea how this error is possible.')
         error(e)
+
 
 def run_cmd_in_terminal(command):
     # List of common terminal emulators in descending order of commonness.
@@ -468,6 +473,7 @@ def run_cmd_in_terminal(command):
 def fn_show_services_log(widget):
     run_cmd_in_terminal('toshy-services-log')
 
+
 def fn_remove_tray_icon(widget):
     global loop
     remove_lockfile()
@@ -476,6 +482,19 @@ def fn_remove_tray_icon(widget):
     os.system(f'{pkill_cmd} -f "toshy_tray.py"')
     # Gtk.main_quit()
     sys.exit(0)
+
+
+def set_item_active_with_retry(menu_item, active=True, max_retries=10):
+    """Attempt to set the menu item's active state with retries."""
+    for _ in range(max_retries):
+        menu_item.set_active(active)
+        # Confirm if the active state is set correctly
+        if menu_item.get_active() == active:
+            return
+        # Introduce a small delay before retrying
+        time.sleep(0.05)
+    print(f"Error: Failed to set menu item '{menu_item.get_label()}'.")
+
 
 # -------- MENU ITEMS --------------------------------------------------
 
@@ -518,15 +537,25 @@ menu.append(separator_below_script_item)  #-------------------------------------
 
 if not barebones_config:
 
+    # def load_prefs_submenu_settings():
+    #     cnfg.load_settings()
+    #     forced_numpad_item.set_active(cnfg.forced_numpad)
+    #     media_arrows_fix_item.set_active(cnfg.media_arrows_fix)
+    #     multi_lang_item.set_active(cnfg.multi_lang)
+    #     ST3_in_VSCode_item.set_active(cnfg.ST3_in_VSCode)
+    #     Caps2Cmd_item.set_active(cnfg.Caps2Cmd)
+    #     Caps2Esc_Cmd_item.set_active(cnfg.Caps2Esc_Cmd)
+    #     Enter2Ent_Cmd_item.set_active(cnfg.Enter2Ent_Cmd)
+
     def load_prefs_submenu_settings():
         cnfg.load_settings()
-        forced_numpad_item.set_active(cnfg.forced_numpad)
-        media_arrows_fix_item.set_active(cnfg.media_arrows_fix)
-        multi_lang_item.set_active(cnfg.multi_lang)
-        ST3_in_VSCode_item.set_active(cnfg.ST3_in_VSCode)
-        Caps2Cmd_item.set_active(cnfg.Caps2Cmd)
-        Caps2Esc_Cmd_item.set_active(cnfg.Caps2Esc_Cmd)
-        Enter2Ent_Cmd_item.set_active(cnfg.Enter2Ent_Cmd)
+        set_item_active_with_retry(forced_numpad_item, cnfg.forced_numpad)
+        set_item_active_with_retry(media_arrows_fix_item, cnfg.media_arrows_fix)
+        set_item_active_with_retry(multi_lang_item, cnfg.multi_lang)
+        set_item_active_with_retry(ST3_in_VSCode_item, cnfg.ST3_in_VSCode)
+        set_item_active_with_retry(Caps2Cmd_item, cnfg.Caps2Cmd)
+        set_item_active_with_retry(Caps2Esc_Cmd_item, cnfg.Caps2Esc_Cmd)
+        set_item_active_with_retry(Enter2Ent_Cmd_item, cnfg.Enter2Ent_Cmd)
 
     def save_prefs_settings(widget):
         cnfg.forced_numpad      = forced_numpad_item.get_active()
@@ -585,15 +614,19 @@ if not barebones_config:
     # End of Preferences submenu
     ###############################################################
 
+    # def load_optspec_layout_submenu_settings():
+    #     cnfg.load_settings()
+    #     layout = cnfg.optspec_layout
+    #     if layout == 'US':          optspec_us_item.set_active(True)
+    #     elif layout == 'ABC':       optspec_abc_extended_item.set_active(True)
+    #     elif layout == 'Disabled':  optspec_disabled_item.set_active(True)
+
     def load_optspec_layout_submenu_settings():
         cnfg.load_settings()
         layout = cnfg.optspec_layout
-        if layout == 'US':
-            optspec_us_item.set_active(True)
-        elif layout == 'ABC':
-            optspec_abc_extended_item.set_active(True)
-        elif layout == 'Disabled':
-            optspec_disabled_item.set_active(True)
+        if   layout == 'US':            set_item_active_with_retry(optspec_us_item, True)
+        elif layout == 'ABC':           set_item_active_with_retry(optspec_abc_extended_item, True)
+        elif layout == 'Disabled':      set_item_active_with_retry(optspec_disabled_item, True)
 
     def save_optspec_layout_setting(menu_item, layout):
         if not menu_item.get_active():
@@ -695,17 +728,6 @@ if not barebones_config:
     #         kbtype_ibm_item.set_active(True)
     #     elif kbtype == 'Windows':
     #         kbtype_windows_item.set_active(True)
-
-    def set_item_active_with_retry(menu_item, active=True, max_retries=10):
-        """Attempt to set the menu item's active state with retries."""
-        for _ in range(max_retries):
-            menu_item.set_active(active)
-            # Confirm if the active state is set correctly
-            if menu_item.get_active() == active:
-                return
-            # Introduce a small delay before retrying
-            time.sleep(0.05)
-        print(f"Error: Failed to set menu item '{menu_item.get_label()}' to active.")
 
     def load_kbtype_submenu_settings():
         cnfg.load_settings()
