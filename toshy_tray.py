@@ -484,16 +484,16 @@ def fn_remove_tray_icon(widget):
     sys.exit(0)
 
 
-def set_item_active_with_retry(menu_item, active=True, max_retries=10):
+def set_item_active_with_retry(menu_item, state=True, max_retries=5):
     """Attempt to set the menu item's active state with retries."""
     for _ in range(max_retries):
-        menu_item.set_active(active)
-        # Confirm if the active state is set correctly
-        if menu_item.get_active() == active:
+        menu_item.set_active(state)
+        time.sleep(0.1)
+        if menu_item.get_active() == state:
             return
-        # Introduce a small delay before retrying
-        time.sleep(0.05)
-    print(f"Error: Failed to set menu item '{menu_item.get_label()}'.")
+        time.sleep(0.1)
+    if not menu_item.get_active() == state:
+        error(f"ERROR: Failed to set item '{menu_item.get_label()}' to state '{state}'.")
 
 
 # -------- MENU ITEMS --------------------------------------------------
