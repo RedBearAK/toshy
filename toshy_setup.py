@@ -1489,16 +1489,17 @@ def apply_tweaks_GNOME():
 
     print(f'Disabled Super key opening the GNOME overview. (Use Cmd+Space instead.)')
 
-    # Set the keyboard shortcut for "Switch applications" to "Alt+Tab"
-    # gsettings set org.gnome.desktop.wm.keybindings switch-applications "['<Alt>Tab']"
-    subprocess.run(['gsettings', 'set', 'org.gnome.desktop.wm.keybindings',
-                    'switch-applications', "['<Alt>Tab']"])
-    # Set the keyboard shortcut for "Switch windows of an application" to "Alt+`" (Alt+Grave)
-    # gsettings set org.gnome.desktop.wm.keybindings switch-group "['<Alt>grave']"
-    subprocess.run(['gsettings', 'set', 'org.gnome.desktop.wm.keybindings',
-                    'switch-group', "['<Alt>grave']"])
+    # TODO: Fix this so it doesn't mess up task switching on Apple keyboards (when set to Super+Tab)
+    # # Set the keyboard shortcut for "Switch applications" to "Alt+Tab"
+    # # gsettings set org.gnome.desktop.wm.keybindings switch-applications "['<Alt>Tab']"
+    # subprocess.run(['gsettings', 'set', 'org.gnome.desktop.wm.keybindings',
+    #                 'switch-applications', "['<Alt>Tab']"])
+    # # Set the keyboard shortcut for "Switch windows of an application" to "Alt+`" (Alt+Grave)
+    # # gsettings set org.gnome.desktop.wm.keybindings switch-group "['<Alt>grave']"
+    # subprocess.run(['gsettings', 'set', 'org.gnome.desktop.wm.keybindings',
+    #                 'switch-group', "['<Alt>grave']"])
 
-    print(f'Enabled "Switch applications" Mac-like task switching.')
+    # print(f'Enabled "Switch applications" Mac-like task switching.')
     
     # Enable keyboard shortcut for GNOME Terminal preferences dialog
     # gsettings set org.gnome.Terminal.Legacy.Keybindings:/org/gnome/terminal/legacy/keybindings/ preferences '<Control>less'
