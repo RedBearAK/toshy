@@ -872,7 +872,7 @@ def matchProps(*,
         if logging_enabled: # and all(cnd_lst): # << add this to show only "True" condition lists
             print(f'####  CND_LST ({all(cond_list)})  ####  {dbg=}')
             for elem in cond_list:
-                print('##', re.sub('^.*span=.*\), ', '', str(elem)).replace('>',''))
+                print('##', re.sub(r'^.*span=.*\), ', '', str(elem)).replace('>',''))
             print('-------------------------------------------------------------------')
         return all(cond_list)
 
@@ -965,7 +965,7 @@ def macro_tester():
                     ST(f"Wind. Title: '{ctx.wm_name}'"), C("Enter"),
                     ST(f"Kbd. Device: '{ctx.device_name}'"), C("Enter"),
                     ST("Next test should come out on ONE LINE!"), C("Enter"),
-                    ST("Unicode and Shift Test: 🌹—€—\u2021—ÿ—\U00002021 12345 !@#$% |\ !!!!!!"),
+                    ST("Unicode and Shift Test: 🌹—€—\u2021—ÿ—\U00002021 12345 !@#$% |\\ !!!!!!"),
                     C("Enter")
         ]
     return _macro_tester
