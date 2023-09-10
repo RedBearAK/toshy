@@ -1498,26 +1498,24 @@ def apply_tweaks_GNOME():
     # # gsettings set org.gnome.desktop.wm.keybindings switch-group "['<Alt>grave']"
     # subprocess.run(['gsettings', 'set', 'org.gnome.desktop.wm.keybindings',
     #                 'switch-group', "['<Alt>grave']"])
-
     # print(f'Enabled "Switch applications" Mac-like task switching.')
-    
+
     # Enable keyboard shortcut for GNOME Terminal preferences dialog
     # gsettings set org.gnome.Terminal.Legacy.Keybindings:/org/gnome/terminal/legacy/keybindings/ preferences '<Control>less'
     cmd_path = 'org.gnome.Terminal.Legacy.Keybindings:/org/gnome/terminal/legacy/keybindings/'
-    # prefs_binding = '<Control>less'
     prefs_binding = '<Control>comma'
     subprocess.run(['gsettings', 'set', cmd_path, 'preferences', prefs_binding])
-
     print(f'Set a keybinding for GNOME Terminal preferences.')
 
     # Enable "Expandable folders" in Nautilus
     # dconf write /org/gnome/nautilus/list-view/use-tree-view true
-    subprocess.run(['dconf', 'write', '/org/gnome/nautilus/list-view/use-tree-view', 'true'])
+    cmd_path = '/org/gnome/nautilus/list-view/use-tree-view'
+    subprocess.run(['dconf', 'write', cmd_path, 'true'])
 
     # Set default view option in Nautilus to "list-view"
     # dconf write /org/gnome/nautilus/preferences/default-folder-viewer "'list-view'"
-    subprocess.run(['dconf', 'write', '/org/gnome/nautilus/preferences/default-folder-viewer',
-                    "'list-view'"])
+    cmd_path = '/org/gnome/nautilus/preferences/default-folder-viewer'
+    subprocess.run(['dconf', 'write', cmd_path, "'list-view'"])
 
     print(f'Set Nautilus default to "List" view with "Expandable folders" enabled.')
 
