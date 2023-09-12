@@ -3631,10 +3631,10 @@ keymap("GenTerms overrides: Fedora", {
 # }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DISTRO_NAME in ['fedora', 'almalinux'] )
 }, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_NAME in ['fedora', 'almalinux'] )
 keymap("GenTerms overrides: Pop!_OS", {
-    C("LC-Right"):              [bind,C("Super-C-Up")],         # SL - Change workspace (popos)
-    C("LC-Left"):               [bind,C("Super-C-Down")],       # SL - Change workspace (popos)
-# }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DISTRO_NAME == 'popos')
-}, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_NAME == 'popos')
+    C("LC-Right"):              [bind,C("Super-C-Up")],         # SL - Change workspace (pop)
+    C("LC-Left"):               [bind,C("Super-C-Down")],       # SL - Change workspace (pop)
+# }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DISTRO_NAME == 'pop')
+}, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_NAME == 'pop')
 keymap("GenTerms overrides: Ubuntu/Fedora", {
     C("LC-RC-Q"):               C("Super-L"),                   # Lock screen (ubuntu/fedora)
     C("LC-Right"):              [bind,C("Super-Page_Up")],      # SL - Change workspace (ubuntu/fedora)
@@ -3806,12 +3806,12 @@ keymap("GenGUI overrides: KDE Neon", {
                                                                 # SL - Default SL - Change workspace (kde_neon)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'neon' )
 keymap("GenGUI overrides: Pop!_OS", {
-    C("RC-Space"):             [iEF2NT(),C("Super-slash")],     # "Launch and switch applications" (popos)
+    C("RC-Space"):             [iEF2NT(),C("Super-slash")],     # "Launch and switch applications" (pop)
     C("RC-H"):                  C("Super-h"),                   # Default SL - Minimize app (gnome/budgie/popos/fedora) not-deepin
-    C("Super-Right"):          [bind,C("Super-C-Up")],          # SL - Change workspace (popos)
-    C("Super-Left"):           [bind,C("Super-C-Down")],        # SL - Change workspace (popos)
-    C("RC-Q"):                  C("Super-q"),                   # SL - Close Apps (popos)
-}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'popos' )
+    C("Super-Right"):          [bind,C("Super-C-Up")],          # SL - Change workspace (pop)
+    C("Super-Left"):           [bind,C("Super-C-Down")],        # SL - Change workspace (pop)
+    C("RC-Q"):                  C("Super-q"),                   # SL - Close Apps (pop)
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'pop' )
 keymap("GenGUI overrides: Ubuntu", {
     C("Super-RC-Q"):            C("Super-L"),                   # Lock screen (ubuntu)
     C("Super-Right"):          [bind,C("Super-Page_Up")],       # SL - Change workspace (ubuntu)

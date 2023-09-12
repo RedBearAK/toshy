@@ -100,7 +100,7 @@ def get_env_info():
         'Linux.*Mint':          'mint',
         'openSUSE.*Tumbleweed': 'opensuse-tumbleweed',
         'Peppermint.*':         'peppermint',
-        'Pop!_OS':              'popos',
+        'Pop!_OS':              'pop',
         'Red.*Hat.*':           'rhel',
         'Rocky.*':              'rocky',
         'Ubuntu':               'ubuntu',
