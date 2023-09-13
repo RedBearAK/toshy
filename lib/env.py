@@ -258,10 +258,10 @@ def get_env_info():
                     pass
 
         processes = {
-            'kde': ['plasmashell', 'kwin_ft', 'kwin_wayland', 'kwin_x11'],
-            'gnome': ['gnome-shell'],
-            'sway': ['sway'],
-            'hyprland': ['hyprland']
+            'kde':          ['plasmashell', 'kwin_ft', 'kwin_wayland', 'kwin_x11'],
+            'gnome':        ['gnome-shell'],
+            'sway':         ['sway', 'swaywm'],
+            'hyprland':     ['hyprland'],
         }
 
         for desktop_env, process_names in processes.items():
