@@ -134,7 +134,7 @@ try:
     # Pylance will complain if function undefined, without 'ignore' comment
     environ_api(session_type = SESSION_TYPE, wl_desktop_env = DESKTOP_ENV) # type: ignore
 except NameError:
-    debug(f"The API function 'environ_api' is not defined yet.")
+    debug(f"The API function 'environ_api' is not defined yet. Using wrong 'keyszer' branch?")
     pass
 
 
