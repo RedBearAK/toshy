@@ -844,6 +844,8 @@ timeouts(
 )
 ```
 
+Save the change to the config file and then restart Toshy from the tray icon, or with `toshy-servcies-restart` in a terminal.  
+
 If you do need to disable or reduce the suspend timer because of the touchpad issue, it will become more important to implement the fixes below for VSCode and Firefox, to keep them from focusing the menu bar every time you hit `Option/Alt`.  
 
 ### VSCode(s) and Firefox menu stealing focus when hitting `Option/Alt`
