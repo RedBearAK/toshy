@@ -220,6 +220,7 @@ def get_env_info():
         'MATE':                     'mate',
         'Pantheon':                 'pantheon',
         'Plasma':                   'kde',
+        'Sway':                     'sway',
         'SwayWM':                   'sway',
         'Trinity':                  'trinity',
         'Ubuntu':                   'gnome',    # "Ubuntu" in XDG_CURRENT_DESKTOP, but DE is GNOME
