@@ -3858,6 +3858,9 @@ keymap("GenGUI overrides: KDE", {
 keymap("GenGUI overrides: MATE", {
     C("RC-Space"):             [iEF2NT(),C("Alt-Space")],       # Right click, configure Mint menu shortcut to match
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'mate' )
+keymap("GenGUI overrides: swaywm", {
+    C("RC-Space"):             [iEF2NT(),C("Super-d")],        # sway window manager
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'sway' )
 keymap("GenGUI overrides: Trinity desktop", {
     C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # Trinity desktop (Q4OS)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'trinity' )
