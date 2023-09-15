@@ -3657,6 +3657,10 @@ keymap("GenTerms overrides: GNOME", {
     C("Shift-LC-Space"):       [bind,C("Super-Shift-Space")],   # keyboard input source (language) switching (reverse) (gnome)
 # }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DESKTOP_ENV == 'gnome' )
 }, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DESKTOP_ENV == 'gnome' )
+keymap("GenTerms overrides: swaywm", {
+    # C("RC-Q"):                  C("Shift-RC-Q"),                # Override sway GenGUI Cmd+Q
+    C("RC-Q"):                  C("Alt-F4"),                    # Override sway GenGUI Cmd+Q
+}, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DESKTOP_ENV == 'sway' )
 keymap("GenTerms overrides: Xfce4", {
     C("RC-Grave"):             [bind,C("Super-Tab")],           # xfce4 Switch within app group
     C("Shift-RC-Grave"):       [bind,C("Super-Shift-Tab")],     # xfce4 Switch within app group
