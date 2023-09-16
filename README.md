@@ -1,32 +1,34 @@
 # Current status: Stable Beta (Please Read)
 
-WARNING: There is a very annoying "bug" going around where there is a problem with service like `xdg-desktop-portal` and `xdg-desktop-portal-gnome` (or `xdg-desktop-portal-gtk`) causing very long delays with launching certain applications (particularly GTK apps like Firefox, but also reportedly Qt apps sometimes) in a Wayland session. Some distros seem to have a fix for this, others have not fixed it yet.  
+WARNING: There is a very annoying "bug" going around where there is a problem with services like `xdg-desktop-portal` and `xdg-desktop-portal-gnome` (or `xdg-desktop-portal-gtk`) causing very long delays with launching certain applications (particularly GTK apps like Firefox, but also reportedly Qt apps sometimes) in a Wayland session. Some distros seem to have a fix for this, others have not fixed it yet.  
 
 Symptoms for Toshy are that the systemd services can't start up properly until anywhere from 30 seconds to a minute or more after logging in. They will eventually start, and restarting the services later (after the glitchy desktop portal service times out) works without issue. I've been observing this on KDE in multiple Linux distros. One "fix" is to mask the `xdg-desktop-portal-gnome` (or `xdg-desktop-portal-gtk`) service to keep it from clogging things up:  
 
 ```sh
 systemctl --user mask xdg-desktop-portal-gnome
+```
 
 Or:
 
+```sh
 systemctl --user mask xdg-desktop-portal-gtk
 ```
 
-But you may need to unmask it if you log into a GNOME desktop, in a Wayland session.  
+But you may need to unmask the service if you log into a GNOME desktop, in a Wayland session.  
 
 ## Main issues you might run into
 
-- KEYBOARD TYPE: The Toshy config file tries to automatically identify the "type" of your keyboard based on some pre-existing lists of keyboard device names, which do not have many entries yet. So your keyboard may be misidentified, leading to modifier keys in the "wrong" place. BE PREPARED to identify the name of your keyboard device (try `toshy-devices` in a terminal) and enter it into the correct list in the config file to fix this problem. There is an editable "custom" list where the entry should be retained even if you reinstall later.  
+- KEYBOARD TYPE: The Toshy config file tries to automatically identify the "type" of your keyboard based on some pre-existing lists of keyboard device names, which do not have many entries yet. So your keyboard may be misidentified, leading to modifier keys in the "wrong" place. BE PREPARED to identify the name of your keyboard device (try `toshy-devices` in a terminal) and enter it into the custom list (actually a Python "dictionary") in the config file to fix this problem. The custom entry is designed to be retained even if you reinstall later.  
 
 Go to this FAQ entry for more info:  
 
-[Keyboard Type Not Correct](#my-keyboard-is-not-recognized-as-the-correct-type)  
+- [Keyboard Type Not Correct](#my-keyboard-is-not-recognized-as-the-correct-type)  
+
+Other possible issues:  
 
 - May have issues installing on distros not on the "tested" list below. Try the `--list-distros` and `--override-distro` options (separately) with the installer, if you think your distro is closely related to one on the list.  
 
 - May seem to run at login, but not do any remapping, needing `toshy-config-verbose-start` in the terminal to troubleshoot. Or, it may just need a restart of the services from the tray icon or with `toshy-services-restart`. Check the output of `toshy-services-log` and `toshy-services-status` first to see if there is an obvious error message that explains the problem. Like not having a compatible GNOME Shell extension installed/enabled to support a Wayland+GNOME session.  
-
-- The Wayland+KDE (Plasma) solution is better now. It should be possible to install under some desktop that is not KDE, then log into KDE on the same system and have Toshy working. If you're not having the issue described at the start of the README.  
 
 - Some distros have no `journalctl` output for `systemd` "user" services, for unknown reasons. I've seen this on Arcolinux, the RHEL clones. If you have some understanding of why this happens, please open an issue thread.  
 
@@ -34,19 +36,19 @@ Go to this FAQ entry for more info:
 
 # Toshy README
 
-• • • • • 
+• • • • • • • 
 ![Toshy app icon inverse grayscale](./assets/toshy_app_icon_rainbow_inverse_grayscale.svg "Toshy app icon inverse grayscale")
-• • • • • 
+• • • • • • • 
 ![Toshy app icon inverted](./assets/toshy_app_icon_rainbow_inverse.svg "Toshy app icon inverse")
-• • • • • 
+• • • • • • • 
 ![Toshy app icon](./assets/toshy_app_icon_rainbow.svg "Toshy app icon")
 
 
 ## Make your Linux keyboard act like a 'Tosh! <br>(or, What the Heck is This?!?)
 
-Toshy is a config file for the `keyszer` Python-based keymapper for Linux (which was forked from `xkeysnail`). The Toshy config is not strictly a fork of Kinto, but was based in the beginning entirely on the config file for Kinto.sh by Ben Reaves (https://github.com/rbreaves/kinto or https://kinto.sh). Without Kinto, Toshy would not exist.  Using Toshy will feel basically the same as using Kinto, just with some new features and some problems solved.  
+Toshy is a config file for the `keyszer` Python-based keymapper for Linux (which was forked from `xkeysnail`) along with some commands and apps to more conveniently interact with and manage the keymapper. The Toshy config is not strictly a fork of Kinto, but was based in the beginning entirely on the config file for Kinto.sh by Ben Reaves (https://github.com/rbreaves/kinto or https://kinto.sh). Without Kinto, Toshy would not exist.  Using Toshy will feel basically the same as using Kinto, just with some new features and some problems solved.  
 
-The purpose of Toshy is to match, as closely as possible, the behavior of keyboard shortcuts in macOS when working on similar applications in Linux. General system-wide shortcuts such as Cmd+Q/W/A/Z/X/C/V and so on are relatively easy to mimic by just moving the modifier key locations, with `modmaps`. A lot of shortcuts in Linux just use `Ctrl` in the place of where macOS would use `Cmd`. But many other shortcut combos from macOS applications have to be remapped onto entirely different shortcut combos in the Linux equivalent application. This is done using application-specific `keymaps`, that only become active when you are using the specified application or window.  
+The purpose of Toshy is to match, as closely as possible, the behavior of keyboard shortcuts in macOS when working on similar applications in Linux. General system-wide shortcuts such as Cmd+Q/W/A/Z/X/C/V and so on are relatively easy to mimic by just moving the modifier key locations, with `modmaps` specific to each supported keyboard type. A lot of shortcuts in Linux just use `Ctrl` in the place of where macOS would use `Cmd`. But many other shortcut combos from macOS applications have to be remapped onto entirely different shortcut combos in the Linux equivalent application. This is done using application-specific `keymaps`, that only become active when you are using the specified application or window. Some of the keymaps apply to entire groups of apps, like "terminals" or "file managers".  
 
 All of this basic functionality is inherited from Kinto. Toshy just tries to be a bit fancier in implementing it.  
 
@@ -56,7 +58,9 @@ If an app that you use frequently in Linux has some shortcut behavior that still
 
 > [!NOTE]  
 > There's an easier way now, that works in both X11/Xorg and Wayland sessions:  
-> `Shift+Opt+Cmd+I,I` (quickly double-tap the "I" key)  
+>
+> - `Shift+Opt+Cmd+I,I` (quickly double-tap the "I" key)  
+>
 > This brings up a dialog showing app/window/keyboard info.  
 
 Still relevant, but unnecessary with the diagnostic tool in the note above:  
@@ -81,9 +85,11 @@ Four different keyboard types are supported by Toshy (Windows/PC, Mac/Apple, IBM
 
 ## Option-key Special Characters
 
-Toshy includes a complete implementation of the macOS Option-key special characters, including all the "dead key" accent keys, from two keyboard layouts. The standard US keyboard layout, and the "ABC Extended" layout (which is still a US keyboard layout otherwise). This adds up to somewhere over 600 special characters being available, between the two layouts. It works just the same way it does on macOS, when you hold the Option or Shift+Option keys. For example, Option+E, then Shift+E, gets you an "E" with Acute accent: É.  
+Toshy includes a complete implementation of the macOS Option-key special characters, including all the "dead key" accent keys, from two keyboard layouts. The standard US keyboard layout, and the "ABC Extended" layout (which is still a US keyboard layout otherwise). This adds up to somewhere over 600 special characters being available, between the two layouts. It works the same way it does on macOS, when you hold the Option or Shift+Option keys. For example, Option+E, then Shift+E, gets you an "E" with Acute accent: É.  
 
-The special characters may not work as expected unless you add a bit of "throttle" delay to the macro output. This is a new `keyszer` API function that inserts timing delays in the output of combos that involve modifier keys. There is a general problem with Linux keymappers using `libinput` in a lot of situations, especially in virtual machines, with the modifier key presses being misinterpreted as occuring at a slightly different time, leading to problems with macro output. A slight delay will usually clear this right up, but a virtual machine environment may need a few dozen milliseconds to achieve macro stability. In fact it's not just macros, but many shortcuts in general may seem very flaky or unusuble in a VM, and this will impact the Option-key special characters, since it uses Unicode macro sequences.  
+The special characters may not work as expected unless you add a bit of "throttle" delay to the macro output. This is a new `keyszer` API function that inserts timing delays in the output of combos that involve modifier keys. There is a general problem with Linux keymappers using `libinput` in a lot of situations, especially in virtual machines, with the modifier key presses being misinterpreted as occuring at a slightly different time, leading to problems with macro output.  
+
+A slight delay will usually clear this right up, but a virtual machine environment may need a few dozen milliseconds to achieve macro stability. In fact it's not just macros, but many shortcuts in general may seem very flaky or unusuble in a VM, and this will impact the Option-key special characters, since it uses Unicode macro sequences.  
 
 A dedicated Unicode processing function was added to `keyszer` that made it possible to bring the Option-key special characters to Linux, where previously I could only add it to the Windows version of Kinto using AutoHotkey.  
 
@@ -103,9 +109,9 @@ There's no simple way around this, since the keymapper is only designed to send 
 
  1. Multi-user support: I believe some changes I've made will facilitate proper multi-user support on the same system. Even in the case of the user invoking a "Switch User" feature in their desktop environment, where the first user's desktop is still running in the background while another user is logged into their own desktop and using the screen (and physical keyboard). This is a very convenient feature even if you aren't actually sharing your computer with another person. There are many reasons why you might want to log into a different user's desktop to test something. Currently this absolutely requires `systemd` and `loginctl`.  
 
- 1. Certain Linux distros, outside the most popular group of Ubuntus, Arches and Red Hat/Fedora related distros, really did not like the way the Kinto installer messes with the `sudoers` file. The Kinto installer does this to provide the user easier access to certain commands used to control the `xkeysnail` service. Some of these Linux distros would get b0rked quite badly if you ran the Kinto installer on them. A couple I ran into that had this problem were antiX and Gentoo. Strangely, the close relative of antiX, the very popular MX Linux, did not have the same problem with Kinto that antiX had. The Toshy installer does nothing with `sudoers` and uses "user" `systemd` services, or a manual script, and sets up `udev` rules so that the user doesn't need to run anything with `sudo` to make the keymapping work. I've already tested Toshy successfully on antiX. Still looking for a user-friendly Gentoo ISO to use for testing, but I have no reason to believe it won't work just as well, once I figure out the native packages needed.  
+ 1. Certain Linux distros, outside the most popular group of Ubuntu-based, Debian-based, Arch-based and Red Hat/Fedora-related distros, really did not like the way the Kinto installer messes with the `sudoers` file. The Kinto installer does this to provide the user easier access to certain commands used to control the `xkeysnail` service. Some of these Linux distros would get b0rked quite badly if you ran the Kinto installer on them. A couple I ran into that had this problem were antiX and Gentoo. Strangely, the close relative of antiX, the very popular MX Linux, did not have the same problem with Kinto that antiX had. The Toshy installer does nothing with `sudoers` and uses "user" `systemd` services, or a manual script, and sets up `udev` rules so that the user doesn't need to run anything with `sudo` to make the keymapping work. I've already tested Toshy successfully on antiX. Still looking for a user-friendly Gentoo ISO to use for testing, but I have no reason to believe it won't work just as well, once I figure out the native packages needed.  
 
- 1. A start on Wayland support. Two Wayland+[desktop environment] types are working now: Wayland+GNOME (needs shell extension installed) and Wayland+KDE (Plasma, installs a KWin script that needs to see a window activation event to start functioning). Wayland+sway and Wayland+Hyprland support is theoretically possible. More on that further down.  
+ 1. A start on Wayland support. Three Wayland+[desktop environment] types are working now: Wayland+GNOME (needs shell extension installed), Wayland+KDE (Plasma, installs a KWin script), and Wayland+sway. Wayland+Hyprland support is in progress. More on that further down.  
 
  1. The Option-key special characters, as described above. Two different layouts are available. Or it can be completely disabled.  
 
@@ -147,7 +153,7 @@ There's no simple way around this, since the keymapper is only designed to send 
 
     - Automatically installed from custom branch by Toshy installer
 
-- X11/Xorg or Wayland+GNOME or Wayland+KDE (Plasma)
+- X11/Xorg or Wayland+GNOME or Wayland+KDE (Plasma) or Wayland+sway
 
     - Wayland+GNOME requires one of these GNOME Shell extensions‡ (see note):
 
@@ -163,7 +169,7 @@ There's no simple way around this, since the keymapper is only designed to send 
         - UUID: `focused-window-dbus@flexagoon.com`
         - URL: https://extensions.gnome.org/extension/5592/focused-window-d-bus/
 
-    - Wayland+KDE has a small glitch where you have to change the focused window once after the KWin script is installed, to get the app-specific remapping to start working. I am trying a solution that uses a pop-up dialog to create a KWin event.
+    - Wayland+KDE has a small glitch where you have to change the focused window once after the KWin script is installed, to get the app-specific remapping to start working. I am trying a solution that uses a pop-up dialog to create a KWin event that "kickstarts" the KWin script.
 
 - `systemd` (but you can just manually run the config from terminal, shell script, or tray indicator menu)
 
@@ -268,7 +274,6 @@ At the moment this installer option will do the following:
     - LargeLineHeight-NoLoopK variant
     - Try it in terminals or code editors
     - May look a bit "heavy" on KDE due to forced "stem darkening" in Qt apps
-- GNOME: Makes "Switch applications" the primary task switching style (groups apps like macOS)
 - KDE: Installs "Application Switcher" KWin script (groups apps like macOS/GNOME)
 - KDE: Disables task switcher option "Show selected window"
 - KDE: Sets the task switcher to "Large Icons" (like macOS/GNOME task switcher)
@@ -296,6 +301,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
     - Standard GNOME variant tested (Wayland session requires extension)
     - KDE variant tested (X11/Xorg or Wayland+KDE session)
+    - Sway spin variant tested
 
 - Ultramarine Linux 38 (Fedora-based)
 
@@ -340,7 +346,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 - CentOS Stream 9 (RHEL 9 upstream)
 
-    - Same info as the RHEL clones above
+    - Same info as the RHEL 9.x clones above
     - Tested with "Workstation" installer choice
 
 - CentOS Stream 8 (RHEL upstream) - Partial support:
@@ -518,7 +524,8 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 - X11/Xorg (all desktop environments)
 - Wayland+GNOME (needs shell extension)
-- Wayland+KDE (change window focus once to make it work)
+- Wayland+KDE
+- Wayland+sway
 
 If you are in an X11/Xorg login session, the desktop environment or window manager doesn't really matter. The keymapper gets the window class/name/title information directly from the X server with `Xlib`.  
 
@@ -526,25 +533,39 @@ On the other hand, if you are in a Wayland session, it is only possible to obtai
 
 For Wayland+GNOME this requires at least one of the known compatible GNOME Shell extensions to be installed. See above in "Requirements".  
 
-At some point it should be possible to have Wayland+KDE_Plasma working (UPDATE: Wayland+KDE is pretty much working), and possibly Wayland+sway and Wayland+hyprland. The methods to do this already exist in the `xremap` keymapper, but that project is written in Rust and `keyszer` is written in Python.  
+Work on Wayland+Hyprland is progressing.  
 
 There are specific remaps or overrides of default remaps for several common desktop environments (or distros which have shortcut peculiarities in their default desktop setups). They become active if the desktop environment is detected correctly by the `env.py` module used by the config file, or the information about the desktop can be placed in some `OVERRIDE` variables in the config file.  
 
 ## Usage
 
-Toshy does its best to set itself up automatically on any Linux system that uses `systemd` and that is a "known" Linux distro type that the installer knows how to deal with (i.e., has a list of the correct packages to install, and knows how to use the package manager). Generally this means distros that use `apt`, `dnf` or `pacman` so far (and `zypper` from openSUSE now).  
+Toshy does its best to set itself up automatically on any Linux system that uses `systemd` and that is a "known" Linux distro type that the installer knows how to deal with (i.e., has a list of the correct native packages to install, and knows how to use the package manager). Generally this means distros that use any of these package managers:  
+
+- `apt`
+- `dnf`
+- `pacman`
+- `zypper`
+- `eopkg`
 
 If the install was successful, there should be a number of different terminal commands available to check the status of the Toshy `systemd` user services (the services are not system-wide, in an attempt to support multi-user setups and be ready to support Wayland more easily) and stop/start/restart the services.  
 
 Toshy actually consists of two separate `systemd` services meant to work together, with one monitoring the other, so the shell commands are meant to make working with the paired services much easier.  
 
-(There is now a third service, but it is only active in a Wayland+KDE environment.)  
+(There is now a third service, but it is only active in a Wayland+KDE environment, creating a D-Bus service to receive updates from the KWin script with the necessary window info.)  
 
 The commands are copied into `~/.local/bin`, and you will be prompted to add that location to your shell's `PATH` if it is not present. Depends on the distro whether that location is already set up as part of the path or not.  
 
+If you change your shell or reset your RC file and need to fix the path, an easy way to do that is to run this script that re-installs the terminal commands in the same way they were initially installed:  
+
+```sh
+~/.config/toshy/scripts/toshy-bincommands-setup.sh
+```
+
+These are the main commands for managing and checking the services:  
+
 ```
 toshy-services-log      (shows journalctl output for Toshy services)
-toshy-services-status   (shows the current state of Toshy services)
+toshy-services-status   (shows the current state of all Toshy services)
 toshy-services-start
 toshy-services-stop
 toshy-services-restart
@@ -770,29 +791,6 @@ keyboards_UserCustom_dct = {
 
 This will force the keyboard to be treated as the 'type' you put after the colon.  
 
-**_Original content of this FAQ is below:_** 
-
-* * *  
-
-If you run the verbose output script you'll be able to see the device name that `keyszer` is seeing when you use your keyboard. Run this in a terminal, and then use a remapped shortcut like `Shift+Cmd+Left_Brace` or `Shift+Cmd+Right_Brace` (the square bracket keys). Or just `Cmd+Tab` away from the terminal and back.  
-
-```sh
-toshy-config-verbose-start
-```
-
-Using the device name, you can look for the correct keyboard Python "list" in the config file and add the device name to the list. The list names are:   
-
-```py
-keyboards_IBM
-keyboards_Chromebook
-keyboards_Windows
-keyboards_Apple
-```
-
-Add your device name as an item in the relevant list, and restart Toshy. The keyboard device should now be treated as the correct type, with the modifiers in the right places.  
-
-> **_NOTE! If you have this problem, please submit an issue report about it, so the device name can be added to the default Toshy config!_**  
-
 ### My keyboard is a switchable Windows/Mac "universal" model
 
 I'm going to recommend that such keyboards be placed in the "Windows" mode. Most such keyboards won't be automatically identified as an "Apple" keyboard by Toshy (mostly because the device name won't contain "Apple") so things will probably work best if you just leave it in "Windows" mode and let Toshy deal with remapping the modifiers.  
@@ -801,7 +799,13 @@ If that doesn't work out well, you'll need to add it to the custom dictionary de
 
 ### CLI/Shell commands missing/unavailable
 
-If you don't have `~/.local/bin` in your shell path, or you answered `n` when prompted during install to add it to the path, you will have to add it to the path yourself, or re-run the installer. Alternately, if you're trying to see the commands immediately after running the installer, you may need to run one of the following commands:  
+If you don't have `~/.local/bin` in your shell path, or you answered `n` when prompted during install to add it to the path, you will have to add it to the path yourself, or re-run the installer or run this command:  
+
+```sh
+~/.config/toshy/scripts/toshy-bincommands-setup.sh
+```
+
+Alternately, if you're trying to see the commands immediately after running the installer, you may need to run one of the following commands:  
 
 ```sh
 hash -r
@@ -999,24 +1003,24 @@ Which task-switching style works for you is down to personal preference, and how
 
 ### KDE Plasma and the Meta/Super/Win/Cmd key
 
-KDE Plasma desktops tend to have the Meta/Super/Win/Cmd key bound to open the application menu. Like the other desktop environments that bind the `Meta` key to do something by itself, this appears to be an alien concept as far as the regular keyboard shortcut control panel is concerned. You won't find it there. To disable this secret modifier-only binding, you have to put something in a hidden dotfile and refresh `KWin`.  
+> [!NOTE]
+> The Toshy installer will now take care of this, and `toshy_setup.py` has command-line options to apply or remove this tweak independently of the full install procedure. 
 
-> UPDATE: The Toshy installer will now take care of this, and `toshy_setup.py` has command-line options to apply or remove this tweak independently of the full install procedure. 
+KDE Plasma desktops tend to have the Meta/Super/Win/Cmd key bound to open the application menu. Like the other desktop environments that bind the `Meta` key to do something by itself, this appears to be an alien concept as far as the regular keyboard shortcut control panel is concerned. You won't find it there.  
 
-Open the file `~/.config/kwinrc`, or create it if it doesn't exist. Append this information at the end of the file: 
-
-```ini
-[ModifierOnlyShortcuts]
-Meta=
-```
-
-Then, run this command in the terminal: 
+To disable this secret Meta-only binding, use these commands:   
 
 ```sh
+kwriteconfig5 --file kwinrc --group ModifierOnlyShortcuts --key Meta ''
 qdbus org.kde.KWin /KWin reconfigure
 ```
 
-To undo this, remove or comment out the same text in the file, and run the same command. The `Meta` key binding should be back.  
+To restore the Meta-only key binding, use these commands:  
+
+```sh
+kwriteconfig5 --file kwinrc --group ModifierOnlyShortcuts --key Meta --delete
+qdbus org.kde.KWin /KWin reconfigure
+```
 
 More info about this:  
 
