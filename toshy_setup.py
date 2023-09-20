@@ -357,14 +357,16 @@ distro_groups_map = {
     # Add more as needed...
 }
 
+# TODO: see if other distros besides Fedora/RHELs have package like 
+# 'gnome-shell-extension-appindicator' or equivalent
 pkg_groups_map = {
     # 'test-based':      ["git"],
 
     'fedora-based':    ["cairo-devel", "cairo-gobject-devel",
-                        "evtest",
-                        "gcc", "git",
                         "dbus-daemon", "dbus-devel",
-                        "gobject-introspection-devel",
+                        "evtest",
+                        "gcc", "git", "gnome-shell-extension-appindicator", 
+                            "gobject-introspection-devel",
                         "libappindicator-gtk3", "libnotify",
                         "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
                         "systemd-devel",
@@ -373,7 +375,8 @@ pkg_groups_map = {
 
     'rhel-based':      ["cairo-devel", "cairo-gobject-devel",
                         "dbus-daemon", "dbus-devel",
-                        "gcc", "git", "gobject-introspection-devel",
+                        "gcc", "git", "gnome-shell-extension-appindicator",
+                            "gobject-introspection-devel",
                         "libappindicator-gtk3", "libnotify",
                         "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
                         "systemd-devel",
@@ -647,8 +650,8 @@ def install_distro_pkgs():
                 cnfg.DISTRO_VER[0] == '7'):
                 print('Doing prep/checks for CentOS 7...')
 
-                # remove 'dbus-daemon' from package list, not available on CentOS 7
-                pkgs_to_remove = ['dbus-daemon']
+                # remove these from package list, not available on CentOS 7
+                pkgs_to_remove = ['dbus-daemon', 'gnome-shell-extension-appindicator']
                 for pkg in pkgs_to_remove:
                     if pkg in cnfg.pkgs_for_distro:
                         cnfg.pkgs_for_distro.remove(pkg)
