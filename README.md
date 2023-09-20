@@ -169,7 +169,7 @@ There's no simple way around this, since the keymapper is only designed to send 
         - UUID: `focused-window-dbus@flexagoon.com`
         - URL: https://extensions.gnome.org/extension/5592/focused-window-d-bus/
 
-    - Wayland+KDE has a small glitch where you have to change the focused window once after the KWin script is installed, to get the app-specific remapping to start working. I am trying a solution that uses a pop-up dialog to create a KWin event that "kickstarts" the KWin script.
+    - Wayland+KDE has a small glitch where you have to change the focused window once after the KWin script is installed, to get the app-specific remapping to start working. I am trying a solution that uses a pop-up dialog to create a KWin event that "kickstarts" the KWin script. You should briefly see a dialog appear and then disappear shortly after you log in to a Wayland+KDE session.  
 
 - `systemd` (but you can just manually run the config from terminal, shell script, or tray indicator menu)
 
