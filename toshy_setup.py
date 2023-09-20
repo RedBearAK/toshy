@@ -357,15 +357,15 @@ distro_groups_map = {
     # Add more as needed...
 }
 
-# TODO: see if other distros besides Fedora/RHELs have package like 
-# 'gnome-shell-extension-appindicator' or equivalent
 pkg_groups_map = {
     # 'test-based':      ["git"],
 
+    # NOTE: Do not add 'gnome-shell-extension-appindicator' to Fedora/RHELs.
+    #       This will install extension but requires logging out of GNOME to activate.
     'fedora-based':    ["cairo-devel", "cairo-gobject-devel",
                         "dbus-daemon", "dbus-devel",
                         "evtest",
-                        "gcc", "git", "gnome-shell-extension-appindicator", 
+                        "gcc", "git", # "gnome-shell-extension-appindicator", 
                             "gobject-introspection-devel",
                         "libappindicator-gtk3", "libnotify",
                         "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
@@ -375,7 +375,7 @@ pkg_groups_map = {
 
     'rhel-based':      ["cairo-devel", "cairo-gobject-devel",
                         "dbus-daemon", "dbus-devel",
-                        "gcc", "git", "gnome-shell-extension-appindicator",
+                        "gcc", "git", # "gnome-shell-extension-appindicator",
                             "gobject-introspection-devel",
                         "libappindicator-gtk3", "libnotify",
                         "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
