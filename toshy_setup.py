@@ -47,8 +47,9 @@ else:
     error(f'This is only meant to run on Linux. Exiting.')
     sys.exit(1)
 
-trash_dir               = os.path.expanduser("~/.local/share/Trash")
-installer_file_path     = os.path.abspath(__file__)
+home_dir                = os.path.expanduser('~')
+trash_dir               = os.path.join(home_dir, '.local', 'share', 'Trash')
+installer_file_path     = os.path.realpath(__file__)
 installer_dir_path      = os.path.dirname(installer_file_path)
 if trash_dir in installer_file_path or '/trash/' in installer_file_path.lower():
     print()
@@ -57,8 +58,14 @@ if trash_dir in installer_file_path or '/trash/' in installer_file_path.lower():
     print()
     sys.exit(1)
 
-orig_PATH_str       = os.environ['PATH']
-home_local_bin      = os.path.join(os.path.expanduser('~'), '.local', 'bin')
+orig_PATH_str = os.getenv('PATH')
+if orig_PATH_str is None:
+    print()
+    error(f"ERROR: PATH variable is not set. Exiting.")
+    print()
+    sys.exit(1)
+
+home_local_bin      = os.path.join(home_dir, '.local', 'bin')
 run_tmp_dir         = os.environ.get('XDG_RUNTIME_DIR') or '/tmp'
 
 path_good_tmp_file  = 'toshy_installer_says_path_is_good'
@@ -76,7 +83,7 @@ if sys.prefix != sys.base_prefix:
     sys.path = [p for p in sys.path if not p.startswith(sys.prefix)]
     sys.prefix = sys.base_prefix
 
-# current stable Python release version (update when needed):
+# current stable Python release version (TODO: update when needed):
 # 3.11 Release Date: Oct. 24, 2022
 curr_py_rel_ver_major   = 3
 curr_py_rel_ver_minor   = 11
@@ -128,8 +135,7 @@ class InstallerSettings:
         self.py_interp_ver          = f'{py_ver_major}.{py_ver_minor}'
         self.py_interp_path         = shutil.which('python3')
 
-        self.home_dir_path          = os.path.abspath(os.path.expanduser('~'))
-        self.toshy_dir_path         = os.path.join(self.home_dir_path, '.config', 'toshy')
+        self.toshy_dir_path         = os.path.join(home_dir, '.config', 'toshy')
         self.db_file_name           = 'toshy_user_preferences.sqlite'
         self.db_file_path           = os.path.join(self.toshy_dir_path, self.db_file_name)
         self.backup_succeeded       = None
@@ -255,34 +261,44 @@ def prompt_for_reboot():
         os.mknod(cnfg.reboot_tmp_file)
 
 
+def color_str(text, color_name):
+    """
+    Return text wrapped in the specified color code.
+    :param text: Text to be colorized.
+    :param color_name: Natural name of the color.
+    :return: Colorized string if terminal likely supports it, otherwise the original string.
+    """
+    color_codes = { 'red': '1;31', 'green': '1;32', 'yellow': '1;33', 'blue': '1;34', 
+                    'magenta': '1;35', 'cyan': '1;36', 'white': '1;37', 'default': '0'}
+    if os.getenv('COLORTERM') and color_name in color_codes:
+        return f"\033[{color_codes[color_name]}m{text}\033[0m"
+    else:
+        return text
+
+
 def dot_Xmodmap_warning():
     """Check for '.Xmodmap' file in user's home folder, show warning about mod key remaps"""
 
-    xmodmap_file_path = os.path.realpath(os.path.join(os.path.expanduser('~'), '.Xmodmap'))
+    xmodmap_file_path = os.path.join(home_dir, '.Xmodmap')
 
     if os.path.isfile(xmodmap_file_path):
         print()
         print(f'{cnfg.separator}')
         print(f'{cnfg.separator}')
         warn_str    = "\t WARNING: You have an '.Xmodmap' file in your home folder!!!"
-        if os.environ['COLORTERM']:
-            # Terminal supports ANSI escape sequences
-            print(f"\033[1;31m{warn_str}\033[0m \n")
-        else:
-            # Terminal might not support ANSI escape sequences
-            print(f"{warn_str} \n")
+        print(color_str(warn_str, "red"))
         print(f'   This can cause confusing PROBLEMS if you are remapping any modifier keys!')
         print(f'{cnfg.separator}')
         print(f'{cnfg.separator}')
         print()
-        
+
         secret_code = ''.join(random.choice(string.ascii_letters) for _ in range(4))
-        
+
         response = input(
             f"You must take responsibility for the issues an '.Xmodmap' file may cause."
             f"\n\n\t If you understand, enter the secret code '{secret_code}': "
         )
-        
+
         if response == secret_code:
             print()
             info("Good code. User has taken responsibility for '.Xmodmap' file. Proceeding...\n")
@@ -366,8 +382,7 @@ pkg_groups_map = {
     'fedora-based':    ["cairo-devel", "cairo-gobject-devel",
                         "dbus-daemon", "dbus-devel",
                         "evtest",
-                        "gcc", "git", # "gnome-shell-extension-appindicator", 
-                            "gobject-introspection-devel",
+                        "gcc", "git", "gobject-introspection-devel",
                         "libappindicator-gtk3", "libnotify",
                         "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
                         "systemd-devel",
@@ -376,15 +391,14 @@ pkg_groups_map = {
 
     'rhel-based':      ["cairo-devel", "cairo-gobject-devel",
                         "dbus-daemon", "dbus-devel",
-                        "gcc", "git", # "gnome-shell-extension-appindicator",
-                            "gobject-introspection-devel",
+                        "gcc", "git", "gobject-introspection-devel",
                         "libappindicator-gtk3", "libnotify",
                         "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
                         "systemd-devel",
                         "xset",
                         "zenity"],
 
-    # openSUSE (Tumbleweed, not applicable to Leap):
+    # NOTE: for openSUSE (Tumbleweed, not applicable to Leap):
     # How to get rid of the need to use specific version numbers in packages: 
     # pkgconfig(packagename)>=N.nn (version symbols optional)
     # How to query a package to see what the equivalent pkgconfig(packagename) syntax would be:
@@ -409,9 +423,9 @@ pkg_groups_map = {
                         "gcc", "git", "gobject-introspection-devel",
                         "libappindicator3-devel", "libnotify-tools",
                         "python3-dbus-python-devel",
-                        "python311",
-                        "python311-devel",
-                        "python311-tk",
+                            "python311",
+                            "python311-devel",
+                            "python311-tk",
                         "systemd-devel",
                         "tk", "typelib-1_0-AyatanaAppIndicator3-0_1",
                         "zenity"],
@@ -420,8 +434,8 @@ pkg_groups_map = {
                         "dbus-daemon", "dbus-devel",
                         "git", "gobject-introspection-devel",
                         "lib64ayatana-appindicator3_1", "lib64ayatana-appindicator3-gir0.1",
-                        "lib64cairo-gobject2", "lib64python-devel", "lib64systemd-devel",
-                        "libnotify",
+                            "lib64cairo-gobject2", "lib64python-devel", "lib64systemd-devel",
+                            "libnotify",
                         "python-dbus", "python-dbus-devel", "python-ensurepip", "python3-pip",
                         "task-devel", "tkinter",
                         "xset",
@@ -432,7 +446,7 @@ pkg_groups_map = {
                         "git", "gir1.2-ayatanaappindicator3-0.1",
                         "input-utils",
                         "libcairo2-dev", "libdbus-1-dev", "libgirepository1.0-dev",
-                        "libnotify-bin", "libsystemd-dev",
+                            "libnotify-bin", "libsystemd-dev",
                         "python3-dbus", "python3-dev", "python3-pip", "python3-tk", "python3-venv",
                         "zenity"],
 
@@ -441,7 +455,7 @@ pkg_groups_map = {
                         "git", "gir1.2-ayatanaappindicator3-0.1",
                         "input-utils",
                         "libcairo2-dev", "libdbus-1-dev", "libgirepository1.0-dev",
-                        "libnotify-bin", "libsystemd-dev",
+                            "libnotify-bin", "libsystemd-dev",
                         "python3-dbus", "python3-dev", "python3-pip", "python3-tk", "python3-venv",
                         "zenity"],
 
@@ -460,7 +474,7 @@ pkg_groups_map = {
     'solus-based':     ["gcc", "git",
                         "libayatana-appindicator", "libcairo-devel", "libnotify",
                         "pip", "python3-dbus", "python3-devel", "python3-tkinter",
-                        "python-dbus-devel", "python-gobject-devel",
+                            "python-dbus-devel", "python-gobject-devel",
                         "systemd-devel",
                         "zenity"],
 }
@@ -1066,9 +1080,8 @@ def backup_toshy_config():
     print(f'\n\n§  Backing up existing Toshy config folder...\n{cnfg.separator}')
 
     timestamp = datetime.datetime.now().strftime('_%Y%m%d_%H%M%S')
-    toshy_cfg_bkups_base_dir  = os.path.join(
-        os.path.expanduser('~'), '.config', 'toshy_config_backups')
-    toshy_cfg_bkup_timestamp_dir  = os.path.abspath(
+    toshy_cfg_bkups_base_dir  = os.path.join(home_dir, '.config', 'toshy_config_backups')
+    toshy_cfg_bkup_timestamp_dir  = os.path.realpath(
         os.path.join(toshy_cfg_bkups_base_dir, 'toshy' + timestamp))
 
     if not os.path.exists(cnfg.toshy_dir_path):
@@ -1291,7 +1304,7 @@ def replace_home_in_file(filename):
     with open(filename, 'r') as file:
         file_data = file.read()
     # Replace the target string
-    file_data = file_data.replace('$HOME', cnfg.home_dir_path)
+    file_data = file_data.replace('$HOME', home_dir)
     # Write the file out again
     with open(filename, 'w') as file:
         file.write(file_data)
@@ -1303,7 +1316,7 @@ def install_desktop_apps():
     script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'toshy-desktopapps-setup.sh')
     subprocess.run([script_path])
 
-    desktop_files_path  = os.path.join(cnfg.home_dir_path, '.local', 'share', 'applications')
+    desktop_files_path  = os.path.join(home_dir, '.local', 'share', 'applications')
     tray_desktop_file   = os.path.join(desktop_files_path, 'Toshy_Tray.desktop')
     gui_desktop_file    = os.path.join(desktop_files_path, 'Toshy_GUI.desktop')
 
@@ -1392,16 +1405,15 @@ def setup_kde_dbus_service():
     print(f'\n\n§  Setting up the Toshy KDE D-Bus service...\n{cnfg.separator}')
 
     # need to autostart "$HOME/.local/bin/toshy-kde-dbus-service"
-    user_path               = os.path.expanduser('~')
-    autostart_dir_path      = os.path.join(user_path, '.config', 'autostart')
+    autostart_dir_path      = os.path.join(home_dir, '.config', 'autostart')
     dbus_svc_dt_file_path   = os.path.join(cnfg.toshy_dir_path, 'desktop')
     dbus_svc_desktop_file   = os.path.join(dbus_svc_dt_file_path, 'Toshy_KDE_DBus_Service.desktop')
-    start_dbus_svc_cmd      = os.path.join(user_path, '.local', 'bin', 'toshy-kde-dbus-service')
+    start_dbus_svc_cmd      = os.path.join(home_dir, '.local', 'bin', 'toshy-kde-dbus-service')
     replace_home_in_file(dbus_svc_desktop_file)
 
     # Where to put the new D-Bus service file:
     # ~/.local/share/dbus-1/services/org.toshy.Toshy.service
-    dbus_svcs_path          = os.path.join(user_path, '.local', 'share', 'dbus-1', 'services')
+    dbus_svcs_path          = os.path.join(home_dir, '.local', 'share', 'dbus-1', 'services')
     toshy_kde_dbus_svc_path = os.path.join(cnfg.toshy_dir_path, 'kde-kwin-dbus-service')
     kde_dbus_svc_file       = os.path.join(toshy_kde_dbus_svc_path, 'org.toshy.Toshy.service')
 
@@ -1466,10 +1478,9 @@ def setup_systemd_services():
 def autostart_tray_icon():
     """Set up the tray icon to autostart at login"""
     print(f'\n\n§  Setting up tray icon to load automatically at login...\n{cnfg.separator}')
-    user_path           = os.path.expanduser('~')
-    desktop_files_path  = os.path.join(user_path, '.local', 'share', 'applications')
+    desktop_files_path  = os.path.join(home_dir, '.local', 'share', 'applications')
     tray_desktop_file   = os.path.join(desktop_files_path, 'Toshy_Tray.desktop')
-    autostart_dir_path  = os.path.join(user_path, '.config', 'autostart')
+    autostart_dir_path  = os.path.join(home_dir, '.config', 'autostart')
     dest_link_file      = os.path.join(autostart_dir_path, 'Toshy_Tray.desktop')
 
     # Need to create autostart folder if necessary
@@ -1740,7 +1751,7 @@ def apply_desktop_tweaks():
 
             # use TTF instead of OTF to try and minimize "stem darkening" effect in KDE
             font_dir        = f'{extract_dir}/TTF/'
-            local_fonts_dir = os.path.realpath(os.path.expanduser('~/.local/share/fonts'))
+            local_fonts_dir = os.path.join(home_dir, '.local', 'share', 'fonts')
 
             os.makedirs(local_fonts_dir, exist_ok=True)
 
@@ -1829,8 +1840,7 @@ def uninstall_toshy():
             error(f'Problem terminating Toshy KDE D-Bus service script:\n\t{proc_err}')
 
     # try to remove the KDE D-Bus service autostart file
-    user_path           = os.path.expanduser('~')
-    autostart_dir_path  = os.path.join(user_path, '.config', 'autostart')
+    autostart_dir_path  = os.path.join(home_dir, '.config', 'autostart')
     dbus_svc_dt_file    = os.path.join(autostart_dir_path, 'Toshy_KDE_DBus_Service.desktop')
 
     dbus_svc_rm_cmd = ['rm', '-f', dbus_svc_dt_file]
@@ -2095,7 +2105,7 @@ def main(cnfg: InstallerSettings):
         print()
     else:
         # Try to start the tray icon immediately, if reboot is not indicated
-        tray_icon_cmd = [os.path.join(cnfg.home_dir_path, '.local', 'bin', 'toshy-tray')]
+        tray_icon_cmd = [os.path.join(home_dir, '.local', 'bin', 'toshy-tray')]
         # Try to launch the tray icon in a separate process not linked to current shell
         # Also, suppress output that might confuse the user
         subprocess.Popen(tray_icon_cmd, close_fds=True, stdout=DEVNULL, stderr=DEVNULL)
