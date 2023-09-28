@@ -1239,7 +1239,7 @@ def install_pip_packages():
 
     pip_pkgs   = [
         "lockfile", "dbus-python", "systemd-python", "pygobject", "tk",
-        "sv_ttk", "watchdog", "psutil", "hyprpy", "i3ipc",
+        "sv_ttk", "watchdog", "psutil", "hyprpy", "i3ipc", "pywayland", # "pywlroots",
 
         # TODO: Check on 'python-xlib' project by early-mid 2024 to see if this bug is fixed:
         #   [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']
