@@ -354,7 +354,6 @@ def do_kwin_reconfigure():
 
 
 distro_groups_map = {
-    # 'test-based':      ["test"],
 
     # separate references for RHEL types versus Fedora types
     'fedora-based':    ["fedora", "fedoralinux", "ultramarine", "nobara", "silverblue-experimental"],
@@ -375,7 +374,6 @@ distro_groups_map = {
 }
 
 pkg_groups_map = {
-    # 'test-based':      ["git"],
 
     # NOTE: Do not add 'gnome-shell-extension-appindicator' to Fedora/RHELs.
     #       This will install extension but requires logging out of GNOME to activate.
@@ -551,14 +549,12 @@ def install_distro_pkgs():
         if cnfg.systemctl_present or 'systemd' not in pkg
     ]
 
-    # test_distros        = []
     dnf_distros         = []
     zypper_distros      = []
     apt_distros         = []
     pacman_distros      = []
     eopkg_distros       = []
 
-    # test_distros        += distro_groups_map['test-based']
     dnf_distros         += distro_groups_map['fedora-based']
     dnf_distros         += distro_groups_map['rhel-based']
     dnf_distros         += distro_groups_map['mandriva-based']
@@ -608,17 +604,6 @@ def install_distro_pkgs():
             exit_with_pkg_install_error(proc_err)
 
     distro_major_ver = cnfg.DISTRO_VER[0] if cnfg.DISTRO_VER else 'NO_VER'
-
-    # if cnfg.DISTRO_NAME in test_distros:
-    #     print(f"Identified a distro named: '{cnfg.DISTRO_NAME}'")
-    #     call_attention_to_password_prompt()
-    #     # add new installer logic here to test an unknown distro type
-    #     check_for_pkg_mgr_cmd('package_manager_command')
-    #     command_lst = ['sudo', 'package_manager_command', 'arg1', 'arg2']
-    #     try:
-    #         subprocess.run(command_lst + cnfg.pkgs_for_distro, check=True)
-    #     except subprocess.CalledProcessError as proc_err:
-    #         exit_with_pkg_install_error(proc_err)
 
     ###########################################################################
     ###  DNF DISTROS  #########################################################
