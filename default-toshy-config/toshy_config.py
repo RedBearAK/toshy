@@ -3475,6 +3475,10 @@ keymap("KWrite text editor", {
     C("RC-comma"):              C("Shift-C-comma"),             # Open preferences dialog
 }, when = matchProps(clas="^kwrite$|^org.kde.Kwrite$") )
 
+keymap("GNOME Text Editor", {
+    C("RC-Slash"):              None,                           # Block Cmd+Slash from doing "Select All"
+    C("RC-Alt-f"):              C("C-h"),                       # Search and replace within the document
+}, when = matchProps(clas="^gnome-text-editor$|^org.gnome.TextEditor$") )
 
 
 ###########################  DIALOG FIXES  ###########################
