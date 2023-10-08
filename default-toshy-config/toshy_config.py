@@ -465,12 +465,13 @@ dialogs_Escape_lod = [
 
 ### dialogs_CloseWin_lod = send these windows the "Close window" combo for Cmd+W
 dialogs_CloseWin_lod = [
+    {clas:"^Angry.*IP.*Scanner$", name:"^Fetchers.*$|^Edit.*favorites.*$"},
     {clas:"^Gnome-control-center$", not_name:"^Settings$"},
     {clas:"^gnome-terminal.*$", name:"^Preferences.*$"},
     {clas:"^gnome-terminal-pref.*$", name:"^Preferences.*$"},
+    {clas:"^fr.handbrake.ghb$", not_name:"^HandBrake$"},
     {clas:"^pcloud$"},
     {clas:"^Totem$", not_name:"^Videos$"},
-    {clas:"^Angry.*IP.*Scanner$", name:"^Fetchers.*$|^Edit.*favorites.*$"},
 ]
 
 
