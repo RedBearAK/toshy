@@ -534,8 +534,8 @@ class DistroQuirksHandler:
     def __init__(self) -> None:
         pass
 
-    @staticmethod
-    def handle_quirks_CentOS_7():
+    # @staticmethod
+    def handle_quirks_CentOS_7(self):
         print('Doing prep/checks for CentOS 7...')
         # remove these from package list, not available on CentOS 7
         pkgs_to_remove = ['dbus-daemon', 'gnome-shell-extension-appindicator']
@@ -723,7 +723,9 @@ def install_distro_pkgs():
                 cnfg.DISTRO_VER and 
                 cnfg.DISTRO_VER[0] == '7'):
 
-                DistroQuirksHandler.handle_quirks_CentOS_7()
+                # DistroQuirksHandler.handle_quirks_CentOS_7()
+                quirks_handler = DistroQuirksHandler()
+                quirks_handler.handle_quirks_CentOS_7()
 
             #     print('Doing prep/checks for CentOS 7...')
 
