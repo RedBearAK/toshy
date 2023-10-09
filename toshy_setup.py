@@ -528,20 +528,22 @@ def exit_with_invalid_distro_error(pkg_mgr_err=None):
 
 
 class DistroQuirksHandler:
-    """Object to contain methods for prepping specific distro variants that
+    """Object to contain static methods for prepping specific distro variants that
         need some extra prep work before installing the native package list"""
 
     def __init__(self) -> None:
         pass
 
-    def handle_quirks_CentOS_7(self):
+    @staticmethod
+    def handle_quirks_CentOS_7():
         print('Doing prep/checks for CentOS 7...')
         # remove these from package list, not available on CentOS 7
         pkgs_to_remove = ['dbus-daemon', 'gnome-shell-extension-appindicator']
         _pkgs_for_distro: list = cnfg.pkgs_for_distro   # type hinting for VSCode
         for pkg in pkgs_to_remove:
             if pkg in cnfg.pkgs_for_distro:
-                cnfg.pkgs_for_distro = _pkgs_for_distro.remove(pkg)
+                _pkgs_for_distro.remove(pkg)
+            cnfg.pkgs_for_distro = _pkgs_for_distro
 
         native_installer.check_for_pkg_mgr_cmd('yum')
         yum_cmd_lst = ['sudo', 'yum', 'install', '-y']
@@ -576,13 +578,16 @@ class DistroQuirksHandler:
             error(f'ERROR: Failed to install DNF package manager.\n\t{proc_err}')
             safe_shutdown(1)
 
-    def handle_quirks_CentOS_Stream_8(self):
+    @staticmethod
+    def handle_quirks_CentOS_Stream_8():
         pass
 
-    def handle_quirks_CentOS_Stream_9(self):
+    @staticmethod
+    def handle_quirks_CentOS_Stream_9():
         pass
 
-    def handle_quirks_RHEL(self):
+    @staticmethod
+    def handle_quirks_RHEL():
         pass
 
 
@@ -633,9 +638,6 @@ class NativePackageInstaller:
 def install_distro_pkgs():
     """Install needed packages from list for distro type"""
     print(f'\n\n§  Installing native packages for this distro type...\n{cnfg.separator}')
-
-    # create the quirks handler class instance
-    quirks_handler              = DistroQuirksHandler()
 
     pkg_group = None
     for group, distros in distro_groups_map.items():
@@ -720,7 +722,8 @@ def install_distro_pkgs():
             if (cnfg.DISTRO_NAME in ['centos'] and 
                 cnfg.DISTRO_VER and 
                 cnfg.DISTRO_VER[0] == '7'):
-                quirks_handler.handle_quirks_CentOS_7(cnfg.pkgs_for_distro)
+
+                DistroQuirksHandler.handle_quirks_CentOS_7()
 
             #     print('Doing prep/checks for CentOS 7...')
 
