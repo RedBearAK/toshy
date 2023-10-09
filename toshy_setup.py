@@ -527,64 +527,21 @@ def exit_with_invalid_distro_error(pkg_mgr_err=None):
     safe_shutdown(1)
 
 
-class NativePackageInstaller:
-    """Object to handle installing packages on each distro type"""
-    def __init__(self) -> None:
-        pass
-
-    def check_for_pkg_mgr_cmd(self, pkg_mgr_cmd):
-        """Make sure native package installer command exists before using it, or exit"""
-        call_attention_to_password_prompt()
-        if not shutil.which(pkg_mgr_cmd):
-            print()
-            error(f'Package manager command ({pkg_mgr_cmd}) not available. Unable to continue.')
-            safe_shutdown(1)
-
-    def exit_with_pkg_install_error(self, proc_err):
-        """shutdown with error message if there is a problem with installing package list"""
-        print()
-        error(f'ERROR: Problem installing package list for distro type:\n\t{proc_err}')
-        safe_shutdown(1)
-
-    def show_pkg_install_success_msg(self):
-        # Have something come out even if package list is empty (like Arch after initial run)
-        print('All necessary native distro packages are installed.')
-
-    def install_pkg_list(self, cmd_lst, pkg_lst):
-        """Install packages using the given package manager command list and package list."""
-        
-        # Extract the package manager command to check
-        pkg_mgr_cmd = next((cmd for cmd in cmd_lst if cmd != 'sudo'), None)
-        # If we couldn't extract the command, exit with an error
-        if not pkg_mgr_cmd:
-            error(f'No valid package manager command in provided command list:\n\t{cmd_lst}')
-            safe_shutdown(1)
-        
-        call_attention_to_password_prompt()
-        self.check_for_pkg_mgr_cmd(pkg_mgr_cmd)
-        
-        # Execute the package installation command
-        try:
-            subprocess.run(cmd_lst + pkg_lst, check=True)
-            # self.show_pkg_install_success_msg()
-        except subprocess.CalledProcessError as proc_err:
-            self.exit_with_pkg_install_error(proc_err)
-
-
 class DistroQuirksHandler:
     """Object to contain methods for prepping specific distro variants that
         need some extra prep work before installing the native package list"""
 
     def __init__(self) -> None:
-        self.pkgs_for_distro: list = cnfg.pkgs_for_distro
+        pass
 
     def handle_quirks_CentOS_7(self):
         print('Doing prep/checks for CentOS 7...')
         # remove these from package list, not available on CentOS 7
         pkgs_to_remove = ['dbus-daemon', 'gnome-shell-extension-appindicator']
+        _pkgs_for_distro: list = cnfg.pkgs_for_distro   # type hinting for VSCode
         for pkg in pkgs_to_remove:
-            if pkg in self.pkgs_for_distro:
-                self.pkgs_for_distro.remove(pkg)
+            if pkg in cnfg.pkgs_for_distro:
+                cnfg.pkgs_for_distro = _pkgs_for_distro.remove(pkg)
 
         native_installer.check_for_pkg_mgr_cmd('yum')
         yum_cmd_lst = ['sudo', 'yum', 'install', '-y']
@@ -629,9 +586,56 @@ class DistroQuirksHandler:
         pass
 
 
+class NativePackageInstaller:
+    """Object to handle installing packages on each distro type"""
+    def __init__(self) -> None:
+        pass
+
+    def check_for_pkg_mgr_cmd(self, pkg_mgr_cmd):
+        """Make sure native package installer command exists before using it, or exit"""
+        call_attention_to_password_prompt()
+        if not shutil.which(pkg_mgr_cmd):
+            print()
+            error(f'Package manager command ({pkg_mgr_cmd}) not available. Unable to continue.')
+            safe_shutdown(1)
+
+    def exit_with_pkg_install_error(self, proc_err):
+        """shutdown with error message if there is a problem with installing package list"""
+        print()
+        error(f'ERROR: Problem installing package list for distro type:\n\t{proc_err}')
+        safe_shutdown(1)
+
+    def show_pkg_install_success_msg(self):
+        # Have something come out even if package list is empty (like Arch after initial run)
+        print('All necessary native distro packages are installed.')
+
+    def install_pkg_list(self, cmd_lst, pkg_lst):
+        """Install packages using the given package manager command list and package list."""
+        
+        # Extract the package manager command to check
+        pkg_mgr_cmd = next((cmd for cmd in cmd_lst if cmd != 'sudo'), None)
+        # If we couldn't extract the command, exit with an error
+        if not pkg_mgr_cmd:
+            error(f'No valid package manager command in provided command list:\n\t{cmd_lst}')
+            safe_shutdown(1)
+        
+        call_attention_to_password_prompt()
+        self.check_for_pkg_mgr_cmd(pkg_mgr_cmd)
+        
+        # Execute the package installation command
+        try:
+            subprocess.run(cmd_lst + pkg_lst, check=True)
+            # self.show_pkg_install_success_msg()
+        except subprocess.CalledProcessError as proc_err:
+            self.exit_with_pkg_install_error(proc_err)
+
+
 def install_distro_pkgs():
     """Install needed packages from list for distro type"""
     print(f'\n\n§  Installing native packages for this distro type...\n{cnfg.separator}')
+
+    # create the quirks handler class instance
+    quirks_handler              = DistroQuirksHandler()
 
     pkg_group = None
     for group, distros in distro_groups_map.items():
@@ -716,7 +720,7 @@ def install_distro_pkgs():
             if (cnfg.DISTRO_NAME in ['centos'] and 
                 cnfg.DISTRO_VER and 
                 cnfg.DISTRO_VER[0] == '7'):
-                quirks_handler.handle_quirks_CentOS_7()
+                quirks_handler.handle_quirks_CentOS_7(cnfg.pkgs_for_distro)
 
             #     print('Doing prep/checks for CentOS 7...')
 
@@ -2241,9 +2245,6 @@ if __name__ == '__main__':
 
     # create the native package installer class instance
     native_installer            = NativePackageInstaller()
-
-    # create the quirks handler class instance
-    quirks_handler              = DistroQuirksHandler()
 
     handle_cli_arguments()
 
