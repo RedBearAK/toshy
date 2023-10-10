@@ -125,6 +125,9 @@ class InstallerSettings:
         self.SESSION_TYPE           = None
         self.DESKTOP_ENV            = None
 
+        self.distro_mjr_ver: str    = ""
+        self.distro_mnr_ver: str    = ""
+
         self.systemctl_present      = shutil.which('systemctl') is not None
         self.init_system            = None
 
@@ -534,7 +537,6 @@ class DistroQuirksHandler:
     def __init__(self) -> None:
         pass
 
-    # @staticmethod
     def handle_quirks_CentOS_7(self):
         print('Doing prep/checks for CentOS 7...')
         # remove these from package list, not available on CentOS 7
@@ -578,17 +580,90 @@ class DistroQuirksHandler:
             error(f'ERROR: Failed to install DNF package manager.\n\t{proc_err}')
             safe_shutdown(1)
 
-    @staticmethod
-    def handle_quirks_CentOS_Stream_8():
-        pass
+    def handle_quirks_CentOS_Stream_8(self):
+        print('Doing prep/checks for CentOS Stream 8...')
+        min_mnr_ver = cnfg.curr_py_rel_ver_mnr - 3           # check up to 2 vers before current
+        max_mnr_ver = cnfg.curr_py_rel_ver_mnr + 3           # check up to 3 vers after current
+        py_minor_ver_rng = range(max_mnr_ver, min_mnr_ver, -1)
+        if py_interp_ver_tup < cnfg.curr_py_rel_ver_tup:
+            print(f"Checking for appropriate Python version on system...")
+            for check_py_minor_ver in py_minor_ver_rng:
+                if shutil.which(f'python3.{check_py_minor_ver}'):
+                    cnfg.py_interp_path = shutil.which(f'python3.{check_py_minor_ver}')
+                    cnfg.py_interp_ver = f'3.{check_py_minor_ver}'
+                    print(f'Found Python version {cnfg.py_interp_ver} available.')
+                    break
+            else:
+                error(  f'ERROR: Did not find any appropriate Python interpreter version.')
+                safe_shutdown(1)
+        try:
+            # for dbus-python
+            subprocess.run(['sudo', 'dnf', 'install', '-y',
+                            f'python{cnfg.py_interp_ver}-devel'], check=True)
+            # for Toshy Preferences GUI app
+            subprocess.run(['sudo', 'dnf', 'install', '-y',
+                            f'python{cnfg.py_interp_ver}-tkinter'], check=True)
+        except subprocess.CalledProcessError as proc_err:
+            error(f'ERROR: Problem installing necessary packages on CentOS Stream 8:'
+                    f'\n\t{proc_err}')
+            safe_shutdown(1)
 
-    @staticmethod
-    def handle_quirks_CentOS_Stream_9():
-        pass
+    def handle_quirks_RHEL(self):
+        print('Doing prep/checks for RHEL-type distro...')
 
-    @staticmethod
-    def handle_quirks_RHEL():
-        pass
+        # for libappindicator-gtk3: sudo dnf install -y epel-release
+        try:
+            native_installer.check_for_pkg_mgr_cmd('dnf')
+            subprocess.run(['sudo', 'dnf', 'install', '-y', 'epel-release'], check=True)
+            # subprocess.run(['sudo', 'dnf', 'update', '-y'], check=True)
+            subprocess.run(['sudo', 'dnf', 'makecache'], check=True)
+        except subprocess.CalledProcessError as proc_err:
+            print()
+            error(f'ERROR: Failed to add "epel-release" repo.\n\t{proc_err}')
+            safe_shutdown(1)
+
+        if ( not (  cnfg.DISTRO_NAME == 'centos' and 
+                    cnfg.distro_mjr_ver in ['7', '8']    ) and 
+                    cnfg.distro_mjr_ver in ['9'] ):
+            #
+            # enable "CodeReady Builder" repo for 'gobject-introspection-devel' only on RHEL 9.x:
+            # sudo dnf config-manager --set-enabled crb
+            subprocess.run(['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb'])
+
+        # Need to do this AFTER the 'epel-release' install
+        if (  cnfg.DISTRO_NAME != 'centos' and 
+                cnfg.distro_mjr_ver in ['8']):
+            # enable CRB repo on RHEL 8.x distros:
+            subprocess.run(['sudo', '/usr/bin/crb', 'enable'])
+            #
+            # TODO: Adjust this list according to "current" stable release Python in middle
+            potential_versions = ['3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
+            #
+            for version in potential_versions:
+                # check if the version is already installed
+                if shutil.which(f'python{version}'):
+                    cnfg.py_interp_path = f'/usr/bin/python{version}'
+                    cnfg.py_interp_ver  = version
+                    break
+                # try to install the corresponding package
+                try:
+                    subprocess.run(['sudo', 'dnf', 'install', '-y',
+                                    f'python{version}',
+                                    f'python{version}-devel',
+                                    f'python{version}-tkinter'],
+                                    check=True)
+                    # if the installation succeeds, set the interpreter path and version
+                    cnfg.py_interp_path = f'/usr/bin/python{version}'
+                    cnfg.py_interp_ver  = version
+                    break
+                # if the installation fails, continue with the next version
+                except subprocess.CalledProcessError:
+                    print(f'No match for potential Python version {version}.')
+                    continue
+            else:
+                # if no suitable version was found, print an error message and exit
+                error('ERROR: Did not find any appropriate Python interpreter version.')
+                safe_shutdown(1)
 
 
 class NativePackageInstaller:
@@ -705,151 +780,30 @@ def install_distro_pkgs():
 
     # split out the major version from the minor version, if there is one
     distro_ver_parts            = cnfg.DISTRO_VER.split('.') if cnfg.DISTRO_VER else []
-    distro_maj_ver              = distro_ver_parts[0] if distro_ver_parts else 'NO_VER'
-    distro_min_ver              = distro_ver_parts[1] if len(distro_ver_parts) > 1 else 'no_min_ver'
+    cnfg.distro_mjr_ver              = distro_ver_parts[0] if distro_ver_parts else 'NO_VER'
+    cnfg.distro_mnr_ver              = distro_ver_parts[1] if len(distro_ver_parts) > 1 else 'no_min_ver'
+
+    # create the quirks handler object
+    quirks_handler              = DistroQuirksHandler()
 
     ###########################################################################
     ###  DNF DISTROS  #########################################################
     ###########################################################################
-    if cnfg.DISTRO_NAME in dnf_distros:
+    def install_on_dnf_distro():
+        """utility function that gets dispatched for distros that use DNF package manager"""
+        call_attention_to_password_prompt()
+
+        # do extra prep/checks if distro is CentOS 7
+        if (cnfg.DISTRO_NAME in ['centos'] and cnfg.distro_mjr_ver == '7'):
+            quirks_handler.handle_quirks_CentOS_7()
+
+        # do extra prep/checks if distro is CentOS Stream 8
+        if cnfg.DISTRO_NAME in ['centos'] and cnfg.distro_mjr_ver in ['8']:
+            quirks_handler.handle_quirks_CentOS_Stream_8()
 
         # do extra stuff only if distro is a RHEL type (not Fedora type)
         if cnfg.DISTRO_NAME in distro_groups_map['rhel-based']:
-            print('Doing prep/checks for RHEL-type distro...')
-            call_attention_to_password_prompt()
-
-            # do extra prep/checks if distro is CentOS 7
-            if (cnfg.DISTRO_NAME in ['centos'] and 
-                cnfg.DISTRO_VER and 
-                cnfg.DISTRO_VER[0] == '7'):
-
-                # DistroQuirksHandler.handle_quirks_CentOS_7()
-                quirks_handler = DistroQuirksHandler()
-                quirks_handler.handle_quirks_CentOS_7()
-
-            #     print('Doing prep/checks for CentOS 7...')
-
-            #     # remove these from package list, not available on CentOS 7
-            #     pkgs_to_remove = ['dbus-daemon', 'gnome-shell-extension-appindicator']
-            #     for pkg in pkgs_to_remove:
-            #         if pkg in cnfg.pkgs_for_distro:
-            #             cnfg.pkgs_for_distro.remove(pkg)
-
-            #     native_installer.check_for_pkg_mgr_cmd('yum')
-            #     yum_cmd_lst = ['sudo', 'yum', 'install', '-y']
-            #     if py_interp_ver_tup >= (3, 8):
-            #         print(f"Good, Python version is 3.8 or later: "
-            #                 f"'{cnfg.py_interp_ver}'")
-            #     else:
-            #         try:
-            #             scl_repo = ['centos-release-scl']
-            #             subprocess.run(yum_cmd_lst + scl_repo, check=True)
-            #             py38_pkgs = [   'rh-python38',
-            #                             'rh-python38-python-devel',
-            #                             'rh-python38-python-tkinter',
-            #                             'rh-python38-python-wheel-wheel'    ]
-            #             subprocess.run(yum_cmd_lst + py38_pkgs, check=True)
-            #             #
-            #             # set new Python interpreter version and path to reflect what was installed
-            #             cnfg.py_interp_path = '/opt/rh/rh-python38/root/usr/bin/python3.8'
-            #             cnfg.py_interp_ver  = '3.8'
-            #             # avoid using systemd packages/services for CentOS
-            #             cnfg.systemctl_present = False
-            #         except subprocess.CalledProcessError as proc_err:
-            #             print()
-            #             error(f'ERROR: (CentOS 7-specific) Problem installing/enabling Python 3.8:'
-            #                     f'\n\t{proc_err}')
-            #             safe_shutdown(1)
-            #     # use yum to install dnf package manager
-            #     try:
-            #         subprocess.run(yum_cmd_lst + ['dnf'], check=True)
-            #     except subprocess.CalledProcessError as proc_err:
-            #         print()
-            #         error(f'ERROR: Failed to install DNF package manager.\n\t{proc_err}')
-            #         safe_shutdown(1)
-
-            # do extra prep/checks if distro is CentOS Stream 8
-            if cnfg.DISTRO_NAME in ['centos'] and cnfg.DISTRO_VER[0] in ['8']:
-                print('Doing prep/checks for CentOS Stream 8...')
-                min_minor = cnfg.curr_py_rel_ver_mnr - 3           # check up to 2 vers before current
-                max_minor = cnfg.curr_py_rel_ver_mnr + 3           # check up to 3 vers after current
-                py_minor_ver_rng = range(max_minor, min_minor, -1)
-                if py_interp_ver_tup < cnfg.curr_py_rel_ver_tup:
-                    print(f"Checking for appropriate Python version on system...")
-                    for check_py_minor_ver in py_minor_ver_rng:
-                        if shutil.which(f'python3.{check_py_minor_ver}'):
-                            cnfg.py_interp_path = shutil.which(f'python3.{check_py_minor_ver}')
-                            cnfg.py_interp_ver = f'3.{check_py_minor_ver}'
-                            print(f'Found Python version {cnfg.py_interp_ver} available.')
-                            break
-                    else:
-                        error(  f'ERROR: Did not find any appropriate Python interpreter version.')
-                        safe_shutdown(1)
-                try:
-                    # for dbus-python
-                    subprocess.run(['sudo', 'dnf', 'install', '-y',
-                                    f'python{cnfg.py_interp_ver}-devel'], check=True)
-                    # for Toshy Preferences GUI app
-                    subprocess.run(['sudo', 'dnf', 'install', '-y',
-                                    f'python{cnfg.py_interp_ver}-tkinter'], check=True)
-                except subprocess.CalledProcessError as proc_err:
-                    error(f'ERROR: Problem installing necessary packages on CentOS Stream 8:'
-                            f'\n\t{proc_err}')
-                    safe_shutdown(1)
-
-            # for libappindicator-gtk3: sudo dnf install -y epel-release
-            try:
-                native_installer.check_for_pkg_mgr_cmd('dnf')
-                subprocess.run(['sudo', 'dnf', 'install', '-y', 'epel-release'], check=True)
-                # subprocess.run(['sudo', 'dnf', 'update', '-y'], check=True)
-                subprocess.run(['sudo', 'dnf', 'makecache'], check=True)
-            except subprocess.CalledProcessError as proc_err:
-                print()
-                error(f'ERROR: Failed to add "epel-release" repo.\n\t{proc_err}')
-                safe_shutdown(1)
-
-            if ( not (  cnfg.DISTRO_NAME == 'centos' and 
-                        distro_maj_ver in ['7', '8']    ) and 
-                        distro_maj_ver in ['9'] ):
-                #
-                # enable "CodeReady Builder" repo for 'gobject-introspection-devel' only on RHEL 9.x:
-                # sudo dnf config-manager --set-enabled crb
-                subprocess.run(['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb'])
-
-            # Need to do this AFTER the 'epel-release' install
-            if (  cnfg.DISTRO_NAME != 'centos' and 
-                    distro_maj_ver in ['8']):
-                # enable CRB repo on RHEL 8.x distros:
-                subprocess.run(['sudo', '/usr/bin/crb', 'enable'])
-                #
-                # TODO: Adjust this list according to "current" stable release Python in middle
-                potential_versions = ['3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
-                #
-                for version in potential_versions:
-                    # check if the version is already installed
-                    if shutil.which(f'python{version}'):
-                        cnfg.py_interp_path = f'/usr/bin/python{version}'
-                        cnfg.py_interp_ver  = version
-                        break
-                    # try to install the corresponding package
-                    try:
-                        subprocess.run(['sudo', 'dnf', 'install', '-y',
-                                        f'python{version}',
-                                        f'python{version}-devel',
-                                        f'python{version}-tkinter'],
-                                        check=True)
-                        # if the installation succeeds, set the interpreter path and version
-                        cnfg.py_interp_path = f'/usr/bin/python{version}'
-                        cnfg.py_interp_ver  = version
-                        break
-                    # if the installation fails, continue with the next version
-                    except subprocess.CalledProcessError:
-                        print(f'No match for potential Python version {version}.')
-                        continue
-                else:
-                    # if no suitable version was found, print an error message and exit
-                    error('ERROR: Did not find any appropriate Python interpreter version.')
-                    safe_shutdown(1)
+            quirks_handler.handle_quirks_RHEL()
 
         # finally, do the install of the main list of packages for Fedora/RHEL distro types
         if cnfg.DISTRO_NAME in distro_groups_map['rhel-based'] + distro_groups_map['fedora-based']:
@@ -865,39 +819,47 @@ def install_distro_pkgs():
                 cmd_lst = ['sudo', 'rpm-ostree', 'install', '--idempotent',
                             '--allow-inactive', '--apply-live', '-y']
                 native_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+                native_installer.show_pkg_install_success_msg()
                 return
 
             else:
                 cmd_lst = ['sudo', 'dnf', 'install', '-y']
                 native_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+                native_installer.show_pkg_install_success_msg()
                 return
 
         # OpenMandriva uses DNF, so it's here in the "dnf_distros" block
         if cnfg.DISTRO_NAME in distro_groups_map['mandriva-based']:
             cmd_lst = ['sudo', 'dnf', 'install', '-y']
             native_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+            native_installer.show_pkg_install_success_msg()
             return
 
     ###########################################################################
     ###  ZYPPER DISTROS  ######################################################
     ###########################################################################
-    elif cnfg.DISTRO_NAME in zypper_distros:
+    def install_on_zypper_distro():
+        """utility function that gets dispatched for distros that use Zypper package manager"""
         cmd_lst = ['sudo', 'zypper', '--non-interactive', 'install']
         native_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+        native_installer.show_pkg_install_success_msg()
         return
 
     ###########################################################################
     ###  APT DISTROS  #########################################################
     ###########################################################################
-    elif cnfg.DISTRO_NAME in apt_distros:
+    def install_on_apt_distro():
+        """utility function that gets dispatched for distros that use APT package manager"""
         cmd_lst = ['sudo', 'apt', 'install', '-y']
         native_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+        native_installer.show_pkg_install_success_msg()
         return
 
     ###########################################################################
     ###  PACMAN DISTROS  ######################################################
     ###########################################################################
-    elif cnfg.DISTRO_NAME in pacman_distros:
+    def install_on_pacman_distro():
+        """utility function that gets dispatched for distros that use Pacman package manager"""
         native_installer.check_for_pkg_mgr_cmd('pacman')
 
         def is_pkg_installed_pacman(package):
@@ -913,6 +875,7 @@ def install_distro_pkgs():
         if pkgs_to_install:
             cmd_lst = ['sudo', 'pacman', '-S', '--noconfirm']
             native_installer.install_pkg_list(cmd_lst, pkgs_to_install)
+            native_installer.show_pkg_install_success_msg()
             return
         else:
             native_installer.show_pkg_install_success_msg()
@@ -921,17 +884,33 @@ def install_distro_pkgs():
     ###########################################################################
     ###  EOPKG DISTROS  #######################################################
     ###########################################################################
-    elif cnfg.DISTRO_NAME in eopkg_distros:
+    def install_on_eopkg_distro():
+        """utility function that gets dispatched for distros that use Eopkg package manager"""
         dev_cmd_lst = ['sudo', 'eopkg', 'install', '-y', '-c']
         dev_pkg_lst = ['system.devel']
         native_installer.install_pkg_list(dev_cmd_lst, dev_pkg_lst)
         cmd_lst = ['sudo', 'eopkg', 'install', '-y']
         native_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+        native_installer.show_pkg_install_success_msg()
         return
 
-    # else:
-    #     exit_with_invalid_distro_error(pkg_mgr_err=True)
+    pkg_mgr_dispatch = {
+        tuple(dnf_distros):     install_on_dnf_distro,
+        tuple(zypper_distros):  install_on_zypper_distro,
+        tuple(apt_distros):     install_on_apt_distro,
+        tuple(pacman_distros):  install_on_pacman_distro,
+        tuple(eopkg_distros):   install_on_eopkg_distro,
+        # add any new package manager distro lists...
+    }
 
+    # Determine the correct installation function
+    for distro_list, installer_function in pkg_mgr_dispatch.items():
+        if cnfg.DISTRO_NAME in distro_list:
+            installer_function()
+            # break
+            return
+    # exit message in case there is no package manager distro list with distro name inside
+    exit_with_invalid_distro_error(pkg_mgr_err=True)
 
 #####################################################################################################
 ###   END OF NATIVE PACKAGE INSTALLER SECTION
@@ -2247,6 +2226,10 @@ if __name__ == '__main__':
 
     # create the configuration settings class instance
     cnfg                        = InstallerSettings()
+
+    # debugging tool
+    cnfg_id                     = id(cnfg)
+    cnfg.pkgs_for_distro        = id(cnfg.pkgs_for_distro)
 
     # create the native package installer class instance
     native_installer            = NativePackageInstaller()
