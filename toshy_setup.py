@@ -766,22 +766,10 @@ def install_distro_pkgs():
         error(f'Problem setting up package manager distro lists:\n\t{key_err}')
         safe_shutdown(1)
 
-    # group the pkg mgr lists to use as a way to check for appropriate pkg mgr logic right away
-    # helps to catch the lack of pkg mgr logic, even if distro may be in overall distro map
-    all_pkg_mgr_lists           = ( dnf_distros + 
-                                    zypper_distros + 
-                                    apt_distros + 
-                                    pacman_distros + 
-                                    eopkg_distros )
-
-    # exit if the distro is not found in the concatenated list of pkg mgr distro lists
-    if cnfg.DISTRO_NAME not in all_pkg_mgr_lists:
-        exit_with_invalid_distro_error(pkg_mgr_err=True)
-
     # split out the major version from the minor version, if there is one
     distro_ver_parts            = cnfg.DISTRO_VER.split('.') if cnfg.DISTRO_VER else []
-    cnfg.distro_mjr_ver              = distro_ver_parts[0] if distro_ver_parts else 'NO_VER'
-    cnfg.distro_mnr_ver              = distro_ver_parts[1] if len(distro_ver_parts) > 1 else 'no_min_ver'
+    cnfg.distro_mjr_ver         = distro_ver_parts[0] if distro_ver_parts else 'NO_VER'
+    cnfg.distro_mnr_ver         = distro_ver_parts[1] if len(distro_ver_parts) > 1 else 'no_min_ver'
 
     # create the quirks handler object
     quirks_handler              = DistroQuirksHandler()
@@ -793,12 +781,18 @@ def install_distro_pkgs():
         """utility function that gets dispatched for distros that use DNF package manager"""
         call_attention_to_password_prompt()
 
+        # OpenMandriva uses DNF, so it's here in the "dnf_distros" block
+        if cnfg.DISTRO_NAME in distro_groups_map['mandriva-based']:
+            cmd_lst = ['sudo', 'dnf', 'install', '-y']
+            native_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+            return  # no need to continue after this
+
         # do extra prep/checks if distro is CentOS 7
-        if (cnfg.DISTRO_NAME in ['centos'] and cnfg.distro_mjr_ver == '7'):
+        if cnfg.DISTRO_NAME in ['centos'] and cnfg.distro_mjr_ver == '7':
             quirks_handler.handle_quirks_CentOS_7()
 
         # do extra prep/checks if distro is CentOS Stream 8
-        if cnfg.DISTRO_NAME in ['centos'] and cnfg.distro_mjr_ver in ['8']:
+        if cnfg.DISTRO_NAME in ['centos'] and cnfg.distro_mjr_ver == '8':
             quirks_handler.handle_quirks_CentOS_Stream_8()
 
         # do extra stuff only if distro is a RHEL type (not Fedora type)
@@ -807,33 +801,22 @@ def install_distro_pkgs():
 
         # finally, do the install of the main list of packages for Fedora/RHEL distro types
         if cnfg.DISTRO_NAME in distro_groups_map['rhel-based'] + distro_groups_map['fedora-based']:
-            if cnfg.DISTRO_NAME == 'silverblue-experimental':
+            if cnfg.DISTRO_NAME in ['silverblue-experimental']:
                 print(f'Distro is Silverblue type. Using "rpm-ostree" instead of DNF.')
                 # set up a toolbox to install software inside (the normal way) on Silverblue types
                 # all launcher shell scripts will need to be changed to "enter" the named toolbox!
                 
                 # toolbox_name = "toshy_toolbox"
                 # subprocess.run(["toolbox", "create", "-y", "-c", toolbox_name])
-                # subprocess.run(["toolbox", "run", "-c", toolbox_name, "dnf", "install", "-y", "python3-dbus", "python3-devel"])
+                # subprocess.run(["toolbox", "run", "-c", toolbox_name, 
+                #                 "dnf", "install", "-y", "python3-dbus", "python3-devel"])
 
                 cmd_lst = ['sudo', 'rpm-ostree', 'install', '--idempotent',
                             '--allow-inactive', '--apply-live', '-y']
                 native_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
-                native_installer.show_pkg_install_success_msg()
-                return
-
             else:
                 cmd_lst = ['sudo', 'dnf', 'install', '-y']
                 native_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
-                native_installer.show_pkg_install_success_msg()
-                return
-
-        # OpenMandriva uses DNF, so it's here in the "dnf_distros" block
-        if cnfg.DISTRO_NAME in distro_groups_map['mandriva-based']:
-            cmd_lst = ['sudo', 'dnf', 'install', '-y']
-            native_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
-            native_installer.show_pkg_install_success_msg()
-            return
 
     ###########################################################################
     ###  ZYPPER DISTROS  ######################################################
@@ -842,8 +825,6 @@ def install_distro_pkgs():
         """utility function that gets dispatched for distros that use Zypper package manager"""
         cmd_lst = ['sudo', 'zypper', '--non-interactive', 'install']
         native_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
-        native_installer.show_pkg_install_success_msg()
-        return
 
     ###########################################################################
     ###  APT DISTROS  #########################################################
@@ -852,8 +833,6 @@ def install_distro_pkgs():
         """utility function that gets dispatched for distros that use APT package manager"""
         cmd_lst = ['sudo', 'apt', 'install', '-y']
         native_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
-        native_installer.show_pkg_install_success_msg()
-        return
 
     ###########################################################################
     ###  PACMAN DISTROS  ######################################################
@@ -875,11 +854,6 @@ def install_distro_pkgs():
         if pkgs_to_install:
             cmd_lst = ['sudo', 'pacman', '-S', '--noconfirm']
             native_installer.install_pkg_list(cmd_lst, pkgs_to_install)
-            native_installer.show_pkg_install_success_msg()
-            return
-        else:
-            native_installer.show_pkg_install_success_msg()
-            return
 
     ###########################################################################
     ###  EOPKG DISTROS  #######################################################
@@ -891,9 +865,8 @@ def install_distro_pkgs():
         native_installer.install_pkg_list(dev_cmd_lst, dev_pkg_lst)
         cmd_lst = ['sudo', 'eopkg', 'install', '-y']
         native_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
-        native_installer.show_pkg_install_success_msg()
-        return
 
+    # map installer sub-functions to each pkg mgr distro list
     pkg_mgr_dispatch = {
         tuple(dnf_distros):     install_on_dnf_distro,
         tuple(zypper_distros):  install_on_zypper_distro,
@@ -907,10 +880,11 @@ def install_distro_pkgs():
     for distro_list, installer_function in pkg_mgr_dispatch.items():
         if cnfg.DISTRO_NAME in distro_list:
             installer_function()
-            # break
+            native_installer.show_pkg_install_success_msg()
             return
     # exit message in case there is no package manager distro list with distro name inside
     exit_with_invalid_distro_error(pkg_mgr_err=True)
+
 
 #####################################################################################################
 ###   END OF NATIVE PACKAGE INSTALLER SECTION
