@@ -543,16 +543,6 @@ menu.append(separator_below_script_item)  #-------------------------------------
 
 if not barebones_config:
 
-    # def load_prefs_submenu_settings():
-    #     cnfg.load_settings()
-    #     forced_numpad_item.set_active(cnfg.forced_numpad)
-    #     media_arrows_fix_item.set_active(cnfg.media_arrows_fix)
-    #     multi_lang_item.set_active(cnfg.multi_lang)
-    #     ST3_in_VSCode_item.set_active(cnfg.ST3_in_VSCode)
-    #     Caps2Cmd_item.set_active(cnfg.Caps2Cmd)
-    #     Caps2Esc_Cmd_item.set_active(cnfg.Caps2Esc_Cmd)
-    #     Enter2Ent_Cmd_item.set_active(cnfg.Enter2Ent_Cmd)
-
     def load_prefs_submenu_settings():
         cnfg.load_settings()
         set_item_active_with_retry(forced_numpad_item, cnfg.forced_numpad)
@@ -620,13 +610,6 @@ if not barebones_config:
     # End of Preferences submenu
     ###############################################################
 
-    # def load_optspec_layout_submenu_settings():
-    #     cnfg.load_settings()
-    #     layout = cnfg.optspec_layout
-    #     if layout == 'US':          optspec_us_item.set_active(True)
-    #     elif layout == 'ABC':       optspec_abc_extended_item.set_active(True)
-    #     elif layout == 'Disabled':  optspec_disabled_item.set_active(True)
-
     def load_optspec_layout_submenu_settings():
         cnfg.load_settings()
         layout = cnfg.optspec_layout
@@ -663,77 +646,6 @@ if not barebones_config:
     optspec_disabled_item.connect('toggled', save_optspec_layout_setting, 'Disabled')
     optspec_layout_submenu.append(optspec_disabled_item)
 
-
-    # def load_optspec_layout_submenu_settings():
-    #     cnfg.load_settings()
-    #     optspec_us_item.set_active(cnfg.optspec_layout == 'US')
-    #     optspec_abc_extended_item.set_active(cnfg.optspec_layout == 'ABC')
-    #     optspec_disabled_item.set_active(cnfg.optspec_layout == 'Disabled')
-
-    # def save_optspec_layout_setting(menu_item, layout):
-    #     if menu_item.get_active():
-    #         cnfg.optspec_layout = layout
-    #         cnfg.save_settings()
-    #         load_optspec_layout_submenu_settings()
-
-
-    # ###############################################################
-    # # OptSpec layout submenu
-    # optspec_layout_submenu = Gtk.Menu()
-    # optspec_layout_item = Gtk.MenuItem(label='OptSpec Layout')
-    # optspec_layout_item.set_submenu(optspec_layout_submenu)
-    # menu.append(optspec_layout_item)
-
-    # # create submenu items for each layout option
-    # optspec_us_item = Gtk.CheckMenuItem(label='US*')
-    # optspec_us_item.connect('toggled', save_optspec_layout_setting, 'US')
-    # optspec_layout_submenu.append(optspec_us_item)
-
-    # optspec_abc_extended_item = Gtk.CheckMenuItem(label='ABC Extended')
-    # optspec_abc_extended_item.connect('toggled', save_optspec_layout_setting, 'ABC')
-    # optspec_layout_submenu.append(optspec_abc_extended_item)
-
-    # optspec_disabled_item = Gtk.CheckMenuItem(label='Disabled')
-    # optspec_disabled_item.connect('toggled', save_optspec_layout_setting, 'Disabled')
-    # optspec_layout_submenu.append(optspec_disabled_item)
-
-    # separator_below_prefs_submenu_item = Gtk.SeparatorMenuItem()
-    # menu.append(separator_below_prefs_submenu_item)  #-------------------------------------#
-
-    # def load_kbtype_submenu_settings():
-    #     cnfg.load_settings()
-    #     kbtype = cnfg.override_kbtype
-        # kbtype_auto_adapt_item.set_active(cnfg.override_kbtype == 'Auto-Adapt')
-        # kbtype_apple_item.set_active(cnfg.override_kbtype == 'Apple')
-        # kbtype_chromebook_item.set_active(cnfg.override_kbtype == 'Chromebook')
-        # kbtype_ibm_item.set_active(cnfg.override_kbtype == 'IBM')
-        # kbtype_windows_item.set_active(cnfg.override_kbtype == 'Windows')
-
-    # def save_kbtype_setting(menu_item, kbtype):
-        # valid_kbtypes = ['IBM', 'Chromebook', 'Windows', 'Apple']
-        # if menu_item.get_active():
-        #     cnfg.override_kbtype = kbtype
-        #     cnfg.save_settings()
-        #     load_kbtype_submenu_settings()
-        #     if cnfg.override_kbtype in valid_kbtypes:
-        #         # Remind user this is not the intended way of fixing the problem.
-        #         message = ('Overriding keyboard type disables auto-adaptation.\r'
-        #                     'This is meant as a temporary fix only! See README.')
-        #         ntfy.send_notification(message, icon_file_grayscale, urgency='critical')
-
-    # def load_kbtype_submenu_settings():
-    #     cnfg.load_settings()
-    #     kbtype = cnfg.override_kbtype
-    #     if kbtype == 'Auto-Adapt':
-    #         kbtype_auto_adapt_item.set_active(True)
-    #     elif kbtype == 'Apple':
-    #         kbtype_apple_item.set_active(True)
-    #     elif kbtype == 'Chromebook':
-    #         kbtype_chromebook_item.set_active(True)
-    #     elif kbtype == 'IBM':
-    #         kbtype_ibm_item.set_active(True)
-    #     elif kbtype == 'Windows':
-    #         kbtype_windows_item.set_active(True)
 
     def load_kbtype_submenu_settings():
         cnfg.load_settings()
@@ -788,33 +700,6 @@ if not barebones_config:
     kbtype_windows_item = Gtk.RadioMenuItem.new_with_label(group_kbtype, 'Windows')
     kbtype_windows_item.connect('toggled', save_kbtype_setting, 'Windows')
     kbtype_submenu.append(kbtype_windows_item)
-
-    # # Keyboard Type submenu
-    # kbtype_submenu = Gtk.Menu()
-    # kbtype_item = Gtk.MenuItem(label='Keyboard Type')
-    # kbtype_item.set_submenu(kbtype_submenu)
-    # menu.append(kbtype_item)
-
-    # # create submenu items for each keyboard type option
-    # kbtype_auto_adapt_item = Gtk.CheckMenuItem(label='Auto-Adapt*')
-    # kbtype_auto_adapt_item.connect('toggled', save_kbtype_setting, 'Auto-Adapt')
-    # kbtype_submenu.append(kbtype_auto_adapt_item)
-
-    # kbtype_apple_item = Gtk.CheckMenuItem(label='Apple')
-    # kbtype_apple_item.connect('toggled', save_kbtype_setting, 'Apple')
-    # kbtype_submenu.append(kbtype_apple_item)
-
-    # kbtype_chromebook_item = Gtk.CheckMenuItem(label='Chromebook')
-    # kbtype_chromebook_item.connect('toggled', save_kbtype_setting, 'Chromebook')
-    # kbtype_submenu.append(kbtype_chromebook_item)
-
-    # kbtype_ibm_item = Gtk.CheckMenuItem(label='IBM')
-    # kbtype_ibm_item.connect('toggled', save_kbtype_setting, 'IBM')
-    # kbtype_submenu.append(kbtype_ibm_item)
-
-    # kbtype_windows_item = Gtk.CheckMenuItem(label='Windows')
-    # kbtype_windows_item.connect('toggled', save_kbtype_setting, 'Windows')
-    # kbtype_submenu.append(kbtype_windows_item)
 
     separator_below_kbtype_submenu_item = Gtk.SeparatorMenuItem()
     menu.append(separator_below_kbtype_submenu_item)  #-------------------------------------#
