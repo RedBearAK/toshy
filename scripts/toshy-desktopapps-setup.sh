@@ -7,7 +7,7 @@
 
 exit_w_error() {
     local msg="$1"
-    echo -e "\nERROR: ${msg} Exiting...\n"
+    echo -e "\n(EE) ERROR: ${msg} Exiting...\n"
     exit 1
 }
 
@@ -25,7 +25,7 @@ fi
 
 LOCAL_SHARE="${HOME}/.local/share"
 TOSHY_CFG_DIR="${HOME}/.config/toshy"
-
+ASSETS_DIR="${TOSHY_CFG_DIR}/assets"
 
 echo -e "\nInstalling Toshy Preferences and Tray Icon app launchers..."
 
@@ -35,14 +35,22 @@ mkdir -p "${LOCAL_SHARE}/applications" || \
 mkdir -p "${LOCAL_SHARE}/icons" || \
     exit_w_error "Failed to create \"${LOCAL_SHARE}/icons\" folder."
 
+
 cp -f "${TOSHY_CFG_DIR}/desktop/Toshy_GUI.desktop"          "${LOCAL_SHARE}/applications" || \
     exit_w_error "Problem copying Toshy_GUI.desktop file."
 
 cp -f "${TOSHY_CFG_DIR}/desktop/Toshy_Tray.desktop"         "${LOCAL_SHARE}/applications" || \
     exit_w_error "Problem copying Toshy_Tray.desktop file."
 
-cp -f "${TOSHY_CFG_DIR}/assets/toshy_app_icon_*.svg"        "${LOCAL_SHARE}/icons" || \
-    exit_w_error "Problem copying Toshy icon files."
+
+cp -f "${ASSETS_DIR}/toshy_app_icon_rainbow_inverse_grayscale.svg" "${LOCAL_SHARE}/icons/" || \
+    exit_w_error "Problem copying toshy_app_icon_rainbow_inverse_grayscale.svg."
+
+cp -f "${ASSETS_DIR}/toshy_app_icon_rainbow_inverse.svg" "${LOCAL_SHARE}/icons/" || \
+    exit_w_error "Problem copying toshy_app_icon_rainbow_inverse.svg."
+
+cp -f "${ASSETS_DIR}/toshy_app_icon_rainbow.svg" "${LOCAL_SHARE}/icons/" || \
+    exit_w_error "Problem copying toshy_app_icon_rainbow.svg."
 
 
 echo -e "\nFinished installing Toshy Preferences and Tray Icon app launchers:"

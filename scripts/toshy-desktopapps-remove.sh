@@ -6,7 +6,7 @@
 
 exit_w_error() {
     local msg="$1"
-    echo -e "\nERROR: ${msg} Exiting...\n"
+    echo -e "\n(EE) ERROR: ${msg} Exiting...\n"
     exit 1
 }
 
@@ -33,8 +33,15 @@ rm -f "${LOCAL_SHARE}/applications/Toshy_GUI.desktop" || \
 rm -f "${LOCAL_SHARE}/applications/Toshy_Tray.desktop" || \
     exit_w_error "Problem while removing the Toshy_Tray.desktop file."
 
-rm -f "${LOCAL_SHARE}/icons/toshy_app_icon_*.svg" || \
-    exit_w_error "Problem while removing the Toshy icon files."
+rm -f "${LOCAL_SHARE}/icons/toshy_app_icon_rainbow_inverse_grayscale.svg" || \
+    exit_w_error "Problem removing toshy_app_icon_rainbow_inverse_grayscale.svg."
+
+rm -f "${LOCAL_SHARE}/icons/toshy_app_icon_rainbow_inverse.svg" || \
+    exit_w_error "Problem removing toshy_app_icon_rainbow_inverse.svg."
+
+rm -f "${LOCAL_SHARE}/icons/toshy_app_icon_rainbow.svg" || \
+    exit_w_error "Problem removing toshy_app_icon_rainbow.svg."
+
 
 echo ""
 echo "Finished removing Toshy Preferences and Tray Icon app launchers:"
