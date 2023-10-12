@@ -1375,7 +1375,7 @@ def install_desktop_apps():
     try:
         subprocess.run([script_path], check=True)
     except subprocess.CalledProcessError as proc_err:
-        error(f'Problem removing Toshy desktop apps:\n\t{proc_err}')
+        error(f'Problem installing Toshy desktop apps:\n\t{proc_err}')
         safe_shutdown(1)
 
     desktop_files_path  = os.path.join(home_dir, '.local', 'share', 'applications')
