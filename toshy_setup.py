@@ -615,28 +615,24 @@ class DistroQuirksHandler:
         try:
             native_installer.check_for_pkg_mgr_cmd('dnf')
             subprocess.run(['sudo', 'dnf', 'install', '-y', 'epel-release'], check=True)
-            # subprocess.run(['sudo', 'dnf', 'update', '-y'], check=True)
             subprocess.run(['sudo', 'dnf', 'makecache'], check=True)
         except subprocess.CalledProcessError as proc_err:
             print()
-            error(f'ERROR: Failed to add "epel-release" repo.\n\t{proc_err}')
+            error(f'ERROR: Problem while adding "epel-release" repo.\n\t{proc_err}')
             safe_shutdown(1)
 
-        if ( not (  cnfg.DISTRO_NAME == 'centos' and 
-                    cnfg.distro_mjr_ver in ['7', '8']    ) and 
-                    cnfg.distro_mjr_ver in ['9'] ):
-            #
-            # enable "CodeReady Builder" repo for 'gobject-introspection-devel' only on RHEL 9.x:
-            # sudo dnf config-manager --set-enabled crb
-            subprocess.run(['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb'])
-
         # Need to do this AFTER the 'epel-release' install
-        if (  cnfg.DISTRO_NAME != 'centos' and 
-                cnfg.distro_mjr_ver in ['8']):
-            # enable CRB repo on RHEL 8.x distros:
-            subprocess.run(['sudo', '/usr/bin/crb', 'enable'])
+        if cnfg.DISTRO_NAME != 'centos' and cnfg.distro_mjr_ver in ['8']:
+            # enable CRB repo on RHEL 8.x distros, but not CentOS Stream 8:
+            cmd_lst = ['sudo', '/usr/bin/crb', 'enable']
+            try:
+                subprocess.run(cmd_lst, check=True)
+            except subprocess.CalledProcessError as proc_err:
+                print()
+                error(f'ERROR: Problem while enabling CRB repo.\n\t{proc_err}')
+                safe_shutdown(1)
             #
-            # TODO: Adjust this list according to "current" stable release Python in middle
+            # TODO: Add higher version if ever necessary (keep minimum 3.8)
             potential_versions = ['3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
             #
             for version in potential_versions:
@@ -645,13 +641,11 @@ class DistroQuirksHandler:
                     cnfg.py_interp_path = f'/usr/bin/python{version}'
                     cnfg.py_interp_ver  = version
                     break
-                # try to install the corresponding package
+                # try to install the corresponding packages
+                cmd_lst = ['sudo', 'dnf', 'install', '-y']
+                pkg_lst = [f'python{version}', f'python{version}-devel', f'python{version}-tkinter']
                 try:
-                    subprocess.run(['sudo', 'dnf', 'install', '-y',
-                                    f'python{version}',
-                                    f'python{version}-devel',
-                                    f'python{version}-tkinter'],
-                                    check=True)
+                    subprocess.run(cmd_lst + pkg_lst, check=True)
                     # if the installation succeeds, set the interpreter path and version
                     cnfg.py_interp_path = f'/usr/bin/python{version}'
                     cnfg.py_interp_ver  = version
@@ -660,14 +654,28 @@ class DistroQuirksHandler:
                 except subprocess.CalledProcessError:
                     print(f'No match for potential Python version {version}.')
                     continue
+            # this 'else' is part of the 'for' loop above, not an 'if' condition
             else:
                 # if no suitable version was found, print an error message and exit
                 error('ERROR: Did not find any appropriate Python interpreter version.')
                 safe_shutdown(1)
 
+        if cnfg.distro_mjr_ver in ['9']:
+            #
+            # enable "CodeReady Builder" repo for 'gobject-introspection-devel' only on 
+            # RHEL 9.x and CentOS Stream 9 (TODO: Add v10 if it uses the same command):
+            # sudo dnf config-manager --set-enabled crb
+            cmd_lst = ['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb']
+            try:
+                subprocess.run(cmd_lst, check=True)
+            except subprocess.CalledProcessError as proc_err:
+                print()
+                error(f'ERROR: Problem while enabling CRB repo:\n\t{proc_err}')
+                safe_shutdown(1)
+
 
 class NativePackageInstaller:
-    """Object to handle installing packages on each distro type"""
+    """Object to handle tasks related to installing native packages"""
     def __init__(self) -> None:
         pass
 
@@ -687,7 +695,7 @@ class NativePackageInstaller:
 
     def show_pkg_install_success_msg(self):
         # Have something come out even if package list is empty (like Arch after initial run)
-        print('All necessary native distro packages are installed.')
+        print('-- All necessary native distro packages are installed. --')
 
     def install_pkg_list(self, cmd_lst, pkg_lst):
         """Install packages using the given package manager command list and package list."""
@@ -1368,7 +1376,7 @@ def replace_home_in_file(filename):
 
 
 def install_desktop_apps():
-    """Install the convenient scripts to manage Toshy"""
+    """Install the convenient desktop apps to manage Toshy"""
     print(f'\n\n§  Installing Toshy desktop apps...\n{cnfg.separator}')
     script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'toshy-desktopapps-setup.sh')
 
