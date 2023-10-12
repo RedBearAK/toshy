@@ -195,10 +195,16 @@ def handle_existing_process():
 
 # Define some globals for the commands run by menu items
 
-assets_path         = os.path.join(current_folder_path, 'assets')
-icon_file_active    = os.path.join(assets_path, "toshy_app_icon_rainbow.svg")
-icon_file_grayscale = os.path.join(assets_path, "toshy_app_icon_rainbow_inverse_grayscale.svg")
-icon_file_inverse   = os.path.join(assets_path, "toshy_app_icon_rainbow_inverse.svg")
+# assets_path         = os.path.join(current_folder_path, 'assets')
+# icon_file_active    = os.path.join(assets_path, "toshy_app_icon_rainbow.svg")
+# icon_file_grayscale = os.path.join(assets_path, "toshy_app_icon_rainbow_inverse_grayscale.svg")
+# icon_file_inverse   = os.path.join(assets_path, "toshy_app_icon_rainbow_inverse.svg")
+
+# Fix for Solus Budgie failing to show proper icons when using full path. Use base file name string.
+# Icon files will all be copied into the local-share-icons location to make this work. 
+icon_file_active                = "toshy_app_icon_rainbow"
+icon_file_grayscale             = "toshy_app_icon_rainbow_inverse_grayscale"
+icon_file_inverse               = "toshy_app_icon_rainbow_inverse"
 
 
 config_dir_path = current_folder_path
