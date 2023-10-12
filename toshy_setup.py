@@ -1371,7 +1371,12 @@ def install_desktop_apps():
     """Install the convenient scripts to manage Toshy"""
     print(f'\n\n§  Installing Toshy desktop apps...\n{cnfg.separator}')
     script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'toshy-desktopapps-setup.sh')
-    subprocess.run([script_path])
+
+    try:
+        subprocess.run([script_path], check=True)
+    except subprocess.CalledProcessError as proc_err:
+        error(f'Problem removing Toshy desktop apps:\n\t{proc_err}')
+        safe_shutdown(1)
 
     desktop_files_path  = os.path.join(home_dir, '.local', 'share', 'applications')
     tray_desktop_file   = os.path.join(desktop_files_path, 'Toshy_Tray.desktop')
