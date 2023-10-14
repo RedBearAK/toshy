@@ -280,8 +280,8 @@ def color_str(text, color_name):
         return text
 
 
-def show_section_completed_msg():
-    print(color_str('-- Section completed successfully. --', 'green'))
+def show_task_completed_msg():
+    print(color_str('-- Task completed successfully. --', 'green'))
 
 
 def dot_Xmodmap_warning():
@@ -888,7 +888,7 @@ def install_distro_pkgs():
         if cnfg.DISTRO_NAME in distro_list:
             installer_function()
             native_installer.show_pkg_install_success_msg()
-            show_section_completed_msg()
+            show_task_completed_msg()
             return
     # exit message in case there is no package manager distro list with distro name inside
     exit_with_invalid_distro_error(pkg_mgr_err=True)
@@ -941,7 +941,7 @@ def load_uinput_module():
                         error(f"ERROR: Failed to append 'uinput' to /etc/modules:\n\t{proc_err}")
                         error(f'ERROR: Install failed.')
                         safe_shutdown(1)
-    show_section_completed_msg()
+    show_task_completed_msg()
 
 
 def reload_udev_rules():
@@ -990,7 +990,7 @@ def install_udev_rules():
             safe_shutdown(1)
     else:
         print(f'Correct "udev" rules already in place.')
-    show_section_completed_msg()
+    show_task_completed_msg()
 
 
 def verify_user_groups():
@@ -1046,7 +1046,7 @@ def verify_user_groups():
         #
         print(f'User "{cnfg.user_name}" added to group "{cnfg.input_group_name}".')
         prompt_for_reboot()
-    show_section_completed_msg()
+    show_task_completed_msg()
 
 
 def clone_keyszer_branch():
@@ -1071,7 +1071,7 @@ def clone_keyszer_branch():
         print()
         error(f'Problem while cloning keyszer branch from GitHub:\n\t{proc_err}')
         safe_shutdown(1)
-    show_section_completed_msg()
+    show_task_completed_msg()
 
 
 def extract_slices(data: str) -> Dict[str, str]:
@@ -1202,7 +1202,7 @@ def backup_toshy_config():
             safe_shutdown(1)
         print(f"Backup completed to '{toshy_cfg_bkup_timestamp_dir}'")
         cnfg.backup_succeeded = True
-    show_section_completed_msg()
+    show_task_completed_msg()
 
 
 def install_toshy_files():
@@ -1283,7 +1283,7 @@ def install_toshy_files():
                 error(f'Problem writing to new config file:\n\t{file_err}')
                 safe_shutdown(1)
             print(f"Existing user customizations applied to the new config file.")
-    show_section_completed_msg()
+    show_task_completed_msg()
 
 
 def setup_python_vir_env():
@@ -1315,7 +1315,7 @@ def setup_python_vir_env():
     #
     # We do not need to "activate" the venv right now, just create it
     print(f'Python virtual environment setup complete.')
-    show_section_completed_msg()
+    show_task_completed_msg()
 
 
 def install_pip_packages():
@@ -1364,7 +1364,7 @@ def install_pip_packages():
     else:
         print(f'Temporary "keyszer" clone folder missing. Unable to install "keyszer".')
         safe_shutdown(1)
-    show_section_completed_msg()
+    show_task_completed_msg()
 
 
 def install_bin_commands():
@@ -1377,7 +1377,7 @@ def install_bin_commands():
         print()
         error(f'Problem while installing terminal commands:\n\t{proc_err}')
         safe_shutdown(1)
-    show_section_completed_msg()
+    show_task_completed_msg()
 
 
 def replace_home_in_file(filename):
@@ -1410,7 +1410,7 @@ def install_desktop_apps():
 
     replace_home_in_file(tray_desktop_file)
     replace_home_in_file(gui_desktop_file)
-    show_section_completed_msg()
+    show_task_completed_msg()
 
 
 def setup_kwin2dbus_script():
@@ -1486,7 +1486,7 @@ def setup_kwin2dbus_script():
 
     # Try to get KWin to notice and activate the script on its own, now that it's in RC file
     do_kwin_reconfigure()
-    show_section_completed_msg()
+    show_task_completed_msg()
 
 
 def setup_kde_dbus_service():
@@ -1552,7 +1552,7 @@ def setup_kde_dbus_service():
     # subprocess.Popen([kickstart_cmd])
 
     print(f'Toshy KDE D-Bus service should automatically start when needed.')
-    show_section_completed_msg()
+    show_task_completed_msg()
 
 
 def setup_systemd_services():
@@ -1564,7 +1564,7 @@ def setup_systemd_services():
         print(f'Finished setting up Toshy systemd services.')
     else:
         print(f'System does not seem to be using "systemd" as init system.')
-    show_section_completed_msg()
+    show_task_completed_msg()
 
 
 def autostart_tray_icon():
@@ -1584,7 +1584,7 @@ def autostart_tray_icon():
     subprocess.run(['ln', '-sf', tray_desktop_file, dest_link_file])
 
     print(f'Toshy tray icon should appear in system tray at each login.')
-    show_section_completed_msg()
+    show_task_completed_msg()
 
 
 ###################################################################################################
@@ -1868,7 +1868,7 @@ def apply_desktop_tweaks():
 
     if not cnfg.tweak_applied:
         print(f'If nothing printed, no tweaks available for "{cnfg.DESKTOP_ENV}" yet.')
-    show_section_completed_msg()
+    show_task_completed_msg()
 
 
 def remove_desktop_tweaks():
@@ -1887,7 +1887,7 @@ def remove_desktop_tweaks():
         remove_tweaks_KDE()
         
     print('Removed known desktop tweaks applied by installer.')
-    show_section_completed_msg()
+    show_task_completed_msg()
 
 
 def uninstall_toshy():
