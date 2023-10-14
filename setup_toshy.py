@@ -1193,7 +1193,7 @@ def install_toshy_files():
     """Install Toshy files"""
     print(f'\n\n§  Installing Toshy files...\n{cnfg.separator}')
     if not cnfg.backup_succeeded:
-        print(f'Backup of Toshy config folder failed? Bailing out.')
+        error(f'Backup of Toshy config folder failed? Bailing out.')
         safe_shutdown(1)
     keyszer_tmp_dir     = os.path.basename(cnfg.keyszer_tmp_path)
     try:
@@ -1218,9 +1218,9 @@ def install_toshy_files():
         # Copy files recursively from source to destination
         shutil.copytree(this_file_dir, cnfg.toshy_dir_path, ignore=ignore_fn)
     except shutil.Error as copy_error:
-        print(f"Failed to copy directory: {copy_error}")
+        error(f"Failed to copy directory: {copy_error}")
     except OSError as os_error:
-        print(f"Failed to create backup directory: {os_error}")
+        error(f"Failed to create backup directory: {os_error}")
     if cnfg.barebones_config is True:
         toshy_default_cfg_barebones = os.path.join(
             cnfg.toshy_dir_path, 'default-toshy-config', 'toshy_config_barebones.py')
