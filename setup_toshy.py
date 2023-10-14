@@ -1202,22 +1202,21 @@ def install_toshy_files():
                 shutil.rmtree(cnfg.toshy_dir_path)
             except (OSError, PermissionError, FileNotFoundError) as file_err:
                 error(f'Problem removing existing Toshy config folder after backup:\n\t{file_err}')
-        # Copy files recursively from source to destination
-        shutil.copytree(
-            this_file_dir, 
-            cnfg.toshy_dir_path, 
-            ignore=shutil.ignore_patterns(
-                '__pycache__',
+        patterns_to_ignore = [
                 '.github',
                 '.gitignore',
+                '__pycache__',
                 keyszer_tmp_dir,
                 'kwin-application-switcher',
                 'LICENSE',
                 'packages.json',
                 'README.md',
-                this_file_name
-            )
-        )
+                this_file_name,
+        ]
+        # must use list unpacking (*) ignore_patterns() requires individual pattern arguments
+        ignore_fn = shutil.ignore_patterns(*patterns_to_ignore)
+        # Copy files recursively from source to destination
+        shutil.copytree(this_file_dir, cnfg.toshy_dir_path, ignore=ignore_fn)
     except shutil.Error as copy_error:
         print(f"Failed to copy directory: {copy_error}")
     except OSError as os_error:
