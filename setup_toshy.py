@@ -694,7 +694,7 @@ class NativePackageInstaller:
 
     def show_pkg_install_success_msg(self):
         # Have something come out even if package list is empty (like Arch after initial run)
-        print('-- All necessary native distro packages are installed. --')
+        print('All necessary native distro packages are installed.')
 
     def install_pkg_list(self, cmd_lst, pkg_lst):
         """Install packages using the given package manager command list and package list."""
