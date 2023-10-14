@@ -6,6 +6,6 @@ Exec=$HOME/.local/bin/toshy-gui
 Terminal=false
 NoDisplay=false
 # Icon must be copied to ~/.local/share/icons
-Icon=toshy_app_icon_rainbow.svg
+Icon=toshy_app_icon_rainbow
 Comment=Prefereces GUI for Toshy. Make Linux work like a 'Tosh!
 Categories=Utility;
