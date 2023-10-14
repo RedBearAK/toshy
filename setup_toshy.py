@@ -59,6 +59,7 @@ home_dir                = os.path.expanduser('~')
 trash_dir               = os.path.join(home_dir, '.local', 'share', 'Trash')
 this_file_path          = os.path.realpath(__file__)
 this_file_dir           = os.path.dirname(this_file_path)
+this_file_name          = os.path.basename(__file__)
 if trash_dir in this_file_path or '/trash/' in this_file_path.lower():
     print()
     error(f"Path to this file:\n\t{this_file_path}")
@@ -83,13 +84,6 @@ if sys.prefix != sys.base_prefix:
     os.environ["VIRTUAL_ENV"] = ""
     sys.path = [p for p in sys.path if not p.startswith(sys.prefix)]
     sys.prefix = sys.base_prefix
-
-# # current stable Python release version (TODO: update when needed):
-# # 3.11 Release Date: Oct. 24, 2022
-# curr_py_rel_ver_mjr     = 3
-# curr_py_rel_ver_mnr     = 11
-# curr_py_rel_ver_tup     = (curr_py_rel_ver_mjr, curr_py_rel_ver_mnr)
-# curr_py_rel_ver_str     = f'{curr_py_rel_ver_mjr}.{curr_py_rel_ver_mnr}'
 
 # Check if 'sudo' command is available to user
 if not shutil.which('sudo'):
@@ -524,7 +518,7 @@ def exit_with_invalid_distro_error(pkg_mgr_err=None):
     if pkg_mgr_err:
         error('ERROR: No valid package manager logic was encountered for this distro.')
     print()
-    print(f'Try some options in "./toshy_setup.py --help".')
+    print(f'Try some options in "./{this_file_name} --help".')
     print()
     print(f'Maybe try one of these with "--override-distro" option:\n\n\t{get_distro_names()}')
     safe_shutdown(1)
@@ -732,7 +726,7 @@ def install_distro_pkgs():
         print()
         print(f"ERROR: No list of packages found for this distro: '{cnfg.DISTRO_NAME}'")
         print(f'Installation cannot proceed without a list of packages. Sorry.')
-        print(f'Try some options in "./toshy_setup.py --help"')
+        print(f'Try some options in "./{this_file_name} --help"')
         safe_shutdown(1)
 
     cnfg.pkgs_for_distro: list = pkg_groups_map[pkg_group]
@@ -1202,7 +1196,6 @@ def install_toshy_files():
         print(f'Backup of Toshy config folder failed? Bailing out.')
         safe_shutdown(1)
     keyszer_tmp_dir     = os.path.basename(cnfg.keyszer_tmp_path)
-    script_file_name    = os.path.basename(__file__)
     try:
         if os.path.exists(cnfg.toshy_dir_path):
             try:
@@ -1222,7 +1215,7 @@ def install_toshy_files():
                 'LICENSE',
                 'packages.json',
                 'README.md',
-                script_file_name
+                this_file_name
             )
         )
     except shutil.Error as copy_error:

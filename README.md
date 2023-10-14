@@ -201,10 +201,10 @@ There is a weird bug with searching for the `Xremap` extension on newer versions
 
 1. Download the latest zip from the big green `Code ˇ` button near the top of the page.  
 1. Unzip the archive, and open a terminal in the resulting folder.  
-1. Run the `toshy_setup.py` script in the terminal, like this:  
+1. Run the `setup_toshy.py` script in the terminal, like this:  
 
 ```sh
-./toshy_setup.py
+./setup_toshy.py
 ```
 
 ### Options for installer
@@ -212,25 +212,25 @@ There is a weird bug with searching for the `Xremap` extension on newer versions
 The installer has a few different options available, as shown in this section. Some can be combined, others (like `--show-env` or `--list-distros`) are exclusive and will raise an error if they are not used alone.  
 
 ```sh
-./toshy_setup.py --help
+./setup_toshy.py --help
 ```
 
 Shows a short description of all available options.  
 
 ```sh
-./toshy_setup.py --show-env
+./setup_toshy.py --show-env
 ```
 
 This will just show what the installer will see as the environment when you try to install, but won't actually run the full install process.  
 
 ```sh
-./toshy_setup.py --list-distros
+./setup_toshy.py --list-distros
 ```
 
 This will print out a list of the distros that the Toshy installer theoretically "knows" how to deal with, as far as knowing the correct package manager to use and having a list of package names that would actually work. Names from the list can be used with:  
 
 ```sh
-./toshy_setup.py --override-distro distro_name
+./setup_toshy.py --override-distro distro_name
 ```
 
 This option will force the installer to attempt the install for that distro name/type. You can use this if you have a distro that is not on the distro list yet, but you think it is close enough to one of the existing distros in the list that the installer should do the right things. For instance if you have some very Arch-ish or very Debian-ish distro, or something based on Ubuntu (there are many!) that doesn't identify as one of the "known" distros when you use `--show-env` and `--list-distros`, then you can try to make it install using one of the related distro names. This will probably work, if the distro is just a minor variation of its parent distro.  
@@ -240,19 +240,19 @@ You don't have to run any of these commands before trying the installer, it will
 Other options for the installer:  
 
 ```sh
-./toshy_setup.py --apply-tweaks
+./setup_toshy.py --apply-tweaks
 ```
 
 Just applies the "desktop tweaks" for the environment, does not do the full install. Might be handy if you have a system with multiple desktop environments.  
 
 ```sh
-./toshy_setup.py --remove-tweaks
+./setup_toshy.py --remove-tweaks
 ```
 
 Just removes the "desktop tweaks" the installer applied.  
 
 ```sh
-./toshy_setup.py --barebones-config
+./setup_toshy.py --barebones-config
 ```
 
 This special option will install a "barebones" config file that does no modmapping or keymapping by default (besides a simple example keymap that gives access to a couple of currency symbols, as a demo). The option will also convert an existing Toshy config into a "barebones" config file, but will ask for explicit confirmation. This config will of course not provide any of the features that a normal Toshy config would, other than the ability to use the keymapper in any of the compatible environments (X11/Xorg, Wayland+GNOME, Wayland+KDE).  
@@ -262,7 +262,7 @@ The Toshy installer should try to retain your changes inside any of the editable
 Last, but definitely not least, the "extra" installer option:  
 
 ```sh
-./toshy_setup.py --fancy-pants
+./setup_toshy.py --fancy-pants
 ```
 
 This will do the full install, but add various things that I find convenient, fun, or that somehow make the desktop environment behave more like macOS.  
@@ -284,7 +284,7 @@ At the moment this installer option will do the following:
 This should work now:  
 
 ```sh
-./toshy_setup.py --uninstall
+./setup_toshy.py --uninstall
 ``` 
 
 Please file an issue if you have some sort of trouble with the uninstall option. If you have a multi-desktop system you may need to run the uninstall procedure while logged into KDE if you ran the installer in KDE, due to the KDE-specific components that get installed for Wayland support.  
@@ -342,7 +342,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 - Other RHEL clones should be supportable
 
     - Red Hat Enterprise Linux itself? Probably.
-    - Try `./toshy_setup.py --override-distro=almalinux` or `=rhel`
+    - Try `./setup_toshy.py --override-distro=almalinux` or `=rhel`
 
 - CentOS Stream 9 (RHEL 9 upstream)
 
@@ -362,7 +362,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 - CentOS 7 (RHEL 7 clone) - Partial support:
 
-    - You must first install `python3` to run `toshy_setup.py`
+    - You must first install `python3` to run `setup_toshy.py`
     - GUI preferences app will not work (Tk too old for `sv_ttk` theme)
     - systemd "user" services are not supported in CentOS/RHEL 7
     - Auto-start at login with systemd services not available
@@ -1004,7 +1004,7 @@ Which task-switching style works for you is down to personal preference, and how
 ### KDE Plasma and the Meta/Super/Win/Cmd key
 
 > [!NOTE]
-> The Toshy installer will now take care of this, and `toshy_setup.py` has command-line options to apply or remove this tweak independently of the full install procedure. 
+> The Toshy installer will now take care of this, and `setup_toshy.py` has command-line options to apply or remove this tweak independently of the full install procedure. 
 
 KDE Plasma desktops tend to have the Meta/Super/Win/Cmd key bound to open the application menu. Like the other desktop environments that bind the `Meta` key to do something by itself, this appears to be an alien concept as far as the regular keyboard shortcut control panel is concerned. You won't find it there.  
 
