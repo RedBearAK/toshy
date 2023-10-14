@@ -339,8 +339,11 @@ def fn_monitor_toshy_services():
 
         if curr_svcs_state_tup != last_svcs_state_tup:
             try:
-                svc_status_lbl_config.config(   text=f'Toshy Config: {svc_status_config}')
-                svc_status_lbl_sessmon.config(  text=f'Session Monitor: {svc_status_sessmon} ')
+                for _ in range(3):
+                    svc_status_lbl_config.config(   text=f'Toshy Config: {svc_status_config}')
+                    time.sleep(0.05)
+                    svc_status_lbl_sessmon.config(  text=f'Session Monitor: {svc_status_sessmon} ')
+                    time.sleep(0.05)
             except NameError: pass  # Let it pass if menu item not ready yet
 
         last_svcs_state_tup = curr_svcs_state_tup
