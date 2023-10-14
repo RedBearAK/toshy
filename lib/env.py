@@ -5,7 +5,7 @@ import os
 import time
 import subprocess
 
-# ENV module version: 2023-05-22
+# ENV module version: 2023-10-13
 
 VERBOSE = True
 FLUSH = True
@@ -226,6 +226,7 @@ def get_env_info():
         'Trinity':                  'trinity',
         'Ubuntu':                   'gnome',    # "Ubuntu" in XDG_CURRENT_DESKTOP, but DE is GNOME
         'Unity':                    'unity',
+        'Wayfire':                  'wayfire',
         'Xfce':                     'xfce',
     }
 
