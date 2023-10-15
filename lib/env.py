@@ -205,6 +205,9 @@ def get_env_info():
         error("ERROR: Desktop Environment not found in XDG_SESSION_DESKTOP or XDG_CURRENT_DESKTOP.")
         error("ERROR: Config file will not be able to adapt automatically to Desktop Environment.")
 
+    if 'unity' in _desktop_env.lower():
+        DESKTOP_ENV = 'unity'
+
     # Produce a simplified desktop environment name
     desktop_env_names = {
         'Budgie':                   'budgie',
@@ -224,19 +227,20 @@ def get_env_info():
         'Sway':                     'sway',
         'SwayWM':                   'sway',
         'Trinity':                  'trinity',
+        'Unity':                    'unity',    # keep above "Ubuntu" to always catch 'unity' first
         'Ubuntu':                   'gnome',    # "Ubuntu" in XDG_CURRENT_DESKTOP, but DE is GNOME
-        'Unity':                    'unity',
         'Wayfire':                  'wayfire',
         'Xfce':                     'xfce',
     }
 
-    for k, v in desktop_env_names.items():
-        # debug(f'{k = :<10} {v = :<10}')
-        if _desktop_env is None: break  # watch out for NoneType here
-        if re.search(k, _desktop_env, re.I):
-            DESKTOP_ENV = v
-        if DESKTOP_ENV:
-            break
+    if not DESKTOP_ENV:
+        for k, v in desktop_env_names.items():
+            # debug(f'{k = :<10} {v = :<10}')
+            if _desktop_env is None: break  # watch out for NoneType here
+            if re.search(k, _desktop_env, re.I):
+                DESKTOP_ENV = v
+            if DESKTOP_ENV:
+                break
 
     # say DE should be added to list only if it it isn't None
     if not DESKTOP_ENV and _desktop_env is not None:
