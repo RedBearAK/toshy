@@ -270,7 +270,7 @@ def call_attention_to_password_prompt():
     except subprocess.CalledProcessError:
         # sudo ticket not valid, requires a password, so get user attention
         print()
-        print(fancy_str('  -- PASSWORD REQUIRED TO CONTINUE --  ', 'red', bold=True))
+        print(fancy_str('  -- PASSWORD REQUIRED TO CONTINUE --  ', 'blue', bold=True))
         print()
 
 
