@@ -247,6 +247,23 @@ def get_environment_info():
         '\n', ctx='EV')
 
 
+def fancy_str(text, color_name, *, bold=False):
+    """
+    Return text wrapped in the specified color code.
+    :param text: Text to be colorized.
+    :param color_name: Natural name of the color.
+    :param bold: Boolean to indicate if text should be bold.
+    :return: Colorized string if terminal likely supports it, otherwise the original string.
+    """
+    color_codes = { 'red': '31', 'green': '32', 'yellow': '33', 'blue': '34', 
+                    'magenta': '35', 'cyan': '36', 'white': '37', 'default': '0'}
+    if os.getenv('COLORTERM') and color_name in color_codes:
+        bold_code = '1;' if bold else ''
+        return f"\033[{bold_code}{color_codes[color_name]}m{text}\033[0m"
+    else:
+        return text
+
+
 def call_attention_to_password_prompt():
     """Utility function to emphasize the sudo password prompt"""
     try:
@@ -254,7 +271,7 @@ def call_attention_to_password_prompt():
     except subprocess.CalledProcessError:
         # sudo ticket not valid, requires a password, so get user attention
         print()
-        print('  -- PASSWORD REQUIRED TO CONTINUE --  ')
+        print(fancy_str('  -- PASSWORD REQUIRED TO CONTINUE --  ', 'red', bold=True))
         print()
 
 
@@ -265,23 +282,8 @@ def prompt_for_reboot():
         os.mknod(cnfg.reboot_tmp_file)
 
 
-def color_str(text, color_name):
-    """
-    Return text wrapped in the specified color code.
-    :param text: Text to be colorized.
-    :param color_name: Natural name of the color.
-    :return: Colorized string if terminal likely supports it, otherwise the original string.
-    """
-    color_codes = { 'red': '1;31', 'green': '1;32', 'yellow': '1;33', 'blue': '1;34', 
-                    'magenta': '1;35', 'cyan': '1;36', 'white': '1;37', 'default': '0'}
-    if os.getenv('COLORTERM') and color_name in color_codes:
-        return f"\033[{color_codes[color_name]}m{text}\033[0m"
-    else:
-        return text
-
-
 def show_task_completed_msg():
-    print(color_str('-- Task completed successfully. --', 'green'))
+    print(fancy_str(' >> Task completed successfully << ', 'green'))
 
 
 def dot_Xmodmap_warning():
@@ -294,7 +296,7 @@ def dot_Xmodmap_warning():
         print(f'{cnfg.separator}')
         print(f'{cnfg.separator}')
         warn_str    = "\t WARNING: You have an '.Xmodmap' file in your home folder!!!"
-        print(color_str(warn_str, "red"))
+        print(fancy_str(warn_str, "red"))
         print(f'   This can cause confusing PROBLEMS if you are remapping any modifier keys!')
         print(f'{cnfg.separator}')
         print(f'{cnfg.separator}')
