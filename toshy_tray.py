@@ -4,7 +4,7 @@
 # Indicator tray icon menu app for Toshy, using pygobject/gi
 TOSHY_PART      = 'tray'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Tray Icon app'
-APP_VERSION     = '2023.0826'
+APP_VERSION     = '2023.1013'
 
 # -------- COMMON COMPONENTS --------------------------------------------------
 
@@ -191,10 +191,16 @@ from gi.repository import Gtk, GLib
 
 # Define some globals for the commands run by menu items
 
-assets_path         = os.path.join(current_folder_path, 'assets')
-icon_file_active    = os.path.join(assets_path, "toshy_app_icon_rainbow.svg")
-icon_file_grayscale = os.path.join(assets_path, "toshy_app_icon_rainbow_inverse_grayscale.svg")
-icon_file_inverse   = os.path.join(assets_path, "toshy_app_icon_rainbow_inverse.svg")
+# assets_path         = os.path.join(current_folder_path, 'assets')
+# icon_file_active    = os.path.join(assets_path, "toshy_app_icon_rainbow.svg")
+# icon_file_grayscale = os.path.join(assets_path, "toshy_app_icon_rainbow_inverse_grayscale.svg")
+# icon_file_inverse   = os.path.join(assets_path, "toshy_app_icon_rainbow_inverse.svg")
+
+# Fix for Solus Budgie failing to show proper icons when using full path. Use base file name string.
+# Icon files will all be copied into the local-share-icons location to make this work. 
+icon_file_active                = "toshy_app_icon_rainbow"
+icon_file_grayscale             = "toshy_app_icon_rainbow_inverse_grayscale"
+icon_file_inverse               = "toshy_app_icon_rainbow_inverse"
 
 loop = None
 
@@ -412,6 +418,7 @@ def fn_restart_toshy_services(widget):
     _ntfy_msg = 'Toshy systemd services (re)started.\nTap any modifier key before trying shortcuts.'
     ntfy.send_notification(_ntfy_msg, _ntfy_icon_file)
 
+
 def fn_stop_toshy_services(widget):
     """Stop Toshy services with CLI command"""
     toshy_svcs_stop_cmd = os.path.join(home_local_bin, 'toshy-services-stop')
@@ -427,13 +434,16 @@ def fn_restart_toshy_script(widget):
     toshy_cfg_restart_cmd = os.path.join(home_local_bin, 'toshy-config-restart')
     subprocess.Popen([toshy_cfg_restart_cmd], stdout=DEVNULL, stderr=DEVNULL)
 
+
 def fn_stop_toshy_script(widget):
     """Stop the manual run config script"""
     toshy_cfg_stop_cmd = os.path.join(home_local_bin, 'toshy-config-stop')
     subprocess.Popen([toshy_cfg_stop_cmd], stdout=DEVNULL, stderr=DEVNULL)
 
+
 def fn_open_preferences(widget):
     subprocess.Popen(['toshy-gui'])
+
 
 def fn_open_config_folder(widget):
     try:
@@ -442,6 +452,7 @@ def fn_open_config_folder(widget):
     except FileNotFoundError as e:
         error('File not found. I have no idea how this error is possible.')
         error(e)
+
 
 def run_cmd_in_terminal(command):
     # List of common terminal emulators in descending order of commonness.
@@ -468,6 +479,7 @@ def run_cmd_in_terminal(command):
 def fn_show_services_log(widget):
     run_cmd_in_terminal('toshy-services-log')
 
+
 def fn_remove_tray_icon(widget):
     global loop
     remove_lockfile()
@@ -476,6 +488,19 @@ def fn_remove_tray_icon(widget):
     os.system(f'{pkill_cmd} -f "toshy_tray.py"')
     # Gtk.main_quit()
     sys.exit(0)
+
+
+def set_item_active_with_retry(menu_item, state=True, max_retries=5):
+    """Attempt to set the menu item's active state with retries."""
+    for _ in range(max_retries):
+        menu_item.set_active(state)
+        time.sleep(0.1)
+        if menu_item.get_active() == state:
+            return
+        time.sleep(0.1)
+    if not menu_item.get_active() == state:
+        error(f"ERROR: Failed to set item '{menu_item.get_label()}' to state '{state}'.")
+
 
 # -------- MENU ITEMS --------------------------------------------------
 
@@ -520,13 +545,13 @@ if not barebones_config:
 
     def load_prefs_submenu_settings():
         cnfg.load_settings()
-        forced_numpad_item.set_active(cnfg.forced_numpad)
-        media_arrows_fix_item.set_active(cnfg.media_arrows_fix)
-        multi_lang_item.set_active(cnfg.multi_lang)
-        ST3_in_VSCode_item.set_active(cnfg.ST3_in_VSCode)
-        Caps2Cmd_item.set_active(cnfg.Caps2Cmd)
-        Caps2Esc_Cmd_item.set_active(cnfg.Caps2Esc_Cmd)
-        Enter2Ent_Cmd_item.set_active(cnfg.Enter2Ent_Cmd)
+        set_item_active_with_retry(forced_numpad_item, cnfg.forced_numpad)
+        set_item_active_with_retry(media_arrows_fix_item, cnfg.media_arrows_fix)
+        set_item_active_with_retry(multi_lang_item, cnfg.multi_lang)
+        set_item_active_with_retry(ST3_in_VSCode_item, cnfg.ST3_in_VSCode)
+        set_item_active_with_retry(Caps2Cmd_item, cnfg.Caps2Cmd)
+        set_item_active_with_retry(Caps2Esc_Cmd_item, cnfg.Caps2Esc_Cmd)
+        set_item_active_with_retry(Enter2Ent_Cmd_item, cnfg.Enter2Ent_Cmd)
 
     def save_prefs_settings(widget):
         cnfg.forced_numpad      = forced_numpad_item.get_active()
@@ -537,6 +562,7 @@ if not barebones_config:
         cnfg.Caps2Esc_Cmd       = Caps2Esc_Cmd_item.get_active()
         cnfg.Enter2Ent_Cmd      = Enter2Ent_Cmd_item.get_active()
         cnfg.save_settings()
+        GLib.idle_add(load_prefs_submenu_settings)  # Queue the update to run in GTK's main loop
 
     ###############################################################
     # Preferences submenu
@@ -586,59 +612,64 @@ if not barebones_config:
 
     def load_optspec_layout_submenu_settings():
         cnfg.load_settings()
-        optspec_us_item.set_active(cnfg.optspec_layout == 'US')
-        optspec_abc_extended_item.set_active(cnfg.optspec_layout == 'ABC')
-        optspec_disabled_item.set_active(cnfg.optspec_layout == 'Disabled')
+        layout = cnfg.optspec_layout
+        if   layout == 'US':            set_item_active_with_retry(optspec_us_item, True)
+        elif layout == 'ABC':           set_item_active_with_retry(optspec_abc_extended_item, True)
+        elif layout == 'Disabled':      set_item_active_with_retry(optspec_disabled_item, True)
 
     def save_optspec_layout_setting(menu_item, layout):
-        if menu_item.get_active():
-            cnfg.optspec_layout = layout
-            cnfg.save_settings()
-            load_optspec_layout_submenu_settings()
+        if not menu_item.get_active():
+            return
+        
+        cnfg.optspec_layout = layout
+        cnfg.save_settings()
+        load_optspec_layout_submenu_settings()
 
-
-    ###############################################################
     # OptSpec layout submenu
     optspec_layout_submenu = Gtk.Menu()
     optspec_layout_item = Gtk.MenuItem(label='OptSpec Layout')
     optspec_layout_item.set_submenu(optspec_layout_submenu)
     menu.append(optspec_layout_item)
 
-    # create submenu items for each layout option
-    optspec_us_item = Gtk.CheckMenuItem(label='US*')
+    # Create submenu items using RadioMenuItem
+    group_optspec = None
+    optspec_us_item = Gtk.RadioMenuItem.new_with_label(group_optspec, 'US*')
     optspec_us_item.connect('toggled', save_optspec_layout_setting, 'US')
     optspec_layout_submenu.append(optspec_us_item)
+    group_optspec = optspec_us_item.get_group()
 
-    optspec_abc_extended_item = Gtk.CheckMenuItem(label='ABC Extended')
+    optspec_abc_extended_item = Gtk.RadioMenuItem.new_with_label(group_optspec, 'ABC Extended')
     optspec_abc_extended_item.connect('toggled', save_optspec_layout_setting, 'ABC')
     optspec_layout_submenu.append(optspec_abc_extended_item)
 
-    optspec_disabled_item = Gtk.CheckMenuItem(label='Disabled')
+    optspec_disabled_item = Gtk.RadioMenuItem.new_with_label(group_optspec, 'Disabled')
     optspec_disabled_item.connect('toggled', save_optspec_layout_setting, 'Disabled')
     optspec_layout_submenu.append(optspec_disabled_item)
 
-    # separator_below_prefs_submenu_item = Gtk.SeparatorMenuItem()
-    # menu.append(separator_below_prefs_submenu_item)  #-------------------------------------#
 
     def load_kbtype_submenu_settings():
         cnfg.load_settings()
-        kbtype_auto_adapt_item.set_active(cnfg.override_kbtype == 'Auto-Adapt')
-        kbtype_apple_item.set_active(cnfg.override_kbtype == 'Apple')
-        kbtype_chromebook_item.set_active(cnfg.override_kbtype == 'Chromebook')
-        kbtype_ibm_item.set_active(cnfg.override_kbtype == 'IBM')
-        kbtype_windows_item.set_active(cnfg.override_kbtype == 'Windows')
+        kbtype = cnfg.override_kbtype
+        if kbtype == 'Auto-Adapt':      set_item_active_with_retry(kbtype_auto_adapt_item, True)
+        elif kbtype == 'Apple':         set_item_active_with_retry(kbtype_apple_item, True)
+        elif kbtype == 'Chromebook':    set_item_active_with_retry(kbtype_chromebook_item, True)
+        elif kbtype == 'IBM':           set_item_active_with_retry(kbtype_ibm_item, True)
+        elif kbtype == 'Windows':       set_item_active_with_retry(kbtype_windows_item, True)
 
     def save_kbtype_setting(menu_item, kbtype):
+        if not menu_item.get_active():
+            return
+        
+        cnfg.override_kbtype = kbtype
+        cnfg.save_settings()
+
+        GLib.idle_add(load_kbtype_submenu_settings)
+
         valid_kbtypes = ['IBM', 'Chromebook', 'Windows', 'Apple']
-        if menu_item.get_active():
-            cnfg.override_kbtype = kbtype
-            cnfg.save_settings()
-            load_kbtype_submenu_settings()
-            if cnfg.override_kbtype in valid_kbtypes:
-                # Remind user this is not the intended way of fixing the problem.
-                message = ('Overriding keyboard type disables auto-adaptation.\r'
-                            'This is meant as a temporary fix only! See README.')
-                ntfy.send_notification(message, icon_file_grayscale, urgency='critical')
+        if cnfg.override_kbtype in valid_kbtypes:
+            message = ('Overriding keyboard type disables auto-adaptation.\r'
+                    'This is meant as a temporary fix only! See README.')
+            ntfy.send_notification(message, icon_file_grayscale, urgency='critical')
 
     ###############################################################
     # Keyboard Type submenu
@@ -647,24 +678,26 @@ if not barebones_config:
     kbtype_item.set_submenu(kbtype_submenu)
     menu.append(kbtype_item)
 
-    # create submenu items for each keyboard type option
-    kbtype_auto_adapt_item = Gtk.CheckMenuItem(label='Auto-Adapt*')
+    # create submenu items using RadioMenuItem
+    group_kbtype = None
+    kbtype_auto_adapt_item = Gtk.RadioMenuItem.new_with_label(group_kbtype, 'Auto-Adapt*')
     kbtype_auto_adapt_item.connect('toggled', save_kbtype_setting, 'Auto-Adapt')
     kbtype_submenu.append(kbtype_auto_adapt_item)
+    group_kbtype = kbtype_auto_adapt_item.get_group()
 
-    kbtype_apple_item = Gtk.CheckMenuItem(label='Apple')
+    kbtype_apple_item = Gtk.RadioMenuItem.new_with_label(group_kbtype, 'Apple')
     kbtype_apple_item.connect('toggled', save_kbtype_setting, 'Apple')
     kbtype_submenu.append(kbtype_apple_item)
 
-    kbtype_chromebook_item = Gtk.CheckMenuItem(label='Chromebook')
+    kbtype_chromebook_item = Gtk.RadioMenuItem.new_with_label(group_kbtype, 'Chromebook')
     kbtype_chromebook_item.connect('toggled', save_kbtype_setting, 'Chromebook')
     kbtype_submenu.append(kbtype_chromebook_item)
 
-    kbtype_ibm_item = Gtk.CheckMenuItem(label='IBM')
+    kbtype_ibm_item = Gtk.RadioMenuItem.new_with_label(group_kbtype, 'IBM')
     kbtype_ibm_item.connect('toggled', save_kbtype_setting, 'IBM')
     kbtype_submenu.append(kbtype_ibm_item)
 
-    kbtype_windows_item = Gtk.CheckMenuItem(label='Windows')
+    kbtype_windows_item = Gtk.RadioMenuItem.new_with_label(group_kbtype, 'Windows')
     kbtype_windows_item.connect('toggled', save_kbtype_setting, 'Windows')
     kbtype_submenu.append(kbtype_windows_item)
 

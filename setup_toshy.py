@@ -6,7 +6,6 @@ import re
 import sys
 import pwd
 import grp
-import time
 import random
 import string
 import signal
@@ -20,12 +19,13 @@ import subprocess
 
 from subprocess import DEVNULL
 from typing import Dict
+
 # local import
 import lib.env as env
 from lib.logger import debug, error, warn, info
 
 if os.name == 'posix' and os.geteuid() == 0:
-    error("This app should not be run as root/superuser.")
+    error("This app should not be run as root/superuser. Exiting.")
     sys.exit(1)
 
 def signal_handler(sig, frame):
@@ -48,25 +48,33 @@ else:
     error(f'This is only meant to run on Linux. Exiting.')
     sys.exit(1)
 
-trash_dir               = os.path.expanduser("~/.local/share/Trash")
-installer_file_path     = os.path.abspath(__file__)
-installer_dir_path      = os.path.dirname(installer_file_path)
-if trash_dir in installer_file_path or '/trash/' in installer_file_path.lower():
+original_PATH_str       = os.getenv('PATH')
+if original_PATH_str is None:
     print()
-    error(f"Path to this file:\n\t{installer_file_path}")
+    error(f"ERROR: PATH variable is not set. This is abnormal. Exiting.")
+    print()
+    sys.exit(1)
+
+home_dir                = os.path.expanduser('~')
+trash_dir               = os.path.join(home_dir, '.local', 'share', 'Trash')
+this_file_path          = os.path.realpath(__file__)
+this_file_dir           = os.path.dirname(this_file_path)
+this_file_name          = os.path.basename(__file__)
+if trash_dir in this_file_path or '/trash/' in this_file_path.lower():
+    print()
+    error(f"Path to this file:\n\t{this_file_path}")
     error(f"You probably did not intend to run this from the TRASH. See path. Exiting.")
     print()
     sys.exit(1)
 
-orig_PATH_str       = os.environ['PATH']
-home_local_bin      = os.path.join(os.path.expanduser('~'), '.local', 'bin')
-run_tmp_dir         = os.environ.get('XDG_RUNTIME_DIR') or '/tmp'
+home_local_bin          = os.path.join(home_dir, '.local', 'bin')
+run_tmp_dir             = os.environ.get('XDG_RUNTIME_DIR') or '/tmp'
 
-path_good_tmp_file  = 'toshy_installer_says_path_is_good'
-path_good_tmp_path  = os.path.join(run_tmp_dir, path_good_tmp_file)
+good_path_tmp_file      = 'toshy_installer_says_path_is_good'
+good_path_tmp_path      = os.path.join(run_tmp_dir, good_path_tmp_file)
 
-path_fix_tmp_file   = 'toshy_installer_says_fix_path'
-path_fix_tmp_path   = os.path.join(run_tmp_dir, path_fix_tmp_file)
+fix_path_tmp_file       = 'toshy_installer_says_fix_path'
+fix_path_tmp_path       = os.path.join(run_tmp_dir, fix_path_tmp_file)
 
 # set a standard path for duration of script run, to avoid issues with user customized paths
 os.environ['PATH']  = '/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin'
@@ -77,22 +85,14 @@ if sys.prefix != sys.base_prefix:
     sys.path = [p for p in sys.path if not p.startswith(sys.prefix)]
     sys.prefix = sys.base_prefix
 
-# current stable Python release version (update when needed):
-# 3.11 Release Date: Oct. 24, 2022
-curr_py_rel_ver_major   = 3
-curr_py_rel_ver_minor   = 11
-curr_py_rel_ver_tup     = (curr_py_rel_ver_major, curr_py_rel_ver_minor)
-curr_py_rel_ver         = f'{curr_py_rel_ver_major}.{curr_py_rel_ver_minor}'
-
 # Check if 'sudo' command is available to user
 if not shutil.which('sudo'):
     print("Error: 'sudo' not found. Installer will fail without it. Exiting.")
     sys.exit(1)
 
 do_not_ask_about_path = None
-
-if home_local_bin in orig_PATH_str:
-    with open(path_good_tmp_path, 'a') as file:
+if home_local_bin in original_PATH_str:
+    with open(good_path_tmp_path, 'a') as file:
         file.write('Nothing to see here.')
     # subprocess.run(['touch', path_good_tmp_path])
     do_not_ask_about_path = True
@@ -101,9 +101,9 @@ else:
 # do the 'else' of creating 'path_fix_tmp_path' later in function that prompts user
 
 # system Python version
-py_ver_major, py_ver_minor  = sys.version_info[:2]
-py_interp_ver_tup      = (py_ver_major, py_ver_minor)
-py_pkg_ver             = f'{py_ver_major}{py_ver_minor}'
+py_ver_mjr, py_ver_mnr  = sys.version_info[:2]
+py_interp_ver_tup       = (py_ver_mjr, py_ver_mnr)
+py_pkg_ver_str          = f'{py_ver_mjr}{py_ver_mnr}'
 
 
 class InstallerSettings:
@@ -112,12 +112,14 @@ class InstallerSettings:
         sep_reps                    = 80
         self.sep_char               = '='
         self.separator              = self.sep_char * sep_reps
-        self.env_info_dct           = None
         self.override_distro        = None
         self.DISTRO_NAME            = None
-        self.DISTRO_VER             = None
+        self.DISTRO_VER: str        = ""
         self.SESSION_TYPE           = None
         self.DESKTOP_ENV            = None
+
+        self.distro_mjr_ver: str    = ""
+        self.distro_mnr_ver: str    = ""
 
         self.systemctl_present      = shutil.which('systemctl') is not None
         self.init_system            = None
@@ -126,11 +128,17 @@ class InstallerSettings:
 
         self.qdbus                  = 'qdbus-qt5' if shutil.which('qdbus-qt5') else 'qdbus'
 
-        self.py_interp_ver          = f'{py_ver_major}.{py_ver_minor}'
+        # current stable Python release version (TODO: update when needed):
+        # 3.11 Release Date: Oct. 24, 2022
+        self.curr_py_rel_ver_mjr     = 3
+        self.curr_py_rel_ver_mnr     = 11
+        self.curr_py_rel_ver_tup     = (self.curr_py_rel_ver_mjr, self.curr_py_rel_ver_mnr)
+        self.curr_py_rel_ver_str     = f'{self.curr_py_rel_ver_mjr}.{self.curr_py_rel_ver_mnr}'
+
+        self.py_interp_ver          = f'{py_ver_mjr}.{py_ver_mnr}'
         self.py_interp_path         = shutil.which('python3')
 
-        self.home_dir_path          = os.path.abspath(os.path.expanduser('~'))
-        self.toshy_dir_path         = os.path.join(self.home_dir_path, '.config', 'toshy')
+        self.toshy_dir_path         = os.path.join(home_dir, '.config', 'toshy')
         self.db_file_name           = 'toshy_user_preferences.sqlite'
         self.db_file_path           = os.path.join(self.toshy_dir_path, self.db_file_name)
         self.backup_succeeded       = None
@@ -138,9 +146,11 @@ class InstallerSettings:
         self.existing_cfg_slices    = None
         self.venv_path              = os.path.join(self.toshy_dir_path, '.venv')
 
-        self.keyszer_tmp_path       = os.path.join(installer_dir_path, 'keyszer-temp')
+        self.keyszer_tmp_path       = os.path.join(this_file_dir, 'keyszer-temp')
 
-        self.keyszer_branch         = 'environ_api_kde'
+        # self.keyszer_branch         = 'environ_api_kde'
+        self.keyszer_branch         = 'environ_api_hyprland'
+        # self.keyszer_branch         = 'environ_api_wlroots' # doesn't work yet
         self.keyszer_url            = 'https://github.com/RedBearAK/keyszer.git'
         self.keyszer_clone_cmd      = f'git clone -b {self.keyszer_branch} {self.keyszer_url}'
 
@@ -217,16 +227,16 @@ def get_environment_info():
         error("ERROR: Init system (process 1) could not be determined. (See above error.)")
     print()   # blank line after init system message
 
-    cnfg.env_info_dct   = env.get_env_info()
+    env_info_dct   = env.get_env_info()
 
     # Avoid casefold() errors by converting all to strings
     if cnfg.override_distro:
         cnfg.DISTRO_NAME    = str(cnfg.override_distro).casefold()
     else:
-        cnfg.DISTRO_NAME    = str(cnfg.env_info_dct.get('DISTRO_NAME',  'keymissing')).casefold()
-    cnfg.DISTRO_VER     = str(cnfg.env_info_dct.get('DISTRO_VER',   'keymissing')).casefold()
-    cnfg.SESSION_TYPE   = str(cnfg.env_info_dct.get('SESSION_TYPE', 'keymissing')).casefold()
-    cnfg.DESKTOP_ENV    = str(cnfg.env_info_dct.get('DESKTOP_ENV',  'keymissing')).casefold()
+        cnfg.DISTRO_NAME    = str(env_info_dct.get('DISTRO_NAME',  'keymissing')).casefold()
+    cnfg.DISTRO_VER     = str(env_info_dct.get('DISTRO_VER',   'keymissing')).casefold()
+    cnfg.SESSION_TYPE   = str(env_info_dct.get('SESSION_TYPE', 'keymissing')).casefold()
+    cnfg.DESKTOP_ENV    = str(env_info_dct.get('DESKTOP_ENV',  'keymissing')).casefold()
 
     debug('Toshy installer sees this environment:'
         f"\n\t DISTRO_NAME  = '{cnfg.DISTRO_NAME}'"
@@ -236,6 +246,23 @@ def get_environment_info():
         '\n', ctx='EV')
 
 
+def fancy_str(text, color_name, *, bold=False):
+    """
+    Return text wrapped in the specified color code.
+    :param text: Text to be colorized.
+    :param color_name: Natural name of the color.
+    :param bold: Boolean to indicate if text should be bold.
+    :return: Colorized string if terminal likely supports it, otherwise the original string.
+    """
+    color_codes = { 'red': '31', 'green': '32', 'yellow': '33', 'blue': '34', 
+                    'magenta': '35', 'cyan': '36', 'white': '37', 'default': '0'}
+    if os.getenv('COLORTERM') and color_name in color_codes:
+        bold_code = '1;' if bold else ''
+        return f"\033[{bold_code}{color_codes[color_name]}m{text}\033[0m"
+    else:
+        return text
+
+
 def call_attention_to_password_prompt():
     """Utility function to emphasize the sudo password prompt"""
     try:
@@ -243,7 +270,9 @@ def call_attention_to_password_prompt():
     except subprocess.CalledProcessError:
         # sudo ticket not valid, requires a password, so get user attention
         print()
-        print('  -- PASSWORD REQUIRED TO CONTINUE --  ')
+        print(fancy_str('  -----------------------------------  ', 'magenta', bold=True))
+        print(fancy_str('  -- PASSWORD REQUIRED TO CONTINUE --  ', 'magenta', bold=True))
+        print(fancy_str('  -----------------------------------  ', 'magenta', bold=True))
         print()
 
 
@@ -254,34 +283,34 @@ def prompt_for_reboot():
         os.mknod(cnfg.reboot_tmp_file)
 
 
+def show_task_completed_msg():
+    """Utility function to show a standard message after each major section completes"""
+    print(fancy_str(' >> Task completed successfully << ', 'green', bold=True))
+
+
 def dot_Xmodmap_warning():
     """Check for '.Xmodmap' file in user's home folder, show warning about mod key remaps"""
 
-    xmodmap_file_path = os.path.realpath(os.path.join(os.path.expanduser('~'), '.Xmodmap'))
+    xmodmap_file_path = os.path.join(home_dir, '.Xmodmap')
 
     if os.path.isfile(xmodmap_file_path):
         print()
         print(f'{cnfg.separator}')
         print(f'{cnfg.separator}')
         warn_str    = "\t WARNING: You have an '.Xmodmap' file in your home folder!!!"
-        if os.environ['COLORTERM']:
-            # Terminal supports ANSI escape sequences
-            print(f"\033[1;31m{warn_str}\033[0m \n")
-        else:
-            # Terminal might not support ANSI escape sequences
-            print(f"{warn_str} \n")
+        print(fancy_str(warn_str, "red"))
         print(f'   This can cause confusing PROBLEMS if you are remapping any modifier keys!')
         print(f'{cnfg.separator}')
         print(f'{cnfg.separator}')
         print()
-        
+
         secret_code = ''.join(random.choice(string.ascii_letters) for _ in range(4))
-        
+
         response = input(
             f"You must take responsibility for the issues an '.Xmodmap' file may cause."
             f"\n\n\t If you understand, enter the secret code '{secret_code}': "
         )
-        
+
         if response == secret_code:
             print()
             info("Good code. User has taken responsibility for '.Xmodmap' file. Proceeding...\n")
@@ -316,8 +345,7 @@ def ask_add_home_local_bin():
         response = input('The "~/.local/bin" folder is not in PATH. OK to add it? [Y/n]: ') or 'y'
         if response in ['y', 'Y']:
             # create temp file that will get script to add local bin to path without asking
-            # subprocess.run(['touch', path_fix_tmp_path])
-            with open(path_fix_tmp_path, 'a') as file:
+            with open(fix_path_tmp_path, 'a') as file:
                 file.write('Nothing to see here.')
 
 
@@ -337,7 +365,6 @@ def do_kwin_reconfigure():
 
 
 distro_groups_map = {
-    # 'test-based':      ["test"],
 
     # separate references for RHEL types versus Fedora types
     'fedora-based':    ["fedora", "fedoralinux", "ultramarine", "nobara", "silverblue-experimental"],
@@ -349,7 +376,7 @@ distro_groups_map = {
 
     'mandriva-based':  ["openmandriva"],
 
-    'ubuntu-based':    ["ubuntu", "mint", "popos", "elementary", "neon", "tuxedo", "zorin"],
+    'ubuntu-based':    ["ubuntu", "mint", "pop", "elementary", "neon", "tuxedo", "zorin"],
     'debian-based':    ["lmde", "peppermint", "debian", "kali", "q4os"],
 
     'arch-based':      ["arch", "arcolinux", "endeavouros", "manjaro"],
@@ -358,13 +385,13 @@ distro_groups_map = {
 }
 
 pkg_groups_map = {
-    # 'test-based':      ["git"],
 
+    # NOTE: Do not add 'gnome-shell-extension-appindicator' to Fedora/RHELs.
+    #       This will install extension but requires logging out of GNOME to activate.
     'fedora-based':    ["cairo-devel", "cairo-gobject-devel",
-                        "evtest",
-                        "gcc", "git",
                         "dbus-daemon", "dbus-devel",
-                        "gobject-introspection-devel",
+                        "evtest",
+                        "gcc", "git", "gobject-introspection-devel",
                         "libappindicator-gtk3", "libnotify",
                         "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
                         "systemd-devel",
@@ -380,7 +407,7 @@ pkg_groups_map = {
                         "xset",
                         "zenity"],
 
-    # openSUSE (Tumbleweed, not applicable to Leap):
+    # NOTE: for openSUSE (Tumbleweed, not applicable to Leap):
     # How to get rid of the need to use specific version numbers in packages: 
     # pkgconfig(packagename)>=N.nn (version symbols optional)
     # How to query a package to see what the equivalent pkgconfig(packagename) syntax would be:
@@ -405,9 +432,9 @@ pkg_groups_map = {
                         "gcc", "git", "gobject-introspection-devel",
                         "libappindicator3-devel", "libnotify-tools",
                         "python3-dbus-python-devel",
-                        "python311",
-                        "python311-devel",
-                        "python311-tk",
+                            "python311",
+                            "python311-devel",
+                            "python311-tk",
                         "systemd-devel",
                         "tk", "typelib-1_0-AyatanaAppIndicator3-0_1",
                         "zenity"],
@@ -416,8 +443,8 @@ pkg_groups_map = {
                         "dbus-daemon", "dbus-devel",
                         "git", "gobject-introspection-devel",
                         "lib64ayatana-appindicator3_1", "lib64ayatana-appindicator3-gir0.1",
-                        "lib64cairo-gobject2", "lib64python-devel", "lib64systemd-devel",
-                        "libnotify",
+                            "lib64cairo-gobject2", "lib64python-devel", "lib64systemd-devel",
+                            "libnotify",
                         "python-dbus", "python-dbus-devel", "python-ensurepip", "python3-pip",
                         "task-devel", "tkinter",
                         "xset",
@@ -428,7 +455,7 @@ pkg_groups_map = {
                         "git", "gir1.2-ayatanaappindicator3-0.1",
                         "input-utils",
                         "libcairo2-dev", "libdbus-1-dev", "libgirepository1.0-dev",
-                        "libnotify-bin", "libsystemd-dev",
+                            "libnotify-bin", "libsystemd-dev",
                         "python3-dbus", "python3-dev", "python3-pip", "python3-tk", "python3-venv",
                         "zenity"],
 
@@ -437,7 +464,7 @@ pkg_groups_map = {
                         "git", "gir1.2-ayatanaappindicator3-0.1",
                         "input-utils",
                         "libcairo2-dev", "libdbus-1-dev", "libgirepository1.0-dev",
-                        "libnotify-bin", "libsystemd-dev",
+                            "libnotify-bin", "libsystemd-dev",
                         "python3-dbus", "python3-dev", "python3-pip", "python3-tk", "python3-venv",
                         "zenity"],
 
@@ -456,7 +483,7 @@ pkg_groups_map = {
     'solus-based':     ["gcc", "git",
                         "libayatana-appindicator", "libcairo-devel", "libnotify",
                         "pip", "python3-dbus", "python3-devel", "python3-tkinter",
-                        "python-dbus-devel", "python-gobject-devel",
+                            "python-dbus-devel", "python-gobject-devel",
                         "systemd-devel",
                         "zenity"],
 }
@@ -493,15 +520,204 @@ def get_distro_names():
 
 
 def exit_with_invalid_distro_error(pkg_mgr_err=None):
+    """Utility function to show error message and exit when distro is not valid"""
     print()
     error(f'ERROR: Installer does not know how to handle distro: "{cnfg.DISTRO_NAME}"')
     if pkg_mgr_err:
         error('ERROR: No valid package manager logic was encountered for this distro.')
     print()
-    print(f'Try some options in "./toshy_setup.py --help".')
+    print(f'Try some options in "./{this_file_name} --help".')
     print()
     print(f'Maybe try one of these with "--override-distro" option:\n\n\t{get_distro_names()}')
     safe_shutdown(1)
+
+
+class DistroQuirksHandler:
+    """Object to contain static methods for prepping specific distro variants that
+        need some extra prep work before installing the native package list"""
+
+    def __init__(self) -> None:
+        pass
+
+    def handle_quirks_CentOS_7(self):
+        print('Doing prep/checks for CentOS 7...')
+        # remove these from package list, not available on CentOS 7
+        pkgs_to_remove = ['dbus-daemon', 'gnome-shell-extension-appindicator']
+        _pkgs_for_distro: list = cnfg.pkgs_for_distro   # type hinting for VSCode
+        for pkg in pkgs_to_remove:
+            if pkg in cnfg.pkgs_for_distro:
+                _pkgs_for_distro.remove(pkg)
+            cnfg.pkgs_for_distro = _pkgs_for_distro
+
+        native_installer.check_for_pkg_mgr_cmd('yum')
+        yum_cmd_lst = ['sudo', 'yum', 'install', '-y']
+        if py_interp_ver_tup >= (3, 8):
+            print(f"Good, Python version is 3.8 or later: "
+                    f"'{cnfg.py_interp_ver}'")
+        else:
+            try:
+                scl_repo = ['centos-release-scl']
+                subprocess.run(yum_cmd_lst + scl_repo, check=True)
+                py38_pkgs = [   'rh-python38',
+                                'rh-python38-python-devel',
+                                'rh-python38-python-tkinter',
+                                'rh-python38-python-wheel-wheel'    ]
+                subprocess.run(yum_cmd_lst + py38_pkgs, check=True)
+                #
+                # set new Python interpreter version and path to reflect what was installed
+                cnfg.py_interp_path = '/opt/rh/rh-python38/root/usr/bin/python3.8'
+                cnfg.py_interp_ver  = '3.8'
+                # avoid using systemd packages/services for CentOS
+                cnfg.systemctl_present = False
+            except subprocess.CalledProcessError as proc_err:
+                print()
+                error(f'ERROR: (CentOS 7-specific) Problem installing/enabling Python 3.8:'
+                        f'\n\t{proc_err}')
+                safe_shutdown(1)
+        # use yum to install dnf package manager
+        try:
+            subprocess.run(yum_cmd_lst + ['dnf'], check=True)
+        except subprocess.CalledProcessError as proc_err:
+            print()
+            error(f'ERROR: Failed to install DNF package manager.\n\t{proc_err}')
+            safe_shutdown(1)
+
+    def handle_quirks_CentOS_Stream_8(self):
+        print('Doing prep/checks for CentOS Stream 8...')
+        min_mnr_ver = cnfg.curr_py_rel_ver_mnr - 3           # check up to 2 vers before current
+        max_mnr_ver = cnfg.curr_py_rel_ver_mnr + 3           # check up to 3 vers after current
+        py_minor_ver_rng = range(max_mnr_ver, min_mnr_ver, -1)
+        if py_interp_ver_tup < cnfg.curr_py_rel_ver_tup:
+            print(f"Checking for appropriate Python version on system...")
+            for check_py_minor_ver in py_minor_ver_rng:
+                if shutil.which(f'python3.{check_py_minor_ver}'):
+                    cnfg.py_interp_path = shutil.which(f'python3.{check_py_minor_ver}')
+                    cnfg.py_interp_ver = f'3.{check_py_minor_ver}'
+                    print(f'Found Python version {cnfg.py_interp_ver} available.')
+                    break
+            else:
+                error(  f'ERROR: Did not find any appropriate Python interpreter version.')
+                safe_shutdown(1)
+        try:
+            # for dbus-python
+            subprocess.run(['sudo', 'dnf', 'install', '-y',
+                            f'python{cnfg.py_interp_ver}-devel'], check=True)
+            # for Toshy Preferences GUI app
+            subprocess.run(['sudo', 'dnf', 'install', '-y',
+                            f'python{cnfg.py_interp_ver}-tkinter'], check=True)
+        except subprocess.CalledProcessError as proc_err:
+            error(f'ERROR: Problem installing necessary packages on CentOS Stream 8:'
+                    f'\n\t{proc_err}')
+            safe_shutdown(1)
+
+    def handle_quirks_RHEL(self):
+        print('Doing prep/checks for RHEL-type distro...')
+
+        # for libappindicator-gtk3: sudo dnf install -y epel-release
+        try:
+            native_installer.check_for_pkg_mgr_cmd('dnf')
+            subprocess.run(['sudo', 'dnf', 'install', '-y', 'epel-release'], check=True)
+            subprocess.run(['sudo', 'dnf', 'makecache'], check=True)
+        except subprocess.CalledProcessError as proc_err:
+            print()
+            error(f'ERROR: Problem while adding "epel-release" repo.\n\t{proc_err}')
+            safe_shutdown(1)
+
+        # Need to do this AFTER the 'epel-release' install
+        if cnfg.DISTRO_NAME != 'centos' and cnfg.distro_mjr_ver in ['8']:
+            # enable CRB repo on RHEL 8.x distros, but not CentOS Stream 8:
+            cmd_lst = ['sudo', '/usr/bin/crb', 'enable']
+            try:
+                subprocess.run(cmd_lst, check=True)
+            except subprocess.CalledProcessError as proc_err:
+                print()
+                error(f'ERROR: Problem while enabling CRB repo.\n\t{proc_err}')
+                safe_shutdown(1)
+            #
+            # TODO: Add higher version if ever necessary (keep minimum 3.8)
+            potential_versions = ['3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
+            #
+            for version in potential_versions:
+                # check if the version is already installed
+                if shutil.which(f'python{version}'):
+                    cnfg.py_interp_path = f'/usr/bin/python{version}'
+                    cnfg.py_interp_ver  = version
+                    break
+                # try to install the corresponding packages
+                cmd_lst = ['sudo', 'dnf', 'install', '-y']
+                pkg_lst = [f'python{version}', f'python{version}-devel', f'python{version}-tkinter']
+                try:
+                    subprocess.run(cmd_lst + pkg_lst, check=True)
+                    # if the installation succeeds, set the interpreter path and version
+                    cnfg.py_interp_path = f'/usr/bin/python{version}'
+                    cnfg.py_interp_ver  = version
+                    break
+                # if the installation fails, continue with the next version
+                except subprocess.CalledProcessError:
+                    print(f'No match for potential Python version {version}.')
+                    continue
+            # this 'else' is part of the 'for' loop above, not an 'if' condition
+            else:
+                # if no suitable version was found, print an error message and exit
+                error('ERROR: Did not find any appropriate Python interpreter version.')
+                safe_shutdown(1)
+
+        if cnfg.distro_mjr_ver in ['9']:
+            #
+            # enable "CodeReady Builder" repo for 'gobject-introspection-devel' only on 
+            # RHEL 9.x and CentOS Stream 9 (TODO: Add v10 if it uses the same command):
+            # sudo dnf config-manager --set-enabled crb
+            cmd_lst = ['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb']
+            try:
+                subprocess.run(cmd_lst, check=True)
+            except subprocess.CalledProcessError as proc_err:
+                print()
+                error(f'ERROR: Problem while enabling CRB repo:\n\t{proc_err}')
+                safe_shutdown(1)
+
+
+class NativePackageInstaller:
+    """Object to handle tasks related to installing native packages"""
+    def __init__(self) -> None:
+        pass
+
+    def check_for_pkg_mgr_cmd(self, pkg_mgr_cmd):
+        """Make sure native package installer command exists before using it, or exit"""
+        call_attention_to_password_prompt()
+        if not shutil.which(pkg_mgr_cmd):
+            print()
+            error(f'Package manager command ({pkg_mgr_cmd}) not available. Unable to continue.')
+            safe_shutdown(1)
+
+    def exit_with_pkg_install_error(self, proc_err):
+        """shutdown with error message if there is a problem with installing package list"""
+        print()
+        error(f'ERROR: Problem installing package list for distro type:\n\t{proc_err}')
+        safe_shutdown(1)
+
+    def show_pkg_install_success_msg(self):
+        # Have something come out even if package list is empty (like Arch after initial run)
+        print('All necessary native distro packages are installed.')
+
+    def install_pkg_list(self, cmd_lst, pkg_lst):
+        """Install packages using the given package manager command list and package list."""
+        
+        # Extract the package manager command to check
+        pkg_mgr_cmd = next((cmd for cmd in cmd_lst if cmd != 'sudo'), None)
+        # If we couldn't extract the command, exit with an error
+        if not pkg_mgr_cmd:
+            error(f'No valid package manager command in provided command list:\n\t{cmd_lst}')
+            safe_shutdown(1)
+        
+        call_attention_to_password_prompt()
+        self.check_for_pkg_mgr_cmd(pkg_mgr_cmd)
+        
+        # Execute the package installation command
+        try:
+            subprocess.run(cmd_lst + pkg_lst, check=True)
+            # self.show_pkg_install_success_msg()
+        except subprocess.CalledProcessError as proc_err:
+            self.exit_with_pkg_install_error(proc_err)
 
 
 def install_distro_pkgs():
@@ -518,7 +734,7 @@ def install_distro_pkgs():
         print()
         print(f"ERROR: No list of packages found for this distro: '{cnfg.DISTRO_NAME}'")
         print(f'Installation cannot proceed without a list of packages. Sorry.')
-        print(f'Try some options in "./toshy_setup.py --help"')
+        print(f'Try some options in "./{this_file_name} --help"')
         safe_shutdown(1)
 
     cnfg.pkgs_for_distro: list = pkg_groups_map[pkg_group]
@@ -527,267 +743,113 @@ def install_distro_pkgs():
     if cnfg.DISTRO_NAME in extra_pkgs_map:
         cnfg.pkgs_for_distro.extend(extra_pkgs_map[cnfg.DISTRO_NAME])
 
-    # Filter out systemd packages if not present
+    # Filter out systemd packages if if systemctl is not present
     cnfg.pkgs_for_distro = [
         pkg for pkg in cnfg.pkgs_for_distro 
         if cnfg.systemctl_present or 'systemd' not in pkg
     ]
 
-    # test_distros        = []
-    dnf_distros         = []
-    zypper_distros      = []
-    apt_distros         = []
-    pacman_distros      = []
-    eopkg_distros       = []
+    dnf_distros                 = []
+    zypper_distros              = []
+    apt_distros                 = []
+    pacman_distros              = []
+    eopkg_distros               = []
 
-    # test_distros        += distro_groups_map['test-based']
-    dnf_distros         += distro_groups_map['fedora-based']
-    dnf_distros         += distro_groups_map['rhel-based']
-    dnf_distros         += distro_groups_map['mandriva-based']
-    zypper_distros      += distro_groups_map['tumbleweed-based']
-    zypper_distros      += distro_groups_map['leap-based']
-    apt_distros         += distro_groups_map['ubuntu-based']
-    apt_distros         += distro_groups_map['debian-based']
-    pacman_distros      += distro_groups_map['arch-based']
-    eopkg_distros       += distro_groups_map['solus-based']
+    # assemble specific pkg mgr distro lists
 
-    def check_for_pkg_mgr_cmd(command):
-        """make sure native package installer command exists before using it, or exit"""
-        pkg_mgr_cmd = command
-        if not shutil.which(pkg_mgr_cmd):
-            print()
-            error(f'Package manager command ({pkg_mgr_cmd}) not available. Unable to continue.')
-            safe_shutdown(1)
+    try:
+        dnf_distros             += distro_groups_map['fedora-based']
+        dnf_distros             += distro_groups_map['rhel-based']
+        dnf_distros             += distro_groups_map['mandriva-based']
 
-    def exit_with_pkg_install_error(proc_err):
-        """shutdown with error message if there is a problem with installing package list"""
+        zypper_distros          += distro_groups_map['tumbleweed-based']
+        zypper_distros          += distro_groups_map['leap-based']
+
+        apt_distros             += distro_groups_map['ubuntu-based']
+        apt_distros             += distro_groups_map['debian-based']
+
+        pacman_distros          += distro_groups_map['arch-based']
+
+        eopkg_distros           += distro_groups_map['solus-based']
+    except (KeyError, TypeError) as key_err:
         print()
-        error(f'ERROR: Problem installing package list for distro type:\n\t{proc_err}')
+        error(f'Problem setting up package manager distro lists:\n\t{key_err}')
         safe_shutdown(1)
 
-    def show_pkg_install_success():
-        # Have something come out even if package list is empty (like Arch after initial run)
-        print('All necessary native distro packages are installed.')
+    # split out the major version from the minor version, if there is one
+    distro_ver_parts            = cnfg.DISTRO_VER.split('.') if cnfg.DISTRO_VER else []
+    cnfg.distro_mjr_ver         = distro_ver_parts[0] if distro_ver_parts else 'NO_VER'
+    cnfg.distro_mnr_ver         = distro_ver_parts[1] if len(distro_ver_parts) > 1 else 'no_min_ver'
 
-    def install_pkg_list(cmd_lst, pkg_lst):
-        """Install packages using the given package manager command list and package list."""
-        
-        # Extract the package manager command to check
-        pkg_mgr_cmd = next((cmd for cmd in cmd_lst if cmd != 'sudo'), None)
-        # If we couldn't extract the command, exit with an error
-        if not pkg_mgr_cmd:
-            error('Provided command list does not contain a valid package manager command.')
-            safe_shutdown(1)
-        
-        call_attention_to_password_prompt()
-        check_for_pkg_mgr_cmd(pkg_mgr_cmd)
-        
-        # Execute the package installation command
-        try:
-            subprocess.run(cmd_lst + pkg_lst, check=True)
-            show_pkg_install_success()
-        except subprocess.CalledProcessError as proc_err:
-            exit_with_pkg_install_error(proc_err)
-
-    distro_major_ver = cnfg.DISTRO_VER[0] if cnfg.DISTRO_VER else 'NO_VER'
-
-    # if cnfg.DISTRO_NAME in test_distros:
-    #     print(f"Identified a distro named: '{cnfg.DISTRO_NAME}'")
-    #     call_attention_to_password_prompt()
-    #     # add new installer logic here to test an unknown distro type
-    #     check_for_pkg_mgr_cmd('package_manager_command')
-    #     command_lst = ['sudo', 'package_manager_command', 'arg1', 'arg2']
-    #     try:
-    #         subprocess.run(command_lst + cnfg.pkgs_for_distro, check=True)
-    #     except subprocess.CalledProcessError as proc_err:
-    #         exit_with_pkg_install_error(proc_err)
+    # create the quirks handler object
+    quirks_handler              = DistroQuirksHandler()
 
     ###########################################################################
     ###  DNF DISTROS  #########################################################
     ###########################################################################
-    if cnfg.DISTRO_NAME in dnf_distros:
+    def install_on_dnf_distro():
+        """utility function that gets dispatched for distros that use DNF package manager"""
+        call_attention_to_password_prompt()
+
+        # OpenMandriva uses DNF, so it's here in the "dnf_distros" block
+        if cnfg.DISTRO_NAME in distro_groups_map['mandriva-based']:
+            cmd_lst = ['sudo', 'dnf', 'install', '-y']
+            native_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+            return  # no need to continue after this
+
+        # do extra prep/checks if distro is CentOS 7
+        if cnfg.DISTRO_NAME in ['centos'] and cnfg.distro_mjr_ver == '7':
+            quirks_handler.handle_quirks_CentOS_7()
+
+        # do extra prep/checks if distro is CentOS Stream 8
+        if cnfg.DISTRO_NAME in ['centos'] and cnfg.distro_mjr_ver == '8':
+            quirks_handler.handle_quirks_CentOS_Stream_8()
 
         # do extra stuff only if distro is a RHEL type (not Fedora type)
         if cnfg.DISTRO_NAME in distro_groups_map['rhel-based']:
-            print('Doing prep/checks for RHEL-type distro...')
-            call_attention_to_password_prompt()
-
-            # do extra prep/checks if distro is CentOS Stream 8
-            if cnfg.DISTRO_NAME in ['centos'] and cnfg.DISTRO_VER[0] in ['8']:
-                print('Doing prep/checks for CentOS Stream 8...')
-                min_minor = curr_py_rel_ver_minor - 3           # check up to 2 vers before current
-                max_minor = curr_py_rel_ver_minor + 3           # check up to 3 vers after current
-                py_minor_ver_rng = range(max_minor, min_minor, -1)
-                if py_interp_ver_tup < curr_py_rel_ver_tup:
-                    print(f"Checking for appropriate Python version on system...")
-                    for check_py_minor_ver in py_minor_ver_rng:
-                        if shutil.which(f'python3.{check_py_minor_ver}'):
-                            cnfg.py_interp_path = shutil.which(f'python3.{check_py_minor_ver}')
-                            cnfg.py_interp_ver = f'3.{check_py_minor_ver}'
-                            print(f'Found Python version {cnfg.py_interp_ver} available.')
-                            break
-                    else:
-                        error(  f'ERROR: Did not find any appropriate Python interpreter version.')
-                        safe_shutdown(1)
-                try:
-                    # for dbus-python
-                    subprocess.run(['sudo', 'dnf', 'install', '-y',
-                                    f'python{cnfg.py_interp_ver}-devel'], check=True)
-                    # for Toshy Preferences GUI app
-                    subprocess.run(['sudo', 'dnf', 'install', '-y',
-                                    f'python{cnfg.py_interp_ver}-tkinter'], check=True)
-                except subprocess.CalledProcessError as proc_err:
-                    error(f'ERROR: Problem installing necessary packages on CentOS Stream 8:'
-                            f'\n\t{proc_err}')
-                    safe_shutdown(1)
-
-            # do extra prep/checks if distro is CentOS 7
-            if (cnfg.DISTRO_NAME in ['centos'] and 
-                cnfg.DISTRO_VER and 
-                cnfg.DISTRO_VER[0] == '7'):
-                print('Doing prep/checks for CentOS 7...')
-
-                # remove 'dbus-daemon' from package list, not available on CentOS 7
-                pkgs_to_remove = ['dbus-daemon']
-                for pkg in pkgs_to_remove:
-                    if pkg in cnfg.pkgs_for_distro:
-                        cnfg.pkgs_for_distro.remove(pkg)
-
-                check_for_pkg_mgr_cmd('yum')
-                yum_cmd_lst = ['sudo', 'yum', 'install', '-y']
-                if py_interp_ver_tup >= (3, 8):
-                    print(f"Good, Python version is 3.8 or later: "
-                            f"'{cnfg.py_interp_ver}'")
-                else:
-                    try:
-                        scl_repo = ['centos-release-scl']
-                        subprocess.run(yum_cmd_lst + scl_repo, check=True)
-                        py38_pkgs = [   'rh-python38',
-                                        'rh-python38-python-devel',
-                                        'rh-python38-python-tkinter',
-                                        'rh-python38-python-wheel-wheel'    ]
-                        subprocess.run(yum_cmd_lst + py38_pkgs, check=True)
-                        #
-                        # set new Python interpreter version and path to reflect what was installed
-                        cnfg.py_interp_path = '/opt/rh/rh-python38/root/usr/bin/python3.8'
-                        cnfg.py_interp_ver  = '3.8'
-                        # avoid using systemd packages/services for CentOS
-                        cnfg.systemctl_present = False
-                    except subprocess.CalledProcessError as proc_err:
-                        print()
-                        error(f'ERROR: (CentOS 7-specific) Problem installing/enabling Python 3.8:'
-                                f'\n\t{proc_err}')
-                        safe_shutdown(1)
-                # use yum to install dnf package manager
-                try:
-                    subprocess.run(yum_cmd_lst + ['dnf'], check=True)
-                except subprocess.CalledProcessError as proc_err:
-                    print()
-                    error(f'ERROR: Failed to install DNF package manager.\n\t{proc_err}')
-                    safe_shutdown(1)
-
-            # for libappindicator-gtk3: sudo dnf install -y epel-release
-            try:
-                check_for_pkg_mgr_cmd('dnf')
-                subprocess.run(['sudo', 'dnf', 'install', '-y', 'epel-release'], check=True)
-                # subprocess.run(['sudo', 'dnf', 'update', '-y'], check=True)
-                subprocess.run(['sudo', 'dnf', 'makecache'], check=True)
-            except subprocess.CalledProcessError as proc_err:
-                print()
-                error(f'ERROR: Failed to add "epel-release" repo.\n\t{proc_err}')
-                safe_shutdown(1)
-
-            if ( not (  cnfg.DISTRO_NAME == 'centos' and 
-                        distro_major_ver in ['7', '8']    ) and 
-                        distro_major_ver in ['9'] ):
-                #
-                # enable "CodeReady Builder" repo for 'gobject-introspection-devel' only on RHEL 9.x:
-                # sudo dnf config-manager --set-enabled crb
-                subprocess.run(['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb'])
-
-            # Need to do this AFTER the 'epel-release' install
-            if (  cnfg.DISTRO_NAME != 'centos' and 
-                    distro_major_ver in ['8']):
-                # enable CRB repo on RHEL 8.x distros:
-                subprocess.run(['sudo', '/usr/bin/crb', 'enable'])
-                #
-                # TODO: Adjust this list according to "current" stable release Python in middle
-                potential_versions = ['3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
-                #
-                for version in potential_versions:
-                    # check if the version is already installed
-                    if shutil.which(f'python{version}'):
-                        cnfg.py_interp_path = f'/usr/bin/python{version}'
-                        cnfg.py_interp_ver  = version
-                        break
-                    # try to install the corresponding package
-                    try:
-                        subprocess.run(['sudo', 'dnf', 'install', '-y',
-                                        f'python{version}',
-                                        f'python{version}-devel',
-                                        f'python{version}-tkinter'],
-                                        check=True)
-                        # if the installation succeeds, set the interpreter path and version
-                        cnfg.py_interp_path = f'/usr/bin/python{version}'
-                        cnfg.py_interp_ver  = version
-                        break
-                    # if the installation fails, continue with the next version
-                    except subprocess.CalledProcessError:
-                        print(f'No match for potential Python version {version}.')
-                        continue
-                else:
-                    # if no suitable version was found, print an error message and exit
-                    error('ERROR: Did not find any appropriate Python interpreter version.')
-                    safe_shutdown(1)
+            quirks_handler.handle_quirks_RHEL()
 
         # finally, do the install of the main list of packages for Fedora/RHEL distro types
         if cnfg.DISTRO_NAME in distro_groups_map['rhel-based'] + distro_groups_map['fedora-based']:
-            if cnfg.DISTRO_NAME == 'silverblue-experimental':
+            if cnfg.DISTRO_NAME in ['silverblue-experimental']:
                 print(f'Distro is Silverblue type. Using "rpm-ostree" instead of DNF.')
                 # set up a toolbox to install software inside (the normal way) on Silverblue types
                 # all launcher shell scripts will need to be changed to "enter" the named toolbox!
                 
                 # toolbox_name = "toshy_toolbox"
                 # subprocess.run(["toolbox", "create", "-y", "-c", toolbox_name])
-                # subprocess.run(["toolbox", "run", "-c", toolbox_name, "dnf", "install", "-y", "python3-dbus", "python3-devel"])
+                # subprocess.run(["toolbox", "run", "-c", toolbox_name, 
+                #                 "dnf", "install", "-y", "python3-dbus", "python3-devel"])
 
                 cmd_lst = ['sudo', 'rpm-ostree', 'install', '--idempotent',
                             '--allow-inactive', '--apply-live', '-y']
-                install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
-                return
-
+                native_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
             else:
                 cmd_lst = ['sudo', 'dnf', 'install', '-y']
-                install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
-                return
-
-        # OpenMandriva uses DNF, so it's here in the "dnf_distros" block
-        if cnfg.DISTRO_NAME in distro_groups_map['mandriva-based']:
-            cmd_lst = ['sudo', 'dnf', 'install', '-y']
-            install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
-            return
+                native_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
     ###########################################################################
     ###  ZYPPER DISTROS  ######################################################
     ###########################################################################
-    elif cnfg.DISTRO_NAME in zypper_distros:
+    def install_on_zypper_distro():
+        """utility function that gets dispatched for distros that use Zypper package manager"""
         cmd_lst = ['sudo', 'zypper', '--non-interactive', 'install']
-        install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
-        return
+        native_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
     ###########################################################################
     ###  APT DISTROS  #########################################################
     ###########################################################################
-    elif cnfg.DISTRO_NAME in apt_distros:
+    def install_on_apt_distro():
+        """utility function that gets dispatched for distros that use APT package manager"""
         cmd_lst = ['sudo', 'apt', 'install', '-y']
-        install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
-        return
+        native_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
     ###########################################################################
     ###  PACMAN DISTROS  ######################################################
     ###########################################################################
-    elif cnfg.DISTRO_NAME in pacman_distros:
-        check_for_pkg_mgr_cmd('pacman')
+    def install_on_pacman_distro():
+        """utility function that gets dispatched for distros that use Pacman package manager"""
+        native_installer.check_for_pkg_mgr_cmd('pacman')
 
         def is_pkg_installed_pacman(package):
             """utility function to help avoid 'reinstalling' existing packages on Arch"""
@@ -801,21 +863,43 @@ def install_distro_pkgs():
         ]
         if pkgs_to_install:
             cmd_lst = ['sudo', 'pacman', '-S', '--noconfirm']
-            install_pkg_list(cmd_lst, pkgs_to_install)
-            return
+            native_installer.install_pkg_list(cmd_lst, pkgs_to_install)
 
     ###########################################################################
     ###  EOPKG DISTROS  #######################################################
     ###########################################################################
-    elif cnfg.DISTRO_NAME in eopkg_distros:
+    def install_on_eopkg_distro():
+        """utility function that gets dispatched for distros that use Eopkg package manager"""
         dev_cmd_lst = ['sudo', 'eopkg', 'install', '-y', '-c']
         dev_pkg_lst = ['system.devel']
-        install_pkg_list(dev_cmd_lst, dev_pkg_lst)
+        native_installer.install_pkg_list(dev_cmd_lst, dev_pkg_lst)
         cmd_lst = ['sudo', 'eopkg', 'install', '-y']
-        install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+        native_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
-    else:
-        exit_with_invalid_distro_error(pkg_mgr_err=True)
+    # map installer sub-functions to each pkg mgr distro list
+    pkg_mgr_dispatch = {
+        tuple(dnf_distros):     install_on_dnf_distro,
+        tuple(zypper_distros):  install_on_zypper_distro,
+        tuple(apt_distros):     install_on_apt_distro,
+        tuple(pacman_distros):  install_on_pacman_distro,
+        tuple(eopkg_distros):   install_on_eopkg_distro,
+        # add any new package manager distro lists...
+    }
+
+    # Determine the correct installation function
+    for distro_list, installer_function in pkg_mgr_dispatch.items():
+        if cnfg.DISTRO_NAME in distro_list:
+            installer_function()
+            native_installer.show_pkg_install_success_msg()
+            show_task_completed_msg()
+            return
+    # exit message in case there is no package manager distro list with distro name inside
+    exit_with_invalid_distro_error(pkg_mgr_err=True)
+
+
+#####################################################################################################
+###   END OF NATIVE PACKAGE INSTALLER SECTION
+#####################################################################################################
 
 
 def load_uinput_module():
@@ -860,6 +944,7 @@ def load_uinput_module():
                         error(f"ERROR: Failed to append 'uinput' to /etc/modules:\n\t{proc_err}")
                         error(f'ERROR: Install failed.')
                         safe_shutdown(1)
+    show_task_completed_msg()
 
 
 def reload_udev_rules():
@@ -908,6 +993,7 @@ def install_udev_rules():
             safe_shutdown(1)
     else:
         print(f'Correct "udev" rules already in place.')
+    show_task_completed_msg()
 
 
 def verify_user_groups():
@@ -963,6 +1049,7 @@ def verify_user_groups():
         #
         print(f'User "{cnfg.user_name}" added to group "{cnfg.input_group_name}".')
         prompt_for_reboot()
+    show_task_completed_msg()
 
 
 def clone_keyszer_branch():
@@ -981,7 +1068,13 @@ def clone_keyszer_branch():
             shutil.rmtree(cnfg.keyszer_tmp_path)
         except (OSError, PermissionError, FileNotFoundError) as file_err:
             error(f"Problem removing existing '{cnfg.keyszer_tmp_path}' folder:\n\t{file_err}")
-    subprocess.run(cnfg.keyszer_clone_cmd.split() + [cnfg.keyszer_tmp_path])
+    try:
+        subprocess.run(cnfg.keyszer_clone_cmd.split() + [cnfg.keyszer_tmp_path], check=True)
+    except subprocess.CalledProcessError as proc_err:
+        print()
+        error(f'Problem while cloning keyszer branch from GitHub:\n\t{proc_err}')
+        safe_shutdown(1)
+    show_task_completed_msg()
 
 
 def extract_slices(data: str) -> Dict[str, str]:
@@ -1062,9 +1155,8 @@ def backup_toshy_config():
     print(f'\n\n§  Backing up existing Toshy config folder...\n{cnfg.separator}')
 
     timestamp = datetime.datetime.now().strftime('_%Y%m%d_%H%M%S')
-    toshy_cfg_bkups_base_dir  = os.path.join(
-        os.path.expanduser('~'), '.config', 'toshy_config_backups')
-    toshy_cfg_bkup_timestamp_dir  = os.path.abspath(
+    toshy_cfg_bkups_base_dir  = os.path.join(home_dir, '.config', 'toshy_config_backups')
+    toshy_cfg_bkup_timestamp_dir  = os.path.realpath(
         os.path.join(toshy_cfg_bkups_base_dir, 'toshy' + timestamp))
 
     if not os.path.exists(cnfg.toshy_dir_path):
@@ -1113,42 +1205,41 @@ def backup_toshy_config():
             safe_shutdown(1)
         print(f"Backup completed to '{toshy_cfg_bkup_timestamp_dir}'")
         cnfg.backup_succeeded = True
+    show_task_completed_msg()
 
 
 def install_toshy_files():
     """Install Toshy files"""
     print(f'\n\n§  Installing Toshy files...\n{cnfg.separator}')
     if not cnfg.backup_succeeded:
-        print(f'Backup of Toshy config folder failed? Bailing out.')
+        error(f'Backup of Toshy config folder failed? Bailing out.')
         safe_shutdown(1)
     keyszer_tmp_dir     = os.path.basename(cnfg.keyszer_tmp_path)
-    script_file_name    = os.path.basename(__file__)
     try:
         if os.path.exists(cnfg.toshy_dir_path):
             try:
                 shutil.rmtree(cnfg.toshy_dir_path)
             except (OSError, PermissionError, FileNotFoundError) as file_err:
                 error(f'Problem removing existing Toshy config folder after backup:\n\t{file_err}')
-        # Copy files recursively from source to destination
-        shutil.copytree(
-            installer_dir_path, 
-            cnfg.toshy_dir_path, 
-            ignore=shutil.ignore_patterns(
-                '__pycache__',
+        patterns_to_ignore = [
                 '.github',
                 '.gitignore',
+                '__pycache__',
                 keyszer_tmp_dir,
                 'kwin-application-switcher',
                 'LICENSE',
                 'packages.json',
                 'README.md',
-                script_file_name
-            )
-        )
+                this_file_name,
+        ]
+        # must use list unpacking (*) ignore_patterns() requires individual pattern arguments
+        ignore_fn = shutil.ignore_patterns(*patterns_to_ignore)
+        # Copy files recursively from source to destination
+        shutil.copytree(this_file_dir, cnfg.toshy_dir_path, ignore=ignore_fn)
     except shutil.Error as copy_error:
-        print(f"Failed to copy directory: {copy_error}")
+        error(f"Failed to copy directory: {copy_error}")
     except OSError as os_error:
-        print(f"Failed to create backup directory: {os_error}")
+        error(f"Failed to create backup directory: {os_error}")
     if cnfg.barebones_config is True:
         toshy_default_cfg_barebones = os.path.join(
             cnfg.toshy_dir_path, 'default-toshy-config', 'toshy_config_barebones.py')
@@ -1195,6 +1286,7 @@ def install_toshy_files():
                 error(f'Problem writing to new config file:\n\t{file_err}')
                 safe_shutdown(1)
             print(f"Existing user customizations applied to the new config file.")
+    show_task_completed_msg()
 
 
 def setup_python_vir_env():
@@ -1206,12 +1298,12 @@ def setup_python_vir_env():
         # change the Python interpreter path to use current release version from pkg list
         # if distro is openSUSE Leap type (instead of old 3.6 version)
         if cnfg.DISTRO_NAME in distro_groups_map['leap-based']:
-            if shutil.which(f'python{curr_py_rel_ver}'):
-                cnfg.py_interp_path = shutil.which(f'python{curr_py_rel_ver}')
-                print(f'Using Python version {curr_py_rel_ver}.')
+            if shutil.which(f'python{cnfg.curr_py_rel_ver_str}'):
+                cnfg.py_interp_path = shutil.which(f'python{cnfg.curr_py_rel_ver_str}')
+                print(f'Using Python version {cnfg.curr_py_rel_ver_str}.')
             else:
                 print(  f'Current stable Python release version '
-                        f'({curr_py_rel_ver}) not found. ')
+                        f'({cnfg.curr_py_rel_ver_str}) not found. ')
         else:
             print(f'Using Python version {cnfg.py_interp_ver}.')
         try:
@@ -1226,6 +1318,7 @@ def setup_python_vir_env():
     #
     # We do not need to "activate" the venv right now, just create it
     print(f'Python virtual environment setup complete.')
+    show_task_completed_msg()
 
 
 def install_pip_packages():
@@ -1233,14 +1326,19 @@ def install_pip_packages():
     print(f'\n\n§  Installing/upgrading Python packages...\n{cnfg.separator}')
     venv_python_cmd = os.path.join(cnfg.venv_path, 'bin', 'python')
     venv_pip_cmd    = os.path.join(cnfg.venv_path, 'bin', 'pip')
-    
-    # everything from 'inotify-simple' to 'six' is just to make `keyszer` install smoother
+
     pip_pkgs   = [
-        "lockfile", "dbus-python", "systemd-python", "pygobject", "tk", "sv_ttk", "psutil",
+        # pinning pygobject to 3.44.1 (or earlier) to get through install on RHEL 8.x and clones
+        # TODO: may need to pin other packages to go along with the pinned pygobject
+        "lockfile", "dbus-python", "systemd-python", "pygobject<=3.44.1", "tk",
+        "sv_ttk", "watchdog", "psutil", "hyprpy", "i3ipc", "pywayland", # "pywlroots",
+
         # TODO: Check on 'python-xlib' project by early-mid 2024 to see if this bug is fixed:
         #   [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']
         # If the bug is fixed, remove pinning to v0.31 here:
-        "watchdog", "inotify-simple", "evdev", "appdirs", "ordered-set", "python-xlib==0.31", "six"
+
+        # everything from 'inotify-simple' to 'six' is just to make `keyszer` install smoother
+        "inotify-simple", "evdev", "appdirs", "ordered-set", "python-xlib==0.31", "six"
     ]
 
     # Filter out systemd packages if no 'systemctl' present
@@ -1269,13 +1367,20 @@ def install_pip_packages():
     else:
         print(f'Temporary "keyszer" clone folder missing. Unable to install "keyszer".')
         safe_shutdown(1)
+    show_task_completed_msg()
 
 
 def install_bin_commands():
     """Install the convenient terminal commands (symlinks to scripts) to manage Toshy"""
     print(f'\n\n§  Installing Toshy terminal commands...\n{cnfg.separator}')
     script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'toshy-bincommands-setup.sh')
-    subprocess.run([script_path])
+    try:
+        subprocess.run([script_path], check=True)
+    except subprocess.CalledProcessError as proc_err:
+        print()
+        error(f'Problem while installing terminal commands:\n\t{proc_err}')
+        safe_shutdown(1)
+    show_task_completed_msg()
 
 
 def replace_home_in_file(filename):
@@ -1284,24 +1389,31 @@ def replace_home_in_file(filename):
     with open(filename, 'r') as file:
         file_data = file.read()
     # Replace the target string
-    file_data = file_data.replace('$HOME', cnfg.home_dir_path)
+    file_data = file_data.replace('$HOME', home_dir)
     # Write the file out again
     with open(filename, 'w') as file:
         file.write(file_data)
 
 
 def install_desktop_apps():
-    """Install the convenient scripts to manage Toshy"""
+    """Install the convenient desktop apps to manage Toshy"""
     print(f'\n\n§  Installing Toshy desktop apps...\n{cnfg.separator}')
     script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'toshy-desktopapps-setup.sh')
-    subprocess.run([script_path])
 
-    desktop_files_path  = os.path.join(cnfg.home_dir_path, '.local', 'share', 'applications')
+    try:
+        subprocess.run([script_path], check=True)
+    except subprocess.CalledProcessError as proc_err:
+        print()
+        error(f'Problem installing Toshy desktop apps:\n\t{proc_err}')
+        safe_shutdown(1)
+
+    desktop_files_path  = os.path.join(home_dir, '.local', 'share', 'applications')
     tray_desktop_file   = os.path.join(desktop_files_path, 'Toshy_Tray.desktop')
     gui_desktop_file    = os.path.join(desktop_files_path, 'Toshy_GUI.desktop')
 
     replace_home_in_file(tray_desktop_file)
     replace_home_in_file(gui_desktop_file)
+    show_task_completed_msg()
 
 
 def setup_kwin2dbus_script():
@@ -1377,6 +1489,7 @@ def setup_kwin2dbus_script():
 
     # Try to get KWin to notice and activate the script on its own, now that it's in RC file
     do_kwin_reconfigure()
+    show_task_completed_msg()
 
 
 def setup_kde_dbus_service():
@@ -1385,16 +1498,15 @@ def setup_kde_dbus_service():
     print(f'\n\n§  Setting up the Toshy KDE D-Bus service...\n{cnfg.separator}')
 
     # need to autostart "$HOME/.local/bin/toshy-kde-dbus-service"
-    user_path               = os.path.expanduser('~')
-    autostart_dir_path      = os.path.join(user_path, '.config', 'autostart')
+    autostart_dir_path      = os.path.join(home_dir, '.config', 'autostart')
     dbus_svc_dt_file_path   = os.path.join(cnfg.toshy_dir_path, 'desktop')
     dbus_svc_desktop_file   = os.path.join(dbus_svc_dt_file_path, 'Toshy_KDE_DBus_Service.desktop')
-    start_dbus_svc_cmd      = os.path.join(user_path, '.local', 'bin', 'toshy-kde-dbus-service')
+    start_dbus_svc_cmd      = os.path.join(home_dir, '.local', 'bin', 'toshy-kde-dbus-service')
     replace_home_in_file(dbus_svc_desktop_file)
 
     # Where to put the new D-Bus service file:
     # ~/.local/share/dbus-1/services/org.toshy.Toshy.service
-    dbus_svcs_path          = os.path.join(user_path, '.local', 'share', 'dbus-1', 'services')
+    dbus_svcs_path          = os.path.join(home_dir, '.local', 'share', 'dbus-1', 'services')
     toshy_kde_dbus_svc_path = os.path.join(cnfg.toshy_dir_path, 'kde-kwin-dbus-service')
     kde_dbus_svc_file       = os.path.join(toshy_kde_dbus_svc_path, 'org.toshy.Toshy.service')
 
@@ -1443,6 +1555,7 @@ def setup_kde_dbus_service():
     # subprocess.Popen([kickstart_cmd])
 
     print(f'Toshy KDE D-Bus service should automatically start when needed.')
+    show_task_completed_msg()
 
 
 def setup_systemd_services():
@@ -1454,15 +1567,15 @@ def setup_systemd_services():
         print(f'Finished setting up Toshy systemd services.')
     else:
         print(f'System does not seem to be using "systemd" as init system.')
+    show_task_completed_msg()
 
 
 def autostart_tray_icon():
     """Set up the tray icon to autostart at login"""
     print(f'\n\n§  Setting up tray icon to load automatically at login...\n{cnfg.separator}')
-    user_path           = os.path.expanduser('~')
-    desktop_files_path  = os.path.join(user_path, '.local', 'share', 'applications')
+    desktop_files_path  = os.path.join(home_dir, '.local', 'share', 'applications')
     tray_desktop_file   = os.path.join(desktop_files_path, 'Toshy_Tray.desktop')
-    autostart_dir_path  = os.path.join(user_path, '.config', 'autostart')
+    autostart_dir_path  = os.path.join(home_dir, '.config', 'autostart')
     dest_link_file      = os.path.join(autostart_dir_path, 'Toshy_Tray.desktop')
 
     # Need to create autostart folder if necessary
@@ -1474,6 +1587,7 @@ def autostart_tray_icon():
     subprocess.run(['ln', '-sf', tray_desktop_file, dest_link_file])
 
     print(f'Toshy tray icon should appear in system tray at each login.')
+    show_task_completed_msg()
 
 
 ###################################################################################################
@@ -1489,34 +1603,33 @@ def apply_tweaks_GNOME():
 
     print(f'Disabled Super key opening the GNOME overview. (Use Cmd+Space instead.)')
 
-    # Set the keyboard shortcut for "Switch applications" to "Alt+Tab"
-    # gsettings set org.gnome.desktop.wm.keybindings switch-applications "['<Alt>Tab']"
-    subprocess.run(['gsettings', 'set', 'org.gnome.desktop.wm.keybindings',
-                    'switch-applications', "['<Alt>Tab']"])
-    # Set the keyboard shortcut for "Switch windows of an application" to "Alt+`" (Alt+Grave)
-    # gsettings set org.gnome.desktop.wm.keybindings switch-group "['<Alt>grave']"
-    subprocess.run(['gsettings', 'set', 'org.gnome.desktop.wm.keybindings',
-                    'switch-group', "['<Alt>grave']"])
+    # TODO: Fix this so it doesn't mess up task switching on Apple keyboards (when set to Super+Tab)
+    # # Set the keyboard shortcut for "Switch applications" to "Alt+Tab"
+    # # gsettings set org.gnome.desktop.wm.keybindings switch-applications "['<Alt>Tab']"
+    # subprocess.run(['gsettings', 'set', 'org.gnome.desktop.wm.keybindings',
+    #                 'switch-applications', "['<Alt>Tab']"])
+    # # Set the keyboard shortcut for "Switch windows of an application" to "Alt+`" (Alt+Grave)
+    # # gsettings set org.gnome.desktop.wm.keybindings switch-group "['<Alt>grave']"
+    # subprocess.run(['gsettings', 'set', 'org.gnome.desktop.wm.keybindings',
+    #                 'switch-group', "['<Alt>grave']"])
+    # print(f'Enabled "Switch applications" Mac-like task switching.')
 
-    print(f'Enabled "Switch applications" Mac-like task switching.')
-    
     # Enable keyboard shortcut for GNOME Terminal preferences dialog
     # gsettings set org.gnome.Terminal.Legacy.Keybindings:/org/gnome/terminal/legacy/keybindings/ preferences '<Control>less'
     cmd_path = 'org.gnome.Terminal.Legacy.Keybindings:/org/gnome/terminal/legacy/keybindings/'
-    # prefs_binding = '<Control>less'
     prefs_binding = '<Control>comma'
     subprocess.run(['gsettings', 'set', cmd_path, 'preferences', prefs_binding])
-
     print(f'Set a keybinding for GNOME Terminal preferences.')
 
     # Enable "Expandable folders" in Nautilus
     # dconf write /org/gnome/nautilus/list-view/use-tree-view true
-    subprocess.run(['dconf', 'write', '/org/gnome/nautilus/list-view/use-tree-view', 'true'])
+    cmd_path = '/org/gnome/nautilus/list-view/use-tree-view'
+    subprocess.run(['dconf', 'write', cmd_path, 'true'])
 
     # Set default view option in Nautilus to "list-view"
     # dconf write /org/gnome/nautilus/preferences/default-folder-viewer "'list-view'"
-    subprocess.run(['dconf', 'write', '/org/gnome/nautilus/preferences/default-folder-viewer',
-                    "'list-view'"])
+    cmd_path = '/org/gnome/nautilus/preferences/default-folder-viewer'
+    subprocess.run(['dconf', 'write', cmd_path, "'list-view'"])
 
     print(f'Set Nautilus default to "List" view with "Expandable folders" enabled.')
 
@@ -1734,7 +1847,7 @@ def apply_desktop_tweaks():
 
             # use TTF instead of OTF to try and minimize "stem darkening" effect in KDE
             font_dir        = f'{extract_dir}/TTF/'
-            local_fonts_dir = os.path.realpath(os.path.expanduser('~/.local/share/fonts'))
+            local_fonts_dir = os.path.join(home_dir, '.local', 'share', 'fonts')
 
             os.makedirs(local_fonts_dir, exist_ok=True)
 
@@ -1758,6 +1871,7 @@ def apply_desktop_tweaks():
 
     if not cnfg.tweak_applied:
         print(f'If nothing printed, no tweaks available for "{cnfg.DESKTOP_ENV}" yet.')
+    show_task_completed_msg()
 
 
 def remove_desktop_tweaks():
@@ -1776,6 +1890,7 @@ def remove_desktop_tweaks():
         remove_tweaks_KDE()
         
     print('Removed known desktop tweaks applied by installer.')
+    show_task_completed_msg()
 
 
 def uninstall_toshy():
@@ -1823,8 +1938,7 @@ def uninstall_toshy():
             error(f'Problem terminating Toshy KDE D-Bus service script:\n\t{proc_err}')
 
     # try to remove the KDE D-Bus service autostart file
-    user_path           = os.path.expanduser('~')
-    autostart_dir_path  = os.path.join(user_path, '.config', 'autostart')
+    autostart_dir_path  = os.path.join(home_dir, '.config', 'autostart')
     dbus_svc_dt_file    = os.path.join(autostart_dir_path, 'Toshy_KDE_DBus_Service.desktop')
 
     dbus_svc_rm_cmd = ['rm', '-f', dbus_svc_dt_file]
@@ -2057,10 +2171,15 @@ def main(cnfg: InstallerSettings):
     apply_desktop_tweaks()
 
     if cnfg.DESKTOP_ENV == 'gnome':
+        print()
         def is_extension_enabled(extension_uuid):
-            output = subprocess.check_output(
-                        ['gsettings', 'get', 'org.gnome.shell', 'enabled-extensions'])
-            extensions = output.decode().strip().replace("'", "").split(",")
+            try:
+                output = subprocess.check_output(
+                            ['gsettings', 'get', 'org.gnome.shell', 'enabled-extensions'])
+                extensions = output.decode().strip().replace("'", "").split(",")
+            except subprocess.CalledProcessError as proc_err:
+                error(f"Unable to check enabled extensions:\n\t{proc_err}")
+                return False
             return extension_uuid in extensions
 
         if is_extension_enabled("appindicatorsupport@rgcjonas.gmail.com"):
@@ -2076,14 +2195,6 @@ def main(cnfg: InstallerSettings):
         # create reboot reminder temp file, in case installer is run again before a reboot
         if not os.path.exists(cnfg.reboot_tmp_file):
             os.mknod(cnfg.reboot_tmp_file)
-        # print()
-        # print()
-        # print()
-        # print(cnfg.separator)
-        # print(cnfg.separator)
-        # print(cnfg.reboot_ascii_art)
-        # print(cnfg.separator)
-        # print(cnfg.separator)
         show_reboot_prompt()
         print(f'{cnfg.sep_char * 2}  Toshy install complete. Report issues on the GitHub repo.')
         print(f'{cnfg.sep_char * 2}  https://github.com/RedBearAK/toshy/issues/')
@@ -2093,7 +2204,7 @@ def main(cnfg: InstallerSettings):
         print()
     else:
         # Try to start the tray icon immediately, if reboot is not indicated
-        tray_icon_cmd = [os.path.join(cnfg.home_dir_path, '.local', 'bin', 'toshy-tray')]
+        tray_icon_cmd = [os.path.join(home_dir, '.local', 'bin', 'toshy-tray')]
         # Try to launch the tray icon in a separate process not linked to current shell
         # Also, suppress output that might confuse the user
         subprocess.Popen(tray_icon_cmd, close_fds=True, stdout=DEVNULL, stderr=DEVNULL)
@@ -2129,7 +2240,15 @@ if __name__ == '__main__':
     except subprocess.CalledProcessError as proc_err:
         error(f"ERROR: 'sudo' found, but 'sudo -k' did not work. Very strange.\n\t{proc_err}")
 
-    cnfg = InstallerSettings()
+    # create the configuration settings class instance
+    cnfg                        = InstallerSettings()
+
+    # debugging tool
+    cnfg_id                     = id(cnfg)
+    cnfg.pkgs_for_distro        = id(cnfg.pkgs_for_distro)
+
+    # create the native package installer class instance
+    native_installer            = NativePackageInstaller()
 
     handle_cli_arguments()
 

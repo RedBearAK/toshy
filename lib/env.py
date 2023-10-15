@@ -5,7 +5,7 @@ import os
 import time
 import subprocess
 
-# ENV module version: 2023-05-22
+# ENV module version: 2023-10-13
 
 VERBOSE = True
 FLUSH = True
@@ -100,7 +100,7 @@ def get_env_info():
         'Linux.*Mint':          'mint',
         'openSUSE.*Tumbleweed': 'opensuse-tumbleweed',
         'Peppermint.*':         'peppermint',
-        'Pop!_OS':              'popos',
+        'Pop!_OS':              'pop',
         'Red.*Hat.*':           'rhel',
         'Rocky.*':              'rocky',
         'Ubuntu':               'ubuntu',
@@ -205,14 +205,18 @@ def get_env_info():
         error("ERROR: Desktop Environment not found in XDG_SESSION_DESKTOP or XDG_CURRENT_DESKTOP.")
         error("ERROR: Config file will not be able to adapt automatically to Desktop Environment.")
 
+    if 'unity' in _desktop_env.lower():
+        DESKTOP_ENV = 'unity'
+
     # Produce a simplified desktop environment name
     desktop_env_names = {
         'Budgie':                   'budgie',
         'Cinnamon':                 'cinnamon',
+        'Cutefish':                 'cutefish',
         'Deepin':                   'deepin',
         'Enlightenment':            'enlightenment',
         'GNOME':                    'gnome',
-        'Hyprland':                 'hypr',
+        'Hyprland':                 'hyprland',
         'IceWM':                    'icewm',
         'KDE':                      'kde',
         'LXDE':                     'lxde',
@@ -220,20 +224,23 @@ def get_env_info():
         'MATE':                     'mate',
         'Pantheon':                 'pantheon',
         'Plasma':                   'kde',
+        'Sway':                     'sway',
         'SwayWM':                   'sway',
         'Trinity':                  'trinity',
+        'Unity':                    'unity',    # keep above "Ubuntu" to always catch 'unity' first
         'Ubuntu':                   'gnome',    # "Ubuntu" in XDG_CURRENT_DESKTOP, but DE is GNOME
-        'Unity':                    'unity',
+        'Wayfire':                  'wayfire',
         'Xfce':                     'xfce',
     }
 
-    for k, v in desktop_env_names.items():
-        # debug(f'{k = :<10} {v = :<10}')
-        if _desktop_env is None: break  # watch out for NoneType here
-        if re.search(k, _desktop_env, re.I):
-            DESKTOP_ENV = v
-        if DESKTOP_ENV:
-            break
+    if not DESKTOP_ENV:
+        for k, v in desktop_env_names.items():
+            # debug(f'{k = :<10} {v = :<10}')
+            if _desktop_env is None: break  # watch out for NoneType here
+            if re.search(k, _desktop_env, re.I):
+                DESKTOP_ENV = v
+            if DESKTOP_ENV:
+                break
 
     # say DE should be added to list only if it it isn't None
     if not DESKTOP_ENV and _desktop_env is not None:
@@ -258,9 +265,10 @@ def get_env_info():
                     pass
 
         processes = {
-            'kde': ['plasmashell', 'kwin_ft', 'kwin_wayland', 'kwin_x11'],
-            'gnome': ['gnome-shell'],
-            'sway': ['sway']
+            'kde':          ['plasmashell', 'kwin_ft', 'kwin_wayland', 'kwin_x11'],
+            'gnome':        ['gnome-shell'],
+            'sway':         ['sway', 'swaywm'],
+            'hyprland':     ['hyprland'],
         }
 
         for desktop_env, process_names in processes.items():

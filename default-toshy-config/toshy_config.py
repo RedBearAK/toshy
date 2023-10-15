@@ -134,7 +134,7 @@ try:
     # Pylance will complain if function undefined, without 'ignore' comment
     environ_api(session_type = SESSION_TYPE, wl_desktop_env = DESKTOP_ENV) # type: ignore
 except NameError:
-    debug(f"The API function 'environ_api' is not defined yet.")
+    debug(f"The API function 'environ_api' is not defined yet. Using wrong 'keyszer' branch?")
     pass
 
 
@@ -465,12 +465,13 @@ dialogs_Escape_lod = [
 
 ### dialogs_CloseWin_lod = send these windows the "Close window" combo for Cmd+W
 dialogs_CloseWin_lod = [
+    {clas:"^Angry.*IP.*Scanner$", name:"^Fetchers.*$|^Edit.*favorites.*$"},
     {clas:"^Gnome-control-center$", not_name:"^Settings$"},
     {clas:"^gnome-terminal.*$", name:"^Preferences.*$"},
     {clas:"^gnome-terminal-pref.*$", name:"^Preferences.*$"},
+    {clas:"^fr.handbrake.ghb$", not_name:"^HandBrake$"},
     {clas:"^pcloud$"},
     {clas:"^Totem$", not_name:"^Videos$"},
-    {clas:"^Angry.*IP.*Scanner$", name:"^Fetchers.*$|^Edit.*favorites.*$"},
 ]
 
 
@@ -872,7 +873,7 @@ def matchProps(*,
         if logging_enabled: # and all(cnd_lst): # << add this to show only "True" condition lists
             print(f'####  CND_LST ({all(cond_list)})  ####  {dbg=}')
             for elem in cond_list:
-                print('##', re.sub('^.*span=.*\), ', '', str(elem)).replace('>',''))
+                print('##', re.sub(r'^.*span=.*\), ', '', str(elem)).replace('>',''))
             print('-------------------------------------------------------------------')
         return all(cond_list)
 
@@ -965,39 +966,46 @@ def macro_tester():
                     ST(f"Wind. Title: '{ctx.wm_name}'"), C("Enter"),
                     ST(f"Kbd. Device: '{ctx.device_name}'"), C("Enter"),
                     ST("Next test should come out on ONE LINE!"), C("Enter"),
-                    ST("Unicode and Shift Test: 🌹—€—\u2021—ÿ—\U00002021 12345 !@#$% |\ !!!!!!"),
+                    ST("Unicode and Shift Test: 🌹—€—\u2021—ÿ—\U00002021 12345 !@#$% |\\ !!!!!!"),
                     C("Enter")
         ]
     return _macro_tester
 
 
+zenity_cmd = shutil.which('zenity')
 zenity_icon_option = None
-try:
-    zenity_help_output = subprocess.check_output(['zenity', '--help-info'])
-    help_text = str(zenity_help_output)
-    if '--icon=' in help_text:
-        zenity_icon_option = '--icon=toshy_app_icon_rainbow'
-    elif '--icon-name=' in help_text:
-        zenity_icon_option = '--icon-name=toshy_app_icon_rainbow'
-except subprocess.CalledProcessError:
-    pass  # zenity --help-info failed, assume icon is not supported
+
+if zenity_cmd:
+    try:
+        zenity_help_output = subprocess.check_output([zenity_cmd, '--help-info'])
+        help_text = str(zenity_help_output)
+        if '--icon=' in help_text:
+            zenity_icon_option = '--icon=toshy_app_icon_rainbow'
+        elif '--icon-name=' in help_text:
+            zenity_icon_option = '--icon-name=toshy_app_icon_rainbow'
+    except subprocess.CalledProcessError:
+        pass  # zenity --help-info failed, assume icon is not supported
+else:
+    error('ERROR: Zenity command is missing! Diagnostic dialog not available!')
 
 
 def notify_context():
     """pop up a notification with context info"""
     def _notify_context(ctx: KeyContext):
-        global zenity_icon_option
+        if not zenity_cmd:
+            return
+        # global zenity_icon_option
         message = ( f"Appl. Class   = '{ctx.wm_class}'"
                     f"\nWndw. Title = '{ctx.wm_name}'"
                     f"\nKbd. Device = '{ctx.device_name}'" )
-        zenity_cmd = [  'zenity', '--info', '--no-wrap', 
-                        '--title=Toshy Context Info',
-                        '--text=' + message
-                        ]
+        zenity_cmd_lst = [  zenity_cmd, '--info', '--no-wrap', 
+                            '--title=Toshy Context Info',
+                            '--text=' + message
+                            ]
         # insert the icon argument if it's supported
         if zenity_icon_option is not None:
-            zenity_cmd.insert(3, zenity_icon_option)
-        subprocess.Popen(zenity_cmd, cwd=icons_dir, stderr=DEVNULL, stdout=DEVNULL)
+            zenity_cmd_lst.insert(3, zenity_icon_option)
+        subprocess.Popen(zenity_cmd_lst, cwd=icons_dir, stderr=DEVNULL, stdout=DEVNULL)
         # Optionally, also send a system notification:
         # ntfy.send_notification(message)
     return _notify_context
@@ -3468,6 +3476,10 @@ keymap("KWrite text editor", {
     C("RC-comma"):              C("Shift-C-comma"),             # Open preferences dialog
 }, when = matchProps(clas="^kwrite$|^org.kde.Kwrite$") )
 
+keymap("GNOME Text Editor", {
+    C("RC-Slash"):              None,                           # Block Cmd+Slash from doing "Select All"
+    C("RC-Alt-f"):              C("C-h"),                       # Search and replace within the document
+}, when = matchProps(clas="^gnome-text-editor$|^org.gnome.TextEditor$") )
 
 
 ###########################  DIALOG FIXES  ###########################
@@ -3624,10 +3636,10 @@ keymap("GenTerms overrides: Fedora", {
 # }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DISTRO_NAME in ['fedora', 'almalinux'] )
 }, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_NAME in ['fedora', 'almalinux'] )
 keymap("GenTerms overrides: Pop!_OS", {
-    C("LC-Right"):              [bind,C("Super-C-Up")],         # SL - Change workspace (popos)
-    C("LC-Left"):               [bind,C("Super-C-Down")],       # SL - Change workspace (popos)
-# }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DISTRO_NAME == 'popos')
-}, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_NAME == 'popos')
+    C("LC-Right"):              [bind,C("Super-C-Up")],         # SL - Change workspace (pop)
+    C("LC-Left"):               [bind,C("Super-C-Down")],       # SL - Change workspace (pop)
+# }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DISTRO_NAME == 'pop')
+}, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_NAME == 'pop')
 keymap("GenTerms overrides: Ubuntu/Fedora", {
     C("LC-RC-Q"):               C("Super-L"),                   # Lock screen (ubuntu/fedora)
     C("LC-Right"):              [bind,C("Super-Page_Up")],      # SL - Change workspace (ubuntu/fedora)
@@ -3650,6 +3662,9 @@ keymap("GenTerms overrides: GNOME", {
     C("Shift-LC-Space"):       [bind,C("Super-Shift-Space")],   # keyboard input source (language) switching (reverse) (gnome)
 # }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DESKTOP_ENV == 'gnome' )
 }, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DESKTOP_ENV == 'gnome' )
+keymap("GenTerms overrides: swaywm", {
+    C("RC-Q"):                  C("Shift-RC-Q"),                # Override sway GenGUI Cmd+Q
+}, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DESKTOP_ENV == 'sway' )
 keymap("GenTerms overrides: Xfce4", {
     C("RC-Grave"):             [bind,C("Super-Tab")],           # xfce4 Switch within app group
     C("Shift-RC-Grave"):       [bind,C("Super-Shift-Tab")],     # xfce4 Switch within app group
@@ -3799,12 +3814,12 @@ keymap("GenGUI overrides: KDE Neon", {
                                                                 # SL - Default SL - Change workspace (kde_neon)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'neon' )
 keymap("GenGUI overrides: Pop!_OS", {
-    C("RC-Space"):             [iEF2NT(),C("Super-slash")],     # "Launch and switch applications" (popos)
+    C("RC-Space"):             [iEF2NT(),C("Super-slash")],     # "Launch and switch applications" (pop)
     C("RC-H"):                  C("Super-h"),                   # Default SL - Minimize app (gnome/budgie/popos/fedora) not-deepin
-    C("Super-Right"):          [bind,C("Super-C-Up")],          # SL - Change workspace (popos)
-    C("Super-Left"):           [bind,C("Super-C-Down")],        # SL - Change workspace (popos)
-    C("RC-Q"):                  C("Super-q"),                   # SL - Close Apps (popos)
-}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'popos' )
+    C("Super-Right"):          [bind,C("Super-C-Up")],          # SL - Change workspace (pop)
+    C("Super-Left"):           [bind,C("Super-C-Down")],        # SL - Change workspace (pop)
+    C("RC-Q"):                  C("Super-q"),                   # SL - Close Apps (pop)
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'pop' )
 keymap("GenGUI overrides: Ubuntu", {
     C("Super-RC-Q"):            C("Super-L"),                   # Lock screen (ubuntu)
     C("Super-Right"):          [bind,C("Super-Page_Up")],       # SL - Change workspace (ubuntu)
@@ -3851,9 +3866,16 @@ keymap("GenGUI overrides: KDE", {
 keymap("GenGUI overrides: MATE", {
     C("RC-Space"):             [iEF2NT(),C("Alt-Space")],       # Right click, configure Mint menu shortcut to match
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'mate' )
+keymap("GenGUI overrides: swaywm", {
+    C("RC-Space"):             [iEF2NT(),C("Super-d")],         # Open sway launcher
+    C("RC-Q"):                  C("RC-Q"),                      # Override General GUI Alt+F4 remap
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'sway' )
 keymap("GenGUI overrides: Trinity desktop", {
     C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # Trinity desktop (Q4OS)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'trinity' )
+keymap("GenGUI overrides: Unity desktop", {
+    C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # Trinity desktop (Q4OS)
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'unity' )
 keymap("GenGUI overrides: Xfce4", {
     C("RC-Grave"):             [bind,C("Super-Tab")],           # xfce4 Switch within app group
     C("Shift-RC-Grave"):       [bind,C("Super-Shift-Tab")],     # xfce4 Switch within app group
