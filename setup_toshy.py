@@ -283,7 +283,7 @@ def prompt_for_reboot():
 
 
 def show_task_completed_msg():
-    print(fancy_str(' >> Task completed successfully << ', 'green'))
+    print(fancy_str(' >> Task completed successfully << ', 'green', bold=True))
 
 
 def dot_Xmodmap_warning():
@@ -2170,6 +2170,7 @@ def main(cnfg: InstallerSettings):
     apply_desktop_tweaks()
 
     if cnfg.DESKTOP_ENV == 'gnome':
+        print()
         def is_extension_enabled(extension_uuid):
             try:
                 output = subprocess.check_output(
