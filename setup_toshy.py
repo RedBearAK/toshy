@@ -345,7 +345,6 @@ def ask_add_home_local_bin():
         response = input('The "~/.local/bin" folder is not in PATH. OK to add it? [Y/n]: ') or 'y'
         if response in ['y', 'Y']:
             # create temp file that will get script to add local bin to path without asking
-            # subprocess.run(['touch', path_fix_tmp_path])
             with open(fix_path_tmp_path, 'a') as file:
                 file.write('Nothing to see here.')
 
