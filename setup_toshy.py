@@ -112,7 +112,6 @@ class InstallerSettings:
         sep_reps                    = 80
         self.sep_char               = '='
         self.separator              = self.sep_char * sep_reps
-        self.env_info_dct           = None
         self.override_distro        = None
         self.DISTRO_NAME            = None
         self.DISTRO_VER: str        = ""
@@ -228,16 +227,16 @@ def get_environment_info():
         error("ERROR: Init system (process 1) could not be determined. (See above error.)")
     print()   # blank line after init system message
 
-    cnfg.env_info_dct   = env.get_env_info()
+    env_info_dct   = env.get_env_info()
 
     # Avoid casefold() errors by converting all to strings
     if cnfg.override_distro:
         cnfg.DISTRO_NAME    = str(cnfg.override_distro).casefold()
     else:
-        cnfg.DISTRO_NAME    = str(cnfg.env_info_dct.get('DISTRO_NAME',  'keymissing')).casefold()
-    cnfg.DISTRO_VER     = str(cnfg.env_info_dct.get('DISTRO_VER',   'keymissing')).casefold()
-    cnfg.SESSION_TYPE   = str(cnfg.env_info_dct.get('SESSION_TYPE', 'keymissing')).casefold()
-    cnfg.DESKTOP_ENV    = str(cnfg.env_info_dct.get('DESKTOP_ENV',  'keymissing')).casefold()
+        cnfg.DISTRO_NAME    = str(env_info_dct.get('DISTRO_NAME',  'keymissing')).casefold()
+    cnfg.DISTRO_VER     = str(env_info_dct.get('DISTRO_VER',   'keymissing')).casefold()
+    cnfg.SESSION_TYPE   = str(env_info_dct.get('SESSION_TYPE', 'keymissing')).casefold()
+    cnfg.DESKTOP_ENV    = str(env_info_dct.get('DESKTOP_ENV',  'keymissing')).casefold()
 
     debug('Toshy installer sees this environment:'
         f"\n\t DISTRO_NAME  = '{cnfg.DISTRO_NAME}'"
@@ -283,6 +282,7 @@ def prompt_for_reboot():
 
 
 def show_task_completed_msg():
+    """Utility function to show a standard message after each major section completes"""
     print(fancy_str(' >> Task completed successfully << ', 'green', bold=True))
 
 
