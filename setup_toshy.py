@@ -2243,10 +2243,6 @@ if __name__ == '__main__':
     # create the configuration settings class instance
     cnfg                        = InstallerSettings()
 
-    # debugging tool
-    cnfg_id                     = id(cnfg)
-    cnfg.pkgs_for_distro        = id(cnfg.pkgs_for_distro)
-
     # create the native package installer class instance
     native_installer            = NativePackageInstaller()
 
