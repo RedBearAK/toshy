@@ -1331,7 +1331,7 @@ def install_pip_packages():
         # pinning pygobject to 3.44.1 (or earlier) to get through install on RHEL 8.x and clones
         # TODO: may need to pin other packages to go along with the pinned pygobject
         "lockfile", "dbus-python", "systemd-python", "pygobject<=3.44.1", "tk",
-        "sv_ttk", "watchdog", "psutil", "hyprpy", "i3ipc", "pywayland", # "pywlroots",
+        "sv_ttk", "watchdog", "psutil", "hyprpy", "i3ipc", "pywayland", "pywlroots",
 
         # TODO: Check on 'python-xlib' project by early-mid 2024 to see if this bug is fixed:
         #   [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']
