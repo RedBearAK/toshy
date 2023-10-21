@@ -7,6 +7,6 @@ Exec=/bin/sh -c 'exec env $HOME/.local/bin/toshy-kde-dbus-service'
 Terminal=false
 NoDisplay=false
 # Icon must be copied to ~/.local/share/icons
-Icon=toshy_app_icon_rainbow.svg
+Icon=toshy_app_icon_rainbow
 Comment=Environment importer for Toshy services
 Categories=Utility;
