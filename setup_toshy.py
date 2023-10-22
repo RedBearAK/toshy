@@ -238,6 +238,11 @@ def get_environment_info():
     cnfg.SESSION_TYPE   = str(env_info_dct.get('SESSION_TYPE', 'keymissing')).casefold()
     cnfg.DESKTOP_ENV    = str(env_info_dct.get('DESKTOP_ENV',  'keymissing')).casefold()
 
+    # split out the major version from the minor version, if there is one
+    distro_ver_parts            = cnfg.DISTRO_VER.split('.') if cnfg.DISTRO_VER else []
+    cnfg.distro_mjr_ver         = distro_ver_parts[0] if distro_ver_parts else 'NO_VER'
+    cnfg.distro_mnr_ver         = distro_ver_parts[1] if len(distro_ver_parts) > 1 else 'no_mnr_ver'
+
     debug('Toshy installer sees this environment:'
         f"\n\t DISTRO_NAME  = '{cnfg.DISTRO_NAME}'"
         f"\n\t DISTRO_VER   = '{cnfg.DISTRO_VER}'"
@@ -367,8 +372,11 @@ def do_kwin_reconfigure():
 distro_groups_map = {
 
     # separate references for RHEL types versus Fedora types
-    'fedora-based':    ["fedora", "fedoralinux", "ultramarine", "nobara", "silverblue-experimental"],
+    'fedora-based':    ["fedora", "fedoralinux", "ultramarine", "nobara"],
     'rhel-based':      ["rhel", "almalinux", "rocky", "eurolinux", "centos"],
+
+    # separate references for Fedora immutables using rpm-ostree
+    'fedora-immutable':["silverblue-experimental"],
 
     # separate references for Tumbleweed types versus Leap types
     'tumbleweed-based':["opensuse-tumbleweed"],
@@ -489,8 +497,16 @@ pkg_groups_map = {
 }
 
 extra_pkgs_map = {
-    # Add a distro name (ID) and its additional packages here as needed
-    # 'distro_name': ["pkg1", "pkg2", ...],
+    # Add a tuple with distro name (ID), major version (or None) and packages to be added...
+    # ('distro_name', '22'): ["pkg1", "pkg2", ...],
+    # ('distro_name', None): ["pkg1", "pkg2", ...],
+}
+
+remove_pkgs_map = {
+    # Add a tuple with distro name (ID), major version (or None) and packages to be removed...
+    # ('distro_name', '22'): ["pkg1", "pkg2", ...],
+    # ('distro_name', None): ["pkg1", "pkg2", ...],
+    ('centos', '7'): ['dbus-daemon', 'gnome-shell-extension-appindicator'],
 }
 
 
@@ -542,12 +558,12 @@ class DistroQuirksHandler:
     def handle_quirks_CentOS_7(self):
         print('Doing prep/checks for CentOS 7...')
         # remove these from package list, not available on CentOS 7
-        pkgs_to_remove = ['dbus-daemon', 'gnome-shell-extension-appindicator']
-        _pkgs_for_distro: list = cnfg.pkgs_for_distro   # type hinting for VSCode
-        for pkg in pkgs_to_remove:
-            if pkg in cnfg.pkgs_for_distro:
-                _pkgs_for_distro.remove(pkg)
-            cnfg.pkgs_for_distro = _pkgs_for_distro
+        # pkgs_to_remove = ['dbus-daemon', 'gnome-shell-extension-appindicator']
+        # _pkgs_for_distro: list = cnfg.pkgs_for_distro   # type hinting for VSCode
+        # for pkg in pkgs_to_remove:
+        #     if pkg in cnfg.pkgs_for_distro:
+        #         _pkgs_for_distro.remove(pkg)
+        #     cnfg.pkgs_for_distro = _pkgs_for_distro
 
         native_installer.check_for_pkg_mgr_cmd('yum')
         yum_cmd_lst = ['sudo', 'yum', 'install', '-y']
@@ -739,9 +755,19 @@ def install_distro_pkgs():
 
     cnfg.pkgs_for_distro: list = pkg_groups_map[pkg_group]
 
-    # Add extra packages for specific distros
-    if cnfg.DISTRO_NAME in extra_pkgs_map:
-        cnfg.pkgs_for_distro.extend(extra_pkgs_map[cnfg.DISTRO_NAME])
+    # Add extra packages for specific distros and versions
+    for version in [cnfg.distro_mjr_ver, None]:
+        distro_key = (cnfg.DISTRO_NAME, version)
+        if distro_key in extra_pkgs_map:
+            cnfg.pkgs_for_distro.extend(extra_pkgs_map[distro_key])
+
+    # Remove packages for specific distros and versions
+    for version in [cnfg.distro_mjr_ver, None]:
+        distro_key = (cnfg.DISTRO_NAME, version)
+        if distro_key in remove_pkgs_map:
+            for pkg in remove_pkgs_map[distro_key]:
+                if pkg in cnfg.pkgs_for_distro:
+                    cnfg.pkgs_for_distro.remove(pkg)
 
     # Filter out systemd packages if if systemctl is not present
     cnfg.pkgs_for_distro = [
@@ -775,11 +801,6 @@ def install_distro_pkgs():
         print()
         error(f'Problem setting up package manager distro lists:\n\t{key_err}')
         safe_shutdown(1)
-
-    # split out the major version from the minor version, if there is one
-    distro_ver_parts            = cnfg.DISTRO_VER.split('.') if cnfg.DISTRO_VER else []
-    cnfg.distro_mjr_ver         = distro_ver_parts[0] if distro_ver_parts else 'NO_VER'
-    cnfg.distro_mnr_ver         = distro_ver_parts[1] if len(distro_ver_parts) > 1 else 'no_min_ver'
 
     # create the quirks handler object
     quirks_handler              = DistroQuirksHandler()
