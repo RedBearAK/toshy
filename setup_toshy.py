@@ -2291,7 +2291,7 @@ if __name__ == '__main__':
     cnfg                        = InstallerSettings()
 
     # create the native package installer class instance
-    native_pkg_installer            = NativePackageInstaller()
+    native_pkg_installer        = NativePackageInstaller()
 
     handle_cli_arguments()
 
