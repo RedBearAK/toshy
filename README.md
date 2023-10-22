@@ -305,6 +305,11 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - KDE variant tested (X11/Xorg or Wayland+KDE session)
     - Sway spin variant tested
 
+- Silverblue/Kinoite 38 (Fedora-based immutables)
+
+    - Package layering is used currently
+    - GNOME Wayland session requires extension
+
 - Ultramarine Linux 38 (Fedora-based)
 
     - Ultramarine GNOME tested (Wayland session requires extension)

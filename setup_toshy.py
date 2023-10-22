@@ -238,6 +238,11 @@ def get_environment_info():
     cnfg.SESSION_TYPE   = str(env_info_dct.get('SESSION_TYPE', 'keymissing')).casefold()
     cnfg.DESKTOP_ENV    = str(env_info_dct.get('DESKTOP_ENV',  'keymissing')).casefold()
 
+    # split out the major version from the minor version, if there is one
+    distro_ver_parts            = cnfg.DISTRO_VER.split('.') if cnfg.DISTRO_VER else []
+    cnfg.distro_mjr_ver         = distro_ver_parts[0] if distro_ver_parts else 'NO_VER'
+    cnfg.distro_mnr_ver         = distro_ver_parts[1] if len(distro_ver_parts) > 1 else 'no_mnr_ver'
+
     debug('Toshy installer sees this environment:'
         f"\n\t DISTRO_NAME  = '{cnfg.DISTRO_NAME}'"
         f"\n\t DISTRO_VER   = '{cnfg.DISTRO_VER}'"
@@ -367,20 +372,23 @@ def do_kwin_reconfigure():
 distro_groups_map = {
 
     # separate references for RHEL types versus Fedora types
-    'fedora-based':    ["fedora", "fedoralinux", "ultramarine", "nobara", "silverblue-experimental"],
-    'rhel-based':      ["rhel", "almalinux", "rocky", "eurolinux", "centos"],
+    'fedora-based':             ["fedora", "fedoralinux", "ultramarine", "nobara"],
+    'rhel-based':               ["rhel", "almalinux", "rocky", "eurolinux", "centos"],
+
+    # separate references for Fedora immutables using rpm-ostree
+    'fedora-immutables':        ["silverblue-experimental", "kinoite-experimental"],
 
     # separate references for Tumbleweed types versus Leap types
-    'tumbleweed-based':["opensuse-tumbleweed"],
-    'leap-based':      ["opensuse-leap"],
+    'tumbleweed-based':         ["opensuse-tumbleweed"],
+    'leap-based':               ["opensuse-leap"],
 
-    'mandriva-based':  ["openmandriva"],
+    'mandriva-based':           ["openmandriva"],
 
-    'ubuntu-based':    ["ubuntu", "mint", "pop", "elementary", "neon", "tuxedo", "zorin"],
-    'debian-based':    ["lmde", "peppermint", "debian", "kali", "q4os"],
+    'ubuntu-based':             ["ubuntu", "mint", "pop", "elementary", "neon", "tuxedo", "zorin"],
+    'debian-based':             ["lmde", "peppermint", "debian", "kali", "q4os"],
 
-    'arch-based':      ["arch", "arcolinux", "endeavouros", "manjaro"],
-    'solus-based':     ["solus"],
+    'arch-based':               ["arch", "arcolinux", "endeavouros", "manjaro"],
+    'solus-based':              ["solus"],
     # Add more as needed...
 }
 
@@ -388,109 +396,129 @@ pkg_groups_map = {
 
     # NOTE: Do not add 'gnome-shell-extension-appindicator' to Fedora/RHELs.
     #       This will install extension but requires logging out of GNOME to activate.
-    'fedora-based':    ["cairo-devel", "cairo-gobject-devel",
-                        "dbus-daemon", "dbus-devel",
-                        "evtest",
-                        "gcc", "git", "gobject-introspection-devel",
-                        "libappindicator-gtk3", "libnotify",
-                        "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
-                        "systemd-devel",
-                        "xset",
-                        "zenity"],
+    'fedora-based':        ["cairo-devel", "cairo-gobject-devel",
+                            "dbus-daemon", "dbus-devel",
+                            "evtest",
+                            "gcc", "git", "gobject-introspection-devel",
+                            "libappindicator-gtk3", "libnotify",
+                            "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
+                            "systemd-devel",
+                            "xset",
+                            "zenity"],
 
-    'rhel-based':      ["cairo-devel", "cairo-gobject-devel",
-                        "dbus-daemon", "dbus-devel",
-                        "gcc", "git", "gobject-introspection-devel",
-                        "libappindicator-gtk3", "libnotify",
-                        "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
-                        "systemd-devel",
-                        "xset",
-                        "zenity"],
+    'rhel-based':          ["cairo-devel", "cairo-gobject-devel",
+                            "dbus-daemon", "dbus-devel",
+                            "gcc", "git", "gobject-introspection-devel",
+                            "libappindicator-gtk3", "libnotify",
+                            "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
+                            "systemd-devel",
+                            "xset",
+                            "zenity"],
+
+    'fedora-immutables':   ["cairo-devel", "cairo-gobject-devel",
+                            "dbus-daemon", "dbus-devel",
+                            "evtest",
+                            "gcc", "git", "gobject-introspection-devel",
+                            "libappindicator-gtk3", "libnotify",
+                            "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
+                            "systemd-devel",
+                            "xset",
+                            "zenity"],
 
     # NOTE: for openSUSE (Tumbleweed, not applicable to Leap):
     # How to get rid of the need to use specific version numbers in packages: 
     # pkgconfig(packagename)>=N.nn (version symbols optional)
     # How to query a package to see what the equivalent pkgconfig(packagename) syntax would be:
     # rpm -q --provides packagename | grep -i pkgconfig
-    'tumbleweed-based':["cairo-devel",
-                        "dbus-1-daemon", "dbus-1-devel",
-                        "gcc", "git", "gobject-introspection-devel",
-                        "libappindicator3-devel", "libnotify-tools",
-                        # f"python{py_pkg_ver}-dbus-python-devel",
-                        "python3-dbus-python-devel",
-                        # f"python{py_pkg_ver}-devel",
-                        "python3-devel",
-                        # f"python{py_pkg_ver}-tk",
-                        "python3-tk",
-                        "systemd-devel",
-                        "tk", "typelib-1_0-AyatanaAppIndicator3-0_1",
-                        "zenity"],
+    'tumbleweed-based':    ["cairo-devel",
+                            "dbus-1-daemon", "dbus-1-devel",
+                            "gcc", "git", "gobject-introspection-devel",
+                            "libappindicator3-devel", "libnotify-tools",
+                            # f"python{py_pkg_ver}-dbus-python-devel",
+                            "python3-dbus-python-devel",
+                            # f"python{py_pkg_ver}-devel",
+                            "python3-devel",
+                            # f"python{py_pkg_ver}-tk",
+                            "python3-tk",
+                            "systemd-devel",
+                            "tk", "typelib-1_0-AyatanaAppIndicator3-0_1",
+                            "zenity"],
 
     # TODO: update Leap Python package versions as it makes newer Python available
-    'leap-based':      ["cairo-devel",
-                        "dbus-1-devel",
-                        "gcc", "git", "gobject-introspection-devel",
-                        "libappindicator3-devel", "libnotify-tools",
-                        "python3-dbus-python-devel",
-                            "python311",
-                            "python311-devel",
-                            "python311-tk",
-                        "systemd-devel",
-                        "tk", "typelib-1_0-AyatanaAppIndicator3-0_1",
-                        "zenity"],
+    'leap-based':          ["cairo-devel",
+                            "dbus-1-devel",
+                            "gcc", "git", "gobject-introspection-devel",
+                            "libappindicator3-devel", "libnotify-tools",
+                            "python3-dbus-python-devel",
+                                "python311",
+                                "python311-devel",
+                                "python311-tk",
+                            "systemd-devel",
+                            "tk", "typelib-1_0-AyatanaAppIndicator3-0_1",
+                            "zenity"],
 
-    'mandriva-based':  ["cairo-devel",
-                        "dbus-daemon", "dbus-devel",
-                        "git", "gobject-introspection-devel",
-                        "lib64ayatana-appindicator3_1", "lib64ayatana-appindicator3-gir0.1",
-                            "lib64cairo-gobject2", "lib64python-devel", "lib64systemd-devel",
-                            "libnotify",
-                        "python-dbus", "python-dbus-devel", "python-ensurepip", "python3-pip",
-                        "task-devel", "tkinter",
-                        "xset",
-                        "zenity"],
-
-    # TODO: see if this needs "dbus-daemon" added as dependency (for containers)
-    'ubuntu-based':    ["curl",
-                        "git", "gir1.2-ayatanaappindicator3-0.1",
-                        "input-utils",
-                        "libcairo2-dev", "libdbus-1-dev", "libgirepository1.0-dev",
-                            "libnotify-bin", "libsystemd-dev",
-                        "python3-dbus", "python3-dev", "python3-pip", "python3-tk", "python3-venv",
-                        "zenity"],
+    'mandriva-based':      ["cairo-devel",
+                            "dbus-daemon", "dbus-devel",
+                            "git", "gobject-introspection-devel",
+                            "lib64ayatana-appindicator3_1", "lib64ayatana-appindicator3-gir0.1",
+                                "lib64cairo-gobject2", "lib64python-devel", "lib64systemd-devel",
+                                "libnotify",
+                            "python-dbus", "python-dbus-devel", "python-ensurepip", "python3-pip",
+                            "task-devel", "tkinter",
+                            "xset",
+                            "zenity"],
 
     # TODO: see if this needs "dbus-daemon" added as dependency (for containers)
-    'debian-based':    ["curl",
-                        "git", "gir1.2-ayatanaappindicator3-0.1",
-                        "input-utils",
-                        "libcairo2-dev", "libdbus-1-dev", "libgirepository1.0-dev",
-                            "libnotify-bin", "libsystemd-dev",
-                        "python3-dbus", "python3-dev", "python3-pip", "python3-tk", "python3-venv",
-                        "zenity"],
+    'ubuntu-based':        ["curl",
+                            "git", "gir1.2-ayatanaappindicator3-0.1",
+                            "input-utils",
+                            "libcairo2-dev", "libdbus-1-dev", "libgirepository1.0-dev",
+                                "libnotify-bin", "libsystemd-dev",
+                            "python3-dbus", "python3-dev", "python3-pip", "python3-tk",
+                                "python3-venv",
+                            "zenity"],
 
     # TODO: see if this needs "dbus-daemon" added as dependency (for containers)
-    'arch-based':      ["cairo",
-                        "dbus",
-                        "evtest",
-                        "git", "gobject-introspection",
-                        "libappindicator-gtk3", "libnotify",
-                        "pkg-config", "python", "python-dbus", "python-pip",
-                        "systemd",
-                        "tk",
-                        "zenity"],
+    'debian-based':        ["curl",
+                            "git", "gir1.2-ayatanaappindicator3-0.1",
+                            "input-utils",
+                            "libcairo2-dev", "libdbus-1-dev", "libgirepository1.0-dev",
+                                "libnotify-bin", "libsystemd-dev",
+                            "python3-dbus", "python3-dev", "python3-pip", "python3-tk",
+                                "python3-venv",
+                            "zenity"],
 
     # TODO: see if this needs "dbus-daemon" added as dependency (for containers)
-    'solus-based':     ["gcc", "git",
-                        "libayatana-appindicator", "libcairo-devel", "libnotify",
-                        "pip", "python3-dbus", "python3-devel", "python3-tkinter",
-                            "python-dbus-devel", "python-gobject-devel",
-                        "systemd-devel",
-                        "zenity"],
+    'arch-based':          ["cairo",
+                            "dbus",
+                            "evtest",
+                            "git", "gobject-introspection",
+                            "libappindicator-gtk3", "libnotify",
+                            "pkg-config", "python", "python-dbus", "python-pip",
+                            "systemd",
+                            "tk",
+                            "zenity"],
+
+    # TODO: see if this needs "dbus-daemon" added as dependency (for containers)
+    'solus-based':         ["gcc", "git",
+                            "libayatana-appindicator", "libcairo-devel", "libnotify",
+                            "pip", "python3-dbus", "python3-devel", "python3-tkinter",
+                                "python-dbus-devel", "python-gobject-devel",
+                            "systemd-devel",
+                            "zenity"],
 }
 
 extra_pkgs_map = {
-    # Add a distro name (ID) and its additional packages here as needed
-    # 'distro_name': ["pkg1", "pkg2", ...],
+    # Add a tuple with distro name (ID), major version (or None) and packages to be added...
+    # ('distro_name', '22'): ["pkg1", "pkg2", ...],
+    # ('distro_name', None): ["pkg1", "pkg2", ...],
+}
+
+remove_pkgs_map = {
+    # Add a tuple with distro name (ID), major version (or None) and packages to be removed...
+    # ('distro_name', '22'): ["pkg1", "pkg2", ...],
+    # ('distro_name', None): ["pkg1", "pkg2", ...],
+    ('centos', '7'):        ['dbus-daemon', 'gnome-shell-extension-appindicator'],
 }
 
 
@@ -542,14 +570,14 @@ class DistroQuirksHandler:
     def handle_quirks_CentOS_7(self):
         print('Doing prep/checks for CentOS 7...')
         # remove these from package list, not available on CentOS 7
-        pkgs_to_remove = ['dbus-daemon', 'gnome-shell-extension-appindicator']
-        _pkgs_for_distro: list = cnfg.pkgs_for_distro   # type hinting for VSCode
-        for pkg in pkgs_to_remove:
-            if pkg in cnfg.pkgs_for_distro:
-                _pkgs_for_distro.remove(pkg)
-            cnfg.pkgs_for_distro = _pkgs_for_distro
+        # pkgs_to_remove = ['dbus-daemon', 'gnome-shell-extension-appindicator']
+        # _pkgs_for_distro: list = cnfg.pkgs_for_distro   # type hinting for VSCode
+        # for pkg in pkgs_to_remove:
+        #     if pkg in cnfg.pkgs_for_distro:
+        #         _pkgs_for_distro.remove(pkg)
+        #     cnfg.pkgs_for_distro = _pkgs_for_distro
 
-        native_installer.check_for_pkg_mgr_cmd('yum')
+        native_pkg_installer.check_for_pkg_mgr_cmd('yum')
         yum_cmd_lst = ['sudo', 'yum', 'install', '-y']
         if py_interp_ver_tup >= (3, 8):
             print(f"Good, Python version is 3.8 or later: "
@@ -615,7 +643,7 @@ class DistroQuirksHandler:
 
         # for libappindicator-gtk3: sudo dnf install -y epel-release
         try:
-            native_installer.check_for_pkg_mgr_cmd('dnf')
+            native_pkg_installer.check_for_pkg_mgr_cmd('dnf')
             subprocess.run(['sudo', 'dnf', 'install', '-y', 'epel-release'], check=True)
             subprocess.run(['sudo', 'dnf', 'makecache'], check=True)
         except subprocess.CalledProcessError as proc_err:
@@ -739,9 +767,19 @@ def install_distro_pkgs():
 
     cnfg.pkgs_for_distro: list = pkg_groups_map[pkg_group]
 
-    # Add extra packages for specific distros
-    if cnfg.DISTRO_NAME in extra_pkgs_map:
-        cnfg.pkgs_for_distro.extend(extra_pkgs_map[cnfg.DISTRO_NAME])
+    # Add extra packages for specific distros and versions
+    for version in [cnfg.distro_mjr_ver, None]:
+        distro_key = (cnfg.DISTRO_NAME, version)
+        if distro_key in extra_pkgs_map:
+            cnfg.pkgs_for_distro.extend(extra_pkgs_map[distro_key])
+
+    # Remove packages for specific distros and versions
+    for version in [cnfg.distro_mjr_ver, None]:
+        distro_key = (cnfg.DISTRO_NAME, version)
+        if distro_key in remove_pkgs_map:
+            for pkg in remove_pkgs_map[distro_key]:
+                if pkg in cnfg.pkgs_for_distro:
+                    cnfg.pkgs_for_distro.remove(pkg)
 
     # Filter out systemd packages if if systemctl is not present
     cnfg.pkgs_for_distro = [
@@ -749,6 +787,7 @@ def install_distro_pkgs():
         if cnfg.systemctl_present or 'systemd' not in pkg
     ]
 
+    rpmostree_distros           = []
     dnf_distros                 = []
     zypper_distros              = []
     apt_distros                 = []
@@ -758,6 +797,8 @@ def install_distro_pkgs():
     # assemble specific pkg mgr distro lists
 
     try:
+        rpmostree_distros       += distro_groups_map['fedora-immutables']
+
         dnf_distros             += distro_groups_map['fedora-based']
         dnf_distros             += distro_groups_map['rhel-based']
         dnf_distros             += distro_groups_map['mandriva-based']
@@ -776,13 +817,29 @@ def install_distro_pkgs():
         error(f'Problem setting up package manager distro lists:\n\t{key_err}')
         safe_shutdown(1)
 
-    # split out the major version from the minor version, if there is one
-    distro_ver_parts            = cnfg.DISTRO_VER.split('.') if cnfg.DISTRO_VER else []
-    cnfg.distro_mjr_ver         = distro_ver_parts[0] if distro_ver_parts else 'NO_VER'
-    cnfg.distro_mnr_ver         = distro_ver_parts[1] if len(distro_ver_parts) > 1 else 'no_min_ver'
-
     # create the quirks handler object
     quirks_handler              = DistroQuirksHandler()
+
+    ###########################################################################
+    ###  RPM-OSTREE DISTROS  ##################################################
+    ###########################################################################
+    def install_on_rpmostree_distro():
+        """utility function that gets dispatched for distros that use RPM-OSTree"""
+        if cnfg.DISTRO_NAME in distro_groups_map['fedora-immutables']:
+            print(f'Distro is Fedora-type immutable. Using "rpm-ostree" instead of DNF.')
+
+            # Filter out packages that are already installed
+            filtered_pkg_lst = []
+            for pkg in cnfg.pkgs_for_distro:
+                result = subprocess.run(["rpm", "-q", pkg],
+                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                if result.returncode != 0:
+                    filtered_pkg_lst.append(pkg)
+
+            if filtered_pkg_lst:
+                cmd_lst = ['sudo', 'rpm-ostree', 'install', '--idempotent',
+                            '--allow-inactive', '--apply-live', '-y']
+                native_pkg_installer.install_pkg_list(cmd_lst, filtered_pkg_lst)
 
     ###########################################################################
     ###  DNF DISTROS  #########################################################
@@ -794,7 +851,7 @@ def install_distro_pkgs():
         # OpenMandriva uses DNF, so it's here in the "dnf_distros" block
         if cnfg.DISTRO_NAME in distro_groups_map['mandriva-based']:
             cmd_lst = ['sudo', 'dnf', 'install', '-y']
-            native_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+            native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
             return  # no need to continue after this
 
         # do extra prep/checks if distro is CentOS 7
@@ -811,22 +868,8 @@ def install_distro_pkgs():
 
         # finally, do the install of the main list of packages for Fedora/RHEL distro types
         if cnfg.DISTRO_NAME in distro_groups_map['rhel-based'] + distro_groups_map['fedora-based']:
-            if cnfg.DISTRO_NAME in ['silverblue-experimental']:
-                print(f'Distro is Silverblue type. Using "rpm-ostree" instead of DNF.')
-                # set up a toolbox to install software inside (the normal way) on Silverblue types
-                # all launcher shell scripts will need to be changed to "enter" the named toolbox!
-                
-                # toolbox_name = "toshy_toolbox"
-                # subprocess.run(["toolbox", "create", "-y", "-c", toolbox_name])
-                # subprocess.run(["toolbox", "run", "-c", toolbox_name, 
-                #                 "dnf", "install", "-y", "python3-dbus", "python3-devel"])
-
-                cmd_lst = ['sudo', 'rpm-ostree', 'install', '--idempotent',
-                            '--allow-inactive', '--apply-live', '-y']
-                native_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
-            else:
-                cmd_lst = ['sudo', 'dnf', 'install', '-y']
-                native_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+            cmd_lst = ['sudo', 'dnf', 'install', '-y']
+            native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
     ###########################################################################
     ###  ZYPPER DISTROS  ######################################################
@@ -834,7 +877,7 @@ def install_distro_pkgs():
     def install_on_zypper_distro():
         """utility function that gets dispatched for distros that use Zypper package manager"""
         cmd_lst = ['sudo', 'zypper', '--non-interactive', 'install']
-        native_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+        native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
     ###########################################################################
     ###  APT DISTROS  #########################################################
@@ -842,14 +885,14 @@ def install_distro_pkgs():
     def install_on_apt_distro():
         """utility function that gets dispatched for distros that use APT package manager"""
         cmd_lst = ['sudo', 'apt', 'install', '-y']
-        native_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+        native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
     ###########################################################################
     ###  PACMAN DISTROS  ######################################################
     ###########################################################################
     def install_on_pacman_distro():
         """utility function that gets dispatched for distros that use Pacman package manager"""
-        native_installer.check_for_pkg_mgr_cmd('pacman')
+        native_pkg_installer.check_for_pkg_mgr_cmd('pacman')
 
         def is_pkg_installed_pacman(package):
             """utility function to help avoid 'reinstalling' existing packages on Arch"""
@@ -863,7 +906,7 @@ def install_distro_pkgs():
         ]
         if pkgs_to_install:
             cmd_lst = ['sudo', 'pacman', '-S', '--noconfirm']
-            native_installer.install_pkg_list(cmd_lst, pkgs_to_install)
+            native_pkg_installer.install_pkg_list(cmd_lst, pkgs_to_install)
 
     ###########################################################################
     ###  EOPKG DISTROS  #######################################################
@@ -872,17 +915,18 @@ def install_distro_pkgs():
         """utility function that gets dispatched for distros that use Eopkg package manager"""
         dev_cmd_lst = ['sudo', 'eopkg', 'install', '-y', '-c']
         dev_pkg_lst = ['system.devel']
-        native_installer.install_pkg_list(dev_cmd_lst, dev_pkg_lst)
+        native_pkg_installer.install_pkg_list(dev_cmd_lst, dev_pkg_lst)
         cmd_lst = ['sudo', 'eopkg', 'install', '-y']
-        native_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+        native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
     # map installer sub-functions to each pkg mgr distro list
     pkg_mgr_dispatch = {
-        tuple(dnf_distros):     install_on_dnf_distro,
-        tuple(zypper_distros):  install_on_zypper_distro,
-        tuple(apt_distros):     install_on_apt_distro,
-        tuple(pacman_distros):  install_on_pacman_distro,
-        tuple(eopkg_distros):   install_on_eopkg_distro,
+        tuple(rpmostree_distros):       install_on_rpmostree_distro,
+        tuple(dnf_distros):             install_on_dnf_distro,
+        tuple(zypper_distros):          install_on_zypper_distro,
+        tuple(apt_distros):             install_on_apt_distro,
+        tuple(pacman_distros):          install_on_pacman_distro,
+        tuple(eopkg_distros):           install_on_eopkg_distro,
         # add any new package manager distro lists...
     }
 
@@ -890,7 +934,7 @@ def install_distro_pkgs():
     for distro_list, installer_function in pkg_mgr_dispatch.items():
         if cnfg.DISTRO_NAME in distro_list:
             installer_function()
-            native_installer.show_pkg_install_success_msg()
+            native_pkg_installer.show_pkg_install_success_msg()
             show_task_completed_msg()
             return
     # exit message in case there is no package manager distro list with distro name inside
@@ -1332,6 +1376,8 @@ def install_pip_packages():
         # TODO: may need to pin other packages to go along with the pinned pygobject
         "lockfile", "dbus-python", "systemd-python", "pygobject<=3.44.1", "tk",
         "sv_ttk", "watchdog", "psutil", "hyprpy", "i3ipc", "pywayland", # "pywlroots",
+
+        # installing 'pywlroots' will require native pkg 'libxkbcommon-devel' (Fedora)
 
         # TODO: Check on 'python-xlib' project by early-mid 2024 to see if this bug is fixed:
         #   [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']
@@ -2244,7 +2290,7 @@ if __name__ == '__main__':
     cnfg                        = InstallerSettings()
 
     # create the native package installer class instance
-    native_installer            = NativePackageInstaller()
+    native_pkg_installer        = NativePackageInstaller()
 
     handle_cli_arguments()
 
