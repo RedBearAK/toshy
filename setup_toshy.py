@@ -835,6 +835,8 @@ def install_distro_pkgs():
                                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 if result.returncode != 0:
                     filtered_pkg_lst.append(pkg)
+                else:
+                    print(fancy_str(f"Package '{pkg}' is already installed. Skipping.", "green"))
 
             if filtered_pkg_lst:
                 cmd_lst = ['sudo', 'rpm-ostree', 'install', '--idempotent',
