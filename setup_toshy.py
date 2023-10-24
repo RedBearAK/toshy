@@ -569,13 +569,6 @@ class DistroQuirksHandler:
 
     def handle_quirks_CentOS_7(self):
         print('Doing prep/checks for CentOS 7...')
-        # remove these from package list, not available on CentOS 7
-        # pkgs_to_remove = ['dbus-daemon', 'gnome-shell-extension-appindicator']
-        # _pkgs_for_distro: list = cnfg.pkgs_for_distro   # type hinting for VSCode
-        # for pkg in pkgs_to_remove:
-        #     if pkg in cnfg.pkgs_for_distro:
-        #         _pkgs_for_distro.remove(pkg)
-        #     cnfg.pkgs_for_distro = _pkgs_for_distro
 
         native_pkg_installer.check_for_pkg_mgr_cmd('yum')
         yum_cmd_lst = ['sudo', 'yum', 'install', '-y']
@@ -1081,42 +1074,6 @@ def verify_user_groups():
     """Check if the `input` group exists and user is in group"""
     print(f'\n\n§  Checking if user is in "input" group...\n{cnfg.separator}')
     create_group(cnfg.input_group)
-
-    # # code to remove (start)
-    # if cnfg.DISTRO_NAME in distro_groups_map['fedora-immutables']:
-    #     # Check if 'input' group already exists in /etc/group
-    #     with open('/etc/group') as f:
-    #         if not re.search(r'^input:', f.read(), re.MULTILINE):
-    #             print('Adding "input" group to /etc/group...')
-    #             # https://docs.fedoraproject.org/en-US/fedora-silverblue/troubleshooting/
-    #             # Special command to make Fedora Silverblue/uBlue work, or usermod will fail: 
-    #             # grep -E '^input:' /usr/lib/group | sudo tee -a /etc/group
-    #             command = "grep -E '^input:' /usr/lib/group | sudo tee -a /etc/group >/dev/null"
-    #             try:
-    #                 call_attention_to_password_prompt()
-    #                 subprocess.run(command, shell=True, check=True)
-    #                 print(f"Added '{cnfg.input_group}' group to system.")
-    #             except subprocess.CalledProcessError as proc_err:
-    #                 error(f"Problem adding '{cnfg.input_group}' group to system.\n\t{proc_err}")
-    #                 safe_shutdown(1)
-    # try:
-    #     grp.getgrnam(cnfg.input_group)
-    # except KeyError:
-    #     # The group doesn't exist, so create it
-    #     print(f'Creating "input" group...')
-    #     try:
-    #         call_attention_to_password_prompt()
-    #         cmd_lst = ['sudo', 'groupadd', cnfg.input_group]
-    #         subprocess.run(cmd_lst, check=True)
-    #     except subprocess.CalledProcessError as proc_err:
-    #         print()
-    #         error(f'ERROR: Problem when trying to create "input" group.\n')
-    #         err_output: bytes = proc_err.output  # Type hinting the error output variable
-    #         # Deal with possible 'NoneType' error output
-    #         error(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
-    #         safe_shutdown(1)
-    # # code to remove (end)
-
     # Check if the user is already in the `input` group
     group_info = grp.getgrnam(cnfg.input_group)
     if cnfg.user_name in group_info.gr_mem:
