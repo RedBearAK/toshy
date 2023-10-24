@@ -1717,28 +1717,49 @@ def apply_tweaks_KDE():
         # git clone https://github.com/nclarius/kwin-application-switcher.git
         # cd kwin-application-switcher
         # ./install.sh
-        switcher_url        = 'https://github.com/nclarius/kwin-application-switcher.git'
-        switcher_dir        = 'kwin-application-switcher'
-        script_path         = os.path.dirname(os.path.realpath(__file__))
-        switcher_dir_path   = os.path.join(script_path, switcher_dir)
+        # 
+        # switcher_url        = 'https://github.com/nclarius/kwin-application-switcher.git'
+
+        # TODO: Revert to main repo if/when patch for this is accepted.
+        # Patched branch that fixes some issues with maintaining grouping:
+        # 'https://github.com/RedBearAK/kwin-application-switcher/tree/grouping_fix'
+
+        switcher_branch     = 'grouping_fix'
+        switcher_repo       = (
+            'https://github.com/RedBearAK/kwin-application-switcher.git'
+        )
+
+        switcher_dir_name   = 'kwin-application-switcher'
+        switcher_dir_path   = os.path.join(this_file_dir, switcher_dir_name)
+        switcher_title      = 'KWin Application Switcher'
+        switcher_cloned     = False
+
+        git_clone_cmd        = ['git', 'clone', '--branch',
+                                switcher_branch, switcher_repo, switcher_dir_path]
+
         # git should be installed by this point? Not necessarily.
-        if shutil.which('git'):
-            try:
-                if os.path.exists(switcher_dir_path):
-                    try:
-                        shutil.rmtree(switcher_dir_path)
-                    except (FileNotFoundError, PermissionError, OSError) as file_err:
-                        error(f'Problem removing existing switcher clone folder:\n\t{file_err}')
-                subprocess.run(["git", "clone", switcher_url, switcher_dir_path], check=True,
-                                stdout=DEVNULL, stderr=DEVNULL)
-                command_dir     = os.path.join(script_path, switcher_dir)
-                subprocess.run(["./install.sh"], cwd=command_dir, check=True,
-                                stdout=DEVNULL, stderr=DEVNULL)
-                print(f'Installed "Application Switcher" KWin script.')
-            except subprocess.CalledProcessError as proc_err:
-                error(f'Something went wrong installing KWin Application Switcher.\n\t{proc_err}')
+        if not shutil.which('git'):
+            error(f"Unable to clone {switcher_title}. Install 'git' and try again.")
         else:
-            error(f"ERROR: Unable to clone KWin Application Switcher. 'git' not installed.")
+            if os.path.exists(switcher_dir_path):
+                try:
+                    shutil.rmtree(switcher_dir_path)
+                except (FileNotFoundError, PermissionError, OSError) as file_err:
+                    warn(f'Problem removing existing switcher clone folder:\n\t{file_err}')
+            try:
+                subprocess.run(git_clone_cmd, check=True) # , stdout=DEVNULL, stderr=DEVNULL)
+                switcher_cloned = True
+            except subprocess.CalledProcessError as proc_err:
+                warn(f'Problem while cloning the {switcher_title} branch:\n\t{proc_err}')
+            if not switcher_cloned:
+                warn(f'Unable to install {switcher_title}. Clone did not succeed.')
+            else:
+                try:
+                    subprocess.run(["./install.sh"], cwd=switcher_dir_path, check=True,
+                                    stdout=DEVNULL, stderr=DEVNULL)
+                    print(f'Installed "{switcher_title}" KWin script.')
+                except subprocess.CalledProcessError as proc_err:
+                    warn(f'Something went wrong installing {switcher_title}.\n\t{proc_err}')
 
         do_kwin_reconfigure()
 
