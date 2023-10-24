@@ -17,7 +17,7 @@ import platform
 import textwrap
 import subprocess
 
-from subprocess import DEVNULL
+from subprocess import DEVNULL, PIPE
 from typing import Dict
 
 # local import
@@ -154,7 +154,7 @@ class InstallerSettings:
         self.keyszer_url            = 'https://github.com/RedBearAK/keyszer.git'
         self.keyszer_clone_cmd      = f'git clone -b {self.keyszer_branch} {self.keyszer_url}'
 
-        self.input_group_name       = 'input'
+        self.input_group       = 'input'
         self.user_name              = pwd.getpwuid(os.getuid()).pw_name
 
         self.barebones_config       = None
@@ -281,7 +281,7 @@ def call_attention_to_password_prompt():
         print()
 
 
-def prompt_for_reboot():
+def enable_prompt_for_reboot():
     """Utility function to make sure user is reminded to reboot if necessary"""
     cnfg.should_reboot = True
     if not os.path.exists(cnfg.reboot_tmp_file):
@@ -831,8 +831,7 @@ def install_distro_pkgs():
             # Filter out packages that are already installed
             filtered_pkg_lst = []
             for pkg in cnfg.pkgs_for_distro:
-                result = subprocess.run(["rpm", "-q", pkg],
-                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                result = subprocess.run(["rpm", "-q", pkg], stdout=PIPE, stderr=PIPE)
                 if result.returncode != 0:
                     filtered_pkg_lst.append(pkg)
                 else:
@@ -1002,7 +1001,7 @@ def reload_udev_rules():
         print('Reloaded the "udev" rules successfully.')
     except subprocess.CalledProcessError as proc_err:
         print(f'Failed to reload "udev" rules:\n\t{proc_err}')
-        prompt_for_reboot()
+        enable_prompt_for_reboot()
 
 
 def install_udev_rules():
@@ -1042,50 +1041,97 @@ def install_udev_rules():
     show_task_completed_msg()
 
 
+def create_group(group_name):
+    """Utility function to create the specified group if it does not already exist."""
+    try:
+        grp.getgrnam(group_name)
+        print(f'Group "{group_name}" already exists.')
+    except KeyError:
+        print(f'Creating "{group_name}" group...')
+        call_attention_to_password_prompt()
+        if cnfg.DISTRO_NAME in distro_groups_map['fedora-immutables']:
+            # Special handling for Fedora immutable distributions
+            with open('/etc/group') as f:
+                if not re.search(rf'^{group_name}:', f.read(), re.MULTILINE):
+                    # https://docs.fedoraproject.org/en-US/fedora-silverblue/troubleshooting/
+                    # Special command to make Fedora Silverblue/uBlue work, or usermod will fail: 
+                    # grep -E '^input:' /usr/lib/group | sudo tee -a /etc/group
+                    command = f"grep -E '^{group_name}:' /usr/lib/group | sudo tee -a /etc/group >/dev/null"
+                    try:
+                        subprocess.run(command, shell=True, check=True)
+                        print(f"Added '{group_name}' group to system.")
+                    except subprocess.CalledProcessError as proc_err:
+                        error(f"Problem adding '{group_name}' group to system.\n\t{proc_err}")
+                        safe_shutdown(1)
+        else:
+            try:
+                cmd_lst = ['sudo', 'groupadd', group_name]
+                subprocess.run(cmd_lst, check=True)
+                print(f'Group "{group_name}" created successfully.')
+            except subprocess.CalledProcessError as proc_err:
+                print()
+                error(f'ERROR: Problem when trying to create "input" group.\n')
+                err_output: bytes = proc_err.output  # Type hinting the error output variable
+                # Deal with possible 'NoneType' error output
+                error(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
+                safe_shutdown(1)
+
+
 def verify_user_groups():
     """Check if the `input` group exists and user is in group"""
     print(f'\n\n§  Checking if user is in "input" group...\n{cnfg.separator}')
-    #
-    if cnfg.DISTRO_NAME == 'silverblue-experimental':
-        # https://docs.fedoraproject.org/en-US/fedora-silverblue/troubleshooting/
-        # Special command to make Fedora Silverblue/uBlue work, or usermod will fail: 
-        # grep -E '^input:' /usr/lib/group | sudo tee -a /etc/group
-        command = "grep -E '^input:' /usr/lib/group | sudo tee -a /etc/group >/dev/null"
-        subprocess.run(command, shell=True, check=True)
-    #
-    try:
-        grp.getgrnam(cnfg.input_group_name)
-    except KeyError:
-        # The group doesn't exist, so create it
-        print(f'Creating "input" group...')
-        try:
-            call_attention_to_password_prompt()
-            subprocess.run(['sudo', 'groupadd', cnfg.input_group_name], check=True)
-        except subprocess.CalledProcessError as proc_err:
-            print()
-            error(f'ERROR: Problem when trying to create "input" group.\n')
-            err_output: bytes = proc_err.output  # Type hinting the error output variable
-            # Deal with possible 'NoneType' error output
-            error(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
-            print()
-            error(f'ERROR: Install failed.')
-            safe_shutdown(1)
-    #
+    create_group(cnfg.input_group)
+
+    # # code to remove (start)
+    # if cnfg.DISTRO_NAME in distro_groups_map['fedora-immutables']:
+    #     # Check if 'input' group already exists in /etc/group
+    #     with open('/etc/group') as f:
+    #         if not re.search(r'^input:', f.read(), re.MULTILINE):
+    #             print('Adding "input" group to /etc/group...')
+    #             # https://docs.fedoraproject.org/en-US/fedora-silverblue/troubleshooting/
+    #             # Special command to make Fedora Silverblue/uBlue work, or usermod will fail: 
+    #             # grep -E '^input:' /usr/lib/group | sudo tee -a /etc/group
+    #             command = "grep -E '^input:' /usr/lib/group | sudo tee -a /etc/group >/dev/null"
+    #             try:
+    #                 call_attention_to_password_prompt()
+    #                 subprocess.run(command, shell=True, check=True)
+    #                 print(f"Added '{cnfg.input_group}' group to system.")
+    #             except subprocess.CalledProcessError as proc_err:
+    #                 error(f"Problem adding '{cnfg.input_group}' group to system.\n\t{proc_err}")
+    #                 safe_shutdown(1)
+    # try:
+    #     grp.getgrnam(cnfg.input_group)
+    # except KeyError:
+    #     # The group doesn't exist, so create it
+    #     print(f'Creating "input" group...')
+    #     try:
+    #         call_attention_to_password_prompt()
+    #         cmd_lst = ['sudo', 'groupadd', cnfg.input_group]
+    #         subprocess.run(cmd_lst, check=True)
+    #     except subprocess.CalledProcessError as proc_err:
+    #         print()
+    #         error(f'ERROR: Problem when trying to create "input" group.\n')
+    #         err_output: bytes = proc_err.output  # Type hinting the error output variable
+    #         # Deal with possible 'NoneType' error output
+    #         error(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
+    #         safe_shutdown(1)
+    # # code to remove (end)
+
     # Check if the user is already in the `input` group
-    group_info = grp.getgrnam(cnfg.input_group_name)
+    group_info = grp.getgrnam(cnfg.input_group)
     if cnfg.user_name in group_info.gr_mem:
         print(f'User "{cnfg.user_name}" is a member of '
-                f'group "{cnfg.input_group_name}".')
+                f'group "{cnfg.input_group}".')
     else:
         # Add the user to the input group
         try:
             call_attention_to_password_prompt()
             subprocess.run(
-                ['sudo', 'usermod', '-aG', cnfg.input_group_name, cnfg.user_name], check=True)
+                ['sudo', 'usermod', '-aG', cnfg.input_group, cnfg.user_name], check=True)
         except subprocess.CalledProcessError as proc_err:
             print()
             error(f'ERROR: Problem when trying to add user "{cnfg.user_name}" to '
-                    f'group "{cnfg.input_group_name}".\n')
+                    f'group "{cnfg.input_group}".\n')
             err_output: bytes = proc_err.output  # Type hinting the error output variable
             # Deal with possible 'NoneType' error output
             error(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
@@ -1093,8 +1139,8 @@ def verify_user_groups():
             error(f'ERROR: Install failed.')
             safe_shutdown(1)
         #
-        print(f'User "{cnfg.user_name}" added to group "{cnfg.input_group_name}".')
-        prompt_for_reboot()
+        print(f'User "{cnfg.user_name}" added to group "{cnfg.input_group}".')
+        enable_prompt_for_reboot()
     show_task_completed_msg()
 
 
@@ -1487,7 +1533,7 @@ def setup_kwin2dbus_script():
     # Try to remove any installed KWin script entirely
     process = subprocess.Popen(
         ['kpackagetool5', '-t', 'KWin/Script', '-r', kwin_script_name],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout=PIPE, stderr=PIPE)
     out, err = process.communicate()
     out = out.decode('utf-8')
     err = err.decode('utf-8')
@@ -1502,7 +1548,7 @@ def setup_kwin2dbus_script():
     # Install the KWin script
     process = subprocess.Popen(
         ['kpackagetool5', '-t', 'KWin/Script', '-i', script_tmp_file],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout=PIPE, stderr=PIPE)
     out, err = process.communicate()
     out = out.decode('utf-8')
     err = err.decode('utf-8')
@@ -1522,8 +1568,7 @@ def setup_kwin2dbus_script():
     # Enable the script using kwriteconfig5
     process = subprocess.Popen(
         [   'kwriteconfig5', '--file', 'kwinrc', '--group', 'Plugins', '--key',
-            f'{kwin_script_name}Enabled', 'true'],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            f'{kwin_script_name}Enabled', 'true'], stdout=PIPE, stderr=PIPE)
     out, err = process.communicate()
     out = out.decode('utf-8')
     err = err.decode('utf-8')
@@ -1796,7 +1841,7 @@ def apply_tweaks_KDE():
             if shutil.which('kquitapp5'):
                 print('Stopping Plasma shell... ', flush=True, end='')
                 subprocess.run(['kquitapp5', 'plasmashell'], check=True,
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                                stdout=PIPE, stderr=PIPE)
                 print('Plasma shell stopped.')
             else:
                 error('The "kquitapp5" command is not found. Skipping plasmashell restart.')
@@ -1805,7 +1850,7 @@ def apply_tweaks_KDE():
             error(f'\nProblem while stopping Plasma shell:\n\t{err_output.decode()}')
 
         print('Starting Plasma shell (backgrounded)... ')
-        subprocess.Popen(['kstart5', 'plasmashell'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        subprocess.Popen(['kstart5', 'plasmashell'], stdout=PIPE, stderr=PIPE)
 
         # THIS STUFF DOESN'T SEEM TO WORK!
         # Disable "sort folders first" option in Dolphin:
