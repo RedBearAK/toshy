@@ -297,7 +297,7 @@ This is a list of Linux distributions and desktop variants I've been able to tes
 
 As noted elsewhere in the README, there is no Windows version of Toshy, unlike Kinto.  
 
-### Red Hat and other RPM-based distros
+### Fedora Variants
 
 - Fedora 36/37/38 (upstream of CentOS Stream and RHEL)
 
@@ -321,6 +321,8 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - Nobara pre-installs the Extension Manager app. Nice!
     - Enable the AppIndicator extension (pre-installed) for tray icon
     - Install an extension from `Requirements` if using Wayland+GNOME
+
+### Red Hat Enterprise Linux and related
 
 - [ AlmaLinux | Rocky Linux ] 9.2 (RHEL clones)
 
@@ -412,7 +414,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
         - X11/Xorg or Wayland+KDE
     - Xubuntu 23.04/23.10
         - X11/Xorg only
-    - Lubuntu 23.04
+    - Lubuntu 23.04/23.10
         - X11/Xorg only
     - Ubuntu Unity 23.10
         - X11/Xorg only
@@ -969,7 +971,9 @@ killall xcape
 
 ### Lubuntu Application Menu and Meta/Super/Win/Cmd key
 
-In Lubuntu, right-click on the hummingbird(?) menu icon on the toolbar at the bottom of the screen, and select `Configure "Application Menu"` to change the keybinding from `Super_L` (left Meta key) to `Alt+F1`. If Toshy is enabled, using either the physical equivalent of `Cmd+Space` or `Option+F1` should work. if Toshy is disabled, just use the physical `Alt+F1` keys. NB: The shortcut apparently needs to be set very quickly after clicking the button to change the shortcut. If it doesn't work the first time, just try again, until it says `Alt+F1`.  
+In Lubuntu, right-click on the hummingbird(?) menu icon on the toolbar at the bottom of the screen, and select `Configure "Application Menu"` to change the keybinding from `Super_L` (left Meta key) to `Alt+F1`. If Toshy is enabled, using either the physical equivalent of `Cmd+Space` or `Option+F1` should work. if Toshy is disabled, just use the physical `Alt+F1` keys. **NB: The shortcut apparently needs to be set very quickly after clicking the button to change the shortcut.** If it doesn't work the first time, just try again, until it says `Alt+F1`.  
+
+As an alternative, this shortcut can also be set through the GUI "Shortcuts Keys" control panel app. Search in the app for the "Show/hide main menu" shortcut. The UI in the app for setting shortcuts seems to have a longer delay (10 seconds), so it may be easier to set the shortcut.  
 
 ### Linux Mint Application Menu (Cinnamon/Xfce/MATE) and the Meta/Super/Win/Cmd key
 
