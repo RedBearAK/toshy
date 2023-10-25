@@ -435,7 +435,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - Wayland+GNOME requires Xremap extension
     - GNOME Shell is still 3.38.x, Xremap is the only compatible extension available for pre-GNOME 40.x
 
-- elementary OS 7.0 (Ubuntu-based)
+- elementary OS 7.0/7.1 (Ubuntu-based)
 
 - Linux Mint 21.1/21.2 (Ubuntu-based)
 
