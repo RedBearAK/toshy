@@ -297,7 +297,7 @@ This is a list of Linux distributions and desktop variants I've been able to tes
 
 As noted elsewhere in the README, there is no Windows version of Toshy, unlike Kinto.  
 
-### Fedora Variants
+### Fedora and Fedora Variants
 
 - Fedora 36/37/38 (upstream of CentOS Stream and RHEL)
 
@@ -322,13 +322,20 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - Enable the AppIndicator extension (pre-installed) for tray icon
     - Install an extension from `Requirements` if using Wayland+GNOME
 
-### Red Hat Enterprise Linux and related
+### Red Hat Enterprise Linux, Clones, CentOS Stream
 
 - [ AlmaLinux | Rocky Linux ] 9.2 (RHEL clones)
 
     - Tested with "Workstation" installer choice, not "Server with GUI"
     - Default GNOME desktop tested (Wayland session requires extension)
     - KDE Plasma desktop tested (Wayland+KDE supported)
+    - Some non-default (but official) repos like CRB will be enabled
+    - NB: There is no journal for "user" services, for some reason
+
+- Eurolinux 9.2 (RHEL clone)
+
+    - Tested with "Server with GUI" installer choice
+    - Default GNOME desktop tested (Wayland session requires extension)
     - Some non-default (but official) repos like CRB will be enabled
     - NB: There is no journal for "user" services, for some reason
 
@@ -340,13 +347,6 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
         - GNOME is old, no compatible Shell extension available
     - Install AppIndicator extension from the Software app
     - RHEL 8.x and clones probably also work in a similar manner
-
-- Eurolinux 9.2 (RHEL clone)
-
-    - Tested with "Server with GUI" installer choice
-    - Default GNOME desktop tested (Wayland session requires extension)
-    - Some non-default (but official) repos like CRB will be enabled
-    - NB: There is no journal for "user" services, for some reason
 
 - Other RHEL clones should be supportable
 
