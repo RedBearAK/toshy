@@ -403,6 +403,7 @@ pkg_groups_map = {
                             "libappindicator-gtk3", "libnotify",
                             "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
                             "systemd-devel",
+                            "wayland-devel",
                             "xset",
                             "zenity"],
 
