@@ -248,7 +248,8 @@ def get_environment_info():
         f"\n\t DISTRO_VER   = '{cnfg.DISTRO_VER}'"
         f"\n\t SESSION_TYPE = '{cnfg.SESSION_TYPE}'"
         f"\n\t DESKTOP_ENV  = '{cnfg.DESKTOP_ENV}'"
-        '\n', ctx='EV')
+        # '\n', ctx='EV')
+        '', ctx='EV')
 
 
 def fancy_str(text, color_name, *, bold=False):
@@ -1035,12 +1036,21 @@ def install_udev_rules():
     show_task_completed_msg()
 
 
+def group_exists_in_etc_group(group_name):
+    """Utility function to check if the group exists in /etc/group file."""
+    try:
+        with open('/etc/group') as f:
+            return re.search(rf'^{group_name}:', f.read(), re.MULTILINE) is not None
+    except FileNotFoundError:
+        error(f'Warning: /etc/group file not found. Cannot add "{group_name}" group.')
+        safe_shutdown(1)
+
+
 def create_group(group_name):
     """Utility function to create the specified group if it does not already exist."""
-    try:
-        grp.getgrnam(group_name)
+    if group_exists_in_etc_group(group_name):
         print(f'Group "{group_name}" already exists.')
-    except KeyError:
+    else:
         print(f'Creating "{group_name}" group...')
         call_attention_to_password_prompt()
         if cnfg.DISTRO_NAME in distro_groups_map['fedora-immutables']:
@@ -2078,106 +2088,97 @@ def uninstall_toshy():
 def handle_cli_arguments():
     """Deal with CLI arguments given to installer script"""
     parser = argparse.ArgumentParser(
-        description='Toshy Installer - some options are mutually exclusive',
-        epilog='Default action: Install Toshy',
+        description='Toshy Installer - commands are mutually exclusive',
+        epilog=f'Check install options with "./{this_file_name} install --help"',
         allow_abbrev=False
     )
 
-    # Add arguments
-    parser.add_argument(
+    subparsers = parser.add_subparsers(dest='command', help='Available commands')
+
+    subparser_install           = subparsers.add_parser(
+        'install',
+        help='Install Toshy (see options to modify install actions)'
+    )
+
+    subparser_install.add_argument(
         '--override-distro',
         type=str,
-        # dest='override_distro',
         help=f'Override auto-detection of distro. See "--list-distros"'
     )
-    parser.add_argument(
-        '--list-distros',
-        action='store_true',
-        help='Display list of distros to use with "--override-distro"'
-    )
-    parser.add_argument(
-        '--uninstall',
-        action='store_true',
-        help='Uninstall Toshy'
-    )
-    parser.add_argument(
-        '--show-env',
-        action='store_true',
-        help='Show the environment the installer detects, and exit'
-    )
-    parser.add_argument(
-        '--apply-tweaks',
-        action='store_true',
-        help='Apply desktop environment tweaks only, no install'
-    )
-    parser.add_argument(
-        '--remove-tweaks',
-        action='store_true',
-        help='Remove desktop environment tweaks only, no install'
-    )
-    parser.add_argument(
+    subparser_install.add_argument(
         '--barebones-config',
         action='store_true',
         help='Install with mostly empty/blank keymapper config file.'
     )
-    parser.add_argument(
+    subparser_install.add_argument(
         '--skip-native',
         action='store_true',
         help='Skip the install of native packages (for debugging installer).'
     )
-    parser.add_argument(
+    subparser_install.add_argument(
         '--fancy-pants',
         action='store_true',
         help='See README for more info on this option.'
     )
 
+    subparser_list_distros      = subparsers.add_parser(
+        'list-distros',
+        help='Display list of distros to use with "--override-distro"'
+    )
+
+    subparser_show_env          = subparsers.add_parser(
+        'show-env',
+        help='Show the environment the installer detects, and exit'
+    )
+
+    subparser_apply_tweaks      = subparsers.add_parser(
+        'apply-tweaks',
+        help='Apply desktop environment tweaks only, no install'
+    )
+
+    subparser_remove_tweaks     = subparsers.add_parser(
+        'remove-tweaks',
+        help='Remove desktop environment tweaks only, no install'
+    )
+
+    subparser_uninstall         = subparsers.add_parser(
+        'uninstall',
+        help='Uninstall Toshy'
+    )
+
     args = parser.parse_args()
 
-    exit_args_dct = {
-        '--uninstall':          args.uninstall,
-        '--show-env':           args.show_env,
-        '--list-distros':       args.list_distros,
-    }
-
-    all_args_dct = {
-        '--apply-tweaks':       args.apply_tweaks,
-        '--remove-tweaks':      args.remove_tweaks,
-        '--override-distro':    bool(args.override_distro),
-        '--barebones-config':   args.barebones_config,
-        '--skip-native':        args.skip_native,
-        '--fancy-pants':        args.fancy_pants,
-        **exit_args_dct
-    }
-
-    # Check that "exit-after" arguments are used alone
-    if any(exit_args_dct.values()) and sum(all_args_dct.values()) > 1:
-        error(f"ERROR: These options should be used alone:\n" +
-            ''.join(f"\n\t{arg}" for arg in exit_args_dct.keys()))
-        safe_shutdown(1)
-
-    if args.uninstall:
-        uninstall_toshy()
+    # show help output if no command given
+    if args.command is None:
+        parser.print_help()
         safe_shutdown(0)
 
-    if args.show_env:
-        get_environment_info()
-        safe_shutdown(0)
+    if args.command == 'install':
+        if args.override_distro:
+            cnfg.override_distro = args.override_distro
 
-    if args.list_distros:
+        if args.barebones_config:
+            cnfg.barebones_config = True
+
+        if args.skip_native:
+            cnfg.skip_native = True
+
+        if args.fancy_pants:
+            cnfg.fancy_pants = True
+
+        main(cnfg)
+        safe_shutdown(0)    # redundant, but that's OK
+
+    if args.command == 'list-distros':
         print(  f'Distros known to the Toshy installer (use with "--override-distro" arg):'
                 f'\n\n\t{get_distro_names()}')
         safe_shutdown(0)
 
-    if args.barebones_config:
-        cnfg.barebones_config = True
+    if args.command == 'show-env':
+        get_environment_info()
+        safe_shutdown(0)
 
-    if args.skip_native:
-        cnfg.skip_native = True
-
-    if args.fancy_pants:
-        cnfg.fancy_pants = True
-
-    if args.apply_tweaks:
+    if args.command == 'apply-tweaks':
         get_environment_info()
         apply_desktop_tweaks()
         if cnfg.should_reboot:
@@ -2190,13 +2191,14 @@ def handle_cli_arguments():
             print()
         safe_shutdown(0)
 
-    if args.remove_tweaks:
+    if args.command == 'remove-tweaks':
         get_environment_info()
         remove_desktop_tweaks()
         safe_shutdown(0)
 
-    if args.override_distro:
-        cnfg.override_distro = args.override_distro
+    if args.command == 'uninstall':
+        uninstall_toshy()
+        safe_shutdown(0)
 
 
 def main(cnfg: InstallerSettings):
@@ -2262,8 +2264,10 @@ def main(cnfg: InstallerSettings):
                 "Easiest method: 'flatpak install extensionmanager', search for 'appindicator'\n",
                 ctx="!!")
 
-    if cnfg.should_reboot or os.path.exists(cnfg.reboot_tmp_file):
+    if os.path.exists(cnfg.reboot_tmp_file):
         cnfg.should_reboot = True
+
+    if cnfg.should_reboot:
         # create reboot reminder temp file, in case installer is run again before a reboot
         if not os.path.exists(cnfg.reboot_tmp_file):
             os.mknod(cnfg.reboot_tmp_file)
@@ -2297,7 +2301,6 @@ def main(cnfg: InstallerSettings):
     if cnfg.remind_extensions or (cnfg.DESKTOP_ENV == 'gnome' and cnfg.SESSION_TYPE == 'wayland'):
         print(f'You MUST install GNOME EXTENSIONS if using Wayland+GNOME! See Toshy README.')
 
-    # print()   # blank line to avoid crowding the prompt after install is done
     safe_shutdown(0)
 
 
@@ -2318,7 +2321,5 @@ if __name__ == '__main__':
     # create the native package installer class instance
     native_pkg_installer        = NativePackageInstaller()
 
+    # first parse the CLI arguments
     handle_cli_arguments()
-
-    # proceed with install sequence if no CLI args triggered an exit-after action
-    main(cnfg)
