@@ -1036,12 +1036,21 @@ def install_udev_rules():
     show_task_completed_msg()
 
 
+def group_exists_in_etc_group(group_name):
+    """Utility function to check if the group exists in /etc/group file."""
+    try:
+        with open('/etc/group') as f:
+            return re.search(rf'^{group_name}:', f.read(), re.MULTILINE) is not None
+    except FileNotFoundError:
+        error(f'Warning: /etc/group file not found. Cannot add "{group_name}" group.')
+        safe_shutdown(1)
+
+
 def create_group(group_name):
     """Utility function to create the specified group if it does not already exist."""
-    try:
-        grp.getgrnam(group_name)
+    if group_exists_in_etc_group(group_name):
         print(f'Group "{group_name}" already exists.')
-    except KeyError:
+    else:
         print(f'Creating "{group_name}" group...')
         call_attention_to_password_prompt()
         if cnfg.DISTRO_NAME in distro_groups_map['fedora-immutables']:
