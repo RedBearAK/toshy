@@ -199,72 +199,59 @@ The `Xremap` GNOME shell extension is the only one that supports older GNOME ver
 
 There is a weird bug with searching for the `Xremap` extension on newer versions of GNOME like GNOME 44, where you actually have to use the option "Show Unsupported" from the hamburger menu in order to get it to show up.  
 
-## How to Install
+## How to Install  
+
+> [!NOTE]  
+> Installer commands and options have changed.  
 
 1. Download the latest zip from the big green `Code ˇ` button near the top of the page.  
 1. Unzip the archive, and open a terminal in the resulting folder.  
 1. Run the `setup_toshy.py` script in the terminal, like this:  
 
 ```sh
-./setup_toshy.py
+./setup_toshy.py install
 ```
 
-### Options for installer
+If for any reason the script is not executable, you can fix that with this command:  
 
-The installer has a few different options available, as shown in this section. Some can be combined, others (like `--show-env` or `--list-distros`) are exclusive and will raise an error if they are not used alone.  
+```sh
+chmod +x setup_toshy.py
+```
+
+### Options for installer script
+
+The installer script has a few different commands and options available, as shown in this section.  
 
 ```sh
 ./setup_toshy.py --help
 ```
 
-Shows a short description of all available options.  
+Shows a short description of all available commands.  
 
 ```sh
-./setup_toshy.py --show-env
+./setup_toshy.py install --help
 ```
 
-This will just show what the installer will see as the environment when you try to install, but won't actually run the full install process.  
+Shows a short description of all available options to modify the `install` command. The modifier options can be combined.  
 
 ```sh
-./setup_toshy.py --list-distros
+./setup_toshy.py install --override-distro distro_name
 ```
 
-This will print out a list of the distros that the Toshy installer theoretically "knows" how to deal with, as far as knowing the correct package manager to use and having a list of package names that would actually work. Names from the list can be used with:  
+This option will force the installer to attempt the install for that distro name/type. You can use this if you have a distro that is not on the distro list yet, but you think it is close enough to one of the existing distros in the list that the installer should do the right things. For instance if you have some very Arch-ish or very Debian-ish distro, or something based on Ubuntu (there are many!) that doesn't identify as one of the "known" distros when you use `show-env` and `list-distros` (see below), then you can try to make it install using one of the related distro names. This will probably work, if the distro is just a minor variation of its parent distro.  
 
 ```sh
-./setup_toshy.py --override-distro distro_name
-```
-
-This option will force the installer to attempt the install for that distro name/type. You can use this if you have a distro that is not on the distro list yet, but you think it is close enough to one of the existing distros in the list that the installer should do the right things. For instance if you have some very Arch-ish or very Debian-ish distro, or something based on Ubuntu (there are many!) that doesn't identify as one of the "known" distros when you use `--show-env` and `--list-distros`, then you can try to make it install using one of the related distro names. This will probably work, if the distro is just a minor variation of its parent distro.  
-
-You don't have to run any of these commands before trying the installer, it will let you know almost immediately if it doesn't know how to install on your distro.  
-
-Other options for the installer:  
-
-```sh
-./setup_toshy.py --apply-tweaks
-```
-
-Just applies the "desktop tweaks" for the environment, does not do the full install. Might be handy if you have a system with multiple desktop environments.  
-
-```sh
-./setup_toshy.py --remove-tweaks
-```
-
-Just removes the "desktop tweaks" the installer applied.  
-
-```sh
-./setup_toshy.py --barebones-config
+./setup_toshy.py install --barebones-config
 ```
 
 This special option will install a "barebones" config file that does no modmapping or keymapping by default (besides a simple example keymap that gives access to a couple of currency symbols, as a demo). The option will also convert an existing Toshy config into a "barebones" config file, but will ask for explicit confirmation. This config will of course not provide any of the features that a normal Toshy config would, other than the ability to use the keymapper in any of the compatible environments (X11/Xorg, Wayland+GNOME, Wayland+KDE).  
 
 The Toshy installer should try to retain your changes inside any of the editable "slices" of the barebones config file, and avoid replacing your barebones config with a regular Toshy config file, even if you don't use the same CLI option the next time you run the installer. Submit an issue if it doesn't respect your barebones config. Even if that happens, the previous config file should be in the timestamped backup folder that the installer always creates.  
 
-Last, but definitely not least, the "extra" installer option:  
+Last, but definitely not least, the "extra" install option:  
 
 ```sh
-./setup_toshy.py --fancy-pants
+./setup_toshy.py install --fancy-pants
 ```
 
 This will do the full install, but add various things that I find convenient, fun, or that somehow make the desktop environment behave more like macOS.  
@@ -281,15 +268,39 @@ At the moment this installer option will do the following:
 - KDE: Sets the task switcher to "Large Icons" (like macOS/GNOME task switcher)
 - KDE: Enables task switcher option "Only one window per application" (makes the task switcher dialog show only a single icon for each application, like macOS/GNOME)
 
+```sh
+./setup_toshy.py list-distros
+```
+
+This command will print out a list of the distros that the Toshy installer theoretically "knows" how to deal with, as far as knowing the correct package manager to use and having a list of package names that would actually work. Names from the list can be used with the `--override-distro` option for the `install` command.  
+
+```sh
+./setup_toshy.py show-env
+```
+
+This will just show what the installer will see as the environment when you try to install, but won't actually run the full install process.  
+
+```sh
+./setup_toshy.py apply-tweaks
+```
+
+Just applies the "desktop tweaks" for the environment, does not do the full install. Might be handy if you have a system with multiple desktop environments.  
+
+```sh
+./setup_toshy.py remove-tweaks
+```
+
+Just removes the "desktop tweaks" the installer applied.  
+
 ## How to Uninstall
 
 This should work now:  
 
 ```sh
-./setup_toshy.py --uninstall
+./setup_toshy.py uninstall
 ``` 
 
-Please file an issue if you have some sort of trouble with the uninstall option. If you have a multi-desktop system you may need to run the uninstall procedure while logged into KDE if you ran the installer in KDE, due to the KDE-specific components that get installed for Wayland support.  
+Please file an issue if you have some sort of trouble with the `uninstall` command. If you have a multi-desktop system you may need to run the uninstall procedure while logged into KDE if you ran the installer in KDE, due to the KDE-specific components that get installed for Wayland support.  
 
 ## Currently working/tested Linux distros:
 
