@@ -248,7 +248,8 @@ def get_environment_info():
         f"\n\t DISTRO_VER   = '{cnfg.DISTRO_VER}'"
         f"\n\t SESSION_TYPE = '{cnfg.SESSION_TYPE}'"
         f"\n\t DESKTOP_ENV  = '{cnfg.DESKTOP_ENV}'"
-        '\n', ctx='EV')
+        # '\n', ctx='EV')
+        '', ctx='EV')
 
 
 def fancy_str(text, color_name, *, bold=False):
@@ -2078,37 +2079,12 @@ def uninstall_toshy():
 def handle_cli_arguments():
     """Deal with CLI arguments given to installer script"""
     parser = argparse.ArgumentParser(
-        description='Toshy Installer - some options are mutually exclusive',
-        epilog='Default action: Install Toshy',
+        description='Toshy Installer - commands are mutually exclusive',
+        epilog=f'Check install options with "./{this_file_name} install --help"',
         allow_abbrev=False
     )
 
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
-
-    subparser_list_distros      = subparsers.add_parser(
-        'list-distros',
-        help='Display list of distros to use with "--override-distro"'
-    )
-
-    subparser_uninstall         = subparsers.add_parser(
-        'uninstall',
-        help='Uninstall Toshy'
-    )
-
-    subparser_show_env          = subparsers.add_parser(
-        'show-env',
-        help='Show the environment the installer detects, and exit'
-    )
-
-    subparser_apply_tweaks      = subparsers.add_parser(
-        'apply-tweaks',
-        help='Apply desktop environment tweaks only, no install'
-    )
-
-    subparser_remove_tweaks     = subparsers.add_parser(
-        'remove-tweaks',
-        help='Remove desktop environment tweaks only, no install'
-    )
 
     subparser_install           = subparsers.add_parser(
         'install',
@@ -2136,6 +2112,31 @@ def handle_cli_arguments():
         help='See README for more info on this option.'
     )
 
+    subparser_list_distros      = subparsers.add_parser(
+        'list-distros',
+        help='Display list of distros to use with "--override-distro"'
+    )
+
+    subparser_show_env          = subparsers.add_parser(
+        'show-env',
+        help='Show the environment the installer detects, and exit'
+    )
+
+    subparser_apply_tweaks      = subparsers.add_parser(
+        'apply-tweaks',
+        help='Apply desktop environment tweaks only, no install'
+    )
+
+    subparser_remove_tweaks     = subparsers.add_parser(
+        'remove-tweaks',
+        help='Remove desktop environment tweaks only, no install'
+    )
+
+    subparser_uninstall         = subparsers.add_parser(
+        'uninstall',
+        help='Uninstall Toshy'
+    )
+
     args = parser.parse_args()
 
     # show help output if no command given
@@ -2143,17 +2144,29 @@ def handle_cli_arguments():
         parser.print_help()
         safe_shutdown(0)
 
-    if args.command == 'uninstall':
-        uninstall_toshy()
-        safe_shutdown(0)
+    if args.command == 'install':
+        if args.override_distro:
+            cnfg.override_distro = args.override_distro
 
-    if args.command == 'show-env':
-        get_environment_info()
-        safe_shutdown(0)
+        if args.barebones_config:
+            cnfg.barebones_config = True
+
+        if args.skip_native:
+            cnfg.skip_native = True
+
+        if args.fancy_pants:
+            cnfg.fancy_pants = True
+
+        main(cnfg)
+        safe_shutdown(0)    # redundant, but that's OK
 
     if args.command == 'list-distros':
         print(  f'Distros known to the Toshy installer (use with "--override-distro" arg):'
                 f'\n\n\t{get_distro_names()}')
+        safe_shutdown(0)
+
+    if args.command == 'show-env':
+        get_environment_info()
         safe_shutdown(0)
 
     if args.command == 'apply-tweaks':
@@ -2174,20 +2187,9 @@ def handle_cli_arguments():
         remove_desktop_tweaks()
         safe_shutdown(0)
 
-    if args.command == 'install':
-        if args.override_distro:
-            cnfg.override_distro = args.override_distro
-
-        if args.barebones_config:
-            cnfg.barebones_config = True
-
-        if args.skip_native:
-            cnfg.skip_native = True
-
-        if args.fancy_pants:
-            cnfg.fancy_pants = True
-
-        main(cnfg)
+    if args.command == 'uninstall':
+        uninstall_toshy()
+        safe_shutdown(0)
 
 
 def main(cnfg: InstallerSettings):
