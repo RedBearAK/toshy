@@ -246,7 +246,19 @@ This option will force the installer to attempt the install for that distro name
 
 This special option will install a "barebones" config file that does no modmapping or keymapping by default (besides a simple example keymap that gives access to a couple of currency symbols, as a demo). The option will also convert an existing Toshy config into a "barebones" config file, but will ask for explicit confirmation. This config will of course not provide any of the features that a normal Toshy config would, other than the ability to use the keymapper in any of the compatible environments (X11/Xorg, Wayland+GNOME, Wayland+KDE).  
 
-The Toshy installer should try to retain your changes inside any of the editable "slices" of the barebones config file, and avoid replacing your barebones config with a regular Toshy config file, even if you don't use the same CLI option the next time you run the installer. Submit an issue if it doesn't respect your barebones config. Even if that happens, the previous config file should be in the timestamped backup folder that the installer always creates.  
+The Toshy installer should try to retain your changes inside any of the editable "slices" of the barebones config file, and avoid replacing your barebones config with a regular Toshy config file, **_even if you don't use the same CLI option the next time you run the installer_**. Submit an issue if it doesn't respect your barebones config. Even if that happens, the previous config file should be in the timestamped backup folder that the installer always creates.  
+
+```sh
+./setup_toshy.py install --skip-native
+```
+
+This is primarily a convenient **debug/development** option. It just bypasses the attempt to install any native package list.  
+
+In theory, you could use this option to get Toshy working on a new distro type that is not currently supported. You could take one of the existing package lists (found inside the installer script file) from a distro type that is closely related to your distro, and try to manually install packages after using this `--skip-native` option, and the `--override-distro` option to provide the installer a "known" distro name. There will of course be errors, particularly during the process of installing/building the Python packages that get installed in the virtual environment folder via the `pip` command. Then you would search the web for what kind of package might fix that error, and try again, with the same options. There will often also be errors to overcome after the install is finished, when trying to launch the tray and GUI apps. Using the `toshy-tray` and `toshy-gui` commands in the terminal will display the errors that prevent those apps from launching or working correctly.  
+
+If you go through this process I hope you'll keep track of exactly what packages you ended up needing to install, and take the time to submit an issue with the package list, distro details, and the native package command(s) you needed to use, so support for the the distro type can be added to the installer.  
+
+One pitfall that is hard to avoid in this process is installing packages that don't actually solve any issue, and then not removing them to verify whether they are truly dependencies. Be careful about that.  
 
 Last, but definitely not least, the "extra" install option:  
 
@@ -254,7 +266,7 @@ Last, but definitely not least, the "extra" install option:
 ./setup_toshy.py install --fancy-pants
 ```
 
-This will do the full install, but add various things that I find convenient, fun, or that somehow make the desktop environment behave more like macOS.  
+This will do the full install, but also add various things that I find convenient, fun, or that somehow make the desktop environment behave more sensibly, which often means "more like macOS". (Note: For some reason KDE on stock Debian 12 doesn't have the "Large Icons" task switcher installed, so you have to cahnge the task switcher in the Task Switcher control panel after using this option.)  
 
 At the moment this installer option will do the following: 
 
@@ -268,11 +280,19 @@ At the moment this installer option will do the following:
 - KDE: Sets the task switcher to "Large Icons" (like macOS/GNOME task switcher)
 - KDE: Enables task switcher option "Only one window per application" (makes the task switcher dialog show only a single icon for each application, like macOS/GNOME)
 
+Note that any or all of the "--options" for the `install` command can be combined, as they modify independent aspects of what the `install` command will do:  
+
+```sh
+./setup_toshy.py install --override-distro distro-name --skip-native --barebones-config --fancy-pants
+```
+
+Here are some other things besides installing that the setup script can do. These commands are mutually exclusive, just like the `install` command.  
+
 ```sh
 ./setup_toshy.py list-distros
 ```
 
-This command will print out a list of the distros that the Toshy installer theoretically "knows" how to deal with, as far as knowing the correct package manager to use and having a list of package names that would actually work. Names from the list can be used with the `--override-distro` option for the `install` command.  
+This command will print out a list of the distros that the Toshy installer theoretically "knows" how to deal with, as far as knowing the correct package manager to use and having a list of package names that would actually work. Entries from the displayed distro list can be used with the `--override-distro` option for the `install` command.  
 
 ```sh
 ./setup_toshy.py show-env
@@ -290,7 +310,7 @@ Just applies the "desktop tweaks" for the environment, does not do the full inst
 ./setup_toshy.py remove-tweaks
 ```
 
-Just removes the "desktop tweaks" the installer applied.  
+Just removes the "desktop tweaks" the installer applied. Does not do the full uninstall.  
 
 ## How to Uninstall
 
