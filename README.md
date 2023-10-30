@@ -266,7 +266,7 @@ Last, but definitely not least, the "extra" install option:
 ./setup_toshy.py install --fancy-pants
 ```
 
-This will do the full install, but also add various things that I find convenient, fun, or that somehow make the desktop environment behave more sensibly, which often means "more like macOS". (Note: For some reason KDE on stock Debian 12 doesn't have the "Large Icons" task switcher installed, so you have to cahnge the task switcher in the Task Switcher control panel after using this option.)  
+This will do the full install, but also add various things that I find convenient, fun, or that somehow make the desktop environment behave more sensibly, which often means "more like macOS". (Note: For some reason KDE on stock Debian 12 doesn't have the "Large Icons" task switcher installed, so you have to fix the task switcher in the Task Switcher control panel after using this option.)  
 
 At the moment this installer option will do the following: 
 
