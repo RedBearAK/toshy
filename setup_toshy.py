@@ -6,6 +6,7 @@ import re
 import sys
 import pwd
 import grp
+import json
 import random
 import string
 import signal
@@ -115,8 +116,10 @@ class InstallerSettings:
         self.override_distro        = None
         self.DISTRO_NAME            = None
         self.DISTRO_VER: str        = ""
+        self.VARIANT_ID             = None
         self.SESSION_TYPE           = None
         self.DESKTOP_ENV            = None
+        self.DE_VERSION: str        = ""
 
         self.distro_mjr_ver: str    = ""
         self.distro_mnr_ver: str    = ""
@@ -233,10 +236,12 @@ def get_environment_info():
     if cnfg.override_distro:
         cnfg.DISTRO_NAME    = str(cnfg.override_distro).casefold()
     else:
-        cnfg.DISTRO_NAME    = str(env_info_dct.get('DISTRO_NAME',  'keymissing')).casefold()
-    cnfg.DISTRO_VER     = str(env_info_dct.get('DISTRO_VER',   'keymissing')).casefold()
-    cnfg.SESSION_TYPE   = str(env_info_dct.get('SESSION_TYPE', 'keymissing')).casefold()
-    cnfg.DESKTOP_ENV    = str(env_info_dct.get('DESKTOP_ENV',  'keymissing')).casefold()
+        cnfg.DISTRO_NAME    = str(env_info_dct.get('DISTRO_NAME',   'keymissing')).casefold()
+    cnfg.DISTRO_VER     = str(env_info_dct.get('DISTRO_VER',    'keymissing')).casefold()
+    cnfg.VARIANT_ID     = str(env_info_dct.get('VARIANT_ID',    'keymissing')).casefold()
+    cnfg.SESSION_TYPE   = str(env_info_dct.get('SESSION_TYPE',  'keymissing')).casefold()
+    cnfg.DESKTOP_ENV    = str(env_info_dct.get('DESKTOP_ENV',   'keymissing')).casefold()
+    cnfg.DE_VERSION     = str(env_info_dct.get('DE_VERSION',    'keymissing')).casefold()
 
     # split out the major version from the minor version, if there is one
     distro_ver_parts            = cnfg.DISTRO_VER.split('.') if cnfg.DISTRO_VER else []
@@ -244,10 +249,12 @@ def get_environment_info():
     cnfg.distro_mnr_ver         = distro_ver_parts[1] if len(distro_ver_parts) > 1 else 'no_mnr_ver'
 
     debug('Toshy installer sees this environment:'
-        f"\n\t DISTRO_NAME  = '{cnfg.DISTRO_NAME}'"
-        f"\n\t DISTRO_VER   = '{cnfg.DISTRO_VER}'"
-        f"\n\t SESSION_TYPE = '{cnfg.SESSION_TYPE}'"
-        f"\n\t DESKTOP_ENV  = '{cnfg.DESKTOP_ENV}'"
+        f"\n\t DISTRO_NAME      = '{cnfg.DISTRO_NAME}'"
+        f"\n\t DISTRO_VER       = '{cnfg.DISTRO_VER}'"
+        f"\n\t VARIANT_ID       = '{cnfg.VARIANT_ID}'"
+        f"\n\t SESSION_TYPE     = '{cnfg.SESSION_TYPE}'"
+        f"\n\t DESKTOP_ENV      = '{cnfg.DESKTOP_ENV}'"
+        f"\n\t DE_VERSION       = '{cnfg.DE_VERSION}'"
         # '\n', ctx='EV')
         '', ctx='EV')
 
@@ -563,7 +570,7 @@ def exit_with_invalid_distro_error(pkg_mgr_err=None):
 
 
 class DistroQuirksHandler:
-    """Object to contain static methods for prepping specific distro variants that
+    """Object to contain methods for prepping specific distro variants that
         need some extra prep work before installing the native package list"""
 
     def __init__(self) -> None:
@@ -850,20 +857,24 @@ def install_distro_pkgs():
             native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
             return  # no need to continue after this
 
-        # do extra prep/checks if distro is CentOS 7
-        if cnfg.DISTRO_NAME in ['centos'] and cnfg.distro_mjr_ver == '7':
-            quirks_handler.handle_quirks_CentOS_7()
-
-        # do extra prep/checks if distro is CentOS Stream 8
-        if cnfg.DISTRO_NAME in ['centos'] and cnfg.distro_mjr_ver == '8':
-            quirks_handler.handle_quirks_CentOS_Stream_8()
-
         # do extra stuff only if distro is a RHEL type (not Fedora type)
         if cnfg.DISTRO_NAME in distro_groups_map['rhel-based']:
-            quirks_handler.handle_quirks_RHEL()
 
-        # finally, do the install of the main list of packages for Fedora/RHEL distro types
-        if cnfg.DISTRO_NAME in distro_groups_map['rhel-based'] + distro_groups_map['fedora-based']:
+            # do extra prep/checks if distro is CentOS 7
+            if cnfg.DISTRO_NAME in ['centos'] and cnfg.distro_mjr_ver == '7':
+                quirks_handler.handle_quirks_CentOS_7()
+
+            # do extra prep/checks if distro is CentOS Stream 8
+            if cnfg.DISTRO_NAME in ['centos'] and cnfg.distro_mjr_ver == '8':
+                quirks_handler.handle_quirks_CentOS_Stream_8()
+
+            quirks_handler.handle_quirks_RHEL()
+            cmd_lst = ['sudo', 'dnf', 'install', '-y']
+            native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+            return  # no need to continue after this
+
+        if cnfg.DISTRO_NAME in distro_groups_map['fedora-based']:
+            # TODO: insert check to see if a Fedora distro is actually an immutable (rpm-ostree)
             cmd_lst = ['sudo', 'dnf', 'install', '-y']
             native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
@@ -1658,22 +1669,42 @@ def autostart_tray_icon():
 
 def apply_tweaks_GNOME():
     """Utility function to add desktop tweaks to GNOME"""
-    # Disable GNOME `overlay-key` binding to Meta/Super/Win/Cmd
-    # gsettings set org.gnome.mutter overlay-key ''
-    subprocess.run(['gsettings', 'set', 'org.gnome.mutter', 'overlay-key', ''])
 
-    print(f'Disabled Super key opening the GNOME overview. (Use Cmd+Space instead.)')
+    # TODO: Decide if we should re-enable the toggle-overview shortcut and change default config
+    # for GNOME 45 and later. Find out if toggle-overview will be dropped(!) at some point. 
 
-    # TODO: Fix this so it doesn't mess up task switching on Apple keyboards (when set to Super+Tab)
-    # # Set the keyboard shortcut for "Switch applications" to "Alt+Tab"
-    # # gsettings set org.gnome.desktop.wm.keybindings switch-applications "['<Alt>Tab']"
-    # subprocess.run(['gsettings', 'set', 'org.gnome.desktop.wm.keybindings',
-    #                 'switch-applications', "['<Alt>Tab']"])
-    # # Set the keyboard shortcut for "Switch windows of an application" to "Alt+`" (Alt+Grave)
-    # # gsettings set org.gnome.desktop.wm.keybindings switch-group "['<Alt>grave']"
-    # subprocess.run(['gsettings', 'set', 'org.gnome.desktop.wm.keybindings',
-    #                 'switch-group', "['<Alt>grave']"])
-    # print(f'Enabled "Switch applications" Mac-like task switching.')
+    # # How to check the existing toggle-overview shortcut:
+    # # gsettings get org.gnome.shell.keybindings toggle-overview
+    # # Will return something like: ['<Shift><Control>space']
+    # get_oview_shortcut_cmd = ['gsettings', 'get', 'org.gnome.shell.keybindings', 'toggle-overview']
+    # try:
+    #     # Capture the current shortcut setting
+    #     curr_oview_shortcut_str = subprocess.check_output(get_oview_shortcut_cmd, text=True).strip()
+    #     # Parse the JSON-formatted string into a Python list
+    #     curr_oview_shortcut_lst = json.loads(curr_oview_shortcut_str)
+    #     # Check if the shortcut is unset
+    #     if curr_oview_shortcut_lst == ['']:
+    #         # It's unset, so we define the shortcut we want to set
+    #         new_oview_shortcut_str = '<Alt>F1'
+    #         set_oview_shortcut_cmd = [  'gsettings', 'set', 'org.gnome.shell.keybindings',
+    #                                     'toggle-overview', json.dumps([new_oview_shortcut_str])]
+    #         # Set the desired shortcut
+    #         subprocess.run(set_oview_shortcut_cmd, check=True)
+    #         print(f"Set 'toggle-overview' shortcut to {new_oview_shortcut_str}.")
+    #     else:
+    #         print(f"'toggle-overview' shortcut is already set to {curr_oview_shortcut_str}.")
+    # except subprocess.CalledProcessError as proc_err:
+    #     error(f'Problem while checking or setting the toggle-overview shortcut.\n\t{proc_err}')
+
+    # Stop disabling overlay-key on GNOME 45 and later (toggle-overview is no longer set)
+    if cnfg.DE_VERSION in ['44', '43', '42', '41', '40', '3']:
+        # Disable GNOME `overlay-key` binding to Meta/Super/Win/Cmd
+        # gsettings set org.gnome.mutter overlay-key ''
+        cmd_lst = ['gsettings', 'set', 'org.gnome.mutter', 'overlay-key', '']
+        subprocess.run(cmd_lst)
+        print(f'Disabled Super key opening the GNOME overview. (Use Cmd+Space instead.)')
+    else:
+        print(f'NOTICE: Toshy not disabling overlay-key on GNOME 45 or later.')
 
     # Enable keyboard shortcut for GNOME Terminal preferences dialog
     # gsettings set org.gnome.Terminal.Legacy.Keybindings:/org/gnome/terminal/legacy/keybindings/ preferences '<Control>less'
