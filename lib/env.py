@@ -51,8 +51,10 @@ def info(*args, ctx="--"):
 def get_env_info():
     DISTRO_NAME     = None
     DISTRO_VER      = None
+    VARIANT_ID      = None
     SESSION_TYPE    = None
     DESKTOP_ENV     = None
+    DE_VERSION      = None
 
     env_info_dct    = {}
     _distro_name    = ""
@@ -146,6 +148,25 @@ def get_env_info():
     else:
         env_info_dct['DISTRO_VER'] = DISTRO_VER
 
+    ########################################################################
+    ##  Get distro variant if available
+    if release_files['/etc/os-release']:
+        for line in release_files['/etc/os-release']:
+            line: str
+            if line.startswith('VARIANT_ID='):
+                VARIANT_ID = line.split('=')[1].strip().strip('"')
+                break
+    elif release_files['/etc/lsb-release']:
+        for line in release_files['/etc/lsb-release']:
+            line: str
+            if line.startswith('DISTRIB_DESCRIPTION='):
+                VARIANT_ID = line.split('=')[1].strip().strip('"')
+                break
+
+    if not VARIANT_ID:
+        env_info_dct['VARIANT_ID'] = 'notfound'
+    else:
+        env_info_dct['VARIANT_ID'] = VARIANT_ID
 
     ########################################################################
     ##  Get session type
@@ -277,6 +298,25 @@ def get_env_info():
 
     env_info_dct['DESKTOP_ENV'] = DESKTOP_ENV
     
+    ########################################################################
+    ##  Get desktop environment version
+
+    if DESKTOP_ENV == 'gnome':
+        try:
+            # Run the gnome-shell command to get the version
+            output = subprocess.check_output(["gnome-shell", "--version"], text=True).strip()
+            # Use regular expression to extract the major version number
+            match = re.search(r"GNOME Shell (\d+)\.", output)
+            if match:
+                DE_VERSION = match.group(1)
+        except subprocess.CalledProcessError as e:
+            error(f"Error obtaining GNOME version: {e}")
+
+    if not DE_VERSION:
+        env_info_dct['DE_VERSION'] = 'no_version'
+    else:
+        env_info_dct['DE_VERSION'] = DE_VERSION
+
     return env_info_dct
 
 
@@ -287,6 +327,8 @@ if __name__ == '__main__':
     debug(  f'Toshy env module sees this environment:'
             f'\n\t\t DISTRO_NAME     = \'{_env_info["DISTRO_NAME"]}\''
             f'\n\t\t DISTRO_VER      = \'{_env_info["DISTRO_VER"]}\''
+            f'\n\t\t VARIANT_ID      = \'{_env_info["VARIANT_ID"]}\''
             f'\n\t\t SESSION_TYPE    = \'{_env_info["SESSION_TYPE"]}\''
             f'\n\t\t DESKTOP_ENV     = \'{_env_info["DESKTOP_ENV"]}\''
+            f'\n\t\t DE_VERSION      = \'{_env_info["DE_VERSION"]}\''
             f'\n', ctx="EV")
