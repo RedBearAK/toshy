@@ -377,6 +377,11 @@ def do_kwin_reconfigure():
         error(f'Error while running KWin reconfigure.\n\t{proc_err}')
 
 
+#####################################################################################################
+###   START OF NATIVE PACKAGE INSTALLER SECTION
+#####################################################################################################
+
+
 distro_groups_map = {
 
     # separate references for RHEL types versus Fedora types
@@ -926,8 +931,11 @@ def install_distro_pkgs():
         cmd_lst = ['sudo', 'eopkg', 'install', '-y']
         native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
+    ###########################################################################
+    ###  PACKAGE MANAGER DISPATCHER  ##########################################
+    ###########################################################################
     # map installer sub-functions to each pkg mgr distro list
-    pkg_mgr_dispatch = {
+    pkg_mgr_dispatch_map = {
         tuple(rpmostree_distros):       install_on_rpmostree_distro,
         tuple(dnf_distros):             install_on_dnf_distro,
         tuple(zypper_distros):          install_on_zypper_distro,
@@ -938,7 +946,7 @@ def install_distro_pkgs():
     }
 
     # Determine the correct installation function
-    for distro_list, installer_function in pkg_mgr_dispatch.items():
+    for distro_list, installer_function in pkg_mgr_dispatch_map.items():
         if cnfg.DISTRO_NAME in distro_list:
             installer_function()
             native_pkg_installer.show_pkg_install_success_msg()
