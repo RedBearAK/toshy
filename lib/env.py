@@ -3,6 +3,7 @@
 import re
 import os
 import time
+import shutil
 import subprocess
 
 # ENV module version: 2023-10-13
@@ -313,23 +314,27 @@ def get_env_info():
             error(f"Error obtaining GNOME version: {proc_err}")
 
     elif DESKTOP_ENV == 'kde':
-        try:
-            # First, try to get the version from plasmashell (KDE 5 and later)
-            output = subprocess.check_output(["plasmashell", "--version"]).decode().strip()
-            match = re.search(r"plasmashell (\d+)\.", output)
-            if match:
-                DE_MAJ_VER = match.group(1)
-            else:
-                # If plasmashell is not available, check for KDE 4 using kwin or other methods
-                output = subprocess.check_output(["kwin", "--version"]).decode().strip()
-                match = re.search(r"KWin (\d+)\.", output)
-                if match and match.group(1) == '4':
-                    DE_MAJ_VER = '4'
-        except subprocess.CalledProcessError as proc_err:
-            error(f"Error obtaining KDE version: {proc_err}")
+        def get_kde_version():
+            # Check for KDE 6
+            if shutil.which("kwriteconfig6") or shutil.which("kpackagetool6"):
+                return '6'
+
+            # Check for KDE 5
+            elif shutil.which("kwriteconfig5") or shutil.which("kpackagetool5"):
+                return '5'
+
+            # Check for KDE 4
+            elif shutil.which("kwriteconfig") or shutil.which("kpackagetool"):
+                # In KDE 4, these tools don't have a version number in their name
+                # Additional check for KDE 4 versioning can be done here if necessary
+                return '4'
+
+            return 'kde_err'
+        
+        DE_MAJ_VER = get_kde_version()
 
     if not DE_MAJ_VER:
-        env_info_dct['DE_MAJ_VER'] = 'no_logic'
+        env_info_dct['DE_MAJ_VER'] = 'no_logic_for_DE'
     else:
         env_info_dct['DE_MAJ_VER'] = DE_MAJ_VER
 
