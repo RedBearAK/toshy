@@ -13,54 +13,59 @@
 # "Active" according to loginctl. 
 
 
+exit_w_error() {
+    local msg="$1"
+    echo -e "\n(EE) ERROR: ${msg} Exiting...\n"
+    exit 1
+}
+
+
 DEBUG=1
 
 if command -v loginctl >/dev/null 2>&1; then
     : # no-op operator
 else
-    echo "The \"loginctl\" command is not available. Toshy session monitor will not work here."
-    exit 1
+    exit_w_error "The 'loginctl' command is not available."
 fi
 
 if command -v systemctl >/dev/null 2>&1; then
     : # no-op operator
 else
-    echo "The \"systemctl\" command is not available. Toshy session monitor will not work here."
-    exit 1
+    exit_w_error "The 'systemctl' command is not available."
 fi
 
 if command -v dbus-send >/dev/null 2>&1; then
     : # no-op operator
 else
-    echo "The \"dbus-send\" command is not available. Toshy session monitor will not work here."
-    exit 1
+    exit_w_error "The 'dbus-send' command is not available."
 fi
 
-TOSHY_CONFIG_SVC=$(dbus-send --session --type=method_call --print-reply \
-    --dest=org.freedesktop.systemd1 \
-    /org/freedesktop/systemd1 \
-    org.freedesktop.systemd1.Manager.GetUnit \
+
+FD_PATH="/org/freedesktop/systemd1"
+GET_UNIT="org.freedesktop.systemd1.Manager.GetUnit"
+DBUS_ARGS="--session --type=method_call --print-reply --dest=org.freedesktop.systemd1"
+
+# shellcheck disable=SC2086
+TOSHY_CONFIG_SVC=$(dbus-send ${DBUS_ARGS} ${FD_PATH} ${GET_UNIT} \
     string:"toshy-config.service" | grep " path " | cut -d'"' -f2
 )
-TOSHY_SESSION_MONITOR_SVC=$(dbus-send --session --type=method_call --print-reply \
-    --dest=org.freedesktop.systemd1 \
-    /org/freedesktop/systemd1 \
-    org.freedesktop.systemd1.Manager.GetUnit \
-    string:"toshy-session-monitor.service" | grep " path " | cut -d'"' -f2
-)
+
+# shellcheck disable=SC2086
+TOSHY_SESSMON_SVC=$(dbus-send ${DBUS_ARGS} ${FD_PATH} ${GET_UNIT} \
+    string:"toshy-session-monitor.service" | grep " path " | cut -d'"' -f2)
 
 if [[ $DEBUG == 1 ]]
     then
-        echo -e "Service paths:\
-        \n  '$TOSHY_CONFIG_SVC'\
-        \n  '$TOSHY_SESSION_MONITOR_SVC'\
+        echo -e "(DD) Service paths:\
+        \n    '$TOSHY_CONFIG_SVC'\
+        \n    '$TOSHY_SESSMON_SVC'\
         \n"
 fi
 
 
 # If XDG_RUNTIME_DIR is not set or is empty
 if [ -z "${XDG_RUNTIME_DIR}" ]; then
-    echo "Toshy Config Service: XDG_RUNTIME_DIR is not set. Unable to determine where to store the marker file."
+    echo "(DD) TOSHY_CFG_SVC: XDG_RUNTIME_DIR is not set."
     # exit 1
 else
     # Full path to the marker file
