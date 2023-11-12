@@ -119,7 +119,7 @@ class InstallerSettings:
         self.VARIANT_ID             = None
         self.SESSION_TYPE           = None
         self.DESKTOP_ENV            = None
-        self.DE_VERSION: str        = ""
+        self.DE_MAJ_VER: str        = ""
 
         self.distro_mjr_ver: str    = ""
         self.distro_mnr_ver: str    = ""
@@ -140,6 +140,8 @@ class InstallerSettings:
 
         self.py_interp_ver          = f'{py_ver_mjr}.{py_ver_mnr}'
         self.py_interp_path         = shutil.which('python3')
+
+        self.KDE_ver                = '5'   # default to KDE 5 tools unless overridden
 
         self.toshy_dir_path         = os.path.join(home_dir, '.config', 'toshy')
         self.db_file_name           = 'toshy_user_preferences.sqlite'
@@ -241,7 +243,7 @@ def get_environment_info():
     cnfg.VARIANT_ID     = str(env_info_dct.get('VARIANT_ID',    'keymissing')).casefold()
     cnfg.SESSION_TYPE   = str(env_info_dct.get('SESSION_TYPE',  'keymissing')).casefold()
     cnfg.DESKTOP_ENV    = str(env_info_dct.get('DESKTOP_ENV',   'keymissing')).casefold()
-    cnfg.DE_VERSION     = str(env_info_dct.get('DE_VERSION',    'keymissing')).casefold()
+    cnfg.DE_MAJ_VER     = str(env_info_dct.get('DE_MAJ_VER',    'keymissing')).casefold()
 
     # split out the major version from the minor version, if there is one
     distro_ver_parts            = cnfg.DISTRO_VER.split('.') if cnfg.DISTRO_VER else []
@@ -254,7 +256,7 @@ def get_environment_info():
         f"\n\t VARIANT_ID       = '{cnfg.VARIANT_ID}'"
         f"\n\t SESSION_TYPE     = '{cnfg.SESSION_TYPE}'"
         f"\n\t DESKTOP_ENV      = '{cnfg.DESKTOP_ENV}'"
-        f"\n\t DE_VERSION       = '{cnfg.DE_VERSION}'"
+        f"\n\t DE_MAJ_VER       = '{cnfg.DE_MAJ_VER}'"
         # '\n', ctx='EV')
         '', ctx='EV')
 
@@ -1500,10 +1502,13 @@ def install_desktop_apps():
 def setup_kwin2dbus_script():
     """Install the KWin script to notify D-Bus service about window focus changes"""
     print(f'\n\n§  Setting up the Toshy KWin script...\n{cnfg.separator}')
+
+    # try to verify the KDE major version
     if not shutil.which('kpackagetool5') or not shutil.which('kwriteconfig5'):
-        print(f'One or more KDE CLI tools not found. Assuming older KDE...')
-        return
-    
+        if shutil.which('kbuildsycoca4') or shutil.which('kde4-config'):
+            print(f'One or more KDE 5 CLI tools not found. Assuming KDE 4...')
+            return
+
     kwin_script_name    = 'toshy-dbus-notifyactivewindow'
     kwin_script_path    = os.path.join( cnfg.toshy_dir_path,
                                         'kde-kwin-dbus-service', kwin_script_name)
@@ -1528,9 +1533,10 @@ def setup_kwin2dbus_script():
                                             stdout=out, stderr=err)
 
     if result.returncode != 0:
-        pass
+        error("ERROR: Problem while removing existing Toshy KWin script.")
+        safe_shutdown(1)
     else:
-        print("Successfully removed existing KWin script.")
+        print("Successfully removed existing Toshy KWin script.")
 
     # Install the KWin script
     process = subprocess.Popen(
@@ -1543,9 +1549,10 @@ def setup_kwin2dbus_script():
                                             stdout=out, stderr=err)
 
     if result.returncode != 0:
-        error(f"Error installing the KWin script. The error was:\n\t{result.stderr}")
+        error(f"Error installing the Toshy KWin script. The error was:\n\t{result.stderr}")
+        safe_shutdown(1)
     else:
-        print("Successfully installed the KWin script.")
+        print("Successfully installed the Toshy KWin script.")
 
     # Remove the temporary kwinscript file
     try:
@@ -1705,7 +1712,7 @@ def apply_tweaks_GNOME():
     #     error(f'Problem while checking or setting the toggle-overview shortcut.\n\t{proc_err}')
 
     # Stop disabling overlay-key on GNOME 45 and later (toggle-overview is no longer set)
-    if cnfg.DE_VERSION in ['44', '43', '42', '41', '40', '3']:
+    if cnfg.DE_MAJ_VER in ['44', '43', '42', '41', '40', '3']:
         # Disable GNOME `overlay-key` binding to Meta/Super/Win/Cmd
         # gsettings set org.gnome.mutter overlay-key ''
         cmd_lst = ['gsettings', 'set', 'org.gnome.mutter', 'overlay-key', '']
@@ -1858,24 +1865,6 @@ def apply_tweaks_KDE():
 
         print('Starting Plasma shell (backgrounded)... ')
         subprocess.Popen(['kstart5', 'plasmashell'], stdout=PIPE, stderr=PIPE)
-
-        # THIS STUFF DOESN'T SEEM TO WORK!
-        # Disable "sort folders first" option in Dolphin:
-        # kwriteconfig5 --file dolphinrc --group General --key FirstSortingFolders false
-        # kwriteconfig5 --file kdeglobals --group "KFileDialog Settings" --key "Sort directories first" false 
-        # FirstSortingFolders_cmd = ['kwriteconfig5', '--file', 'dolphinrc',
-        #                             '--group', 'General',
-        #                             '--key', 'FirstSortingFolders', 'false']
-        # subprocess.run(FirstSortingFolders_cmd, check=True)
-        # print('Disabled "sort folders first" option in Dolphin.')
-        # # kquitapp5 dolphin && dolphin &
-        # print('Restarting Dolphin file manager...')
-        # try:
-        #     subprocess.run(['kquitapp5', 'dolphin'], check=True)
-        #     subprocess.Popen('dolphin')
-        #     print('Dolphin file manager restarted.')
-        # except subprocess.CalledProcessError as proc_err:
-        #     error(f'Problem restarting Dolphin file manager:\n\t{proc_err}')
 
 
 def remove_tweaks_KDE():

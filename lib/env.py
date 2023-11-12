@@ -54,7 +54,7 @@ def get_env_info():
     VARIANT_ID      = None
     SESSION_TYPE    = None
     DESKTOP_ENV     = None
-    DE_VERSION      = None
+    DE_MAJ_VER      = None
 
     env_info_dct    = {}
     _distro_name    = ""
@@ -297,7 +297,7 @@ def get_env_info():
 
 
     env_info_dct['DESKTOP_ENV'] = DESKTOP_ENV
-    
+
     ########################################################################
     ##  Get desktop environment version
 
@@ -308,14 +308,30 @@ def get_env_info():
             # Use regular expression to extract the major version number
             match = re.search(r"GNOME Shell (\d+)\.", output)
             if match:
-                DE_VERSION = match.group(1)
-        except subprocess.CalledProcessError as e:
-            error(f"Error obtaining GNOME version: {e}")
+                DE_MAJ_VER = match.group(1)
+        except subprocess.CalledProcessError as proc_err:
+            error(f"Error obtaining GNOME version: {proc_err}")
 
-    if not DE_VERSION:
-        env_info_dct['DE_VERSION'] = 'no_version'
+    elif DESKTOP_ENV == 'kde':
+        try:
+            # First, try to get the version from plasmashell (KDE 5 and later)
+            output = subprocess.check_output(["plasmashell", "--version"], text=True).strip()
+            match = re.search(r"plasmashell (\d+)\.", output)
+            if match:
+                DE_MAJ_VER = match.group(1)
+            else:
+                # If plasmashell is not available, check for KDE 4 using kwin or other methods
+                output = subprocess.check_output(["kwin", "--version"], text=True).strip()
+                match = re.search(r"KWin (\d+)\.", output)
+                if match and match.group(1) == '4':
+                    DE_MAJ_VER = '4'
+        except subprocess.CalledProcessError as proc_err:
+            error(f"Error obtaining KDE version: {proc_err}")
+
+    if not DE_MAJ_VER:
+        env_info_dct['DE_MAJ_VER'] = 'no_logic'
     else:
-        env_info_dct['DE_VERSION'] = DE_VERSION
+        env_info_dct['DE_MAJ_VER'] = DE_MAJ_VER
 
     return env_info_dct
 
@@ -330,5 +346,5 @@ if __name__ == '__main__':
             f'\n\t\t VARIANT_ID      = \'{_env_info["VARIANT_ID"]}\''
             f'\n\t\t SESSION_TYPE    = \'{_env_info["SESSION_TYPE"]}\''
             f'\n\t\t DESKTOP_ENV     = \'{_env_info["DESKTOP_ENV"]}\''
-            f'\n\t\t DE_VERSION      = \'{_env_info["DE_VERSION"]}\''
+            f'\n\t\t DE_MAJ_VER      = \'{_env_info["DE_MAJ_VER"]}\''
             f'\n', ctx="EV")
