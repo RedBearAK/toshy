@@ -304,7 +304,7 @@ def get_env_info():
     if DESKTOP_ENV == 'gnome':
         try:
             # Run the gnome-shell command to get the version
-            output = subprocess.check_output(["gnome-shell", "--version"], text=True).strip()
+            output = subprocess.check_output(["gnome-shell", "--version"]).decode().strip()
             # Use regular expression to extract the major version number
             match = re.search(r"GNOME Shell (\d+)\.", output)
             if match:
@@ -315,13 +315,13 @@ def get_env_info():
     elif DESKTOP_ENV == 'kde':
         try:
             # First, try to get the version from plasmashell (KDE 5 and later)
-            output = subprocess.check_output(["plasmashell", "--version"], text=True).strip()
+            output = subprocess.check_output(["plasmashell", "--version"]).decode().strip()
             match = re.search(r"plasmashell (\d+)\.", output)
             if match:
                 DE_MAJ_VER = match.group(1)
             else:
                 # If plasmashell is not available, check for KDE 4 using kwin or other methods
-                output = subprocess.check_output(["kwin", "--version"], text=True).strip()
+                output = subprocess.check_output(["kwin", "--version"]).decode().strip()
                 match = re.search(r"KWin (\d+)\.", output)
                 if match and match.group(1) == '4':
                     DE_MAJ_VER = '4'
