@@ -107,7 +107,7 @@ OVERRIDE_DISTRO_VER      = None
 OVERRIDE_VARIANT_ID      = None
 OVERRIDE_SESSION_TYPE    = None
 OVERRIDE_DESKTOP_ENV     = None
-OVERRIDE_DE_VERSION      = None
+OVERRIDE_DE_MAJ_VER      = None
 
 ###  SLICE_MARK_END: env_overrides  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 ###################################################################################################
@@ -118,7 +118,7 @@ DISTRO_VER      = None
 VARIANT_ID      = None
 SESSION_TYPE    = None
 DESKTOP_ENV     = None
-DE_VERSION      = None
+DE_MAJ_VER      = None
 
 env_info: Dict[str, str] = lib.env.get_env_info()   # Returns a dict
 
@@ -127,7 +127,7 @@ DISTRO_VER      = OVERRIDE_DISTRO_VER   or env_info.get('DISTRO_VER')
 VARIANT_ID      = OVERRIDE_VARIANT_ID   or env_info.get('VARIANT_ID')
 SESSION_TYPE    = OVERRIDE_SESSION_TYPE or env_info.get('SESSION_TYPE')
 DESKTOP_ENV     = OVERRIDE_DESKTOP_ENV  or env_info.get('DESKTOP_ENV')
-DE_VERSION      = OVERRIDE_DE_VERSION   or env_info.get('DE_VERSION')
+DE_MAJ_VER      = OVERRIDE_DE_MAJ_VER   or env_info.get('DE_MAJ_VER')
 
 debug("")
 debug(  f'Toshy config sees this environment:'
@@ -135,7 +135,7 @@ debug(  f'Toshy config sees this environment:'
         f'\n\t{DISTRO_VER       = }'
         f'\n\t{SESSION_TYPE     = }'
         f'\n\t{DESKTOP_ENV      = }'
-        f'\n\t{DE_VERSION       = }\n', ctx="CG")
+        f'\n\t{DE_MAJ_VER       = }\n', ctx="CG")
 
 try:
     # Pylance will complain if function undefined, without 'ignore' comment
@@ -3866,7 +3866,7 @@ keymap("GenGUI overrides: pre-GNOME 45 fix", {
     C("RC-Space"):             [iEF2NT(),C("Super-s")],         # Override GNOME 45+ Key.LEFT_META remap
 }, when = lambda ctx: 
         matchProps(not_lst=remotes_lod)(ctx) and 
-        is_pre_GNOME_45(DE_VERSION)(ctx)
+        is_pre_GNOME_45(DE_MAJ_VER)(ctx)
 )
 
 keymap("GenGUI overrides: GNOME", {
