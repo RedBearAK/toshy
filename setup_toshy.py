@@ -1563,7 +1563,7 @@ def setup_kwin2dbus_script():
             os.remove(os.path.join(home_dir, '.local', 'share', 'kwin', 'scripts', kwin_script_name))
         except (FileNotFoundError, PermissionError) as file_err:
             error(f'Problem removing existing KWin script folder:\n\t{file_err}')
-            safe_shutdown(1)
+            # safe_shutdown(1)
     else:
         print("Successfully removed existing Toshy KWin script.")
 
