@@ -1519,11 +1519,20 @@ def setup_kwin2dbus_script():
     """Install the KWin script to notify D-Bus service about window focus changes"""
     print(f'\n\n§  Setting up the Toshy KWin script...\n{cnfg.separator}')
 
-    # try to verify the KDE major version
-    if not shutil.which('kpackagetool5') or not shutil.which('kwriteconfig5'):
-        if shutil.which('kbuildsycoca4') or shutil.which('kde4-config'):
-            print(f'One or more KDE 5 CLI tools not found. Assuming KDE 4...')
-            return
+    if cnfg.DESKTOP_ENV == 'kde':
+        KDE_ver = cnfg.DE_MAJ_VER
+    else:
+        error("ERROR: Tried to install Toshy KWin script, but DE is not KDE.")
+        return
+
+    if KDE_ver not in ['6', '5', '4']:
+        error("ERROR: Toshy KWin script cannot be installed.")
+        error(f"KDE version invalid: '{KDE_ver}'")
+        return
+
+    if KDE_ver == '4':
+        print('KDE 4 is not Wayland compatible. Toshy KWin script not necessary.')
+        return
 
     kwin_script_name    = 'toshy-dbus-notifyactivewindow'
     kwin_script_path    = os.path.join( cnfg.toshy_dir_path,
