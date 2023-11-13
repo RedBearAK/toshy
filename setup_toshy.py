@@ -1538,6 +1538,7 @@ def setup_kwin2dbus_script():
     kwin_script_path    = os.path.join( cnfg.toshy_dir_path,
                                         'kde-kwin-dbus-service', kwin_script_name)
     script_tmp_file     = f'{cnfg.run_tmp_dir}/{kwin_script_name}.kwinscript'
+    curr_script_path = os.path.join(home_dir, '.local', 'share', 'kwin', 'scripts', kwin_script_name)
 
     # Create a zip file (overwrite if it exists)
     with zipfile.ZipFile(script_tmp_file, 'w') as zipf:
@@ -1560,7 +1561,7 @@ def setup_kwin2dbus_script():
     if result.returncode != 0:
         error("ERROR: Problem while removing existing Toshy KWin script.")
         try:
-            os.remove(os.path.join(home_dir, '.local', 'share', 'kwin', 'scripts', kwin_script_name))
+            shutil.rmtree(curr_script_path)
         except (FileNotFoundError, PermissionError) as file_err:
             error(f'Problem removing existing KWin script folder:\n\t{file_err}')
             # safe_shutdown(1)
