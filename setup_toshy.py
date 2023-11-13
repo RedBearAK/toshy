@@ -1559,9 +1559,10 @@ def setup_kwin2dbus_script():
                                             stdout=out, stderr=err)
 
     if result.returncode != 0:
-        error("ERROR: Problem while removing existing Toshy KWin script.")
+        error("Problem while uninstalling existing Toshy KWin script.")
         try:
             shutil.rmtree(curr_script_path)
+            print(f'Removed existing Toshy KWin script folder (if any).')
         except (FileNotFoundError, PermissionError) as file_err:
             error(f'Problem removing existing KWin script folder:\n\t{file_err}')
             # safe_shutdown(1)
