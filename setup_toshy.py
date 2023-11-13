@@ -16,6 +16,7 @@ import argparse
 import datetime
 import platform
 import textwrap
+import builtins
 import subprocess
 
 from subprocess import DEVNULL, PIPE
@@ -24,6 +25,21 @@ from typing import Dict
 # local import
 import lib.env as env
 from lib.logger import debug, error, warn, info
+from lib import logger
+
+logger.FLUSH = True
+
+# Save the original print function
+original_print = builtins.print
+
+# Override the print function
+def print(*args, **kwargs):
+    kwargs['flush'] = True  # Set flush to True
+#    original_print("Using custom print:", *args, **kwargs)  # Call the original print
+    original_print(*args, **kwargs)  # Call the original print
+
+# Replace the built-in print with our custom print
+builtins.print = print
 
 if os.name == 'posix' and os.geteuid() == 0:
     error("This app should not be run as root/superuser. Exiting.")

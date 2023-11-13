@@ -27,8 +27,8 @@ from lib.logger import *
 from lib import logger
 from lib.settings_class import Settings
 
-
-logger.VERBOSE = True
+logger.FLUSH        = True
+logger.VERBOSE      = True
 
 if not str(sys.platform) == "linux":
     raise OSError("This app is designed to be run only on Linux")
