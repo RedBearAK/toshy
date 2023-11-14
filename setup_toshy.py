@@ -1522,26 +1522,36 @@ def setup_kwin2dbus_script():
     if cnfg.DESKTOP_ENV == 'kde':
         KDE_ver = cnfg.DE_MAJ_VER
     else:
-        error("ERROR: Tried to install Toshy KWin script, but DE is not KDE.")
+        error("ERROR: Asked to install Toshy KWin script, but DE is not KDE.")
         return
 
     if KDE_ver not in ['6', '5', '4']:
         error("ERROR: Toshy KWin script cannot be installed.")
-        error(f"KDE version invalid: '{KDE_ver}'")
+        error(f"KDE major version invalid: '{KDE_ver}'")
         return
 
     if KDE_ver == '4':
-        print('KDE 4 is not Wayland compatible. Toshy KWin script not necessary.')
+        print('KDE 4 is not Wayland compatible. Toshy KWin script unnecessary.')
         return
 
-    kwin_script_name    = 'toshy-dbus-notifyactivewindow'
-    kwin_script_path    = os.path.join( cnfg.toshy_dir_path,
-                                        'kde-kwin-dbus-service', kwin_script_name)
-    script_tmp_file     = f'{cnfg.run_tmp_dir}/{kwin_script_name}.kwinscript'
-    curr_script_path = os.path.join(home_dir, '.local', 'share', 'kwin', 'scripts', kwin_script_name)
+    kpackagetool_cmd    = f'kpackagetool{KDE_ver}'
+    kwriteconfig_cmd    = f'kwriteconfig{KDE_ver}'
+
+    kwin_script_name        = 'toshy-dbus-notifyactivewindow'
+    kwin_script_path        = os.path.join( cnfg.toshy_dir_path,
+                                        'kde-kwin-script',
+                                        f'kde{KDE_ver}',
+                                        kwin_script_name)
+    kwin_script_tmp_file    = f'{cnfg.run_tmp_dir}/{kwin_script_name}.kwinscript'
+    curr_script_path        = os.path.join( home_dir,
+                                            '.local',
+                                            'share',
+                                            'kwin',
+                                            'scripts',
+                                            kwin_script_name)
 
     # Create a zip file (overwrite if it exists)
-    with zipfile.ZipFile(script_tmp_file, 'w') as zipf:
+    with zipfile.ZipFile(kwin_script_tmp_file, 'w') as zipf:
         # Add main.js to the kwinscript package
         zipf.write(os.path.join(kwin_script_path, 'contents', 'code', 'main.js'),
                                 arcname='contents/code/main.js')
@@ -1550,12 +1560,13 @@ def setup_kwin2dbus_script():
 
     # Try to remove any installed KWin script entirely
     process = subprocess.Popen(
-        ['kpackagetool5', '-t', 'KWin/Script', '-r', kwin_script_name],
+        [kpackagetool_cmd, '-t', 'KWin/Script', '-r', kwin_script_name],
         stdout=PIPE, stderr=PIPE)
     out, err = process.communicate()
     out = out.decode('utf-8')
     err = err.decode('utf-8')
-    result = subprocess.CompletedProcess(args=process.args, returncode=process.returncode,
+    result = subprocess.CompletedProcess(   args=process.args,
+                                            returncode=process.returncode,
                                             stdout=out, stderr=err)
 
     if result.returncode != 0:
@@ -1570,13 +1581,13 @@ def setup_kwin2dbus_script():
         print("Successfully removed existing Toshy KWin script.")
 
     # Install the KWin script
-    process = subprocess.Popen(
-        ['kpackagetool5', '-t', 'KWin/Script', '-i', script_tmp_file],
-        stdout=PIPE, stderr=PIPE)
+    cmd_lst = [kpackagetool_cmd, '-t', 'KWin/Script', '-i', kwin_script_tmp_file]
+    process = subprocess.Popen(cmd_lst, stdout=PIPE, stderr=PIPE)
     out, err = process.communicate()
     out = out.decode('utf-8')
     err = err.decode('utf-8')
-    result = subprocess.CompletedProcess(args=process.args, returncode=process.returncode,
+    result = subprocess.CompletedProcess(   args=process.args,
+                                            returncode=process.returncode,
                                             stdout=out, stderr=err)
 
     if result.returncode != 0:
@@ -1587,17 +1598,18 @@ def setup_kwin2dbus_script():
 
     # Remove the temporary kwinscript file
     try:
-        os.remove(script_tmp_file)
+        os.remove(kwin_script_tmp_file)
     except (FileNotFoundError, PermissionError): pass
 
-    # Enable the script using kwriteconfig5
-    process = subprocess.Popen(
-        [   'kwriteconfig5', '--file', 'kwinrc', '--group', 'Plugins', '--key',
-            f'{kwin_script_name}Enabled', 'true'], stdout=PIPE, stderr=PIPE)
+    # Enable the KWin script
+    cmd_lst = [kwriteconfig_cmd, '--file', 'kwinrc', '--group', 'Plugins', '--key',
+            f'{kwin_script_name}Enabled', 'true']
+    process = subprocess.Popen(cmd_lst, stdout=PIPE, stderr=PIPE)
     out, err = process.communicate()
     out = out.decode('utf-8')
     err = err.decode('utf-8')
-    result = subprocess.CompletedProcess(args=process.args, returncode=process.returncode,
+    result = subprocess.CompletedProcess(   args=process.args,
+                                            returncode=process.returncode,
                                             stdout=out, stderr=err)
 
     if result.returncode != 0:
@@ -1788,9 +1800,25 @@ def remove_tweaks_GNOME():
 def apply_tweaks_KDE():
     """Utility function to add desktop tweaks to KDE"""
 
-    if not shutil.which('kwriteconfig5'):
-        print(f'KDE 5.x tools not present. Skipping KDE tweaks.')
+    if cnfg.DESKTOP_ENV == 'kde':
+        KDE_ver = cnfg.DE_MAJ_VER
+    else:
+        error("ERROR: Asked to apply KDE tweaks, but DE is not KDE.")
         return
+
+    # check that major release ver from env module is rational
+    if KDE_ver not in ['6', '5', '4']:
+        error("ERROR: Desktop tweaks for KDE cannot be applied.")
+        error(f"KDE major version invalid: '{KDE_ver}'")
+        return
+
+    if KDE_ver == '4':
+        print('No tweaks available for KDE 4.')
+        return
+
+    kstart_cmd          = f'kstart{KDE_ver}'
+    kquitapp_cmd        = f'kquitapp{KDE_ver}'
+    kwriteconfig_cmd    = f'kwriteconfig{KDE_ver}'
 
     # Documentation on the use of Meta key in KDE:
     # https://userbase.kde.org/Plasma/Tips#Windows.2FMeta_Key
@@ -1854,19 +1882,19 @@ def apply_tweaks_KDE():
         do_kwin_reconfigure()
 
         # Set the LayoutName value to big_icons (shows task switcher with large icons, no previews)
-        LayoutName_cmd = ['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox',
+        LayoutName_cmd = [kwriteconfig_cmd, '--file', 'kwinrc', '--group', 'TabBox',
                             '--key', 'LayoutName', 'big_icons']
         subprocess.run(LayoutName_cmd, check=True)
         print(f'Set task switcher style to: "Large Icons"')
 
         # Set the HighlightWindows value to false (disables "Show selected window" option)
-        HighlightWindows_cmd = ['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox',
+        HighlightWindows_cmd = [kwriteconfig_cmd, '--file', 'kwinrc', '--group', 'TabBox',
                                 '--key', 'HighlightWindows', 'false']
         subprocess.run(HighlightWindows_cmd, check=True)
         print(f'Disabled task switcher option: "Show selected window"')
 
         # Set the ApplicationsMode value to 1 (enables "Only one window per application" option)
-        ApplicationsMode_cmd = ['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox',
+        ApplicationsMode_cmd = [kwriteconfig_cmd, '--file', 'kwinrc', '--group', 'TabBox',
                                 '--key', 'ApplicationsMode', '1']
         subprocess.run(ApplicationsMode_cmd, check=True)
         print(f'Enabled task switcher option: "Only one window per application"')
@@ -1875,27 +1903,36 @@ def apply_tweaks_KDE():
 
         # Disable single click to open/launch files/folders:
         # kwriteconfig5 --file kdeglobals --group KDE --key SingleClick false
-        SingleClick_cmd = ['kwriteconfig5', '--file', 'kdeglobals', '--group', 'KDE',
+        SingleClick_cmd = [kwriteconfig_cmd, '--file', 'kdeglobals', '--group', 'KDE',
                             '--key', 'SingleClick', 'false']
         subprocess.run(SingleClick_cmd, check=True)
         print('Disabled single-click to open/launch files/folders')
 
-        # Restart Plasma shell to make the new setting active
-        # killall plasmashell && kstart5 plasmashell
-        try:
-            if shutil.which('kquitapp5'):
-                print('Stopping Plasma shell... ', flush=True, end='')
-                subprocess.run(['kquitapp5', 'plasmashell'], check=True,
-                                stdout=PIPE, stderr=PIPE)
-                print('Plasma shell stopped.')
+        if shutil.which(kstart_cmd):
+            plasmashell_stopped = False
+            # Restart Plasma shell to make the new setting active
+            # kquitapp5/6 plasmashell && kstart5/6 plasmashell
+            try:
+                if shutil.which(kquitapp_cmd):
+                    print('Stopping Plasma shell... ', flush=True, end='')
+                    subprocess.run([kquitapp_cmd, 'plasmashell'], check=True,
+                                    stdout=PIPE, stderr=PIPE)
+                    print('Plasma shell stopped.')
+                    plasmashell_stopped = True
+                else:
+                    error(f'The "kquitapp{KDE_ver}" command is missing. Skipping plasmashell restart.')
+            except subprocess.CalledProcessError as proc_err:
+                err_output: bytes = proc_err.stderr             # type hint error output
+                error(f'\nProblem while stopping Plasma shell:\n\t{err_output.decode()}')
+            if plasmashell_stopped:
+                print('Starting Plasma shell (backgrounded)... ')
+                subprocess.Popen([kstart_cmd, 'plasmashell'], stdout=PIPE, stderr=PIPE)
             else:
-                error('The "kquitapp5" command is not found. Skipping plasmashell restart.')
-        except subprocess.CalledProcessError as proc_err:
-            err_output: bytes = proc_err.stderr             # type hint error output
-            error(f'\nProblem while stopping Plasma shell:\n\t{err_output.decode()}')
-
-        print('Starting Plasma shell (backgrounded)... ')
-        subprocess.Popen(['kstart5', 'plasmashell'], stdout=PIPE, stderr=PIPE)
+                error('Plasma shell was not stopped. Skipping restarting Plasma shell.')
+                print('You should probably log out or restart.')
+        else:
+            error(f"The 'kstart{KDE_ver}' command is missing. Skipping restarting Plasma shell.")
+            print('You should probably log out or restart.')
 
 
 def remove_tweaks_KDE():
