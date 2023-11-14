@@ -386,15 +386,6 @@ def elevate_privileges():
     subprocess.run(['sudo', 'bash', '-c', 'echo -e "\nUsing elevated privileges..."'], check=True)
 
 
-def do_kwin_reconfigure():
-    """Utility function to run the KWin reconfigure command"""
-    try:
-        subprocess.run([cnfg.qdbus, 'org.kde.KWin', '/KWin', 'reconfigure'],
-                        check=True, stderr=DEVNULL, stdout=DEVNULL)
-    except subprocess.CalledProcessError as proc_err:
-        error(f'Error while running KWin reconfigure.\n\t{proc_err}')
-
-
 #####################################################################################################
 ###   START OF NATIVE PACKAGE INSTALLER SECTION
 #####################################################################################################
@@ -1513,6 +1504,20 @@ def install_desktop_apps():
     replace_home_in_file(tray_desktop_file)
     replace_home_in_file(gui_desktop_file)
     show_task_completed_msg()
+
+
+def do_kwin_reconfigure():
+    """Utility function to run the KWin reconfigure command"""
+    if not shutil.which(cnfg.qdbus):
+        error(f'The "{cnfg.qdbus}" command is missing. Cannot run KWin reconfigure.')
+        return
+
+    if shutil.which(cnfg.qdbus):
+        try:
+            subprocess.run([cnfg.qdbus, 'org.kde.KWin', '/KWin', 'reconfigure'],
+                            check=True, stderr=DEVNULL, stdout=DEVNULL)
+        except subprocess.CalledProcessError as proc_err:
+            error(f'Error while running KWin reconfigure.\n\t{proc_err}')
 
 
 def setup_kwin2dbus_script():
