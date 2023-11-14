@@ -1854,6 +1854,15 @@ def apply_tweaks_KDE():
         return
 
     kstart_cmd          = f'kstart{KDE_ver}'
+
+    if not shutil.which(kstart_cmd):
+        # try just 'kstart' on KDE 6 if there is no 'kstart6'
+        if shutil.which('kstart'):
+            kstart_cmd          = 'kstart'
+        # if no 'kstart', fall back to 'kstart5' if it exists
+        elif shutil.which('kstart5'):
+            kstart_cmd          = 'kstart5'
+
     kquitapp_cmd        = f'kquitapp{KDE_ver}'
     kwriteconfig_cmd    = f'kwriteconfig{KDE_ver}'
 
