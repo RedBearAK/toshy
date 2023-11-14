@@ -1508,16 +1508,46 @@ def install_desktop_apps():
 
 def do_kwin_reconfigure():
     """Utility function to run the KWin reconfigure command"""
-    if not shutil.which(cnfg.qdbus):
-        error(f'The "{cnfg.qdbus}" command is missing. Cannot run KWin reconfigure.')
+
+    commands = ['dbus-send', 'gdbus', cnfg.qdbus]
+
+    for cmd in commands:
+        if shutil.which(cmd):
+            break
+    else:
+        error(f'No expected D-Bus command available. Cannot do KWin reconfigure.')
         return
+
+    if shutil.which('dbus-send'):
+        try:
+            cmd_lst = [ 'dbus-send', '--type=method_call',
+                        '--dest=org.kde.KWin', '/KWin',
+                        'org.kde.KWin.reconfigure']
+            subprocess.run(cmd_lst, check=True, stderr=DEVNULL, stdout=DEVNULL)
+            return
+        except subprocess.CalledProcessError as proc_err:
+            error(f'Problem using "dbus-send" to do KWin reconfigure.\n\t{proc_err}')
+
+    if shutil.which('gdbus'):
+        try:
+            cmd_lst = [ 'gdbus', 'call', '--session', 
+                        '--dest', 'org.kde.KWin',
+                        '--object-path', '/KWin', 
+                        '--method', 'org.kde.KWin.reconfigure']
+            subprocess.run(cmd_lst, check=True, stderr=DEVNULL, stdout=DEVNULL)
+            return
+        except subprocess.CalledProcessError as proc_err:
+            error(f'Problem using "gdbus" to do KWin reconfigure.\n\t{proc_err}')
 
     if shutil.which(cnfg.qdbus):
         try:
-            subprocess.run([cnfg.qdbus, 'org.kde.KWin', '/KWin', 'reconfigure'],
-                            check=True, stderr=DEVNULL, stdout=DEVNULL)
+            cmd_lst = [cnfg.qdbus, 'org.kde.KWin', '/KWin', 'reconfigure']
+            subprocess.run(cmd_lst, check=True, stderr=DEVNULL, stdout=DEVNULL)
+            return
         except subprocess.CalledProcessError as proc_err:
-            error(f'Error while running KWin reconfigure.\n\t{proc_err}')
+            error(f'Problem using "{cnfg.qdbus}" to do KWin reconfigure.\n\t{proc_err}')
+
+    error(f'Failed to do KWin reconfigure. No available D-Bus utility worked.')
 
 
 def setup_kwin2dbus_script():
