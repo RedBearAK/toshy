@@ -60,24 +60,28 @@ LOG_PFX = 'TOSHY_KWIN_SETUP'
 
 DISTRO_NAME     = None
 DISTRO_VER      = None
+VARIANT_ID      = None
 SESSION_TYPE    = None
 DESKTOP_ENV     = None
+DE_MAJ_VER      = None
 
 
 def check_environment():
     """Retrieve the current environment from env module"""
     env_info: Dict[str, str] = env.get_env_info()   # Returns a dict
-    global DISTRO_NAME, DISTRO_VER, SESSION_TYPE, DESKTOP_ENV
-    DISTRO_NAME     = env_info.get('DISTRO_NAME')
-    DISTRO_VER      = env_info.get('DISTRO_VER')
-    SESSION_TYPE    = env_info.get('SESSION_TYPE')
-    DESKTOP_ENV     = env_info.get('DESKTOP_ENV')
+    global DISTRO_NAME, DISTRO_VER, VARIANT_ID, SESSION_TYPE, DESKTOP_ENV, DE_MAJ_VER
+    DISTRO_NAME     = env_info.get('DISTRO_NAME',   'keymissing')
+    DISTRO_VER      = env_info.get('DISTRO_VER',    'keymissing')
+    VARIANT_ID      = env_info.get('VARIANT_ID',    'keymissing')
+    SESSION_TYPE    = env_info.get('SESSION_TYPE',  'keymissing')
+    DESKTOP_ENV     = env_info.get('DESKTOP_ENV',   'keymissing')
+    DE_MAJ_VER      = env_info.get('DE_MAJ_VER',    'keymissing')
 
 
 check_environment()
 
 if DESKTOP_ENV in ['kde', 'plasma'] and SESSION_TYPE == 'wayland':
-    pass
+    KDE_ver = DE_MAJ_VER
 else:
     debug(f'{LOG_PFX}: Not a Wayland+KDE environment. Exiting.')
     time.sleep(2)
@@ -85,88 +89,173 @@ else:
 
 
 def main():
-    qdbus_cmd = None
 
-    if shutil.which('qdbus'):
-        qdbus_cmd = 'qdbus'
+    gdbus_cmd                       = None
+    if shutil.which('gdbus'):
+        gdbus_cmd                   = 'gdbus'
+
+    dbus_send_cmd                   = None
+    if shutil.which('dbus-send'):
+        dbus_send_cmd               = 'dbus-send'
+
+    qdbus_cmd                       = None
+    if shutil.which('qdbus-qt6'):
+        qdbus_cmd                   = 'qdbus-qt6'
     elif shutil.which('qdbus-qt5'):
-        qdbus_cmd = 'qdbus-qt5'
+        qdbus_cmd                   = 'qdbus-qt5'
+    elif shutil.which('qdbus'):
+        qdbus_cmd                   = 'qdbus'
 
-    if qdbus_cmd is None:
-        error(f"Cannot find 'qdbus' or 'qdbus-qt5'. Cannot check KWin script status.")
+    if gdbus_cmd is None and dbus_send_cmd is None and qdbus_cmd is None:
+        error(f"No expected D-Bus utility was found. Cannot check KWin script status.")
         sys.exit(1)
 
-    toshy_kwin_script_name          = 'toshy-dbus-notifyactivewindow'
-    kwin_dbus_obj                   = 'org.kde.KWin'
-    kwin_kwin_path                  = '/KWin'
-    kwin_scripting_path             = '/Scripting'
-    kwin_scripting_iface            = 'org.kde.kwin.Scripting'
+    kwin_script_name            = 'toshy-dbus-notifyactivewindow'
+    kwin_dbus_obj               = 'org.kde.KWin'
+    kwin_kwin_path              = '/KWin'
+    kwin_scripting_path         = '/Scripting'
+    kwin_scripting_iface        = 'org.kde.kwin.Scripting'
 
     def do_kwin_reconfigure():
         """Utility function to run the KWin reconfigure command"""
-        try:
-            subprocess.run([qdbus_cmd, kwin_dbus_obj, kwin_kwin_path, 'reconfigure'],
-                            check=True, stderr=DEVNULL, stdout=DEVNULL)
-            time.sleep(1)
-        except subprocess.CalledProcessError as proc_error:
-            error(f'{LOG_PFX}: Error while running KWin reconfigure.\n\t{proc_error}')
+        if dbus_send_cmd:
+            # do KWin reconfigure with dbus-send utility
+            cmd_lst = [ dbus_send_cmd, '--type=method_call',
+                        f'--dest={kwin_dbus_obj}', kwin_kwin_path,
+                        'org.kde.KWin.reconfigure']
+            try:
+                subprocess.run(cmd_lst, check=True, stderr=DEVNULL, stdout=DEVNULL)
+                time.sleep(1)
+                return
+            except subprocess.CalledProcessError as proc_err:
+                error(f'Problem using "dbus-send" to do KWin reconfigure.\n\t{proc_err}')
+
+        if gdbus_cmd:
+            # do KWin reconfigure with gdbus utility
+            cmd_lst = [ gdbus_cmd, 'call', '--session', 
+                        '--dest', kwin_dbus_obj,
+                        '--object-path', kwin_kwin_path, 
+                        '--method', 'org.kde.KWin.reconfigure']
+            try:
+                subprocess.run(cmd_lst, check=True, stderr=DEVNULL, stdout=DEVNULL)
+                time.sleep(1)
+                return
+            except subprocess.CalledProcessError as proc_err:
+                error(f'Problem using "gdbus" to do KWin reconfigure.\n\t{proc_err}')
+
+        if qdbus_cmd:
+            # do KWin reconfigure with qdbus utility
+            cmd_lst = [ qdbus_cmd, kwin_dbus_obj, kwin_kwin_path, 'reconfigure']
+            try:
+                subprocess.run(cmd_lst, check=True, stderr=DEVNULL, stdout=DEVNULL)
+                time.sleep(1)
+                return
+            except subprocess.CalledProcessError as proc_err:
+                error(f'Problem using "{qdbus_cmd}" to do KWin reconfigure.\n\t{proc_err}')
+
+        error(f'{LOG_PFX}: Failed to do KWin reconfigure.')
 
 
     def is_kwin_script_loaded():
+        """Utility function t check if the KWin script is loaded"""
+
+        if dbus_send_cmd:
+            cmd_lst = [
+                dbus_send_cmd,
+                '--print-reply=literal',
+                '--dest=' + kwin_dbus_obj,
+                '--type=method_call',
+                kwin_scripting_path,
+                f'{kwin_scripting_iface}.isScriptLoaded',
+                'string:' + kwin_script_name
+            ]
+        elif gdbus_cmd:
+            cmd_lst = [
+                gdbus_cmd, 
+                'call', 
+                '--session', 
+                '--dest', kwin_dbus_obj, 
+                '--object-path', kwin_scripting_path, 
+                '--method', f'{kwin_scripting_iface}.isScriptLoaded', 
+                kwin_script_name
+            ]
+        elif qdbus_cmd:
+            cmd_lst = [
+                qdbus_cmd,
+                kwin_dbus_obj,
+                kwin_scripting_path,
+                f'{kwin_scripting_iface}.isScriptLoaded',
+                kwin_script_name
+            ]
+
         try:
-            output: bytes = subprocess.check_output([  qdbus_cmd,
-                                                kwin_dbus_obj,
-                                                kwin_scripting_path,
-                                                f'{kwin_scripting_iface}.isScriptLoaded',
-                                                toshy_kwin_script_name    ])
+            output: bytes       = subprocess.check_output(cmd_lst)
             # output is bytes object, not string!
-            output_str = output.decode().strip()
-            print(f"{LOG_PFX}: Is '{toshy_kwin_script_name}' KWin script loaded: {output_str}", flush=True)
-            return output_str == 'true'
-        except subprocess.CalledProcessError as e:
-            print(f"{LOG_PFX}: Error checking if KWin script is loaded:\n\t{e}", flush=True)
+            output_str          = output.decode().strip()
+            is_loaded           = 'true' in output_str.lower()
+            print(f"{LOG_PFX}: Is '{kwin_script_name}' KWin script loaded: {is_loaded}", flush=True)
+            return is_loaded
+        except subprocess.CalledProcessError as proc_err:
+            print(f"{LOG_PFX}: Error checking if KWin script is loaded:\n\t{proc_err}", flush=True)
             return False
 
 
     def load_kwin_script():
+        """unused utility function to load the KWin script"""
         try:
             subprocess.run([qdbus_cmd,
                             kwin_dbus_obj,
                             kwin_scripting_path,
                             f'{kwin_scripting_iface}.loadScript',
-                            toshy_kwin_script_name    ],
+                            kwin_script_name    ],
                             check=True) #,
                             # stderr=DEVNULL,
                             # stdout=DEVNULL)
-            print(f'{LOG_PFX}: Loaded KWin script.')
+            print(f'{LOG_PFX}: Loaded KWin script.', flush=True)
         except subprocess.CalledProcessError as e:
-            print(f"{LOG_PFX}: Error loading KWin script:\n\t{e}")
+            print(f"{LOG_PFX}: Error loading KWin script:\n\t{e}", flush=True)
             return False
 
 
     def unload_kwin_script():
+        """unused utility function to unload the KWin script"""
         try:
             subprocess.run([qdbus_cmd,
                             kwin_dbus_obj,
                             kwin_scripting_path,
                             f'{kwin_scripting_iface}.unloadScript',
-                            toshy_kwin_script_name    ],
+                            kwin_script_name    ],
                             check=True) #,
                             # stderr=DEVNULL,
                             # stdout=DEVNULL)
-            print(f'{LOG_PFX}: Loaded KWin script.')
+            print(f'{LOG_PFX}: Loaded KWin script.', flush=True)
         except subprocess.CalledProcessError as e:
-            print(f"{LOG_PFX}: Error loading KWin script:\n\t{e}")
+            print(f"{LOG_PFX}: Error loading KWin script:\n\t{e}", flush=True)
             return False
 
 
     def setup_kwin2dbus_script():
         """Install the KWin script to notify D-Bus service about window focus changes"""
         # print(f'\n\n§  Setting up the Toshy KWin script...\n{separator}')
-        kwin_script_name    = 'toshy-dbus-notifyactivewindow'
-        kwin_script_path    = os.path.join( parent_folder_path,
-                                            'kde-kwin-dbus-service', kwin_script_name)
-        script_tmp_file     = f'{run_tmp_dir}/{kwin_script_name}.kwinscript'
+
+        if KDE_ver not in ['6', '5', '4']:
+            error("ERROR: Toshy KWin script cannot be installed.")
+            error(f"KDE major version invalid: '{KDE_ver}'")
+            return
+
+        if KDE_ver == '4':
+            print('KDE 4 is not Wayland compatible. Toshy KWin script unnecessary.')
+            return
+
+        kpackagetool_cmd        = f'kpackagetool{KDE_ver}'
+        kwriteconfig_cmd        = f'kwriteconfig{KDE_ver}'
+
+        kwin_script_name        = 'toshy-dbus-notifyactivewindow'
+        kwin_script_path        = os.path.join( parent_folder_path,
+                                                'kde-kwin-script',
+                                                f'kde{KDE_ver}',
+                                                kwin_script_name)
+        script_tmp_file         = f'{run_tmp_dir}/{kwin_script_name}.kwinscript'
 
         # Create a zip file (overwrite if it exists)
         with zipfile.ZipFile(script_tmp_file, 'w') as zipf:
@@ -177,20 +266,18 @@ def main():
             zipf.write(os.path.join(kwin_script_path, 'metadata.json'), arcname='metadata.json')
 
         # Try to remove any installed KWin script entirely
-        result = subprocess.run(
-            ['kpackagetool5', '-t', 'KWin/Script', '-r', kwin_script_name],
-            capture_output=True, text=True)
+        cmd_lst = [kpackagetool_cmd, '-t', 'KWin/Script', '-r', kwin_script_name]
+        result = subprocess.run(cmd_lst, capture_output=True, text=True)
         if result.returncode != 0:
             pass
         else:
             print(f"{LOG_PFX}: Removed existing KWin script.", flush=True)
 
         # Install the KWin script
+        cmd_lst = [kpackagetool_cmd, '-t', 'KWin/Script', '-i', script_tmp_file]
         try:
-            subprocess.run(
-                ['kpackagetool5', '-t', 'KWin/Script', '-i', script_tmp_file],
-                check=True, capture_output=True, text=True)
-            print(f"{LOG_PFX}: Installed the KWin script.")
+            subprocess.run(cmd_lst, check=True, capture_output=True, text=True)
+            print(f"{LOG_PFX}: Installed the KWin script.", flush=True)
         except subprocess.CalledProcessError as proc_err:
             error(f"{LOG_PFX}: Error installing the KWin script. The error was:\n\t{proc_err.stderr}")
 
@@ -200,11 +287,10 @@ def main():
         except (FileNotFoundError, PermissionError): pass
 
         # Keep the script enabled after restart using kwriteconfig5 to kwinrc file
+        cmd_lst = [kwriteconfig_cmd, '--file', 'kwinrc', '--group', 'Plugins', '--key',
+                f'{kwin_script_name}Enabled', 'true']
         try:
-            subprocess.run(
-                ['kwriteconfig5', '--file', 'kwinrc', '--group', 'Plugins', '--key',
-                f'{kwin_script_name}Enabled', 'true'],
-                check=True, capture_output=True, text=True)
+            subprocess.run(cmd_lst, check=True, capture_output=True, text=True)
             print(f"{LOG_PFX}: Enabled the KWin script.", flush=True)
         except subprocess.CalledProcessError as proc_err:
             error(f"{LOG_PFX}: Error enabling the KWin script. The error was:\n\t{proc_err.stderr}")
