@@ -316,7 +316,7 @@ def enable_prompt_for_reboot():
 
 def show_task_completed_msg():
     """Utility function to show a standard message after each major section completes"""
-    print(fancy_str(' >> Task completed successfully << ', 'green', bold=True))
+    print(fancy_str('   >> Task completed successfully <<   ', 'green', bold=True))
 
 
 def dot_Xmodmap_warning():
