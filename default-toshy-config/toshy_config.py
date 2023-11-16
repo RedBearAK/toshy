@@ -104,8 +104,10 @@ debug(cnfg, ctx="CG")
 # MANUALLY set any environment information if the auto-identification isn't working:
 OVERRIDE_DISTRO_NAME     = None
 OVERRIDE_DISTRO_VER      = None
+OVERRIDE_VARIANT_ID      = None
 OVERRIDE_SESSION_TYPE    = None
 OVERRIDE_DESKTOP_ENV     = None
+OVERRIDE_DE_MAJ_VER      = None
 
 ###  SLICE_MARK_END: env_overrides  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 ###################################################################################################
@@ -113,22 +115,27 @@ OVERRIDE_DESKTOP_ENV     = None
 # leave all of this alone!
 DISTRO_NAME     = None
 DISTRO_VER      = None
+VARIANT_ID      = None
 SESSION_TYPE    = None
 DESKTOP_ENV     = None
+DE_MAJ_VER      = None
 
 env_info: Dict[str, str] = lib.env.get_env_info()   # Returns a dict
 
-DISTRO_NAME     = OVERRIDE_DISTRO_NAME  or env_info.get('DISTRO_NAME')
-DISTRO_VER      = OVERRIDE_DISTRO_VER   or env_info.get('DISTRO_VER')
-SESSION_TYPE    = OVERRIDE_SESSION_TYPE or env_info.get('SESSION_TYPE')
-DESKTOP_ENV     = OVERRIDE_DESKTOP_ENV  or env_info.get('DESKTOP_ENV')
+DISTRO_NAME     = locals().get('OVERRIDE_DISTRO_NAME')  or env_info.get('DISTRO_NAME', 'keymissing')
+DISTRO_VER      = locals().get('OVERRIDE_DISTRO_VER')   or env_info.get('DISTRO_VER', 'keymissing')
+VARIANT_ID      = locals().get('OVERRIDE_VARIANT_ID')   or env_info.get('VARIANT_ID', 'keymissing')
+SESSION_TYPE    = locals().get('OVERRIDE_SESSION_TYPE') or env_info.get('SESSION_TYPE', 'keymissing')
+DESKTOP_ENV     = locals().get('OVERRIDE_DESKTOP_ENV')  or env_info.get('DESKTOP_ENV', 'keymissing')
+DE_MAJ_VER      = locals().get('OVERRIDE_DE_MAJ_VER')   or env_info.get('DE_MAJ_VER', 'keymissing')
 
 debug("")
 debug(  f'Toshy config sees this environment:'
         f'\n\t{DISTRO_NAME      = }'
         f'\n\t{DISTRO_VER       = }'
         f'\n\t{SESSION_TYPE     = }'
-        f'\n\t{DESKTOP_ENV      = }\n', ctx="CG")
+        f'\n\t{DESKTOP_ENV      = }'
+        f'\n\t{DE_MAJ_VER       = }\n', ctx="CG")
 
 try:
     # Pylance will complain if function undefined, without 'ignore' comment
@@ -1010,6 +1017,17 @@ def notify_context():
         # Optionally, also send a system notification:
         # ntfy.send_notification(message)
     return _notify_context
+
+
+def is_pre_GNOME_45(de_ver):
+    def _is_pre_GNOME_45(ctx):
+        if DESKTOP_ENV == 'gnome':
+            try:
+                return int(de_ver) in [44, 43, 42, 41, 40, 3]
+            except ValueError:
+                pass    # fall through to return False
+        return False
+    return _is_pre_GNOME_45
 
 
 
@@ -3842,8 +3860,17 @@ keymap("GenGUI overrides: Deepin", {
     C("RC-H"):                  C("Super-n"),                   # Default SL - Minimize app (deepin)
     C("Alt-RC-Space"):          C("Super-e"),                   # Open Finder - (deepin)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'deepin' )
+
+
+keymap("GenGUI overrides: pre-GNOME 45 fix", {
+    C("RC-Space"):             [iEF2NT(),C("Super-s")],         # Override GNOME 45+ Key.LEFT_META remap
+}, when = lambda ctx: 
+        matchProps(not_lst=remotes_lod)(ctx) and 
+        is_pre_GNOME_45(DE_MAJ_VER)(ctx)
+)
+
 keymap("GenGUI overrides: GNOME", {
-    C("RC-Space"):             [iEF2NT(),C("Super-s")],         # Show GNOME overview/app launcher
+    C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # Show GNOME overview/app launcher
     C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,elementary)
     C("RC-Super-f"):            C("Alt-F10"),                   # Default SL - Maximize app (gnome/kde)
     C("RC-H"):                  C("Super-h"),                   # Default SL - Minimize app (gnome/budgie/popos/fedora) not-deepin
@@ -3852,6 +3879,7 @@ keymap("GenGUI overrides: GNOME", {
     C("RC-Shift-Key_4"):        C("Alt-Print"),                 # Take a screenshot of a window (gnome)
     C("RC-Shift-Key_5"):        C("Print"),                     # Take a screenshot interactively (gnome)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'gnome' )
+
 keymap("GenGUI overrides: IceWM", {
     C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # IceWM: Win95Keys=1 (Meta shows menu)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'icewm' )

@@ -6,6 +6,7 @@ import re
 import sys
 import pwd
 import grp
+import json
 import random
 import string
 import signal
@@ -15,6 +16,7 @@ import argparse
 import datetime
 import platform
 import textwrap
+import builtins
 import subprocess
 
 from subprocess import DEVNULL, PIPE
@@ -23,6 +25,21 @@ from typing import Dict
 # local import
 import lib.env as env
 from lib.logger import debug, error, warn, info
+from lib import logger
+
+logger.FLUSH = True
+
+# Save the original print function
+original_print = builtins.print
+
+# Override the print function
+def print(*args, **kwargs):
+    kwargs['flush'] = True  # Set flush to True
+#    original_print("Using custom print:", *args, **kwargs)  # Call the original print
+    original_print(*args, **kwargs)  # Call the original print
+
+# Replace the built-in print with our custom print
+builtins.print = print
 
 if os.name == 'posix' and os.geteuid() == 0:
     error("This app should not be run as root/superuser. Exiting.")
@@ -115,8 +132,10 @@ class InstallerSettings:
         self.override_distro        = None
         self.DISTRO_NAME            = None
         self.DISTRO_VER: str        = ""
+        self.VARIANT_ID             = None
         self.SESSION_TYPE           = None
         self.DESKTOP_ENV            = None
+        self.DE_MAJ_VER: str        = ""
 
         self.distro_mjr_ver: str    = ""
         self.distro_mnr_ver: str    = ""
@@ -137,6 +156,8 @@ class InstallerSettings:
 
         self.py_interp_ver          = f'{py_ver_mjr}.{py_ver_mnr}'
         self.py_interp_path         = shutil.which('python3')
+
+        self.KDE_ver                = '5'   # default to KDE 5 tools unless overridden
 
         self.toshy_dir_path         = os.path.join(home_dir, '.config', 'toshy')
         self.db_file_name           = 'toshy_user_preferences.sqlite'
@@ -233,10 +254,12 @@ def get_environment_info():
     if cnfg.override_distro:
         cnfg.DISTRO_NAME    = str(cnfg.override_distro).casefold()
     else:
-        cnfg.DISTRO_NAME    = str(env_info_dct.get('DISTRO_NAME',  'keymissing')).casefold()
-    cnfg.DISTRO_VER     = str(env_info_dct.get('DISTRO_VER',   'keymissing')).casefold()
-    cnfg.SESSION_TYPE   = str(env_info_dct.get('SESSION_TYPE', 'keymissing')).casefold()
-    cnfg.DESKTOP_ENV    = str(env_info_dct.get('DESKTOP_ENV',  'keymissing')).casefold()
+        cnfg.DISTRO_NAME    = str(env_info_dct.get('DISTRO_NAME',   'keymissing')).casefold()
+    cnfg.DISTRO_VER     = str(env_info_dct.get('DISTRO_VER',    'keymissing')).casefold()
+    cnfg.VARIANT_ID     = str(env_info_dct.get('VARIANT_ID',    'keymissing')).casefold()
+    cnfg.SESSION_TYPE   = str(env_info_dct.get('SESSION_TYPE',  'keymissing')).casefold()
+    cnfg.DESKTOP_ENV    = str(env_info_dct.get('DESKTOP_ENV',   'keymissing')).casefold()
+    cnfg.DE_MAJ_VER     = str(env_info_dct.get('DE_MAJ_VER',    'keymissing')).casefold()
 
     # split out the major version from the minor version, if there is one
     distro_ver_parts            = cnfg.DISTRO_VER.split('.') if cnfg.DISTRO_VER else []
@@ -244,10 +267,12 @@ def get_environment_info():
     cnfg.distro_mnr_ver         = distro_ver_parts[1] if len(distro_ver_parts) > 1 else 'no_mnr_ver'
 
     debug('Toshy installer sees this environment:'
-        f"\n\t DISTRO_NAME  = '{cnfg.DISTRO_NAME}'"
-        f"\n\t DISTRO_VER   = '{cnfg.DISTRO_VER}'"
-        f"\n\t SESSION_TYPE = '{cnfg.SESSION_TYPE}'"
-        f"\n\t DESKTOP_ENV  = '{cnfg.DESKTOP_ENV}'"
+        f"\n\t DISTRO_NAME      = '{cnfg.DISTRO_NAME}'"
+        f"\n\t DISTRO_VER       = '{cnfg.DISTRO_VER}'"
+        f"\n\t VARIANT_ID       = '{cnfg.VARIANT_ID}'"
+        f"\n\t SESSION_TYPE     = '{cnfg.SESSION_TYPE}'"
+        f"\n\t DESKTOP_ENV      = '{cnfg.DESKTOP_ENV}'"
+        f"\n\t DE_MAJ_VER       = '{cnfg.DE_MAJ_VER}'"
         # '\n', ctx='EV')
         '', ctx='EV')
 
@@ -291,7 +316,7 @@ def enable_prompt_for_reboot():
 
 def show_task_completed_msg():
     """Utility function to show a standard message after each major section completes"""
-    print(fancy_str(' >> Task completed successfully << ', 'green', bold=True))
+    print(fancy_str('   >> Task completed successfully <<   ', 'green', bold=True))
 
 
 def dot_Xmodmap_warning():
@@ -361,13 +386,9 @@ def elevate_privileges():
     subprocess.run(['sudo', 'bash', '-c', 'echo -e "\nUsing elevated privileges..."'], check=True)
 
 
-def do_kwin_reconfigure():
-    """Utility function to run the KWin reconfigure command"""
-    try:
-        subprocess.run([cnfg.qdbus, 'org.kde.KWin', '/KWin', 'reconfigure'],
-                        check=True, stderr=DEVNULL, stdout=DEVNULL)
-    except subprocess.CalledProcessError as proc_err:
-        error(f'Error while running KWin reconfigure.\n\t{proc_err}')
+#####################################################################################################
+###   START OF NATIVE PACKAGE INSTALLER SECTION
+#####################################################################################################
 
 
 distro_groups_map = {
@@ -563,7 +584,7 @@ def exit_with_invalid_distro_error(pkg_mgr_err=None):
 
 
 class DistroQuirksHandler:
-    """Object to contain static methods for prepping specific distro variants that
+    """Object to contain methods for prepping specific distro variants that
         need some extra prep work before installing the native package list"""
 
     def __init__(self) -> None:
@@ -850,20 +871,24 @@ def install_distro_pkgs():
             native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
             return  # no need to continue after this
 
-        # do extra prep/checks if distro is CentOS 7
-        if cnfg.DISTRO_NAME in ['centos'] and cnfg.distro_mjr_ver == '7':
-            quirks_handler.handle_quirks_CentOS_7()
-
-        # do extra prep/checks if distro is CentOS Stream 8
-        if cnfg.DISTRO_NAME in ['centos'] and cnfg.distro_mjr_ver == '8':
-            quirks_handler.handle_quirks_CentOS_Stream_8()
-
         # do extra stuff only if distro is a RHEL type (not Fedora type)
         if cnfg.DISTRO_NAME in distro_groups_map['rhel-based']:
-            quirks_handler.handle_quirks_RHEL()
 
-        # finally, do the install of the main list of packages for Fedora/RHEL distro types
-        if cnfg.DISTRO_NAME in distro_groups_map['rhel-based'] + distro_groups_map['fedora-based']:
+            # do extra prep/checks if distro is CentOS 7
+            if cnfg.DISTRO_NAME in ['centos'] and cnfg.distro_mjr_ver == '7':
+                quirks_handler.handle_quirks_CentOS_7()
+
+            # do extra prep/checks if distro is CentOS Stream 8
+            if cnfg.DISTRO_NAME in ['centos'] and cnfg.distro_mjr_ver == '8':
+                quirks_handler.handle_quirks_CentOS_Stream_8()
+
+            quirks_handler.handle_quirks_RHEL()
+            cmd_lst = ['sudo', 'dnf', 'install', '-y']
+            native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+            return  # no need to continue after this
+
+        if cnfg.DISTRO_NAME in distro_groups_map['fedora-based']:
+            # TODO: insert check to see if a Fedora distro is actually an immutable (rpm-ostree)
             cmd_lst = ['sudo', 'dnf', 'install', '-y']
             native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
@@ -915,8 +940,11 @@ def install_distro_pkgs():
         cmd_lst = ['sudo', 'eopkg', 'install', '-y']
         native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
+    ###########################################################################
+    ###  PACKAGE MANAGER DISPATCHER  ##########################################
+    ###########################################################################
     # map installer sub-functions to each pkg mgr distro list
-    pkg_mgr_dispatch = {
+    pkg_mgr_dispatch_map = {
         tuple(rpmostree_distros):       install_on_rpmostree_distro,
         tuple(dnf_distros):             install_on_dnf_distro,
         tuple(zypper_distros):          install_on_zypper_distro,
@@ -927,7 +955,7 @@ def install_distro_pkgs():
     }
 
     # Determine the correct installation function
-    for distro_list, installer_function in pkg_mgr_dispatch.items():
+    for distro_list, installer_function in pkg_mgr_dispatch_map.items():
         if cnfg.DISTRO_NAME in distro_list:
             installer_function()
             native_pkg_installer.show_pkg_install_success_msg()
@@ -1478,69 +1506,147 @@ def install_desktop_apps():
     show_task_completed_msg()
 
 
+def do_kwin_reconfigure():
+    """Utility function to run the KWin reconfigure command"""
+
+    commands = ['dbus-send', 'gdbus', cnfg.qdbus]
+
+    for cmd in commands:
+        if shutil.which(cmd):
+            break
+    else:
+        error(f'No expected D-Bus command available. Cannot do KWin reconfigure.')
+        return
+
+    if shutil.which('dbus-send'):
+        try:
+            cmd_lst = [ 'dbus-send', '--type=method_call',
+                        '--dest=org.kde.KWin', '/KWin',
+                        'org.kde.KWin.reconfigure']
+            subprocess.run(cmd_lst, check=True, stderr=DEVNULL, stdout=DEVNULL)
+            return
+        except subprocess.CalledProcessError as proc_err:
+            error(f'Problem using "dbus-send" to do KWin reconfigure.\n\t{proc_err}')
+
+    if shutil.which('gdbus'):
+        try:
+            cmd_lst = [ 'gdbus', 'call', '--session', 
+                        '--dest', 'org.kde.KWin',
+                        '--object-path', '/KWin', 
+                        '--method', 'org.kde.KWin.reconfigure']
+            subprocess.run(cmd_lst, check=True, stderr=DEVNULL, stdout=DEVNULL)
+            return
+        except subprocess.CalledProcessError as proc_err:
+            error(f'Problem using "gdbus" to do KWin reconfigure.\n\t{proc_err}')
+
+    if shutil.which(cnfg.qdbus):
+        try:
+            cmd_lst = [cnfg.qdbus, 'org.kde.KWin', '/KWin', 'reconfigure']
+            subprocess.run(cmd_lst, check=True, stderr=DEVNULL, stdout=DEVNULL)
+            return
+        except subprocess.CalledProcessError as proc_err:
+            error(f'Problem using "{cnfg.qdbus}" to do KWin reconfigure.\n\t{proc_err}')
+
+    error(f'Failed to do KWin reconfigure. No available D-Bus utility worked.')
+
+
 def setup_kwin2dbus_script():
     """Install the KWin script to notify D-Bus service about window focus changes"""
     print(f'\n\n§  Setting up the Toshy KWin script...\n{cnfg.separator}')
-    if not shutil.which('kpackagetool5') or not shutil.which('kwriteconfig5'):
-        print(f'One or more KDE CLI tools not found. Assuming older KDE...')
+
+    if cnfg.DESKTOP_ENV == 'kde':
+        KDE_ver = cnfg.DE_MAJ_VER
+    else:
+        error("ERROR: Asked to install Toshy KWin script, but DE is not KDE.")
         return
-    
-    kwin_script_name    = 'toshy-dbus-notifyactivewindow'
-    kwin_script_path    = os.path.join( cnfg.toshy_dir_path,
-                                        'kde-kwin-dbus-service', kwin_script_name)
-    script_tmp_file     = f'{cnfg.run_tmp_dir}/{kwin_script_name}.kwinscript'
+
+    if KDE_ver not in ['6', '5', '4']:
+        error("ERROR: Toshy KWin script cannot be installed.")
+        error(f"KDE major version invalid: '{KDE_ver}'")
+        return
+
+    if KDE_ver == '4':
+        print('KDE 4 is not Wayland compatible. Toshy KWin script unnecessary.')
+        return
+
+    kpackagetool_cmd        = f'kpackagetool{KDE_ver}'
+    kwriteconfig_cmd        = f'kwriteconfig{KDE_ver}'
+
+    kwin_script_name        = 'toshy-dbus-notifyactivewindow'
+    kwin_script_path        = os.path.join( cnfg.toshy_dir_path,
+                                            'kde-kwin-script',
+                                            f'kde{KDE_ver}',
+                                            kwin_script_name)
+    kwin_script_tmp_file    = f'{cnfg.run_tmp_dir}/{kwin_script_name}.kwinscript'
+    curr_script_path        = os.path.join( home_dir,
+                                            '.local',
+                                            'share',
+                                            'kwin',
+                                            'scripts',
+                                            kwin_script_name)
 
     # Create a zip file (overwrite if it exists)
-    with zipfile.ZipFile(script_tmp_file, 'w') as zipf:
+    with zipfile.ZipFile(kwin_script_tmp_file, 'w') as zipf:
         # Add main.js to the kwinscript package
         zipf.write(os.path.join(kwin_script_path, 'contents', 'code', 'main.js'),
                                 arcname='contents/code/main.js')
         # Add metadata.desktop to the kwinscript package
         zipf.write(os.path.join(kwin_script_path, 'metadata.json'), arcname='metadata.json')
 
-    # Try to remove any installed KWin script entirely
-    process = subprocess.Popen(
-        ['kpackagetool5', '-t', 'KWin/Script', '-r', kwin_script_name],
-        stdout=PIPE, stderr=PIPE)
-    out, err = process.communicate()
-    out = out.decode('utf-8')
-    err = err.decode('utf-8')
-    result = subprocess.CompletedProcess(args=process.args, returncode=process.returncode,
-                                            stdout=out, stderr=err)
+    # Try to remove existing KWin script, only if it exists
+    if os.path.exists(curr_script_path):
+        # Try to remove any installed KWin script entirely
+        process = subprocess.Popen(
+            [kpackagetool_cmd, '-t', 'KWin/Script', '-r', kwin_script_name],
+            stdout=PIPE, stderr=PIPE)
+        out, err = process.communicate()
+        out = out.decode('utf-8')
+        err = err.decode('utf-8')
+        result = subprocess.CompletedProcess(   args=process.args,
+                                                returncode=process.returncode,
+                                                stdout=out, stderr=err)
 
-    if result.returncode != 0:
-        pass
-    else:
-        print("Successfully removed existing KWin script.")
+        if result.returncode != 0:
+            error("Problem while uninstalling existing Toshy KWin script.")
+            try:
+                shutil.rmtree(curr_script_path)
+                print(f'Removed existing Toshy KWin script folder (if any).')
+            except (FileNotFoundError, PermissionError) as file_err:
+                error(f'Problem removing existing KWin script folder:\n\t{file_err}')
+                # safe_shutdown(1)
+        else:
+            print("Successfully removed existing Toshy KWin script.")
 
     # Install the KWin script
-    process = subprocess.Popen(
-        ['kpackagetool5', '-t', 'KWin/Script', '-i', script_tmp_file],
-        stdout=PIPE, stderr=PIPE)
+    cmd_lst = [kpackagetool_cmd, '-t', 'KWin/Script', '-i', kwin_script_tmp_file]
+    process = subprocess.Popen(cmd_lst, stdout=PIPE, stderr=PIPE)
     out, err = process.communicate()
     out = out.decode('utf-8')
     err = err.decode('utf-8')
-    result = subprocess.CompletedProcess(args=process.args, returncode=process.returncode,
+    result = subprocess.CompletedProcess(   args=process.args,
+                                            returncode=process.returncode,
                                             stdout=out, stderr=err)
 
     if result.returncode != 0:
-        error(f"Error installing the KWin script. The error was:\n\t{result.stderr}")
+        error(f"Error installing the Toshy KWin script. The error was:\n\t{result.stderr}")
+        safe_shutdown(1)
     else:
-        print("Successfully installed the KWin script.")
+        print("Successfully installed the Toshy KWin script.")
 
     # Remove the temporary kwinscript file
     try:
-        os.remove(script_tmp_file)
+        os.remove(kwin_script_tmp_file)
     except (FileNotFoundError, PermissionError): pass
 
-    # Enable the script using kwriteconfig5
-    process = subprocess.Popen(
-        [   'kwriteconfig5', '--file', 'kwinrc', '--group', 'Plugins', '--key',
-            f'{kwin_script_name}Enabled', 'true'], stdout=PIPE, stderr=PIPE)
+    # Enable the KWin script
+    cmd_lst = [kwriteconfig_cmd, '--file', 'kwinrc', '--group', 'Plugins', '--key',
+            f'{kwin_script_name}Enabled', 'true']
+    process = subprocess.Popen(cmd_lst, stdout=PIPE, stderr=PIPE)
     out, err = process.communicate()
     out = out.decode('utf-8')
     err = err.decode('utf-8')
-    result = subprocess.CompletedProcess(args=process.args, returncode=process.returncode,
+    result = subprocess.CompletedProcess(   args=process.args,
+                                            returncode=process.returncode,
                                             stdout=out, stderr=err)
 
     if result.returncode != 0:
@@ -1658,22 +1764,42 @@ def autostart_tray_icon():
 
 def apply_tweaks_GNOME():
     """Utility function to add desktop tweaks to GNOME"""
-    # Disable GNOME `overlay-key` binding to Meta/Super/Win/Cmd
-    # gsettings set org.gnome.mutter overlay-key ''
-    subprocess.run(['gsettings', 'set', 'org.gnome.mutter', 'overlay-key', ''])
 
-    print(f'Disabled Super key opening the GNOME overview. (Use Cmd+Space instead.)')
+    # TODO: Decide if we should re-enable the toggle-overview shortcut and change default config
+    # for GNOME 45 and later. Find out if toggle-overview will be dropped(!) at some point. 
 
-    # TODO: Fix this so it doesn't mess up task switching on Apple keyboards (when set to Super+Tab)
-    # # Set the keyboard shortcut for "Switch applications" to "Alt+Tab"
-    # # gsettings set org.gnome.desktop.wm.keybindings switch-applications "['<Alt>Tab']"
-    # subprocess.run(['gsettings', 'set', 'org.gnome.desktop.wm.keybindings',
-    #                 'switch-applications', "['<Alt>Tab']"])
-    # # Set the keyboard shortcut for "Switch windows of an application" to "Alt+`" (Alt+Grave)
-    # # gsettings set org.gnome.desktop.wm.keybindings switch-group "['<Alt>grave']"
-    # subprocess.run(['gsettings', 'set', 'org.gnome.desktop.wm.keybindings',
-    #                 'switch-group', "['<Alt>grave']"])
-    # print(f'Enabled "Switch applications" Mac-like task switching.')
+    # # How to check the existing toggle-overview shortcut:
+    # # gsettings get org.gnome.shell.keybindings toggle-overview
+    # # Will return something like: ['<Shift><Control>space']
+    # get_oview_shortcut_cmd = ['gsettings', 'get', 'org.gnome.shell.keybindings', 'toggle-overview']
+    # try:
+    #     # Capture the current shortcut setting
+    #     curr_oview_shortcut_str = subprocess.check_output(get_oview_shortcut_cmd, text=True).strip()
+    #     # Parse the JSON-formatted string into a Python list
+    #     curr_oview_shortcut_lst = json.loads(curr_oview_shortcut_str)
+    #     # Check if the shortcut is unset
+    #     if curr_oview_shortcut_lst == ['']:
+    #         # It's unset, so we define the shortcut we want to set
+    #         new_oview_shortcut_str = '<Alt>F1'
+    #         set_oview_shortcut_cmd = [  'gsettings', 'set', 'org.gnome.shell.keybindings',
+    #                                     'toggle-overview', json.dumps([new_oview_shortcut_str])]
+    #         # Set the desired shortcut
+    #         subprocess.run(set_oview_shortcut_cmd, check=True)
+    #         print(f"Set 'toggle-overview' shortcut to {new_oview_shortcut_str}.")
+    #     else:
+    #         print(f"'toggle-overview' shortcut is already set to {curr_oview_shortcut_str}.")
+    # except subprocess.CalledProcessError as proc_err:
+    #     error(f'Problem while checking or setting the toggle-overview shortcut.\n\t{proc_err}')
+
+    # Stop disabling overlay-key on GNOME 45 and later (toggle-overview is no longer set)
+    if cnfg.DE_MAJ_VER in ['44', '43', '42', '41', '40', '3']:
+        # Disable GNOME `overlay-key` binding to Meta/Super/Win/Cmd
+        # gsettings set org.gnome.mutter overlay-key ''
+        cmd_lst = ['gsettings', 'set', 'org.gnome.mutter', 'overlay-key', '']
+        subprocess.run(cmd_lst)
+        print(f'Disabled Super key opening the GNOME overview. (Use Cmd+Space instead.)')
+    else:
+        print(f'NOTICE: Toshy not disabling overlay-key on GNOME 45 or later.')
 
     # Enable keyboard shortcut for GNOME Terminal preferences dialog
     # gsettings set org.gnome.Terminal.Legacy.Keybindings:/org/gnome/terminal/legacy/keybindings/ preferences '<Control>less'
@@ -1711,14 +1837,40 @@ def remove_tweaks_GNOME():
 def apply_tweaks_KDE():
     """Utility function to add desktop tweaks to KDE"""
 
-    if not shutil.which('kwriteconfig5'):
-        print(f'KDE 5.x tools not present. Skipping KDE tweaks.')
+    if cnfg.DESKTOP_ENV == 'kde':
+        KDE_ver = cnfg.DE_MAJ_VER
+    else:
+        error("ERROR: Asked to apply KDE tweaks, but DE is not KDE.")
         return
+
+    # check that major release ver from env module is rational
+    if KDE_ver not in ['6', '5', '4']:
+        error("ERROR: Desktop tweaks for KDE cannot be applied.")
+        error(f"KDE major version invalid: '{KDE_ver}'")
+        return
+
+    if KDE_ver == '4':
+        print('No tweaks available for KDE 4.')
+        return
+
+    kstart_cmd          = f'kstart{KDE_ver}'
+
+    if not shutil.which(kstart_cmd):
+        # try just 'kstart' on KDE 6 if there is no 'kstart6'
+        if shutil.which('kstart'):
+            kstart_cmd          = 'kstart'
+        # if no 'kstart', fall back to 'kstart5' if it exists
+        elif shutil.which('kstart5'):
+            kstart_cmd          = 'kstart5'
+
+    kquitapp_cmd        = f'kquitapp{KDE_ver}'
+    kwriteconfig_cmd    = f'kwriteconfig{KDE_ver}'
 
     # Documentation on the use of Meta key in KDE:
     # https://userbase.kde.org/Plasma/Tips#Windows.2FMeta_Key
-    subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group',
-                    'ModifierOnlyShortcuts', '--key', 'Meta', ''], check=True)
+    subprocess.run([kwriteconfig_cmd, '--file', 'kwinrc',
+                    '--group', 'ModifierOnlyShortcuts',
+                    '--key', 'Meta', ''], check=True)
     print(f'Disabled Meta key opening application menu. (Use Cmd+Space instead.)')
 
     # Run reconfigure command
@@ -1777,20 +1929,26 @@ def apply_tweaks_KDE():
         do_kwin_reconfigure()
 
         # Set the LayoutName value to big_icons (shows task switcher with large icons, no previews)
-        LayoutName_cmd = ['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox',
-                            '--key', 'LayoutName', 'big_icons']
+        LayoutName_cmd          = [ kwriteconfig_cmd,
+                                    '--file', 'kwinrc',
+                                    '--group', 'TabBox',
+                                    '--key', 'LayoutName', 'big_icons']
         subprocess.run(LayoutName_cmd, check=True)
         print(f'Set task switcher style to: "Large Icons"')
 
         # Set the HighlightWindows value to false (disables "Show selected window" option)
-        HighlightWindows_cmd = ['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox',
-                                '--key', 'HighlightWindows', 'false']
+        HighlightWindows_cmd    = [ kwriteconfig_cmd,
+                                    '--file', 'kwinrc',
+                                    '--group', 'TabBox',
+                                    '--key', 'HighlightWindows', 'false']
         subprocess.run(HighlightWindows_cmd, check=True)
         print(f'Disabled task switcher option: "Show selected window"')
 
         # Set the ApplicationsMode value to 1 (enables "Only one window per application" option)
-        ApplicationsMode_cmd = ['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox',
-                                '--key', 'ApplicationsMode', '1']
+        ApplicationsMode_cmd    = [ kwriteconfig_cmd,
+                                    '--file', 'kwinrc',
+                                    '--group', 'TabBox',
+                                    '--key', 'ApplicationsMode', '1']
         subprocess.run(ApplicationsMode_cmd, check=True)
         print(f'Enabled task switcher option: "Only one window per application"')
 
@@ -1798,58 +1956,73 @@ def apply_tweaks_KDE():
 
         # Disable single click to open/launch files/folders:
         # kwriteconfig5 --file kdeglobals --group KDE --key SingleClick false
-        SingleClick_cmd = ['kwriteconfig5', '--file', 'kdeglobals', '--group', 'KDE',
-                            '--key', 'SingleClick', 'false']
+        SingleClick_cmd         = [ kwriteconfig_cmd,
+                                    '--file', 'kdeglobals',
+                                    '--group', 'KDE',
+                                    '--key', 'SingleClick', 'false']
         subprocess.run(SingleClick_cmd, check=True)
         print('Disabled single-click to open/launch files/folders')
 
-        # Restart Plasma shell to make the new setting active
-        # killall plasmashell && kstart5 plasmashell
-        try:
-            if shutil.which('kquitapp5'):
-                print('Stopping Plasma shell... ', flush=True, end='')
-                subprocess.run(['kquitapp5', 'plasmashell'], check=True,
-                                stdout=PIPE, stderr=PIPE)
-                print('Plasma shell stopped.')
+        if shutil.which(kstart_cmd):
+            plasmashell_stopped = False
+            # Restart Plasma shell to make the new setting active
+            # kquitapp5/6 plasmashell && kstart5/6 plasmashell
+            try:
+                if shutil.which(kquitapp_cmd):
+                    print('Stopping Plasma shell... ', flush=True, end='')
+                    subprocess.run([kquitapp_cmd, 'plasmashell'], check=True,
+                                    stdout=PIPE, stderr=PIPE)
+                    print('Plasma shell stopped.')
+                    plasmashell_stopped = True
+                else:
+                    error(f'The "{kquitapp_cmd}" command is missing. Skipping plasmashell restart.')
+            except subprocess.CalledProcessError as proc_err:
+                err_output: bytes = proc_err.stderr             # type hint error output
+                error(f'\nProblem while stopping Plasma shell:\n\t{err_output.decode()}')
+            if plasmashell_stopped:
+                print('Starting Plasma shell (backgrounded)... ')
+                subprocess.Popen([kstart_cmd, 'plasmashell'], stdout=PIPE, stderr=PIPE)
             else:
-                error('The "kquitapp5" command is not found. Skipping plasmashell restart.')
-        except subprocess.CalledProcessError as proc_err:
-            err_output: bytes = proc_err.stderr             # type hint error output
-            error(f'\nProblem while stopping Plasma shell:\n\t{err_output.decode()}')
-
-        print('Starting Plasma shell (backgrounded)... ')
-        subprocess.Popen(['kstart5', 'plasmashell'], stdout=PIPE, stderr=PIPE)
-
-        # THIS STUFF DOESN'T SEEM TO WORK!
-        # Disable "sort folders first" option in Dolphin:
-        # kwriteconfig5 --file dolphinrc --group General --key FirstSortingFolders false
-        # kwriteconfig5 --file kdeglobals --group "KFileDialog Settings" --key "Sort directories first" false 
-        # FirstSortingFolders_cmd = ['kwriteconfig5', '--file', 'dolphinrc',
-        #                             '--group', 'General',
-        #                             '--key', 'FirstSortingFolders', 'false']
-        # subprocess.run(FirstSortingFolders_cmd, check=True)
-        # print('Disabled "sort folders first" option in Dolphin.')
-        # # kquitapp5 dolphin && dolphin &
-        # print('Restarting Dolphin file manager...')
-        # try:
-        #     subprocess.run(['kquitapp5', 'dolphin'], check=True)
-        #     subprocess.Popen('dolphin')
-        #     print('Dolphin file manager restarted.')
-        # except subprocess.CalledProcessError as proc_err:
-        #     error(f'Problem restarting Dolphin file manager:\n\t{proc_err}')
+                error('Plasma shell was not stopped. Skipping restarting Plasma shell.')
+                print('You should probably log out or restart.')
+        else:
+            error(f'The "{kstart_cmd}" command is missing. Skipping restarting Plasma shell.')
+            print('You should probably log out or restart.')
 
 
 def remove_tweaks_KDE():
     """Utility function to remove the tweaks applied to KDE"""
-    if not shutil.which('kwriteconfig5'):
+
+    if cnfg.DESKTOP_ENV == 'kde':
+        KDE_ver = cnfg.DE_MAJ_VER
+    else:
+        error("ERROR: Asked to remove KDE tweaks, but DE is not KDE.")
         return
 
+    # check that major release ver from env module is rational
+    if KDE_ver not in ['6', '5', '4']:
+        error("ERROR: Desktop tweaks for KDE cannot be removed.")
+        error(f"KDE major version invalid: '{KDE_ver}'")
+        return
+
+    if KDE_ver == '4':
+        print('No tweaks were applied for KDE 4. Nothing to remove.')
+        return
+
+    kwriteconfig_cmd    = f'kwriteconfig{KDE_ver}'
+
     # Re-enable Meta key opening the application menu
-    subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group',
-                    'ModifierOnlyShortcuts', '--key', 'Meta', '--delete'], check=True)
+    subprocess.run([kwriteconfig_cmd,
+                    '--file', 'kwinrc',
+                    '--group', 'ModifierOnlyShortcuts',
+                    '--key', 'Meta', '--delete'],
+                    check=True)
     # Disable the "Only one window per application" task switcher option
-    subprocess.run(['kwriteconfig5', '--file', 'kwinrc', '--group', 'TabBox', 
-                    '--key', 'ApplicationsMode', '--delete'], check=True)
+    subprocess.run([kwriteconfig_cmd,
+                    '--file', 'kwinrc',
+                    '--group', 'TabBox', 
+                    '--key', 'ApplicationsMode', '--delete'],
+                    check=True)
 
     # Run reconfigure command
     do_kwin_reconfigure()

@@ -26,8 +26,6 @@ Go to this FAQ entry for more info:
 
 Other possible issues:  
 
-- **NEW**: GNOME 45 shortcuts changed. See the [FAQ entry](#gnome-45-new-quick-settings-shortcut) on how to fix the Cmd+Space shortcut. 
-
 - May have issues installing on distros not on the "tested" list below. Try the `--list-distros` and `--override-distro` options (separately) with the installer, if you think your distro is closely related to one on the list.  
 
 - May seem to run at login, but not do any remapping, needing `toshy-config-verbose-start` in the terminal to troubleshoot. Or, it may just need a restart of the services from the tray icon or with `toshy-services-restart`. Check the output of `toshy-services-log` and `toshy-services-status` first to see if there is an obvious error message that explains the problem. Like not having a compatible GNOME Shell extension installed/enabled to support a Wayland+GNOME session.  
@@ -1056,28 +1054,6 @@ If you want to task-switch more like macOS, set the "Switch applications" shortc
 Note that this will also change the appearance and function of the task-switcher dialog that appears when you use the corresponding shortcut. The "Switch applications" shortcut is like the macOS task-switcher, it shows one large application icon for each group of windows belonging to the same "application". The "Switch windows" shortcut will show a task-switcher dialog that has a preview icon for every **_window_** open on the current workspace, similar to Windows and Linux desktop environments like KDE Plasma. The "large icons" task-switcher tends to have far fewer items and be easier to navigate visually. Just like on macOS, the equivalent of `Cmd+Grave` can be used to switch windows of the same application.  
 
 Which task-switching style works for you is down to personal preference, and how well you like the macOS style of task-switching with `Cmd+Tab`.  
-
-### GNOME 45 new Quick Settings shortcut
-
-GNOME 45 has changed what the Super+S shortcut does. In most distros it would open the Overview in earlier GNOME versions, so the Toshy config has a remap for this (inherited from Kinto). Strangely, the "Show the overview" shortcut (separate from the hidden Meta-only shortcut) has been disabled. Apparently it was considered redundant with the Meta-only shortcut.  
-
-The first step to fix opening the Overview with Cmd+Space (assuming you don't use some other launcher for this, like Ulauncher or Albert), find the "user_apps" slice marks and place the keymap below inside them, then **_restart Toshy_** using any method you prefer. You can restart the services from the tray icon, or using the Preferences app, or with `toshy-services-restart` in the terminal.  
-
-```py
-###################################################################################################
-###  SLICE_MARK_START: user_apps  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
-
-keymap("GNOME 45 fix", {
-    C("RC-Space"):             [iEF2NT(),C("Alt-F1")],          # Override pre-GNOME 45 Super+S remap
-}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'gnome' )
-
-###  SLICE_MARK_END: user_apps  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
-###################################################################################################
-```
-
-Toshy disables the Meta-only shortcut, so the "Show the overview" shortcut needs to be assigned back to `Alt+F1` by opening the Settings app, going to Keyboard settings, opening the Keyboard Shortcuts dialog, and searching for "overview". Click on the "Show the overview" shortcut and press the `Cmd+Space` equivalent on your keyboard (if Toshy is enabled and you followed the instructions above). That should set the shortcut back to a working state. It should show `Alt+F1` as the shortcut, that's the important thing.  
-
-The fix for this in the future may require detecting the GNOME shell version and adding a special keymap for that condition to override the older GNOME keymap. Unfortunately the older keymap will need to be retained for all the distros that won't move past GNOME 44 for several more years.  
 
 ### KDE Plasma and the Meta/Super/Win/Cmd key
 
