@@ -18,7 +18,7 @@ But you may need to unmask the service if you log into a GNOME desktop, in a Way
 
 ## Main issues you might run into
 
-- KEYBOARD TYPE: The Toshy config file tries to automatically identify the "type" of your keyboard based on some pre-existing lists of keyboard device names, which do not have many entries yet. So your keyboard may be misidentified, leading to modifier keys in the "wrong" place. BE PREPARED to identify the name of your keyboard device (try `toshy-devices` in a terminal) and enter it into the custom list (actually a Python "dictionary") in the config file to fix this problem. The custom entry is designed to be retained even if you reinstall later.  
+- KEYBOARD TYPE: The Toshy config file tries to automatically identify the "type" of your keyboard based on some pre-existing lists of keyboard device names, which do not have many entries, and there are thousands of keyboard name variants. So your keyboard may be misidentified, leading to modifier keys in the "wrong" place. BE PREPARED to identify the name of your keyboard device (try `toshy-devices` in a terminal) and enter it into the custom list (actually a Python "dictionary") in the config file to fix this problem. The custom entry is designed to be retained even if you reinstall later. There is a sub-menu in the tray icon menu intended to allow temporarily bypassing this problem while you find the device name and enter it in your config file.  
 
 Go to this FAQ entry for more info:  
 
@@ -26,13 +26,11 @@ Go to this FAQ entry for more info:
 
 Other possible issues:  
 
-- May have issues installing on distros not on the "tested" list below. Try the `--list-distros` and `--override-distro` options (separately) with the installer, if you think your distro is closely related to one on the list.  
+- May have issues installing on distros not on the "tested" list below. If you think your distro is closely related to one on the list, try the `list-distros` command with the setup script, and then the `--override-distro` option for the `install` command. See the **How to Install** section.  
 
-- May seem to run at login, but not do any remapping, needing `toshy-config-verbose-start` in the terminal to troubleshoot. Or, it may just need a restart of the services from the tray icon or with `toshy-services-restart`. Check the output of `toshy-services-log` and `toshy-services-status` first to see if there is an obvious error message that explains the problem. Like not having a compatible GNOME Shell extension installed/enabled to support a Wayland+GNOME session.  
+- May seem to run at login, but not do any remapping, needing `toshy-config-verbose-start` in the terminal to troubleshoot. Or, it may just need a restart of the services from the tray icon or with `toshy-services-restart`. Check the output of `toshy-services-log` and `toshy-services-status` first to see if there is an obvious error message that explains the problem. Like not having a compatible GNOME Shell extension installed/enabled to support a Wayland+GNOME session. Other than the Wayland+GNOME situation, I don't really see this much anymore.  
 
-- Some distros have no `journalctl` output for `systemd` "user" services, for unknown reasons. I've seen this on Arcolinux, the RHEL clones. If you have some understanding of why this happens, please open an issue thread.  
-
-- On a dual-init distro like MX Linux, if you install Toshy while using SysVinit (default on MX) it will avoid installing the `systemd` packages and service unit files. If you then switch to `systemd` at the boot screen (from the "Advanced" menu) you'll need to re-run the Toshy installer (only once) while using `systemd` to make Toshy work automatically like it does on other distros where the default is `systemd`.  
+- On a dual-init distro like MX Linux, if you install Toshy while using SysVinit (default on MX) the installer will avoid installing the `systemd` packages and service unit files. If you then switch to using `systemd` as init at the boot screen (from the "Advanced" menu) you'll need to re-run the Toshy installer (only once) while using `systemd` to make Toshy work automatically like it does on other distros where the default is `systemd`. Or, you can just keep running the config manually, like is currently necessary under SysVinit and any other init system besides `systemd`.  
 
 # Toshy README
 
@@ -152,6 +150,10 @@ There's no simple way around this, since the keymapper is only designed to send 
 
     - List of working/tested distros below
 
+- Python 3.6 (to run installer script)
+
+- Python 3.8 (to run the keymapper in its `venv`)
+
 - `keyszer` (keymapper for Linux, forked from `xkeysnail`)
 
     - Automatically installed from custom branch by Toshy installer
@@ -190,7 +192,7 @@ flatpak install com.mattjakeman.ExtensionManager
 flatpak install extensionmanager
 ```
 
-If it's not found you may need to enable the Flathub repo on your machine. Go to Flathub.org for instructions for your distro.  
+If it's not found you may need to enable the Flathub repo on your machine. Go to https://flathub.org/setup for instructions for your distro.  
 
 When you get it installed, you can just use the "Browse" tab in this application to search for the extensions by name and quickly install them.  
 
@@ -365,7 +367,6 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - Installed from KDE "live" ISO, updated from 9.2 to 9.3
     - KDE Plasma desktop tested (Wayland+KDE supported)
     - Some non-default (but official) repos like CRB will be enabled
-    - NB: There is no journal for "user" services, for some reason
 
 - [ AlmaLinux | Rocky Linux ] 9.2 (RHEL clones)
 
@@ -373,14 +374,12 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - Default GNOME desktop tested (Wayland session requires extension)
     - KDE Plasma desktop tested (Wayland+KDE supported)
     - Some non-default (but official) repos like CRB will be enabled
-    - NB: There is no journal for "user" services, for some reason
 
 - Eurolinux 9.2 (RHEL clone)
 
     - Tested with "Server with GUI" installer choice
     - Default GNOME desktop tested (Wayland session requires extension)
     - Some non-default (but official) repos like CRB will be enabled
-    - NB: There is no journal for "user" services, for some reason
 
 - AlmaLinux 8.8 (RHEL clone) - Partial support:
 
@@ -552,7 +551,6 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - X11/Xorg and Wayland+KDE, Wayland+GNOME
     - `plasma-wayland-session` can be installed
     - See FAQ Re: Application Menu shortcut fix
-    - NB: No journal for "user" systemd services, for some reason
 
 - EndeavourOS (Arch-based)
 
