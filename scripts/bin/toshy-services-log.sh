@@ -40,4 +40,8 @@ fi
 echo "Showing systemd journal messages for Toshy services (since last boot):"
 
 # -b flag to only show messages since last boot
-journalctl --user -n100 -b -f -u toshy-config -u toshy-session-monitor -u toshy-kde-dbus
+# -f flag to follow new journal output
+# -n100 to show the last 100 lines (max) of existing log output
+# journalctl --user -n100 -b -f -u toshy-config -u toshy-session-monitor -u toshy-kde-dbus
+# newer(?) syntax to do the same thing? 
+journalctl -n100 -b -f --user-unit 'toshy-*'

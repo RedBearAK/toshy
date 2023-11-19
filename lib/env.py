@@ -316,15 +316,15 @@ def get_env_info():
     elif DESKTOP_ENV == 'kde':
         def get_kde_version():
             # Check for KDE 6
-            if shutil.which("kwriteconfig6") or shutil.which("kpackagetool6"):
+            if shutil.which("kpackagetool6"): # or shutil.which("kwriteconfig6"):
                 return '6'
 
             # Check for KDE 5
-            elif shutil.which("kwriteconfig5") or shutil.which("kpackagetool5"):
+            elif shutil.which("kpackagetool5"): # or shutil.which("kwriteconfig5"):
                 return '5'
 
             # Check for KDE 4
-            elif shutil.which("kwriteconfig") or shutil.which("kpackagetool"):
+            elif shutil.which("kpackagetool"): # or shutil.which("kwriteconfig"): 
                 # In KDE 4, these tools don't have a version number in their name
                 # Additional check for KDE 4 versioning can be done here if necessary
                 return '4'

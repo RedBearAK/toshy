@@ -196,7 +196,7 @@ When you get it installed, you can just use the "Browse" tab in this application
 
 There will be no issue when installing more than one of the compatible extensions. Which might be advisable, to reduce the risk of not having a working extension for a while the next time you upgrade your system in-place and wind up with a newer, temporarily unsupported version of GNOME. I expect at least one of the extensions will always be updated quickly to support the latest GNOME. The branch of `keyszer` installed by Toshy will seamlessly jump to trying the other extensions in case one fails or is disabled/uninstalled for any reason. You just need to have at least one from the list installed and enabled, and when it responds over D-Bus to the query from `keyszer` it will be marked as the "good" one and used from then on, unless it stops responding. Lather, rinse, repeat.  
 
-The `Xremap` GNOME shell extension is the only one that supports older GNOME versions, so it's the only one that will show up when browsing the extensions list from an environment like Zorin OS (GNOME 3.38.x) or the distros based on Red Hat Enterprise Linux (clones like AlmaLinux, Rocky Linux, EuroLinux, etc.) which are still using GNOME 40.x.  
+The `Xremap` GNOME shell extension is the only one that supports older GNOME versions, so it's the only one that will show up when browsing the extensions list from an environment like Zorin OS (GNOME 3.38.x) or the distros based on Red Hat Enterprise Linux (clones or RHEL compatibles like AlmaLinux, Rocky Linux, EuroLinux, etc.) which are still using GNOME 40.x.  
 
 There is a weird bug with searching for the `Xremap` extension on newer versions of GNOME like GNOME 44, where you actually have to use the option "Show Unsupported" from the hamburger menu in order to get it to show up.  
 
@@ -359,6 +359,13 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - Install an extension from `Requirements` if using Wayland+GNOME
 
 ### Red Hat Enterprise Linux, Clones, CentOS Stream
+
+- AlmaLinux 9.3 (RHEL compatible)
+
+    - Installed from KDE "live" ISO, updated from 9.2 to 9.3
+    - KDE Plasma desktop tested (Wayland+KDE supported)
+    - Some non-default (but official) repos like CRB will be enabled
+    - NB: There is no journal for "user" services, for some reason
 
 - [ AlmaLinux | Rocky Linux ] 9.2 (RHEL clones)
 
