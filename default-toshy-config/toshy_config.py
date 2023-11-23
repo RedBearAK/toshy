@@ -3163,6 +3163,11 @@ keymap("Chrome Browsers Overrides", {
     # C("RC-Right"):              C("Alt-Right"),                 # Page nav: Forward to next page in history (conflict with wordwise)
     C("RC-Left_Brace"):         C("Alt-Left"),                  # Page nav: Back to prior page in history
     C("RC-Right_Brace"):        C("Alt-Right"),                 # Page nav: Forward to next page in history
+
+    C("RC-y"):                  C("C-H"),                       # Browser History
+    C("Alt-RC-u"):              C("C-U"),                       # View Page Source
+    C("Shift-RC-j"):            C("RC-J"),                      # Show Downloads view
+
 }, when = matchProps(clas=browsers_chromeStr))
 
 # Keybindings for General Web Browsers
@@ -3355,6 +3360,8 @@ keymap("VSCodes", {
 
     # Override the global Cmd+Dot (Escape/cancel) shortcut for QuickFix in VSCode(s)
     C("RC-Dot"):                C("RC-Dot"),                    # QuickFix, overriding global shortcut
+
+    C("Super-Grave"):           C("C-j"),                       # Open terminal (Cmd+J also works)
 
     # Find dialog options
     C("Alt-RC-C"):              C("Alt-C"),                     # Find: toggle "Match Case"
