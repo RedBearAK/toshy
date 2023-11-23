@@ -1889,18 +1889,23 @@ def apply_tweaks_KDE():
         # Patched branch that fixes some issues with maintaining grouping:
         # 'https://github.com/RedBearAK/kwin-application-switcher/tree/grouping_fix'
 
-        switcher_branch     = 'grouping_fix'
-        switcher_repo       = (
-            'https://github.com/RedBearAK/kwin-application-switcher.git'
-        )
+        # switcher_branch     = 'grouping_fix'
+
+        # TODO: Revert to nclarius repo if/when this branch is merged.
+        # Patched branch that merges API variations for KDE 5 and 6:
+        # 'https://github.com/RedBearAK/kwin-application-switcher/tree/kde6_kde5_merged'
+        # (includes the fixes from 'grouping_fix' branch)
+
+        switcher_branch     = 'kde6_kde5_merged'
+        switcher_repo       = 'https://github.com/RedBearAK/kwin-application-switcher.git'
 
         switcher_dir_name   = 'kwin-application-switcher'
         switcher_dir_path   = os.path.join(this_file_dir, switcher_dir_name)
         switcher_title      = 'KWin Application Switcher'
         switcher_cloned     = False
 
-        git_clone_cmd        = ['git', 'clone', '--branch',
-                                switcher_branch, switcher_repo, switcher_dir_path]
+        git_clone_cmd_lst   = ['git', 'clone', '--branch']
+        branch_args_lst     = [switcher_branch, switcher_repo, switcher_dir_path]
 
         # git should be installed by this point? Not necessarily.
         if not shutil.which('git'):
@@ -1912,7 +1917,7 @@ def apply_tweaks_KDE():
                 except (FileNotFoundError, PermissionError, OSError) as file_err:
                     warn(f'Problem removing existing switcher clone folder:\n\t{file_err}')
             try:
-                subprocess.run(git_clone_cmd, check=True) # , stdout=DEVNULL, stderr=DEVNULL)
+                subprocess.run(git_clone_cmd_lst + branch_args_lst, check=True)
                 switcher_cloned = True
             except subprocess.CalledProcessError as proc_err:
                 warn(f'Problem while cloning the {switcher_title} branch:\n\t{proc_err}')
@@ -1920,9 +1925,9 @@ def apply_tweaks_KDE():
                 warn(f'Unable to install {switcher_title}. Clone did not succeed.')
             else:
                 try:
-                    subprocess.run(["./install.sh"], cwd=switcher_dir_path, check=True,
-                                    stdout=DEVNULL, stderr=DEVNULL)
-                    print(f'Installed "{switcher_title}" KWin script.')
+                    subprocess.run(["./install.sh"], cwd=switcher_dir_path, check=True) #,
+                                    # stdout=DEVNULL, stderr=DEVNULL)
+                    # print(f'Installed "{switcher_title}" KWin script.')
                 except subprocess.CalledProcessError as proc_err:
                     warn(f'Something went wrong installing {switcher_title}.\n\t{proc_err}')
 
