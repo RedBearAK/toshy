@@ -3361,7 +3361,9 @@ keymap("VSCodes", {
     # Override the global Cmd+Dot (Escape/cancel) shortcut for QuickFix in VSCode(s)
     C("RC-Dot"):                C("RC-Dot"),                    # QuickFix, overriding global shortcut
 
-    C("Super-Grave"):           C("C-j"),                       # Open terminal (Cmd+J also works)
+    # In-app terminal operations (Cmd+J is "Toggle Panel Visibility" for problems/output/debug/terminal panel)
+    C("Super-Grave"):           C("C-Grave"),                   # Terminal: Toggle Terminal
+    C("Shift-Super-Grave"):     C("Shift-C-Grave"),             # Terminal: Create New Terminal
 
     # Find dialog options
     C("Alt-RC-C"):              C("Alt-C"),                     # Find: toggle "Match Case"
