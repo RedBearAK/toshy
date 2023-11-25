@@ -302,6 +302,23 @@ def get_env_info():
     ########################################################################
     ##  Get desktop environment version
 
+    def get_kde_version():
+        kde_session_version = os.environ.get('KDE_SESSION_VERSION')
+        if kde_session_version:
+            if kde_session_version in ['4', '5', '6']:
+                return kde_session_version
+            else:
+                error(f"KDE_SESSION_VERSION contains unrecognized value: '{kde_session_version}'")
+        if shutil.which("kpackagetool6"): # or shutil.which("kwriteconfig6"):
+            return '6'
+        elif shutil.which("kpackagetool5"): # or shutil.which("kwriteconfig5"):
+            return '5'
+        elif shutil.which("kpackagetool"): # or shutil.which("kwriteconfig"): 
+            # In KDE 4, these tools don't have a version number in their name
+            # Additional check for KDE 4 versioning can be done here if necessary
+            return '4'
+        return 'kde_ver_check_err'
+
     if DESKTOP_ENV == 'gnome':
         try:
             # Run the gnome-shell command to get the version
@@ -314,23 +331,6 @@ def get_env_info():
             error(f"Error obtaining GNOME version: {proc_err}")
 
     elif DESKTOP_ENV == 'kde':
-        def get_kde_version():
-            # Check for KDE 6
-            if shutil.which("kpackagetool6"): # or shutil.which("kwriteconfig6"):
-                return '6'
-
-            # Check for KDE 5
-            elif shutil.which("kpackagetool5"): # or shutil.which("kwriteconfig5"):
-                return '5'
-
-            # Check for KDE 4
-            elif shutil.which("kpackagetool"): # or shutil.which("kwriteconfig"): 
-                # In KDE 4, these tools don't have a version number in their name
-                # Additional check for KDE 4 versioning can be done here if necessary
-                return '4'
-
-            return 'kde_err'
-        
         DE_MAJ_VER = get_kde_version()
 
     if not DE_MAJ_VER:
