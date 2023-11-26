@@ -79,7 +79,8 @@ APP_VERSION     = '2023.0826'
 
 # Settings object used to tweak preferences "live" between gui, tray and config.
 cnfg = Settings(current_folder_path)
-cnfg.watch_database()   # activate watchdog observer on the sqlite3 db file
+cnfg.watch_database()       # activate watchdog observer on the sqlite3 db file
+cnfg.watch_synergy_log()    # activate watchdog observer on the Synergy log file
 debug("")
 debug(cnfg, ctx="CG")
 
@@ -846,6 +847,9 @@ def matchProps(*,
                         f"See log output before traceback.\n")
 
         def _matchProps_Lst(ctx: KeyContext):
+            # handle loss of screen focus (return False right away) such as Synergy having focus
+            if cnfg.screen_focus is False:
+                return False
             if not_lst is not None:
                 if logging_enabled: print(f"## _matchProps_Lst()[not_lst] ## {dbg=}")
                 return not any(matchProps(**dct)(ctx) for dct in not_lst)
@@ -861,6 +865,9 @@ def matchProps(*,
     if _devn is not None: devn_rgx = re.compile(_devn) if cse else re.compile(_devn, re.I)
 
     def _matchProps(ctx: KeyContext):
+        # handle loss of screen focus (return False right away) such as Synergy having focus
+        if cnfg.screen_focus is False:
+            return False
         cond_list = []
         if _clas is not None:
             clas_match = re.search(clas_rgx,
@@ -1063,7 +1070,7 @@ modmap("Keyboard Type Trigger Modmap", {
     Key.RIGHT_CTRL: Key.RIGHT_CTRL,
     Key.LEFT_SHIFT: Key.LEFT_SHIFT,
     Key.RIGHT_SHIFT: Key.RIGHT_SHIFT,
-}, when = lambda ctx: getKBtype()(ctx) )
+}, when = lambda ctx: getKBtype()(ctx) )    # THIS CONDITIONAL MUST EVALUATE TO FALSE ALWAYS!
 # Special keymap to trigger the evaluation of the keyboard type when 
 # any non-modifier key is pressed
 keymap("Keyboard Type Trigger Keymap", {
