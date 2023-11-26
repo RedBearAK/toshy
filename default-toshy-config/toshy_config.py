@@ -826,6 +826,10 @@ def matchProps(*,
     _name = not_name if name is None else name
     _devn = not_devn if devn is None else devn
 
+    def _isScreenFocusActive(ctx: KeyContext):
+        # If screen focus is lost, return False immediately
+        return False if cnfg.screen_focus is False else True
+
     # process lists of conditions
     if _lst is not None:
         if any([x is not None for x in lst_dct_params]): 
@@ -847,8 +851,7 @@ def matchProps(*,
                         f"See log output before traceback.\n")
 
         def _matchProps_Lst(ctx: KeyContext):
-            # handle loss of screen focus (return False right away) such as Synergy having focus
-            if cnfg.screen_focus is False:
+            if not _isScreenFocusActive(ctx):
                 return False
             if not_lst is not None:
                 if logging_enabled: print(f"## _matchProps_Lst()[not_lst] ## {dbg=}")
@@ -859,14 +862,13 @@ def matchProps(*,
 
         return _matchProps_Lst      # outer function returning inner function
 
-    # compile case insentitive regex object for given params, unless cse=True
+    # compile case insensitive regex object for given params, unless cse=True
     if _clas is not None: clas_rgx = re.compile(_clas) if cse else re.compile(_clas, re.I)
     if _name is not None: name_rgx = re.compile(_name) if cse else re.compile(_name, re.I)
     if _devn is not None: devn_rgx = re.compile(_devn) if cse else re.compile(_devn, re.I)
 
     def _matchProps(ctx: KeyContext):
-        # handle loss of screen focus (return False right away) such as Synergy having focus
-        if cnfg.screen_focus is False:
+        if not _isScreenFocusActive(ctx):
             return False
         cond_list = []
         if _clas is not None:
