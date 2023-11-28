@@ -826,7 +826,7 @@ def matchProps(*,
     _name = not_name if name is None else name
     _devn = not_devn if devn is None else devn
 
-    def _isScreenFocusActive(ctx: KeyContext):
+    def _isScreenFocusActive():
         # If screen focus is lost, return False immediately
         return False if cnfg.screen_focus is False else True
 
@@ -851,7 +851,7 @@ def matchProps(*,
                         f"See log output before traceback.\n")
 
         def _matchProps_Lst(ctx: KeyContext):
-            if not _isScreenFocusActive(ctx):
+            if not _isScreenFocusActive():
                 return False
             if not_lst is not None:
                 if logging_enabled: print(f"## _matchProps_Lst()[not_lst] ## {dbg=}")
@@ -868,7 +868,7 @@ def matchProps(*,
     if _devn is not None: devn_rgx = re.compile(_devn) if cse else re.compile(_devn, re.I)
 
     def _matchProps(ctx: KeyContext):
-        if not _isScreenFocusActive(ctx):
+        if not _isScreenFocusActive():
             return False
         cond_list       = []
         nt_err          = 'ERR: matchProps: NoneType in ctx.'
