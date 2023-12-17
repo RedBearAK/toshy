@@ -9,18 +9,21 @@ mkdir -p "${EXT_DIR}"
 cp ./metadata.json "${EXT_DIR}"
 cp ./extension.js "${EXT_DIR}"
 
-CIN_EXTS="org.cinnamon.enabled-extensions"
+CIN_EXTS="org.cinnamon enabled-extensions"
 
 if command -v gsettings &> /dev/null; then
-    CURRENT_EXTS=$(gsettings get ${CIN_EXTS})
+    CURRENT_EXTS=$(gsettings get "${CIN_EXTS}")
     if [[ $CURRENT_EXTS != *"'${EXT_NAME}'"* ]]; then
 
-        # to add extension name to list with sed string replacement:
-        # UPDATED_EXTS=$(echo ${CURRENT_EXTS} | sed -e "s/]$/, '${EXT_NAME}']/")
-        # to add extension name to list with bash replacement syntax: 
-        UPDATED_EXTS="${CURRENT_EXTS%]}, '${EXT_NAME}']"
+        if [ "${CURRENT_EXTS}" == "@as []" ]; then
+            # The list is empty; add the extension without leading comma and space
+            UPDATED_EXTS="['${EXT_NAME}']"
+        else
+            # The list is not empty; add the extension with leading comma and space
+            UPDATED_EXTS="${CURRENT_EXTS%]}, '${EXT_NAME}']"
+        fi
 
-        gsettings set ${CIN_EXTS} "${UPDATED_EXTS}"
+        gsettings set "${CIN_EXTS}" "${UPDATED_EXTS}"
 
     fi
 else
