@@ -1,0 +1,9 @@
+{
+    "uuid": "ToshyFocusedWindow@toshy.app",
+    "name": "Toshy Focused Window Info",
+    "description": "Provides focused window information via a D-Bus interface.",
+    "cinnamon-version": ["5.0", "5.2", "5.4", "5.6", "6.0"],
+    "author": "RedBearAK",
+    "url": "https://github.com/RedBearAK/toshy",
+    "version": "1.0"
+}
