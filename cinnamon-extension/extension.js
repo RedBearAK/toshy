@@ -6,9 +6,9 @@
 // run dialog, or directly in ~/.cinnamon/glass.log.
 
 // testing from terminal: 
-// dbus-send --print-reply --dest=app.toshy.ToshyFocusedWindow /app/toshy/ToshyFocusedWindow app.toshy.ToshyFocusedWindow.GetFocusedWindowInfo
-// qdbus app.toshy.ToshyFocusedWindow /app/toshy/ToshyFocusedWindow app.toshy.ToshyFocusedWindow.GetFocusedWindowInfo
-// gdbus call --session --dest app.toshy.ToshyFocusedWindow --object-path /app/toshy/ToshyFocusedWindow --method app.toshy.ToshyFocusedWindow.GetFocusedWindowInfo
+// dbus-send --print-reply --dest=org.Cinnamon /app/toshy/ToshyFocusedWindow app.toshy.ToshyFocusedWindow.GetFocusedWindowInfo
+// qdbus org.Cinnamon /app/toshy/ToshyFocusedWindow app.toshy.ToshyFocusedWindow.GetFocusedWindowInfo
+// gdbus call --session --dest org.Cinnamon --object-path /app/toshy/ToshyFocusedWindow --method app.toshy.ToshyFocusedWindow.GetFocusedWindowInfo
 
 
 const Gio = imports.gi.Gio;
