@@ -12,7 +12,8 @@ cp ./extension.js "${EXT_DIR}"
 CIN_EXTS="org.cinnamon enabled-extensions"
 
 if command -v gsettings &> /dev/null; then
-    CURRENT_EXTS=$(gsettings get "${CIN_EXTS}")
+    # shellcheck disable=SC2086
+    CURRENT_EXTS=$(gsettings get ${CIN_EXTS})
     if [[ $CURRENT_EXTS != *"'${EXT_NAME}'"* ]]; then
 
         if [ "${CURRENT_EXTS}" == "@as []" ]; then
@@ -23,7 +24,8 @@ if command -v gsettings &> /dev/null; then
             UPDATED_EXTS="${CURRENT_EXTS%]}, '${EXT_NAME}']"
         fi
 
-        gsettings set "${CIN_EXTS}" "${UPDATED_EXTS}"
+        # shellcheck disable=SC2086
+        gsettings set ${CIN_EXTS} "${UPDATED_EXTS}"
 
     fi
 else

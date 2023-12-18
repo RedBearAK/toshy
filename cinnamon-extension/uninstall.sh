@@ -12,7 +12,8 @@ fi
 CIN_EXTS="org.cinnamon enabled-extensions"
 
 if command -v gsettings &> /dev/null; then
-    CURRENT_EXTS=$(gsettings get "${CIN_EXTS}")
+    # shellcheck disable=SC2086
+    CURRENT_EXTS=$(gsettings get ${CIN_EXTS})
     if [[ $CURRENT_EXTS == *"'${EXT_NAME}'"* ]]; then
 
         # Remove the extension with preceding comma and space
@@ -20,7 +21,8 @@ if command -v gsettings &> /dev/null; then
         # Remove the extension if it's the only item
         UPDATED_EXTS="${UPDATED_EXTS/\'${EXT_NAME}\'/}"
 
-        gsettings set "${CIN_EXTS}" "${UPDATED_EXTS}"
+        # shellcheck disable=SC2086
+        gsettings set ${CIN_EXTS} "${UPDATED_EXTS}"
 
     fi
 else
