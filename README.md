@@ -112,7 +112,7 @@ There's no simple way around this, since the keymapper is only designed to send 
 
  1. Certain Linux distros, outside the most popular group of Ubuntu-based, Debian-based, Arch-based and Red Hat/Fedora-related distros, really did not like the way the Kinto installer messes with the `sudoers` file. The Kinto installer does this to provide the user easier access to certain commands used to control the `xkeysnail` service. Some of these Linux distros would get b0rked quite badly if you ran the Kinto installer on them. A couple I ran into that had this problem were antiX and Gentoo. Strangely, the close relative of antiX, the very popular MX Linux, did not have the same problem with Kinto that antiX had. The Toshy installer does nothing with `sudoers` and uses "user" `systemd` services, or a manual script, and sets up `udev` rules so that the user doesn't need to run anything with `sudo` to make the keymapping work. I've already tested Toshy successfully on antiX. Still looking for a user-friendly Gentoo ISO to use for testing, but I have no reason to believe it won't work just as well, once I figure out the native packages needed.  
 
- 1. A start on Wayland support. Three Wayland+[desktop environment] types are working now: Wayland+GNOME (needs shell extension installed), Wayland+KDE (Plasma, installs a KWin script), and Wayland+sway. Wayland+Hyprland support is in progress. More on that further down.  
+ 1. A start on Wayland support. Four Wayland+[desktop environment] types are working now: Wayland+Cinnamon, Wayland+GNOME (needs shell extension installed), Wayland+KDE (Plasma, installs a KWin script), and Wayland+sway. Wayland+Hyprland support is in progress. More on that further down.  
 
  1. The Option-key special characters, as described above. Two different layouts are available. Or it can be completely disabled.  
 
@@ -158,25 +158,31 @@ There's no simple way around this, since the keymapper is only designed to send 
 
     - Automatically installed from custom branch by Toshy installer
 
-- X11/Xorg or Wayland+GNOME or Wayland+KDE (Plasma) or Wayland+sway
+- X11/Xorg, or one of these Wayland environments:
 
-    - Wayland+GNOME requires one of these GNOME Shell extensions‡ (see note):
+    - Wayland+Cinnamon
+    - Wayland+GNOME
+    - Wayland+KDE (Plasma)
+    - sway
+    - Hyprland (UNTESTED)
 
-        - ### Name: 'Xremap' (try this if you have an older GNOME)
-        - UUID: `xremap@k0kubun.com`
-        - URL: https://extensions.gnome.org/extension/5060/xremap/
+- Wayland+GNOME requires one of these GNOME Shell extensions‡ (see note):
 
-        - ### Name: 'Window Calls Extended'
-        - UUID: `window-calls-extended@hseliger.eu`
-        - URL: https://extensions.gnome.org/extension/4974/window-calls-extended/
+    - ### Name: 'Xremap' (try this if you have an older GNOME)
+    - UUID: `xremap@k0kubun.com`
+    - URL: https://extensions.gnome.org/extension/5060/xremap/
 
-        - ### Name: 'Focused Window D-Bus'
-        - UUID: `focused-window-dbus@flexagoon.com`
-        - URL: https://extensions.gnome.org/extension/5592/focused-window-d-bus/
+    - ### Name: 'Window Calls Extended'
+    - UUID: `window-calls-extended@hseliger.eu`
+    - URL: https://extensions.gnome.org/extension/4974/window-calls-extended/
 
-    - Wayland+KDE has a small glitch where you have to change the focused window once after the KWin script is installed, to get the app-specific remapping to start working. I am trying a solution that uses a pop-up dialog to create a KWin event that "kickstarts" the KWin script. You should briefly see a dialog appear and then disappear shortly after you log in to a Wayland+KDE session.  
+    - ### Name: 'Focused Window D-Bus'
+    - UUID: `focused-window-dbus@flexagoon.com`
+    - URL: https://extensions.gnome.org/extension/5592/focused-window-d-bus/
 
-- `systemd` (but you can just manually run the config from terminal, shell script, or tray indicator menu)
+- Wayland+KDE has a small glitch where you have to change the focused window once after the KWin script is installed, to get the app-specific remapping to start working. I am trying a solution that uses a pop-up dialog to create a KWin event that "kickstarts" the KWin script. You should briefly see a dialog appear and then disappear shortly after you log in to a Wayland+KDE session.  
+
+- `systemd` (but you can just manually run the config from terminal, shell script, GUI preferences app, or tray indicator menu)
 
 - D-Bus, and `dbus-python` (for the tray indicator and GUI app)
 
@@ -247,7 +253,7 @@ This option will force the installer to attempt the install for that distro name
 ./setup_toshy.py install --barebones-config
 ```
 
-This special option will install a "barebones" config file that does no modmapping or keymapping by default (besides a simple example keymap that gives access to a couple of currency symbols, as a demo). The option will also convert an existing Toshy config into a "barebones" config file, but will ask for explicit confirmation. This config will of course not provide any of the features that a normal Toshy config would, other than the ability to use the keymapper in any of the compatible environments (X11/Xorg, Wayland+GNOME, Wayland+KDE).  
+This special option will install a "barebones" config file that does no modmapping or keymapping by default (besides a simple example keymap that gives access to a couple of currency symbols, as a demo). The option will also convert an existing Toshy config into a "barebones" config file, but will ask for explicit confirmation. This config will of course not provide any of the features that a normal Toshy config would, other than the ability to use the keymapper in any of the compatible environments (X11/Xorg, Wayland+Cinnamon, Wayland+GNOME, Wayland+KDE, sway or Hyprland).  
 
 The Toshy installer should try to retain your changes inside any of the editable "slices" of the barebones config file, and avoid replacing your barebones config with a regular Toshy config file, **_even if you don't use the same CLI option the next time you run the installer_**. Submit an issue if it doesn't respect your barebones config. Even if that happens, the previous config file should be in the timestamped backup folder that the installer always creates.  
 
@@ -479,11 +485,11 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 - elementary OS 7.0/7.1 (Ubuntu-based)
 
-- Linux Mint 21.1/21.2 (Ubuntu-based)
+- Linux Mint 21.1/21.2/21.3beta (Ubuntu-based)
 
-    - Cinnamon desktop
-    - Xfce desktop
-    - MATE desktop
+    - Cinnamon desktop (X11/Xorg or Wayland)
+    - Xfce desktop (X11/Xorg only)
+    - MATE desktop (X11/Xorg only)
     - All desktops can be installed on the same Mint system:
     - `sudo apt install mint-meta-mate mint-meta-xfce mint-meta-cinnamon`
 
@@ -494,7 +500,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 ### Debian and Debian-based distros
 
-- LMDE 5 (Linux Mint Debian Edition)
+- LMDE 5/6 (Linux Mint Debian Edition)
 
     - Default desktop is Cinnamon
 
