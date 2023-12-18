@@ -25,8 +25,9 @@ const DBusInterfaceXML = `
     </interface>
 </node>`;
 
-const Extension = class {
+const MyExtension = class {
     GetFocusedWindowInfo() {
+        global.log("GetFocusedWindowInfo called");
         let focusedWindow   = global.display.focus_window;
         let appClass        = "ERR_no_focusedWindow";
         let windowTitle     = "ERR_no_focusedWindow";
@@ -34,6 +35,7 @@ const Extension = class {
             appClass        = focusedWindow.get_wm_class() || "ERR_no_appClass";
             windowTitle     = focusedWindow.get_title() || "ERR_no_windowTitle";
         }
+        global.log(`Focused window - Class: ${appClass}, Title: ${windowTitle}`);
         return JSON.stringify({ "appClass": appClass, "windowTitle": windowTitle });
     }
 };
@@ -41,15 +43,27 @@ const Extension = class {
 let dbusObject;
 
 function enable() {
-    let dbusInterfaceInfo = Gio.DBusNodeInfo.new_for_xml(DBusInterfaceXML).interfaces[0];
-    dbusObject = new Gio.DBusExportedObject.wrapJSObject(dbusInterfaceInfo, new Extension());
-    // dbusObject.export(Gio.DBus.session, '/org/cinnamon/extensions/ToshyFocusedWindow');
-    dbusObject.export(Gio.DBus.session, dbus_iface_path);
+    global.log("Enabling ToshyFocusedWindow extension");
+    try {
+        let dbusInterfaceInfo = Gio.DBusNodeInfo.new_for_xml(DBusInterfaceXML).interfaces[0];
+        dbusObject = new Gio.DBusExportedObject.wrapJSObject(dbusInterfaceInfo, new MyExtension());
+        dbusObject.export(Gio.DBus.session, dbus_iface_path);
+        global.log("DBus service exported successfully");
+    } catch (e) {
+        global.logError(`Error while enabling ToshyFocusedWindow extension: ${e}`);
+    }
 }
 
 function disable() {
     if (dbusObject) {
         dbusObject.unexport();
         dbusObject = null;
+        global.log("DBus service unexported successfully");
     }
+}
+
+function init(extensionMeta) {
+    const UUID = extensionMeta.uuid;
+    global.log(`Initializing extension: '${UUID}'`);
+    // Additional initialization code if required
 }
