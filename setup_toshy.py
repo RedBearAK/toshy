@@ -1765,7 +1765,7 @@ def autostart_tray_icon():
 def apply_tweaks_Cinnamon():
     """Utility function to add desktop tweaks to Cinnamon"""
 
-    cmd_lst         = ['./cinnamon-extension/install.sh']
+    cmd_lst         = ['./install.sh']
     dir_path        = os.path.join(this_file_dir, 'cinnamon-extension')
 
     try:
