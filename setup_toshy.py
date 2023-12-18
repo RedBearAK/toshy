@@ -1764,7 +1764,15 @@ def autostart_tray_icon():
 
 def apply_tweaks_Cinnamon():
     """Utility function to add desktop tweaks to Cinnamon"""
-    subprocess.Popen(['./cinnamon-extension/install.sh'], stdout=PIPE, stderr=PIPE)
+
+    cmd_lst         = ['./cinnamon-extension/install.sh']
+    dir_path        = os.path.join(this_file_dir, 'cinnamon-extension')
+
+    try:
+        subprocess.run(cmd_lst, cwd=dir_path, check=True)
+        print(f'Installed Cinnamon extension for window context.')
+    except subprocess.CalledProcessError as proc_err:
+        error(f'Problem while installing Cinnamon extension:\n\t{proc_err}')
 
 
 def apply_tweaks_GNOME():
