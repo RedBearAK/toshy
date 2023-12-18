@@ -1762,6 +1762,19 @@ def autostart_tray_icon():
 ###################################################################################################
 
 
+def apply_tweaks_Cinnamon():
+    """Utility function to add desktop tweaks to Cinnamon"""
+
+    cmd_lst         = ['./install.sh']
+    dir_path        = os.path.join(this_file_dir, 'cinnamon-extension')
+
+    try:
+        subprocess.run(cmd_lst, cwd=dir_path, check=True)
+        print(f'Installed Cinnamon extension for window context.')
+    except subprocess.CalledProcessError as proc_err:
+        error(f'Problem while installing Cinnamon extension:\n\t{proc_err}')
+
+
 def apply_tweaks_GNOME():
     """Utility function to add desktop tweaks to GNOME"""
 
@@ -2053,6 +2066,11 @@ def apply_desktop_tweaks():
 
     if cnfg.fancy_pants:
         print(f'Fancy-Pants install invoked. Additional steps will be taken.')
+
+    if cnfg.DESKTOP_ENV == 'cinnamon':
+        print(f'Applying Cinnamon desktop tweaks...')
+        apply_tweaks_Cinnamon()
+        cnfg.tweak_applied = True
 
     if cnfg.DESKTOP_ENV == 'gnome':
         print(f'Applying GNOME desktop tweaks...')

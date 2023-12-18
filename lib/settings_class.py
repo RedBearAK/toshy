@@ -7,44 +7,49 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
 
 import keyszer.lib.logger
-from keyszer.lib.logger import debug
+from keyszer.lib.logger import debug, error
 
 
 
 class Settings:
     def __init__(self, config_dir_path: str = '..') -> None:
-        self.config_dir_path    = config_dir_path
-        self.db_file_name       = 'toshy_user_preferences.sqlite'
-        self.db_file_path       = os.path.join(self.config_dir_path, self.db_file_name)
-        self.first_run          = True
-        self.last_settings      = None
-        self.current_settings   = None
+        self.config_dir_path        = config_dir_path
+        self.db_file_name           = 'toshy_user_preferences.sqlite'
+        self.db_file_path           = os.path.join(self.config_dir_path, self.db_file_name)
+        self.first_run              = True
+        self.last_settings          = None
+        self.current_settings       = None
         # Get the name of the module that instantiated the class
-        calling_frame           = inspect.stack()[1]
-        calling_file_path       = calling_frame.filename
-        calling_module          = os.path.split(calling_file_path)[1]
-        self.calling_module     = calling_module
+        calling_frame               = inspect.stack()[1]
+        calling_file_path           = calling_frame.filename
+        calling_module              = os.path.split(calling_file_path)[1]
+        self.calling_module         = calling_module
         # settings defaults
-        self.gui_dark_theme     = True              # Default: True
-        self.override_kbtype    = 'Auto-Adapt'      # Default: 'Auto-Adapt'
-        self.optspec_layout     = 'US'              # Default: 'US'
-        self.forced_numpad      = True              # Default: True
-        self.media_arrows_fix   = False             # Default: False
-        self.multi_lang         = False             # Default: False
-        self.Caps2Cmd           = False             # Default: False
-        self.Caps2Esc_Cmd       = False             # Default: False
-        self.Enter2Ent_Cmd      = False             # Default: False
-        self.ST3_in_VSCode      = False             # Default: False
+        self.gui_dark_theme         = True              # Default: True
+        self.override_kbtype        = 'Auto-Adapt'      # Default: 'Auto-Adapt'
+        self.optspec_layout         = 'US'              # Default: 'US'
+        self.forced_numpad          = True              # Default: True
+        self.media_arrows_fix       = False             # Default: False
+        self.multi_lang             = False             # Default: False
+        self.Caps2Cmd               = False             # Default: False
+        self.Caps2Esc_Cmd           = False             # Default: False
+        self.Enter2Ent_Cmd          = False             # Default: False
+        self.ST3_in_VSCode          = False             # Default: False
+        # Synergy
+        self.screen_focus           = True  # True if focus is on the screen, False otherwise
+        self.synergy_log_path       = os.path.expanduser("~/.local/state/Synergy/synergy.log")
+        self.synergy_log_last_pos   = 0  # Keep track of the last read position in the log file
+        self.initial_log_read_done  = False
         # Load user's custom settings from database (defaults will be saved if no DB)
         self.load_settings()
 
     def watch_database(self):
         # initialize observer to watch for database changes
-        self.event_handler = FileSystemEventHandler()
-        self.event_handler.on_modified = self.on_database_modified
-        self.observer = Observer()
-        self.observer.schedule(self.event_handler, path=self.config_dir_path, recursive=False)
-        self.observer.start()
+        event_handler = FileSystemEventHandler()
+        event_handler.on_modified = self.on_database_modified
+        observer = Observer()
+        observer.schedule(event_handler, path=self.config_dir_path, recursive=False)
+        observer.start()
 
     def on_database_modified(self, event: Optional[FileSystemEvent]):
         if event.src_path == self.db_file_path:
@@ -122,6 +127,61 @@ class Settings:
         # create a list of tuples with attribute name and value pairs
         settings_list = [(attr, getattr(self, attr)) for attr in filtered_attributes]
         return settings_list
+
+    def watch_synergy_log(self):
+        log_dir = os.path.dirname(self.synergy_log_path)
+        if not os.path.exists(log_dir):
+            debug("No Synergy log folder found. No log observer will be engaged.")
+        else:
+            debug(f"Setting an observer on '{log_dir}'")
+            event_handler = FileSystemEventHandler()
+            event_handler.on_modified = self.on_synergy_log_modified
+            event_handler.on_created = self.on_synergy_log_created
+            observer = Observer()
+            observer.schedule(event_handler, path=log_dir, recursive=False)
+            observer.start()
+
+    def on_synergy_log_modified(self, event: Optional[FileSystemEvent]):
+        if event.src_path == self.synergy_log_path:
+            self.handle_synergy_log_file_change()
+
+    def on_synergy_log_created(self, event: Optional[FileSystemEvent]):
+        if event.src_path == self.synergy_log_path:
+            self.handle_synergy_log_file_change()
+
+    def handle_synergy_log_file_change(self):
+        lines = []  # prevent UnboundLocalError
+        if os.path.exists(self.synergy_log_path):
+            with open(self.synergy_log_path, 'r') as f:
+                if self.synergy_log_last_pos == 0:
+                    # Seek to a position near the end of the file
+                    f.seek(0, os.SEEK_END)
+                    end_pos = f.tell()
+                    f.seek(max(end_pos - 1024, 0))  # Read the last ~1024 bytes
+                    if f.tell() != 0:
+                        f.readline()  # Skip partial line
+                    lines = f.readlines()
+                    self.synergy_log_last_pos = f.tell()
+                else:
+                    f.seek(self.synergy_log_last_pos)
+                    lines = f.readlines()
+                    self.synergy_log_last_pos = f.tell()  # Update the last read position
+                # Track the most recent relevant screen focus state
+        if lines:
+            most_recent_state = None
+            for line in lines:
+                line = line.strip()
+                if "leaving screen" in line:
+                    most_recent_state = False
+                elif "entering screen" in line:
+                    most_recent_state = True
+
+            if most_recent_state is not None:
+                self.screen_focus = most_recent_state
+                if self.screen_focus:
+                    debug("Synergy log watcher detected return of screen focus.")
+                else:
+                    debug("Synergy log watcher detected loss of screen focus.")
 
     def __str__(self):
         return f"""Current settings:

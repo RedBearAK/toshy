@@ -79,7 +79,8 @@ APP_VERSION     = '2023.0826'
 
 # Settings object used to tweak preferences "live" between gui, tray and config.
 cnfg = Settings(current_folder_path)
-cnfg.watch_database()   # activate watchdog observer on the sqlite3 db file
+cnfg.watch_database()       # activate watchdog observer on the sqlite3 db file
+cnfg.watch_synergy_log()    # activate watchdog observer on the Synergy log file
 debug("")
 debug(cnfg, ctx="CG")
 
@@ -825,6 +826,10 @@ def matchProps(*,
     _name = not_name if name is None else name
     _devn = not_devn if devn is None else devn
 
+    def _isScreenFocusActive():
+        # If screen focus is lost, return False immediately
+        return False if cnfg.screen_focus is False else True
+
     # process lists of conditions
     if _lst is not None:
         if any([x is not None for x in lst_dct_params]): 
@@ -846,6 +851,8 @@ def matchProps(*,
                         f"See log output before traceback.\n")
 
         def _matchProps_Lst(ctx: KeyContext):
+            if not _isScreenFocusActive():
+                return False
             if not_lst is not None:
                 if logging_enabled: print(f"## _matchProps_Lst()[not_lst] ## {dbg=}")
                 return not any(matchProps(**dct)(ctx) for dct in not_lst)
@@ -855,24 +862,24 @@ def matchProps(*,
 
         return _matchProps_Lst      # outer function returning inner function
 
-    # compile case insentitive regex object for given params, unless cse=True
+    # compile case insensitive regex object for given params, unless cse=True
     if _clas is not None: clas_rgx = re.compile(_clas) if cse else re.compile(_clas, re.I)
     if _name is not None: name_rgx = re.compile(_name) if cse else re.compile(_name, re.I)
     if _devn is not None: devn_rgx = re.compile(_devn) if cse else re.compile(_devn, re.I)
 
     def _matchProps(ctx: KeyContext):
-        cond_list = []
+        if not _isScreenFocusActive():
+            return False
+        cond_list       = []
+        nt_err          = 'ERR: matchProps: NoneType in ctx.'
         if _clas is not None:
-            clas_match = re.search(clas_rgx,
-                                    ctx.wm_class or 'ERR: matchProps: NoneType in ctx.wm_class')
+            clas_match = re.search(clas_rgx, ctx.wm_class or nt_err + 'wm_class')
             cond_list.append(not clas_match if not_clas is not None else clas_match)
         if _name is not None:
-            name_match = re.search(name_rgx,
-                                    ctx.wm_name or 'ERR: matchProps: NoneType in ctx.wm_name')
+            name_match = re.search(name_rgx, ctx.wm_name or nt_err + 'wm_name')
             cond_list.append(not name_match if not_name is not None else name_match)
         if _devn is not None:
-            devn_match = re.search(devn_rgx,
-                                    ctx.device_name or 'ERR: matchProps: NoneType in ctx.device_name')
+            devn_match = re.search(devn_rgx, ctx.device_name or nt_err + 'device_name')
             cond_list.append(not devn_match if not_devn is not None else devn_match)
         # these two MUST check explicitly for "is not None" because external input is True/False,
         # and we want to be able to match the LED_on state of either "True" or "False"
@@ -1063,7 +1070,7 @@ modmap("Keyboard Type Trigger Modmap", {
     Key.RIGHT_CTRL: Key.RIGHT_CTRL,
     Key.LEFT_SHIFT: Key.LEFT_SHIFT,
     Key.RIGHT_SHIFT: Key.RIGHT_SHIFT,
-}, when = lambda ctx: getKBtype()(ctx) )
+}, when = lambda ctx: getKBtype()(ctx) )    # THIS CONDITIONAL MUST EVALUATE TO FALSE ALWAYS!
 # Special keymap to trigger the evaluation of the keyboard type when 
 # any non-modifier key is pressed
 keymap("Keyboard Type Trigger Keymap", {
