@@ -27,7 +27,7 @@ const DBusInterfaceXML = `
 
 const MyExtension = class {
     GetFocusedWindowInfo() {
-        global.log("GetFocusedWindowInfo called");
+        // global.log("GetFocusedWindowInfo called");
         let focusedWindow   = global.display.focus_window;
         let appClass        = "ERR_no_focusedWindow";
         let windowTitle     = "ERR_no_focusedWindow";
@@ -35,7 +35,7 @@ const MyExtension = class {
             appClass        = focusedWindow.get_wm_class() || "ERR_no_appClass";
             windowTitle     = focusedWindow.get_title() || "ERR_no_windowTitle";
         }
-        global.log(`Focused window - Class: ${appClass}, Title: ${windowTitle}`);
+        // global.log(`Focused window - Class: ${appClass}, Title: ${windowTitle}`);
         return JSON.stringify({ "appClass": appClass, "windowTitle": windowTitle });
     }
 };
