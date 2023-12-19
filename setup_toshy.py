@@ -175,7 +175,7 @@ class InstallerSettings:
         self.keyszer_url            = 'https://github.com/RedBearAK/keyszer.git'
         self.keyszer_clone_cmd      = f'git clone -b {self.keyszer_branch} {self.keyszer_url}'
 
-        self.input_group       = 'input'
+        self.input_group            = 'input'
         self.user_name              = pwd.getpwuid(os.getuid()).pw_name
 
         self.barebones_config       = None
