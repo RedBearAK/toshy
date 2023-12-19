@@ -3881,9 +3881,7 @@ keymap("GenGUI overrides: Deepin", {
 keymap("GenGUI overrides: pre-GNOME 45 fix", {
     C("RC-Space"):             [iEF2NT(),C("Super-s")],         # Override GNOME 45+ Key.LEFT_META remap
 }, when = lambda ctx: 
-        matchProps(not_lst=remotes_lod)(ctx) and 
-        is_pre_GNOME_45(DE_MAJ_VER)(ctx)
-)
+        matchProps(not_lst=remotes_lod)(ctx) and is_pre_GNOME_45(DE_MAJ_VER)(ctx) )
 
 keymap("GenGUI overrides: GNOME", {
     C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # Show GNOME overview/app launcher
@@ -3896,6 +3894,9 @@ keymap("GenGUI overrides: GNOME", {
     C("RC-Shift-Key_5"):        C("Print"),                     # Take a screenshot interactively (gnome)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'gnome' )
 
+keymap("GenGUI overrides: Hyprland", {
+    C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # Hyprland (override in "User Apps" slice if necessary)
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'hyprland' )
 keymap("GenGUI overrides: IceWM", {
     C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # IceWM: Win95Keys=1 (Meta shows menu)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'icewm' )
