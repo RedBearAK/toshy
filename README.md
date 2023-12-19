@@ -150,9 +150,9 @@ There's no simple way around this, since the keymapper is only designed to send 
 
     - List of working/tested distros below
 
-- Python 3.6 (to run installer script)
+- Python >=3.6 (to run installer script)
 
-- Python 3.8 (to run the keymapper in its `venv`)
+- Python >=3.8 (to run the keymapper in its `venv`)
 
 - `keyszer` (keymapper for Linux, forked from `xkeysnail`)
 
@@ -166,19 +166,21 @@ There's no simple way around this, since the keymapper is only designed to send 
     - Wayland+sway
     - Wayland+Hyprland
 
-- Wayland+GNOME requires one of these GNOME Shell extensions‡ (see note):
+- Wayland+GNOME requires one of these GNOME Shell extensions (see note‡):
 
-    - ### Name: 'Xremap' (try this if you have an older GNOME)
+    ___
+    - **Name: 'Xremap' (try this on older GNOME shells)**
     - UUID: `xremap@k0kubun.com`
     - URL: https://extensions.gnome.org/extension/5060/xremap/
-
-    - ### Name: 'Window Calls Extended'
+    ___
+    - **Name: 'Window Calls Extended'**
     - UUID: `window-calls-extended@hseliger.eu`
     - URL: https://extensions.gnome.org/extension/4974/window-calls-extended/
-
-    - ### Name: 'Focused Window D-Bus'
+    ___
+    - **Name: 'Focused Window D-Bus'**
     - UUID: `focused-window-dbus@flexagoon.com`
     - URL: https://extensions.gnome.org/extension/5592/focused-window-d-bus/
+    ___
 
 - Wayland+KDE has a small glitch where you have to change the focused window once after the KWin script is installed, to get the app-specific remapping to start working. I am trying a solution that uses a pop-up dialog to create a KWin event that "kickstarts" the KWin script. You should briefly see a dialog appear and then disappear shortly after you log in to a Wayland+KDE session.  
 
