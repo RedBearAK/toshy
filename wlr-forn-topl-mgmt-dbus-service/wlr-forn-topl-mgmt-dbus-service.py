@@ -10,7 +10,6 @@ import dbus.service
 import dbus.mainloop.glib
 
 from pywayland.client import Display
-from .wayland_protocols.wlr_foreign_toplevel_management_unstable_v1 import ZwlrForeignToplevelManagerV1
 
 from gi.repository import GLib
 from dbus.exceptions import DBusException
@@ -37,6 +36,7 @@ os.environ['PYTHONPATH'] = f'{parent_folder_path}:{current_folder_path}:{existin
 
 # local imports now that path is prepped
 import lib.env as env
+from .wayland_protocols.wlr_foreign_toplevel_management_unstable_v1 import ZwlrForeignToplevelManagerV1
 
 if os.name == 'posix' and os.geteuid() == 0:
     error("This app should not be run as root/superuser.")
