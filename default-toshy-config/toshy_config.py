@@ -411,6 +411,7 @@ browsers_chromeStr      = "|".join('^'+x+'$' for x in browsers_chrome)
 
 browsers_firefox = [
     "Firefox",
+    "firefox-esr",
     "Firefox Developer Edition",
     "firefoxdeveloperedition",
     "floorp",
