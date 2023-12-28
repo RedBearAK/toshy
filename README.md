@@ -112,7 +112,7 @@ There's no simple way around this, since the keymapper is only designed to send 
 
  1. Certain Linux distros, outside the most popular group of Ubuntu-based, Debian-based, Arch-based and Red Hat/Fedora-related distros, really did not like the way the Kinto installer messes with the `sudoers` file. The Kinto installer does this to provide the user easier access to certain commands used to control the `xkeysnail` service. Some of these Linux distros would get b0rked quite badly if you ran the Kinto installer on them. A couple I ran into that had this problem were antiX and Gentoo. Strangely, the close relative of antiX, the very popular MX Linux, did not have the same problem with Kinto that antiX had. The Toshy installer does nothing with `sudoers` and uses "user" `systemd` services, or a manual script, and sets up `udev` rules so that the user doesn't need to run anything with `sudo` to make the keymapping work. I've already tested Toshy successfully on antiX. Still looking for a user-friendly Gentoo ISO to use for testing, but I have no reason to believe it won't work just as well, once I figure out the native packages needed.  
 
- 1. A start on Wayland support. Four Wayland+[desktop environment] types are working now: Wayland+Cinnamon (installs an extension), Wayland+GNOME (needs third-party shell extension installed), Wayland+KDE (Plasma, installs a KWin script), Wayland+sway, and Wayland+Hyprland.  
+ 1. A start on Wayland support. Five Wayland+[desktop environment] types are working now: Wayland+Cinnamon (installs an extension), Wayland+GNOME (needs third-party shell extension installed), Wayland+KDE (Plasma, installs a KWin script), Wayland+sway, and Wayland+Hyprland.  
 
  1. The Option-key special characters, as described above. Two different layouts are available. Or it can be completely disabled.  
 
@@ -141,6 +141,8 @@ There's no simple way around this, since the keymapper is only designed to send 
  1. Another growing collection of enhancements to various Linux apps to enable shortcuts like `Cmd+comma` (preferences) and `Cmd+I` (get info/properties) to work in more apps.  
 
  1. A function (`matchProps`) that enables very powerful and complex (or simple) matching on multiple properties at the same time. Application class, window name/title, device name, NumLock and CapsLock LED state can all be combined in any way, and lists can be made of specific combinations of one or more of those properties to match on.  
+
+1. Support for watching the Synergy log file to automatically disable remapping of keys when the focus is on the screen showing the remote system. Synergy still has the unfortunate problem that it presents no app class or window title, so there was previously no simple way to stop remapping keys in the same way that is done for other remote desktop types of apps. Synergy logs when the cursor and keyboard focus leaves and returns, so watching the log file seems to be a workable solution.  
 
  1. More that I will add later when I remember...  
 
