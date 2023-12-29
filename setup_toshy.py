@@ -1058,7 +1058,15 @@ def reload_udev_rules():
 def install_udev_rules():
     """Set up `udev` rules file to give user/keyszer access to uinput"""
     print(f'\n\n§  Installing "udev" rules file for keymapper...\n{cnfg.separator}')
-    rules_file_path = '/etc/udev/rules.d/90-toshy-keymapper-input.rules'
+    rules_dir           = '/etc/udev/rules.d'
+    rules_file          = '90-toshy-keymapper-input.rules'
+    rules_file_path     = os.path.join(rules_dir, rules_file)
+
+    # Check if the /etc/udev/rules.d directory exists, if not, create it
+    if not os.path.exists(rules_dir):
+        print(f"Creating directory: '{rules_dir}'")
+        os.makedirs(rules_dir, exist_ok=True)
+
     setfacl_path = shutil.which('setfacl')
     acl_rule = ''
     if setfacl_path is not None:
