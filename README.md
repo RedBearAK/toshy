@@ -208,7 +208,7 @@ When you get it installed, you can just use the "Browse" tab in this application
 
 There is no risk of any kind of conflict when installing more than one of the compatible shell extensions. Which might be advisable, to reduce the risk of not having a working extension for a while the next time you upgrade your system in-place and wind up with a newer version of GNOME that one or two of the extensions hasn't been updated to support. I expect at least one of the (now three) extensions will always be updated quickly to support the latest GNOME. The branch of `keyszer` installed by Toshy will seamlessly jump to trying the other extensions in case one fails or is disabled/uninstalled for any reason. You just need to have at least one from the list installed and enabled, and when it responds over D-Bus to the query from `keyszer` it will be marked as the "good" one and used from then on, unless it stops responding. Lather, rinse, repeat.  
 
-The `Xremap` GNOME shell extension is the only one that supports older GNOME versions, so it's the only one that will show up when browsing the extensions list from an environment like Zorin OS (GNOME 3.38.x) or the distros based on Red Hat Enterprise Linux (clones or RHEL compatibles like AlmaLinux, Rocky Linux, Oracle Linux, EuroLinux, etc.) which are still using GNOME 40.x.  
+The `Xremap` GNOME shell extension is the only one that supports older GNOME versions, so it's the only one that will show up when browsing the extensions list from an environment like Zorin OS 16.x (GNOME 3.38.x) or the distros based on Red Hat Enterprise Linux (clones or RHEL compatibles like AlmaLinux, Rocky Linux, Oracle Linux, EuroLinux, etc.) which are still using GNOME 40.x on the 9.x versions.  
 
 There is a weird bug with searching for extensions by name sometimes, where you actually have to use the option "Show Unsupported" from the hamburger menu in order to get it to show up. This seems to happen at random, and may be dependent on what is going on with GNOME's extension site. Just make sure that the extension says in its details page that it is compatible with your version of the GNOME shell, and it should be fine to install.  
 
@@ -481,13 +481,21 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
     - X11/Xorg or Wayland+KDE session
 
+- Zorin OS 17 (Ubuntu-based)
+
+    - X11/Xorg or Wayland+GNOME (requires extension)
+    - Wayland+GNOME requires extension (see Requirements)
+    - GNOME Shell is version 43.x, any extension should work now
+
 - Zorin OS 16.2 (Ubuntu-based)
 
     - X11/Xorg or Wayland+GNOME (requires extension)
-    - Wayland+GNOME requires Xremap extension
-    - GNOME Shell is still 3.38.x, Xremap is the only compatible extension available for pre-GNOME 40.x
+    - NOTE: GNOME Shell on Zorin 16.x is old: 3.38
+    - 'Xremap' is the only compatible shell extension
 
 - elementary OS 7.0/7.1 (Ubuntu-based)
+
+    - Tray icons are not supported in Pantheon desktop
 
 - Linux Mint 21.1/21.2/21.3beta (Ubuntu-based)
 
