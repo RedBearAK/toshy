@@ -410,7 +410,10 @@ distro_groups_map = {
     'debian-based':             ["lmde", "peppermint", "debian", "kali", "q4os"],
 
     'arch-based':               ["arch", "arcolinux", "endeavouros", "manjaro"],
+
     'solus-based':              ["solus"],
+
+    'void-based':               ["void"],
     # Add more as needed...
 }
 
@@ -529,6 +532,18 @@ pkg_groups_map = {
                                 "python-dbus-devel", "python-gobject-devel",
                             "systemd-devel",
                             "zenity"],
+
+    'void-based':          ["cairo-devel", "cairo-gobject-devel",
+                            "dbus-daemon", "dbus-devel",
+                            "evtest",
+                            "gcc", "git", "gobject-introspection-devel",
+                            "libappindicator-gtk3", "libnotify",
+                            "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
+                            "systemd-devel",
+                            "wayland-devel",
+                            "xset",
+                            "zenity"],
+
 }
 
 extra_pkgs_map = {
@@ -809,10 +824,12 @@ def install_distro_pkgs():
     apt_distros                 = []
     pacman_distros              = []
     eopkg_distros               = []
+    xbps_distros                = []
 
     # assemble specific pkg mgr distro lists
 
     try:
+
         rpmostree_distros       += distro_groups_map['fedora-immutables']
 
         dnf_distros             += distro_groups_map['fedora-based']
@@ -828,6 +845,9 @@ def install_distro_pkgs():
         pacman_distros          += distro_groups_map['arch-based']
 
         eopkg_distros           += distro_groups_map['solus-based']
+
+        xbps_distros            += distro_groups_map['void-based']
+
     except (KeyError, TypeError) as key_err:
         print()
         error(f'Problem setting up package manager distro lists:\n\t{key_err}')
@@ -941,6 +961,14 @@ def install_distro_pkgs():
         native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
     ###########################################################################
+    ###  XBPS DISTROS  ########################################################
+    ###########################################################################
+    def install_on_xbps_distro():
+        """utility function that gets dispatched for distros that use xbps-install package manager"""
+        cmd_lst = ['sudo', 'xbps-install', '-Sy']
+        native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+
+    ###########################################################################
     ###  PACKAGE MANAGER DISPATCHER  ##########################################
     ###########################################################################
     # map installer sub-functions to each pkg mgr distro list
@@ -951,6 +979,7 @@ def install_distro_pkgs():
         tuple(apt_distros):             install_on_apt_distro,
         tuple(pacman_distros):          install_on_pacman_distro,
         tuple(eopkg_distros):           install_on_eopkg_distro,
+        tuple(xbps_distros):            install_on_xbps_distro,
         # add any new package manager distro lists...
     }
 
