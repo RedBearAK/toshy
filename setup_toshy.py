@@ -533,14 +533,14 @@ pkg_groups_map = {
                             "systemd-devel",
                             "zenity"],
 
-    'void-based':          ["cairo-devel",
+    'void-based':          ["cairo-devel", "curl",
                             "dbus-devel",
                             "evtest",
                             "gcc", "git",
                             "libayatana-appindicator-devel", "libgirepository-devel", "libnotify",
                             "pkg-config", "python3-dbus", "python3-devel", "python3-pip",
                                 "python3-pkgconfig", "python3-tkinter",
-                            "wayland-devel",
+                            "wayland-devel", "wget",
                             "xset",
                             "zenity"],
 
