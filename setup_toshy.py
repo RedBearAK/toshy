@@ -533,7 +533,8 @@ pkg_groups_map = {
                             "systemd-devel",
                             "zenity"],
 
-    'void-based':          ["cairo-devel", 
+    'void-based':          ["cairo-devel",
+                            # "dbus",
                             "dbus-devel",
                             "evtest",
                             "gcc", "git",
@@ -1065,7 +1066,13 @@ def install_udev_rules():
     # Check if the /etc/udev/rules.d directory exists, if not, create it
     if not os.path.exists(rules_dir):
         print(f"Creating directory: '{rules_dir}'")
-        os.makedirs(rules_dir, exist_ok=True)
+        try:
+            call_attention_to_password_prompt()
+            cmd_lst = ['sudo', 'mkdir', '-p', rules_dir]
+            subprocess.run(cmd_lst, check=True)
+        except subprocess.CalledProcessError as proc_err:
+            error(f"Problem while creating udev rules folder:\n\t{proc_err}")
+            safe_shutdown(1)
 
     setfacl_path = shutil.which('setfacl')
     acl_rule = ''
