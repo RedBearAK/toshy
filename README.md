@@ -633,10 +633,11 @@ Toshy does its best to set itself up automatically on any Linux system that uses
 
 - `apt`
 - `dnf`
-- `pacman`
-- `zypper`
 - `eopkg`
+- `pacman`
 - `rpm-ostree`
+- `xbps-install`
+- `zypper`
 
 If the install was successful, there should be a number of different terminal commands available to check the status of the Toshy `systemd` user services (the services are not system-wide, in an attempt to support multi-user setups and be ready to support Wayland more easily) and stop/start/restart the services.  
 
