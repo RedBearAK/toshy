@@ -607,12 +607,17 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 ## Currently working desktop environments / window managers
 
-- X11/Xorg (all desktop environments)
-- Wayland+Cinnamon
-- Wayland+GNOME (needs shell extension)
-- Wayland+KDE
-- Wayland+sway
-- Wayland+Hyprland
+- X11/Xorg sessions
+
+    - Any desktop environment should work
+
+- Wayland sessions
+
+    - Cinnamon
+    - GNOME (needs shell extension, see Requirements)
+    - Hyprland
+    - KDE
+    - Sway
 
 If you are in an X11/Xorg login session, the desktop environment or window manager doesn't really matter. The keymapper gets the window class/name/title information directly from the X server with `Xlib`.  
 
