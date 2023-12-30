@@ -595,6 +595,16 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
     - Budgie ISO tested, GNOME and MATE should work without issue
 
+- Void Linux (xbps, rolling release) - PARTIAL SUPPORT
+
+    - Void doesn't use `systemd`, no Runit scripts provided
+
+    - Options to start the manual keymapper config script:
+        - Tray icon menu: `Re/Start Toshy Script`
+        - Terminal command: `nohup toshy-config-start &`
+        - Runit service script to run terminal command
+        - Put a desktop entry file in `~/.config/autostart`
+
 ## Currently working desktop environments / window managers
 
 - X11/Xorg (all desktop environments)
