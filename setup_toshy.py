@@ -410,7 +410,10 @@ distro_groups_map = {
     'debian-based':             ["lmde", "peppermint", "debian", "kali", "q4os"],
 
     'arch-based':               ["arch", "arcolinux", "endeavouros", "manjaro"],
+
     'solus-based':              ["solus"],
+
+    'void-based':               ["void"],
     # Add more as needed...
 }
 
@@ -529,6 +532,18 @@ pkg_groups_map = {
                                 "python-dbus-devel", "python-gobject-devel",
                             "systemd-devel",
                             "zenity"],
+
+    'void-based':          ["cairo-devel", "curl",
+                            "dbus-devel",
+                            "evtest",
+                            "gcc", "git",
+                            "libayatana-appindicator-devel", "libgirepository-devel", "libnotify",
+                            "pkg-config", "python3-dbus", "python3-devel", "python3-pip",
+                                "python3-pkgconfig", "python3-tkinter",
+                            "wayland-devel", "wget",
+                            "xset",
+                            "zenity"],
+
 }
 
 extra_pkgs_map = {
@@ -809,10 +824,12 @@ def install_distro_pkgs():
     apt_distros                 = []
     pacman_distros              = []
     eopkg_distros               = []
+    xbps_distros                = []
 
     # assemble specific pkg mgr distro lists
 
     try:
+
         rpmostree_distros       += distro_groups_map['fedora-immutables']
 
         dnf_distros             += distro_groups_map['fedora-based']
@@ -828,6 +845,9 @@ def install_distro_pkgs():
         pacman_distros          += distro_groups_map['arch-based']
 
         eopkg_distros           += distro_groups_map['solus-based']
+
+        xbps_distros            += distro_groups_map['void-based']
+
     except (KeyError, TypeError) as key_err:
         print()
         error(f'Problem setting up package manager distro lists:\n\t{key_err}')
@@ -941,6 +961,14 @@ def install_distro_pkgs():
         native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
     ###########################################################################
+    ###  XBPS DISTROS  ########################################################
+    ###########################################################################
+    def install_on_xbps_distro():
+        """utility function that gets dispatched for distros that use xbps-install package manager"""
+        cmd_lst = ['sudo', 'xbps-install', '-Sy']
+        native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+
+    ###########################################################################
     ###  PACKAGE MANAGER DISPATCHER  ##########################################
     ###########################################################################
     # map installer sub-functions to each pkg mgr distro list
@@ -951,6 +979,7 @@ def install_distro_pkgs():
         tuple(apt_distros):             install_on_apt_distro,
         tuple(pacman_distros):          install_on_pacman_distro,
         tuple(eopkg_distros):           install_on_eopkg_distro,
+        tuple(xbps_distros):            install_on_xbps_distro,
         # add any new package manager distro lists...
     }
 
@@ -1030,7 +1059,21 @@ def reload_udev_rules():
 def install_udev_rules():
     """Set up `udev` rules file to give user/keyszer access to uinput"""
     print(f'\n\n§  Installing "udev" rules file for keymapper...\n{cnfg.separator}')
-    rules_file_path = '/etc/udev/rules.d/90-toshy-keymapper-input.rules'
+    rules_dir           = '/etc/udev/rules.d'
+    rules_file          = '90-toshy-keymapper-input.rules'
+    rules_file_path     = os.path.join(rules_dir, rules_file)
+
+    # Check if the /etc/udev/rules.d directory exists, if not, create it
+    if not os.path.exists(rules_dir):
+        print(f"Creating directory: '{rules_dir}'")
+        try:
+            call_attention_to_password_prompt()
+            cmd_lst = ['sudo', 'mkdir', '-p', rules_dir]
+            subprocess.run(cmd_lst, check=True)
+        except subprocess.CalledProcessError as proc_err:
+            error(f"Problem while creating udev rules folder:\n\t{proc_err}")
+            safe_shutdown(1)
+
     setfacl_path = shutil.which('setfacl')
     acl_rule = ''
     if setfacl_path is not None:
