@@ -4,7 +4,7 @@ Name=Toshy Import Vars
 GenericName=Toshy Import Vars
 # Give systemd user services access to environment variables like:
 # XDG_SESSION_TYPE XDG_SESSION_DESKTOP XDG_CURRENT_DESKTOP
-Exec=/bin/sh -c 'exec env sleep 3 && systemctl --user import-environment XDG_SESSION_TYPE XDG_SESSION_DESKTOP XDG_CURRENT_DESKTOP'
+Exec=/bin/sh -c 'exec env sleep 3 && systemctl --user import-environment XDG_SESSION_TYPE XDG_SESSION_DESKTOP XDG_CURRENT_DESKTOP && toshy-services-restart'
 Terminal=false
 NoDisplay=false
 # Icon must be copied to ~/.local/share/icons
