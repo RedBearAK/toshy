@@ -112,7 +112,7 @@ There's no simple way around this, since the keymapper is only designed to send 
 
  1. Certain Linux distros, outside the most popular group of Ubuntu-based, Debian-based, Arch-based and Red Hat/Fedora-related distros, really did not like the way the Kinto installer messes with the `sudoers` file. The Kinto installer does this to provide the user easier access to certain commands used to control the `xkeysnail` service. Some of these Linux distros would get b0rked quite badly if you ran the Kinto installer on them. A couple I ran into that had this problem were antiX and Gentoo. Strangely, the close relative of antiX, the very popular MX Linux, did not have the same problem with Kinto that antiX had. The Toshy installer does nothing with `sudoers` and uses "user" `systemd` services, or a manual script, and sets up `udev` rules so that the user doesn't need to run anything with `sudo` to make the keymapping work. I've already tested Toshy successfully on antiX. Still looking for a user-friendly Gentoo ISO to use for testing, but I have no reason to believe it won't work just as well, once I figure out the native packages needed.  
 
- 1. A start on Wayland support. Five Wayland+[desktop environment] types are working now: Wayland+Cinnamon (installs an extension), Wayland+GNOME (needs third-party shell extension installed), Wayland+KDE (Plasma, installs a KWin script), Wayland+sway, and Wayland+Hyprland.  
+ 1. A start on Wayland support. Five Wayland+[desktop environment] types are working now: Wayland+Cinnamon (installs an extension), Wayland+GNOME (needs third-party shell extension installed), Wayland+Plasma (installs a KWin script), Wayland+sway, and Wayland+Hyprland.  
 
  1. The Option-key special characters, as described above. Two different layouts are available. Or it can be completely disabled.  
 
@@ -164,9 +164,9 @@ There's no simple way around this, since the keymapper is only designed to send 
 
     - Wayland+Cinnamon
     - Wayland+GNOME
-    - Wayland+KDE (Plasma)
-    - Wayland+sway
     - Wayland+Hyprland
+    - Wayland+Plasma (KDE)
+    - Wayland+Sway
 
 - Wayland+GNOME requires one of these GNOME Shell extensions (see note‡):
 
@@ -184,7 +184,7 @@ There's no simple way around this, since the keymapper is only designed to send 
     - URL: https://extensions.gnome.org/extension/5592/focused-window-d-bus/
     ___
 
-- Wayland+KDE has a small glitch where you have to change the focused window once after the KWin script is installed, to get the app-specific remapping to start working. I am trying a solution that uses a pop-up dialog to create a KWin event that "kickstarts" the KWin script. You should briefly see a dialog appear and then disappear shortly after you log in to a Wayland+KDE session.  
+- Wayland+Plasma has a small glitch where you have to change the focused window once after the KWin script is installed, to get the app-specific remapping to start working. I am trying a solution that uses a pop-up dialog to create a KWin event that "kickstarts" the KWin script. You should briefly see a dialog appear and then disappear shortly after you log in to a Wayland+Plasma session.  
 
 - `systemd` (but you can just manually run the config from terminal, shell script, GUI preferences app, or tray indicator menu)
 
@@ -257,7 +257,7 @@ This option will force the installer to attempt the install for that distro name
 ./setup_toshy.py install --barebones-config
 ```
 
-This special option will install a "barebones" config file that does no modmapping or keymapping by default (besides a simple example keymap that gives access to a couple of currency symbols, as a demo). The option will also convert an existing Toshy config into a "barebones" config file, but will ask for explicit confirmation. This config will of course not provide any of the features that a normal Toshy config would, other than the ability to use the keymapper in any of the compatible environments (X11/Xorg, Wayland+Cinnamon, Wayland+GNOME, Wayland+KDE, Wayland+sway or Wayland+Hyprland).  
+This special option will install a "barebones" config file that does no modmapping or keymapping by default (besides a simple example keymap that gives access to a couple of currency symbols, as a demo). The option will also convert an existing Toshy config into a "barebones" config file, but will ask for explicit confirmation. This config will of course not provide any of the features that a normal Toshy config would, other than the ability to use the keymapper in any of the compatible environments (X11/Xorg, Wayland+Cinnamon, Wayland+GNOME, Wayland+Hyprland, Wayland+Plasma, or Wayland+Sway).  
 
 The Toshy installer should try to retain your changes inside any of the editable "slices" of the barebones config file, and avoid replacing your barebones config with a regular Toshy config file, **_even if you don't use the same CLI option the next time you run the installer_**. Submit an issue if it doesn't respect your barebones config. Even if that happens, the previous config file should be in the timestamped backup folder that the installer always creates.  
 
@@ -345,9 +345,11 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 - Fedora 36/37/38/39 (upstream of CentOS Stream and RHEL)
 
-    - Standard GNOME variant tested (Wayland session requires extension)
-    - KDE variant tested (X11/Xorg or Wayland+KDE session)
-    - Sway spin variant tested
+    - Workstation (GNOME) works (Wayland session requires extension)
+    - KDE Plasma variant works (X11/Xorg or Wayland session)
+    - Sway spin variant works
+    - Hyprland works (using JaKooLit Fedora-Hyprland setup script)
+    - Other spins like Cinnamon, Budgie should work fine
 
 - Silverblue/Kinoite 38 (Fedora-based immutables)
 
@@ -375,14 +377,14 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 - AlmaLinux 9.3 (RHEL compatible)
 
     - Installed from KDE "live" ISO, updated from 9.2 to 9.3
-    - KDE Plasma desktop tested (Wayland+KDE supported)
+    - KDE Plasma desktop tested (Wayland session supported)
     - Some non-default (but official) repos like CRB will be enabled
 
 - [ AlmaLinux | Rocky Linux ] 9.2 (RHEL clones)
 
     - Tested with "Workstation" installer choice, not "Server with GUI"
     - Default GNOME desktop tested (Wayland session requires extension)
-    - KDE Plasma desktop tested (Wayland+KDE supported)
+    - KDE Plasma desktop tested (Wayland session supported)
     - Some non-default (but official) repos like CRB will be enabled
 
 - Eurolinux 9.2 (RHEL clone)
@@ -453,7 +455,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 - OpenMandriva ROME 2023.08
 
-    - Wayland+KDE may have issues with GTK "portal" service
+    - Wayland+Plasma may have issues with GTK "portal" service
     - May need to restart the Toshy services after logging in
 
 ### Ubuntu variants and Ubuntu-based distros
@@ -463,7 +465,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - Ubuntu 22.04/23.04
         - X11/Xorg or Wayland+GNOME (requires extension)
     - Kubuntu 22.04/23.04
-        - X11/Xorg or Wayland+KDE
+        - X11/Xorg or Wayland+Plasma
     - Xubuntu 23.04/23.10
         - X11/Xorg only
     - Lubuntu 23.04/23.10
@@ -479,7 +481,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 - KDE Neon (based on Ubuntu LTS releases)
 
-    - X11/Xorg or Wayland+KDE session
+    - X11/Xorg or Wayland+Plasma session
 
 - Zorin OS 17 (Ubuntu-based)
 
@@ -566,7 +568,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
     - ArcoLinuxL ISO (full installer) tested
     - Multiple desktops tested (GNOME, KDE, others)
-    - X11/Xorg and Wayland+KDE, Wayland+GNOME
+    - X11/Xorg and Wayland (all working Wayland environments)
     - `plasma-wayland-session` can be installed
     - See FAQ Re: Application Menu shortcut fix
 
@@ -643,7 +645,7 @@ If the install was successful, there should be a number of different terminal co
 
 Toshy actually consists of two separate `systemd` services meant to work together, with one monitoring the other, so the shell commands are meant to make working with the paired services much easier.  
 
-(There is now a third service, but it is only active in a Wayland+KDE environment, creating a D-Bus service to receive updates from the KWin script with the necessary window info.)  
+(There is now a third service, but it is only active in a Wayland+Plasma environment, creating a D-Bus service to receive updates from the KWin script with the necessary window info.)  
 
 The commands are copied into `~/.local/bin`, and you will be prompted to add that location to your shell's `PATH` if it is not present. Depends on the distro whether that location is already set up as part of the path or not.  
 
@@ -784,7 +786,7 @@ In X11/Xorg environments, run this in a terminal, then click with the "cross" mo
 xprop WM_CLASS _NET_WM_NAME
 ```
 
-In a Wayland environment where you know the app-specific remapping is otherwise working (Wayland+GNOME with extensions or Wayland+KDE is all that works right now), run the Toshy manual config start "verbose" command and then use a shortcut that will be remapped (like `Shift+Cmd+Left_Brace`), while the keyboard focus is on the window that is not being recognized:  
+In a Wayland environment where you know the app-specific remapping is otherwise working, run the Toshy manual config start "verbose" command and then use a shortcut that will be remapped (like `Shift+Cmd+Left_Brace` from the "General GUI" keymap), while the keyboard focus is on the window that is not being recognized:  
 
 ```sh
 toshy-config-verbose-start
