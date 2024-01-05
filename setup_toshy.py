@@ -1720,8 +1720,8 @@ def setup_kde_dbus_service():
 
     # need to autostart "$HOME/.local/bin/toshy-kde-dbus-service"
     autostart_dir_path      = os.path.join(home_dir, '.config', 'autostart')
-    dbus_svc_dt_file_path   = os.path.join(cnfg.toshy_dir_path, 'desktop')
-    dbus_svc_desktop_file   = os.path.join(dbus_svc_dt_file_path, 'Toshy_KDE_DBus_Service.desktop')
+    toshy_dt_files_path     = os.path.join(cnfg.toshy_dir_path, 'desktop')
+    dbus_svc_desktop_file   = os.path.join(toshy_dt_files_path, 'Toshy_KDE_DBus_Service.desktop')
     start_dbus_svc_cmd      = os.path.join(home_dir, '.local', 'bin', 'toshy-kde-dbus-service')
     replace_home_in_file(dbus_svc_desktop_file)
 
@@ -1788,29 +1788,41 @@ def setup_systemd_services():
 def autostart_systemd_kickstarter():
     """Install the desktop file that will make sure the systemd services are restarted 
     after a short logout-login sequence, when systemd fails to stop the user services"""
-    # need to autostart "$HOME/.local/bin/toshy-kde-dbus-service"
-    autostart_dir_path      = os.path.join(home_dir, '.config', 'autostart')
-    svcs_kick_dt_file_path  = os.path.join(cnfg.toshy_dir_path, 'desktop')
-    svcs_kick_dt_file       = os.path.join(svcs_kick_dt_file_path, 'Toshy_Systemd_Service_Kickstart.desktop')
-    dest_link_file          = os.path.join(autostart_dir_path, 'Toshy_Systemd_Service_Kickstart.desktop')
-    # replace_home_in_file(svcs_kick_desktop_file)
+
     ensure_XDG_autostart_dir_exists()
-    cmd_lst = ['ln', '-sf', svcs_kick_dt_file, dest_link_file]
-    subprocess.run(cmd_lst)
+
+    svcs_kick_dt_file_name  = 'Toshy_Systemd_Service_Kickstart.desktop'
+    toshy_dt_files_path     = os.path.join(cnfg.toshy_dir_path, 'desktop')
+    svcs_kick_dt_file       = os.path.join(toshy_dt_files_path, svcs_kick_dt_file_name)
+    autostart_dir_path      = os.path.join(home_dir, '.config', 'autostart')
+    dest_link_file          = os.path.join(autostart_dir_path, svcs_kick_dt_file_name)
+
+    cmd_lst                 = ['ln', '-sf', svcs_kick_dt_file, dest_link_file]
+    try:
+        subprocess.run(cmd_lst, check=True)
+    except subprocess.CalledProcessError as proc_err:
+        error(f'Problem while setting up systemd kickstarter:\n\t{proc_err}')
+        safe_shutdown(1)
 
 
 def autostart_tray_icon():
     """Set up the tray icon to autostart at login"""
     print(f'\n\n§  Setting up tray icon to load automatically at login...\n{cnfg.separator}')
-    desktop_files_path  = os.path.join(home_dir, '.local', 'share', 'applications')
-    tray_desktop_file   = os.path.join(desktop_files_path, 'Toshy_Tray.desktop')
-    autostart_dir_path  = os.path.join(home_dir, '.config', 'autostart')
-    dest_link_file      = os.path.join(autostart_dir_path, 'Toshy_Tray.desktop')
 
     ensure_XDG_autostart_dir_exists()
 
-    cmd_lst = ['ln', '-sf', tray_desktop_file, dest_link_file]
-    subprocess.run(cmd_lst)
+    tray_dt_file_name       = 'Toshy_Tray.desktop'
+    desktop_files_path      = os.path.join(home_dir, '.local', 'share', 'applications')
+    tray_desktop_file       = os.path.join(desktop_files_path, tray_dt_file_name)
+    autostart_dir_path      = os.path.join(home_dir, '.config', 'autostart')
+    dest_link_file          = os.path.join(autostart_dir_path, tray_dt_file_name)
+
+    cmd_lst                 = ['ln', '-sf', tray_desktop_file, dest_link_file]
+    try:
+        subprocess.run(cmd_lst, check=True)
+    except subprocess.CalledProcessError as proc_err:
+        error(f'Problem while setting up tray icon autostart:\n\t{proc_err}')
+        safe_shutdown(1)
 
     print(f'Toshy tray icon should appear in system tray at each login.')
     show_task_completed_msg()
