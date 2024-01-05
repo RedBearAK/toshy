@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=Toshy Systemd Services Kickstart
+GenericName=Toshy Systemd Services Kickstart
+# Systemd has an issue with failing to stop/restart user services if user logs back in too fast.
+# Give systemd user services a kickstart on login if session monitor is found to be inactive.
+Exec=/bin/sh -c 'sleep 5 && (ps -p 1 -o comm= | grep -q systemd) && systemctl --user is-enabled toshy-session-monitor.service &> /dev/null && (systemctl --user is-active toshy-session-monitor.service &> /dev/null || toshy-services-restart)'
+Terminal=false
+NoDisplay=false
+# Icon must be copied to ~/.local/share/icons
+Icon=toshy_app_icon_rainbow
+Comment=Login kickstarter for Toshy Systemd Services
+Categories=Utility;

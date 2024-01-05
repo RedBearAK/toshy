@@ -1702,6 +1702,17 @@ def setup_kwin2dbus_script():
     show_task_completed_msg()
 
 
+def ensure_XDG_autostart_dir_exists():
+    """Utility function to make sure XDG autostart directory exists"""
+    autostart_dir_path      = os.path.join(home_dir, '.config', 'autostart')
+    if not os.path.isdir(autostart_dir_path):
+        try:
+            os.makedirs(autostart_dir_path, exist_ok=True)
+        except (PermissionError, NotADirectoryError) as file_err:
+            error(f"Problem trying to make sure '{autostart_dir_path}' exists.\n\t{file_err}")
+            safe_shutdown(1)
+
+
 def setup_kde_dbus_service():
     """Install the D-Bus service initialization script to receive window focus
     change notifications from the KWin script on KDE desktops (needed for Wayland)"""
@@ -1709,8 +1720,8 @@ def setup_kde_dbus_service():
 
     # need to autostart "$HOME/.local/bin/toshy-kde-dbus-service"
     autostart_dir_path      = os.path.join(home_dir, '.config', 'autostart')
-    dbus_svc_dt_file_path   = os.path.join(cnfg.toshy_dir_path, 'desktop')
-    dbus_svc_desktop_file   = os.path.join(dbus_svc_dt_file_path, 'Toshy_KDE_DBus_Service.desktop')
+    toshy_dt_files_path     = os.path.join(cnfg.toshy_dir_path, 'desktop')
+    dbus_svc_desktop_file   = os.path.join(toshy_dt_files_path, 'Toshy_KDE_DBus_Service.desktop')
     start_dbus_svc_cmd      = os.path.join(home_dir, '.local', 'bin', 'toshy-kde-dbus-service')
     replace_home_in_file(dbus_svc_desktop_file)
 
@@ -1724,7 +1735,7 @@ def setup_kde_dbus_service():
         try:
             os.makedirs(dbus_svcs_path, exist_ok=True)
         except (PermissionError, NotADirectoryError) as file_err:
-            error(f"Problem trying to make sure '{dbus_svcs_path}' is a directory:\n\t{file_err}")
+            error(f"Problem trying to make sure '{dbus_svcs_path}' exists:\n\t{file_err}")
             safe_shutdown(1)
 
     # STOP INSTALLING THIS, IT'S NOT HELPFUL
@@ -1735,13 +1746,7 @@ def setup_kde_dbus_service():
     #     error(f"Path '{dbus_svcs_path}' is not a directory. Cannot continue.")
     #     safe_shutdown(1)
 
-    # ensure autostart directory exists
-    if not os.path.isdir(autostart_dir_path):
-        try:
-            os.makedirs(autostart_dir_path, exist_ok=True)
-        except (PermissionError, NotADirectoryError) as file_err:
-            error(f"Problem trying to make sure '{autostart_dir_path}' is directory.\n\t{file_err}")
-            safe_shutdown(1)
+    ensure_XDG_autostart_dir_exists()
 
     # try to delete old desktop entry file that would have been installed by code below
     autostart_dbus_dt_file = os.path.join(autostart_dir_path, 'Toshy_KDE_DBus_Service.desktop')
@@ -1780,21 +1785,44 @@ def setup_systemd_services():
     show_task_completed_msg()
 
 
+def autostart_systemd_kickstarter():
+    """Install the desktop file that will make sure the systemd services are restarted 
+    after a short logout-login sequence, when systemd fails to stop the user services"""
+
+    ensure_XDG_autostart_dir_exists()
+
+    svcs_kick_dt_file_name  = 'Toshy_Systemd_Service_Kickstart.desktop'
+    toshy_dt_files_path     = os.path.join(cnfg.toshy_dir_path, 'desktop')
+    svcs_kick_dt_file       = os.path.join(toshy_dt_files_path, svcs_kick_dt_file_name)
+    autostart_dir_path      = os.path.join(home_dir, '.config', 'autostart')
+    dest_link_file          = os.path.join(autostart_dir_path, svcs_kick_dt_file_name)
+
+    cmd_lst                 = ['ln', '-sf', svcs_kick_dt_file, dest_link_file]
+    try:
+        subprocess.run(cmd_lst, check=True)
+    except subprocess.CalledProcessError as proc_err:
+        error(f'Problem while setting up systemd kickstarter:\n\t{proc_err}')
+        safe_shutdown(1)
+
+
 def autostart_tray_icon():
     """Set up the tray icon to autostart at login"""
     print(f'\n\n§  Setting up tray icon to load automatically at login...\n{cnfg.separator}')
-    desktop_files_path  = os.path.join(home_dir, '.local', 'share', 'applications')
-    tray_desktop_file   = os.path.join(desktop_files_path, 'Toshy_Tray.desktop')
-    autostart_dir_path  = os.path.join(home_dir, '.config', 'autostart')
-    dest_link_file      = os.path.join(autostart_dir_path, 'Toshy_Tray.desktop')
 
-    # Need to create autostart folder if necessary
+    ensure_XDG_autostart_dir_exists()
+
+    tray_dt_file_name       = 'Toshy_Tray.desktop'
+    desktop_files_path      = os.path.join(home_dir, '.local', 'share', 'applications')
+    tray_desktop_file       = os.path.join(desktop_files_path, tray_dt_file_name)
+    autostart_dir_path      = os.path.join(home_dir, '.config', 'autostart')
+    dest_link_file          = os.path.join(autostart_dir_path, tray_dt_file_name)
+
+    cmd_lst                 = ['ln', '-sf', tray_desktop_file, dest_link_file]
     try:
-        os.makedirs(autostart_dir_path, exist_ok=True)
-    except (PermissionError, NotADirectoryError) as file_err:
-        error(f"Problem trying to make sure '{autostart_dir_path}' is directory.\n\t{file_err}")
+        subprocess.run(cmd_lst, check=True)
+    except subprocess.CalledProcessError as proc_err:
+        error(f'Problem while setting up tray icon autostart:\n\t{proc_err}')
         safe_shutdown(1)
-    subprocess.run(['ln', '-sf', tray_desktop_file, dest_link_file])
 
     print(f'Toshy tray icon should appear in system tray at each login.')
     show_task_completed_msg()
@@ -2261,13 +2289,22 @@ def uninstall_toshy():
     # try to remove the KDE D-Bus service autostart file
     autostart_dir_path  = os.path.join(home_dir, '.config', 'autostart')
     dbus_svc_dt_file    = os.path.join(autostart_dir_path, 'Toshy_KDE_DBus_Service.desktop')
-
     dbus_svc_rm_cmd = ['rm', '-f', dbus_svc_dt_file]
     try:
         # do not pass as list (brackets) since it is already a list
         subprocess.run(dbus_svc_rm_cmd, check=True)
     except subprocess.CalledProcessError as proc_err:
         error(f'Problem removing Toshy KDE D-Bus service autostart:\n\t{proc_err}')
+
+    # try to remove the systemd services kickstart autostart file
+    autostart_dir_path  = os.path.join(home_dir, '.config', 'autostart')
+    svcs_kick_dt_file   = os.path.join(autostart_dir_path, 'Toshy_Systemd_Service_Kickstart.desktop')
+    svcs_kick_rm_cmd    = ['rm', '-f', svcs_kick_dt_file]
+    try:
+        # do not pass as list (brackets) since it is already a list
+        subprocess.run(svcs_kick_rm_cmd, check=True)
+    except subprocess.CalledProcessError as proc_err:
+        error(f'Problem removing Toshy systemd services kickstart autostart:\n\t{proc_err}')
 
     # terminate the tray icon process
     stop_tray_cmd = ['pkill', '-u', cnfg.user_name, '-f', 'toshy_tray']
@@ -2276,9 +2313,9 @@ def uninstall_toshy():
         subprocess.run(stop_tray_cmd, check=True)
     except subprocess.CalledProcessError as proc_err:
         print(f'Problem stopping the tray icon process:\n\t{proc_err}')
+
     # remove the tray icon autostart file
     tray_autostart_file = os.path.join(autostart_dir_path, 'Toshy_Tray.desktop')
-
     tray_autostart_rm_cmd = ['rm', '-f', tray_autostart_file]
     try:
         # do not pass as list (brackets) since it is already a list
@@ -2479,6 +2516,8 @@ def main(cnfg: InstallerSettings):
     setup_kde_dbus_service()
 
     setup_systemd_services()
+
+    autostart_systemd_kickstarter()
 
     autostart_tray_icon()
     apply_desktop_tweaks()

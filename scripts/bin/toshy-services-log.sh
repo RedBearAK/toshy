@@ -37,6 +37,18 @@ else
 fi
 
 
+clean_exit() {
+    echo "Caught Interrupt signal. Exiting..."
+    # Add your clean-up commands here
+
+    # Exit the script
+    exit 0
+}
+
+# Trap the interrupt signal
+trap 'clean_exit' SIGINT
+
+
 echo "Showing systemd journal messages for Toshy services (since last boot):"
 
 # -b flag to only show messages since last boot
