@@ -439,10 +439,12 @@ filemanagers = [
     "dde-file-manager",
     "dolphin",
     "io.elementary.files",
+    "krusader",
     "nautilus",
     "nemo",
     "org.gnome.nautilus",
     "org.kde.dolphin",
+    "org.kde.krusader",
     "pcmanfm",
     "pcmanfm-qt",
     "spacefm",
@@ -453,6 +455,7 @@ filemanagerStr = "|".join('^'+x+'$' for x in filemanagers)
 
 ### dialogs_Escape_lod = send these windows the Escape key for Cmd+W
 dialogs_Escape_lod = [
+    {clas:"^krusader$|^org.kde.krusader$", name:"^Properties.*Krusader$"},
     {clas:"^.*nautilus$", name:"^.*Properties$|^Preferences$|^Create Archive$|^Rename.*Files$"},
     {clas:"^Transmission-gtk$|^com.transmissionbt.Transmission.*$", not_name:"^Transmission$"},
     {clas:"^org.gnome.Software$", not_name:"^Software$"},
@@ -2988,11 +2991,25 @@ keymap("Overrides for Pantheon - Finder Mods", {
     C("RC-comma"):              None,                           # Disable preferences shortcut since none available
 }, when = matchProps(clas="^io.elementary.files$"))
 
+# Keybindings overrides for Krusader (alternative/old KDE file manager)
+# (overrides some bindings from general file manager code block below)
+keymap("Overrides for Krusader - Finder Mods", {
+    C("Shift-RC-Dot"):          C("Alt-Dot"),                   # Toggle hidden files visibility ("dot" files)
+    # C("RC-n"):                  None,                           # Enable this to block Cmd+N (new window is not possible?)
+    C("RC-Shift-n"):            iEF2(C("F7"), False),           # New folder (F7)
+    C("RC-KEY_1"):              None,                           # View as Icons [Not available, blocked]
+    C("RC-KEY_2"):              C("Alt-Shift-D"),               # View as List (Detailed)
+    C("RC-KEY_3"):              C("Alt-Shift-B"),               # View as List (Compact)
+    C("RC-KEY_4"):              None,                           # View as Gallery [Not available, blocked]
+    C("RC-Backspace"):         [C("Delete"), sleep(0.5), C("Tab"), sleep(0.5), C("Enter")],    # Delete file/folder (auto-confirm)
+    # C("RC-Backspace"):          C("Delete"),                    # Delete file/folder (no auto-confirm)
+}, when = matchProps(clas="^org.kde.krusader$|^krusader$"))
+
 # Keybindings overrides for Nautilus
 # (overrides some bindings from general file manager code block below)
 keymap("Overrides for Nautilus Create Archive dialog - Finder Mods", {
     C("Enter"):                 C("Enter"),                     # Use Enter as Enter in the Create Archive dialog
-}, when = matchProps(clas="^.*nautilus$", name="Create Archive"))
+}, when = matchProps(clas="^org.gnome.nautilus$|^nautilus$", name="Create Archive"))
 
 keymap("Overrides for Nautilus - Finder Mods", {
     # Optional "new window at home folder" in Nautilus
@@ -3077,6 +3094,7 @@ keymap("XDG file dialogs", {
 ##  Caja File Browser (MATE file manager, fork of Nautilus)
 ##  DDE File Manager (Deepin Linux file manager)
 ##  Dolphin (KDE file manager)
+##  Krusader (Alternative/old KDE file manager)
 ##  Nautilus (GNOME file manager, may be named "Files")
 ##  Nemo (Cinnamon file manager, fork of Nautilus, may be named "Files")
 ##  Pantheon Files (elementary OS file manager, may be named "Files")
@@ -3091,11 +3109,11 @@ keymap("XDG file dialogs", {
 
 keymap("General File Managers - Finder Mods", {
     ###########################################################################################################
-    ###  Show Properties (Get Info) | Open Settings/Preferences | Show/Hide hidden files                    ###
+    ###  Show Properties (Get Info) | Open Settings/Preferences | Toggle hidden files visibility            ###
     ###########################################################################################################
     C("RC-i"):                  C("Alt-Enter"),                 # File properties dialog (Get Info)
     C("RC-comma"):             [C("Alt-E"),C("N")],             # Open preferences dialog
-    C("Shift-RC-dot"):          C("RC-H"),                      # Show/hide hidden files ("dot" files)
+    C("Shift-RC-dot"):          C("RC-H"),                      # Toggle hidden files visibility ("dot" files)
     ###########################################################################################################
     ###  Navigation                                                                                         ###
     ###########################################################################################################
