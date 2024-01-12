@@ -1,0 +1,21 @@
+{
+    "KPackageStructure": "KWin/Script",
+    "KPlugin": {
+        "Name": "Toshy D-Bus NotifyActiveWindow",
+        "Description": "Notify Toshy D-Bus service when active window changes",
+        "Icon": "preferences-system-windows",
+        
+        "Authors": [
+            {
+                "Email": "64876997+RedBearAK@users.noreply.github.com",
+                "Name": "RedBearAK"
+            }
+        ],
+        "Id": "toshy-dbus-notifyactivewindow",
+        "Version": "1.2",
+        "License": "GPLv3",
+        "Website": "https://github.com/RedBearAK/toshy"
+    },
+    "X-Plasma-API": "javascript",
+    "X-Plasma-MainScript": "code/main.js"
+}
