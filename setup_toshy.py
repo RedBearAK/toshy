@@ -2274,22 +2274,25 @@ def uninstall_toshy():
     if cnfg.DESKTOP_ENV in ['kde', 'plasma']:
         # unload/uninstall/remove KWin script(s)
         kwin_script_name = 'toshy-dbus-notifyactivewindow'
+        KDE_ver = cnfg.DE_MAJ_VER
         try:
-            subprocess.run(['kpackagetool5', '-t', 'KWin/Script', '-r', kwin_script_name], check=True)
-            print("Successfully removed the KWin script.")
+            cmd_lst = [f'kpackagetool{KDE_ver}', '-t', 'KWin/Script', '-r', kwin_script_name]
+            subprocess.run(cmd_lst, check=True)
+            print("Successfully removed the Toshy D-Bus NotifyActiveWindow KWin script.")
         except subprocess.CalledProcessError as proc_err:
             error(f'Problem removing Toshy KWin script {kwin_script_name}:\n\t{proc_err}')
 
         # kill the KDE D-Bus service script
         try:
-            subprocess.run(['pkill', '-u', cnfg.user_name, '-f', 'toshy_kde_dbus_service'], check=True)
+            cmd_lst = ['pkill', '-u', cnfg.user_name, '-f', 'toshy_kde_dbus_service']
+            subprocess.run(cmd_lst, check=True)
         except subprocess.CalledProcessError as proc_err:
             error(f'Problem terminating Toshy KDE D-Bus service script:\n\t{proc_err}')
 
     # try to remove the KDE D-Bus service autostart file
     autostart_dir_path  = os.path.join(home_dir, '.config', 'autostart')
     dbus_svc_dt_file    = os.path.join(autostart_dir_path, 'Toshy_KDE_DBus_Service.desktop')
-    dbus_svc_rm_cmd = ['rm', '-f', dbus_svc_dt_file]
+    dbus_svc_rm_cmd     = ['rm', '-f', dbus_svc_dt_file]
     try:
         # do not pass as list (brackets) since it is already a list
         subprocess.run(dbus_svc_rm_cmd, check=True)

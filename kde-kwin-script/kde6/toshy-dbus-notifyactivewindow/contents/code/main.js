@@ -20,9 +20,5 @@ function notifyActiveWindow(window){
     );
 }
 
-// workspace.clientActivated.connect(function(client){
-//     notifyActiveWindow(client);
-// });
-
-// simpler way to set up the function link
+// Set up the function link to the event
 workspace.windowActivated.connect(notifyActiveWindow);
