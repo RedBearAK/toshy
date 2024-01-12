@@ -2278,7 +2278,7 @@ def uninstall_toshy():
         try:
             cmd_lst = [f'kpackagetool{KDE_ver}', '-t', 'KWin/Script', '-r', kwin_script_name]
             subprocess.run(cmd_lst, check=True)
-            print("Successfully removed the KWin script.")
+            print("Successfully removed the Toshy D-Bus NotifyActiveWindow KWin script.")
         except subprocess.CalledProcessError as proc_err:
             error(f'Problem removing Toshy KWin script {kwin_script_name}:\n\t{proc_err}')
 
