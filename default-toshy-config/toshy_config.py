@@ -418,6 +418,7 @@ browsers_firefox = [
     "LibreWolf",
     "Mullvad Browser",
     "Navigator",
+    "org.mozilla.firefox",
     "Waterfox",
 ]
 browsers_firefox        = [x.casefold() for x in browsers_firefox]
