@@ -2903,7 +2903,7 @@ keymap("Thunderbird email client", {
     # Enable Cmd+Option+Left/Right for tab navigation
     C("RC-Alt-Left"):           C("C-Page_Up"),                 # Go to prior tab (macOS Thunderbird tab nav shortcut)
     C("RC-Alt-Right"):          C("C-Page_Down"),               # Go to next tab (macOS Thunderbird tab nav shortcut)
-}, when = matchProps(clas="^thunderbird.*$") )
+}, when = matchProps(clas="^thunderbird.*$|^org.mozilla.thunderbird$") )
 
 keymap("Angry IP Scanner", {
     C("RC-comma"):              C("Shift-RC-P"),                # Open preferences
