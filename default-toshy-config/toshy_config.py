@@ -1014,10 +1014,26 @@ def notify_context():
     def _notify_context(ctx: KeyContext):
         if not zenity_cmd:
             return
+
         # global zenity_icon_option
-        message = ( f"Appl. Class   = '{ctx.wm_class}'"
-                    f"\nWndw. Title = '{ctx.wm_name}'"
-                    f"\nKbd. Device = '{ctx.device_name}'" )
+        # message = ( f"Appl. Class   = '{ctx.wm_class}'"
+        #             f"\nWndw. Title = '{ctx.wm_name}'"
+        #             f"\nKbd. Device = '{ctx.device_name}'" )
+
+        # def escape_markup(text):
+        #     return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+
+        # message = ( f"Appl. Class   = '{escape_markup(ctx.wm_class)}'"
+        #             f"\nWndw. Title = '{escape_markup(ctx.wm_name)}'"
+        #             f"\nKbd. Device = '{escape_markup(ctx.device_name)}'" )
+
+        def add_backslashes(text):
+            return text.replace('<', '\\<').replace('>', '\\>')
+
+        message = ( f"Appl. Class   = '{add_backslashes(ctx.wm_class)}'"
+                    f"\nWndw. Title = '{add_backslashes(ctx.wm_name)}'"
+                    f"\nKbd. Device = '{add_backslashes(ctx.device_name)}'" )
+
         zenity_cmd_lst = [  zenity_cmd, '--info', '--no-wrap', 
                             '--title=Toshy Context Info',
                             '--text=' + message
