@@ -1015,33 +1015,23 @@ def notify_context():
         if not zenity_cmd:
             return
 
-        # global zenity_icon_option
-        # message = ( f"Appl. Class   = '{ctx.wm_class}'"
-        #             f"\nWndw. Title = '{ctx.wm_name}'"
-        #             f"\nKbd. Device = '{ctx.device_name}'" )
+        # fix a problem with zenity and <tags> in text
+        def escape_markup(text: str):
+            return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 
-        # def escape_markup(text):
-        #     return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-
-        # message = ( f"Appl. Class   = '{escape_markup(ctx.wm_class)}'"
-        #             f"\nWndw. Title = '{escape_markup(ctx.wm_name)}'"
-        #             f"\nKbd. Device = '{escape_markup(ctx.device_name)}'" )
-
-        def add_backslashes(text):
-            return text.replace('<', '\\<').replace('>', '\\>')
-
-        message = ( f"Appl. Class   = '{add_backslashes(ctx.wm_class)}'"
-                    f"\nWndw. Title = '{add_backslashes(ctx.wm_name)}'"
-                    f"\nKbd. Device = '{add_backslashes(ctx.device_name)}'" )
+        message = ( f"Appl. Class   = '{escape_markup(ctx.wm_class)}'"
+                    f"\nWndw. Title = '{escape_markup(ctx.wm_name)}'"
+                    f"\nKbd. Device = '{escape_markup(ctx.device_name)}'" )
 
         zenity_cmd_lst = [  zenity_cmd, '--info', '--no-wrap', 
                             '--title=Toshy Context Info',
-                            '--text=' + message
-                            ]
+                            '--text=' + message ]
+
         # insert the icon argument if it's supported
         if zenity_icon_option is not None:
             zenity_cmd_lst.insert(3, zenity_icon_option)
         subprocess.Popen(zenity_cmd_lst, cwd=icons_dir, stderr=DEVNULL, stdout=DEVNULL)
+
         # Optionally, also send a system notification:
         # ntfy.send_notification(message)
     return _notify_context
