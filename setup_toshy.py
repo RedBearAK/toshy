@@ -1599,20 +1599,23 @@ def get_kwin_script_index(script_name):
     kwin_dest               = "org.kde.KWin"
     kwin_script_iface       = "org.kde.kwin.Scripting"
 
-    qdbus_index_cmd         = ( f"qdbus {kwin_dest} /Scripting "
+    qdbus_idx_cmd         = ( f"qdbus {kwin_dest} /Scripting "
                                 f"{kwin_script_iface}.loadScript {script_name}")
-    dbus_send_index_cmd     = ( f"dbus-send --print-reply --dest={kwin_dest} /Scripting "
+    dbus_send_idx_cmd     = ( f"dbus-send --print-reply --dest={kwin_dest} /Scripting "
                                 f"{kwin_script_iface}.loadScript string:{script_name}")
-    gdbus_index_cmd         = ( f"gdbus call --session --dest {kwin_dest} --object-path /Scripting "
+    gdbus_idx_cmd         = ( f"gdbus call --session --dest {kwin_dest} --object-path /Scripting "
                                 f"--method {kwin_script_iface}.loadScript {script_name}")
 
     try:
         if shutil.which('qdbus'):
-            return subprocess.check_output(qdbus_index_cmd, shell=True).strip()
+            return subprocess.check_output(qdbus_idx_cmd, shell=True).strip().decode('utf-8')
         elif shutil.which('dbus-send'):
-            return subprocess.check_output(dbus_send_index_cmd, shell=True).strip()
+            return subprocess.check_output(dbus_send_idx_cmd, shell=True).strip().decode('utf-8')
         elif shutil.which('gdbus'):
-            return subprocess.check_output(gdbus_index_cmd, shell=True).strip()
+            output = subprocess.check_output(gdbus_idx_cmd, shell=True).strip().decode('utf-8')
+            # Extracting the numeric part from the tuple-like string
+            script_index = output.strip("()").split(',')[0]
+            return script_index
         else:
             error("No suitable D-Bus utility found to get script index.")
             return None
