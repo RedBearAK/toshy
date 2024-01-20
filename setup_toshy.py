@@ -1761,8 +1761,9 @@ def setup_kwin2dbus_script():
     # Try to get KWin to notice and activate the script on its own, now that it's in RC file
     do_kwin_reconfigure()
 
-    # here we will also try to "run" the KWin script, as an alternative to the "kickstart" script
-    run_kwin_script(kwin_script_name)
+    # Here we will also try to "run" the KWin script, as an alternative to the "kickstart" script
+    # Did things change from Plasma 5 to 6? This doesn't seem to work. 
+    # run_kwin_script(kwin_script_name)
 
     show_task_completed_msg()
 
