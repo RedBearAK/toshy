@@ -1040,13 +1040,9 @@ def notify_context():
 
 
 def is_pre_GNOME_45(de_ver):
-    def _is_pre_GNOME_45(ctx):
-        if DESKTOP_ENV == 'gnome':
-            try:
-                return int(de_ver) in [44, 43, 42, 41, 40, 3]
-            except ValueError:
-                pass    # fall through to return False
-        return False
+    pre_G45_ver_lst = [44, 43, 42, 41, 40, 3]
+    def _is_pre_GNOME_45(ctx: KeyContext):
+        return  DESKTOP_ENV == 'gnome' and str(de_ver).isdigit() and int(de_ver) in pre_G45_ver_lst
     return _is_pre_GNOME_45
 
 

@@ -1593,6 +1593,67 @@ def do_kwin_reconfigure():
     error(f'Failed to do KWin reconfigure. No available D-Bus utility worked.')
 
 
+def get_kwin_script_index(script_name):
+    """Utility function to get the index of a loaded KWin script"""
+
+    kwin_dest               = "org.kde.KWin"
+    kwin_script_iface       = "org.kde.kwin.Scripting"
+
+    qdbus_idx_cmd         = ( f"qdbus {kwin_dest} /Scripting "
+                                f"{kwin_script_iface}.loadScript {script_name}")
+    dbus_send_idx_cmd     = ( f"dbus-send --print-reply --dest={kwin_dest} /Scripting "
+                                f"{kwin_script_iface}.loadScript string:{script_name}")
+    gdbus_idx_cmd         = ( f"gdbus call --session --dest {kwin_dest} --object-path /Scripting "
+                                f"--method {kwin_script_iface}.loadScript {script_name}")
+
+    try:
+        if shutil.which('qdbus'):
+            return subprocess.check_output(qdbus_idx_cmd, shell=True).strip().decode('utf-8')
+        elif shutil.which('dbus-send'):
+            return subprocess.check_output(dbus_send_idx_cmd, shell=True).strip().decode('utf-8')
+        elif shutil.which('gdbus'):
+            output = subprocess.check_output(gdbus_idx_cmd, shell=True).strip().decode('utf-8')
+            # Extracting the numeric part from the tuple-like string
+            script_index = output.strip("()").split(',')[0]
+            return script_index
+        else:
+            error("No suitable D-Bus utility found to get script index.")
+            return None
+    except subprocess.CalledProcessError as proc_err:
+        error(f"An error occurred while getting the script index: {proc_err}")
+        return None
+
+
+def run_kwin_script(script_name):
+    """Utility function to run an already loaded and enabled KWin script"""
+
+    kwin_dest               = "org.kde.KWin"
+    kwin_script_iface       = "org.kde.kwin.Script"
+
+    script_index            = get_kwin_script_index(script_name)
+    if not script_index:
+        error(f"Unable to run KWin script. No index returned.")
+        return
+
+    qdbus_run_cmd           = ( f"qdbus {kwin_dest} /{script_index} {kwin_script_iface}.run")
+    dbus_send_run_cmd       = ( f"dbus-send --type=method_call --dest={kwin_dest} "
+                            f"/{script_index} {kwin_script_iface}.run")
+    gdbus_run_cmd           = ( f"gdbus call --session --dest {kwin_dest} --object-path "
+                            f"/{script_index} --method {kwin_script_iface}.run")
+
+    try:
+        if shutil.which('qdbus'):
+            subprocess.run(qdbus_run_cmd, shell=True, check=True)
+        elif shutil.which('dbus-send'):
+            subprocess.run(dbus_send_run_cmd, shell=True, check=True)
+        elif shutil.which('gdbus'):
+            subprocess.run(gdbus_run_cmd, shell=True, check=True)
+        else:
+            error("No suitable D-Bus utility found to run KWin script.")
+    except subprocess.CalledProcessError as proc_err:
+        error(f"An error occurred while executing the run command: {proc_err}")
+
+
 def setup_kwin2dbus_script():
     """Install the KWin script to notify D-Bus service about window focus changes"""
     print(f'\n\n§  Setting up the Toshy KWin script...\n{cnfg.separator}')
@@ -1699,6 +1760,11 @@ def setup_kwin2dbus_script():
 
     # Try to get KWin to notice and activate the script on its own, now that it's in RC file
     do_kwin_reconfigure()
+
+    # Here we will also try to "run" the KWin script, as an alternative to the "kickstart" script
+    # Did things change from Plasma 5 to 6? This doesn't seem to work. 
+    # run_kwin_script(kwin_script_name)
+
     show_task_completed_msg()
 
 
