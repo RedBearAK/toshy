@@ -593,7 +593,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 ### Independent distros
 
-- Solus 4.4 (eopkg)
+- Solus 4.4/4.5 (eopkg)
 
     - Budgie ISO tested, GNOME and MATE should work without issue
 
