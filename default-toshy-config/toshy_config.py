@@ -305,6 +305,7 @@ terminals_lod = [
     {clas:"^tabby$"                     },
     {clas:"^terminator$"                },
     {clas:"^termite$"                   },
+    {clas:"^Termius$"                   },
     {clas:"^tilda$"                     },
     {clas:"^tilix$"                     },
     {clas:"^urxvt$"                     },
