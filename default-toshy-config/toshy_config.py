@@ -2889,6 +2889,24 @@ keymap("User hardware keys", {
 ###################################################################################################
 
 
+# HOW TO SWAP CMD+SPACE AND CTRL+SPACE (SPOTLIGHT EQUIVALENT VS INPUT SWITCHING)
+# Copy this entire block into the "user_apps" editable slice markers, and 
+# uncomment everything below this text. Fix the output shortcuts to work on your 
+# chosen desktop environment. 
+# 
+# keymap("User overrides terminals", {
+#     C("LC-Space"):              [iEF2NT(),C("THE-REAL-COMBO-FOR-SOME-LAUNCHER")],    # Spotlight equivalent
+#     C("Shift-LC-Space"):        None,    # block the default general terminals shortcut for input switching
+# }, when = matchProps(lst=terminals_lod))
+# keymap("User overrides general", {
+#     C("Super-Space"):           [iEF2NT(),C("THE-REAL-COMBO-FOR-SOME-LAUNCHER")],    # Spotlight equivalent
+#     C("Shift-Super-Space"):     None,    # block the default general GUI shortcut for reverse input switching
+#     ### Keyboard input source (language/layout) switching
+#     C("RC-Space"):              [bind,C("THE-REAL-COMBO-FOR-INPUT-SWITCHING")],    # input switch forward
+#     C("Shift-RC-Space"):        [bind,C("THE-REAL-COMBO-FOR-REVERSE-INPUT-SWITCHING")],    # input switch reverse (OPTIONAL)
+# }, when = matchProps(not_lst=remotes_lod))
+
+
 
 #################################  MISC APPS  #####################################
 ###                                                                             ###
