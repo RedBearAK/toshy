@@ -993,7 +993,23 @@ def macro_tester():
     return _macro_tester
 
 
-zenity_cmd = shutil.which('zenity')
+def is_valid_command(command):
+    """Check if the command path is valid and executable"""
+    return command and os.path.isfile(command) and os.access(command, os.X_OK)
+
+
+zenity_is_qarma = False
+
+zenity_cmd = shutil.which('zenity-gtk')
+if not zenity_cmd:
+    zenity_cmd = shutil.which('qarma')
+    if zenity_cmd:
+        zenity_is_qarma = True
+if not zenity_cmd:
+    zenity_cmd = shutil.which('zenity')
+
+debug(f"Zenity command path: '{zenity_cmd}'")
+
 zenity_icon_option = None
 
 if zenity_cmd:
@@ -1007,24 +1023,33 @@ if zenity_cmd:
     except subprocess.CalledProcessError:
         pass  # zenity --help-info failed, assume icon is not supported
 else:
-    error('ERROR: Zenity command is missing! Diagnostic dialog not available!')
+    error('ERR: Zenity command is missing! Diagnostic dialog not available!')
 
 
 def notify_context():
     """pop up a notification with context info"""
     def _notify_context(ctx: KeyContext):
         if not zenity_cmd:
+            error('ERR: Zenity command is missing! Diagnostic dialog not available!')
+            return
+
+        if not is_valid_command(zenity_cmd):
+            error(f"ERR: Zenity command not valid: '{zenity_cmd}'")
             return
 
         # fix a problem with zenity and <tags> in text
         def escape_markup(text: str):
             return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 
-        message = ( f"\n<tt>"
-                    f"<b>Class =</b> '{escape_markup(ctx.wm_class)}'  \n"
-                    f"<b>Title =</b> '{escape_markup(ctx.wm_name)}'  \n"
-                    f"<b>Keybd =</b> '{escape_markup(ctx.device_name)}'  \n"
-                    f"</tt>" )
+        nwln_chr        = '<br>' if zenity_is_qarma else '\n'
+        ctx_clas        = ctx.wm_class
+        ctx_name        = ctx.wm_name
+        ctx_devn        = ctx.device_name
+        message         = ( f"{nwln_chr}<tt>"
+                            f"<b>Class =</b> '{escape_markup(ctx_clas)}'  {nwln_chr}"
+                            f"<b>Title =</b> '{escape_markup(ctx_name)}'  {nwln_chr}"
+                            f"<b>Keybd =</b> '{escape_markup(ctx_devn)}'  {nwln_chr}"
+                            f"</tt>" )
 
         zenity_cmd_lst = [  zenity_cmd, '--info', '--no-wrap', 
                             '--title=Toshy Context Info',
