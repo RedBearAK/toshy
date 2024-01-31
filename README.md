@@ -453,18 +453,21 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 ### OpenMandriva (DNF/RPM-based, descended from Mandriva, Mandrake)
 
-- OpenMandriva ROME 2023.08
+- OpenMandriva ROME 2023/2024 (rolling release variant)
 
-    - Wayland+Plasma may have issues with GTK "portal" service
-    - May need to restart the Toshy services after logging in
+    - Wayland+Plasma tested
+
+- OpenMandriva 5.0 (fixed release variant)
+
+    - Wayland+Plasma tested
 
 ### Ubuntu variants and Ubuntu-based distros
 
 - Ubuntu official variants tested:
 
-    - Ubuntu 22.04/23.04
+    - Ubuntu 22.04/23.04/23.10
         - X11/Xorg or Wayland+GNOME (requires extension)
-    - Kubuntu 22.04/23.04
+    - Kubuntu 22.04/23.04/23.10
         - X11/Xorg or Wayland+Plasma
     - Xubuntu 23.04/23.10
         - X11/Xorg only
@@ -473,6 +476,9 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - Ubuntu Unity 23.10
         - X11/Xorg only
     - Ubuntu Budgie 23.04
+        - X11/Xorg only
+    - Ubuntu Kylin 23.10 - **_NOT WORKING!_**
+        - **_PACKAGE CONFLICT IN REPO_**
         - X11/Xorg only
 
 - Pop!_OS 22.04 LTS (Ubuntu-based)
