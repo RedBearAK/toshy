@@ -993,6 +993,11 @@ def macro_tester():
     return _macro_tester
 
 
+def is_valid_command(command):
+    """Check if the command path is valid and executable"""
+    return command and os.path.isfile(command) and os.access(command, os.X_OK)
+
+
 zenity_is_qarma = False
 
 zenity_cmd = shutil.which('zenity-gtk')
@@ -1018,21 +1023,25 @@ if zenity_cmd:
     except subprocess.CalledProcessError:
         pass  # zenity --help-info failed, assume icon is not supported
 else:
-    error('ERROR: Zenity command is missing! Diagnostic dialog not available!')
+    error('ERR: Zenity command is missing! Diagnostic dialog not available!')
 
 
 def notify_context():
     """pop up a notification with context info"""
     def _notify_context(ctx: KeyContext):
         if not zenity_cmd:
-            error('ERROR: Zenity command is missing! Diagnostic dialog not available!')
+            error('ERR: Zenity command is missing! Diagnostic dialog not available!')
+            return
+
+        if not is_valid_command(zenity_cmd):
+            error(f"ERR: Zenity command not valid: '{zenity_cmd}'")
             return
 
         # fix a problem with zenity and <tags> in text
         def escape_markup(text: str):
             return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 
-        nwln_chr        = '<br>' if zenity_is_qarma is True else '\n'
+        nwln_chr        = '<br>' if zenity_is_qarma else '\n'
         ctx_clas        = ctx.wm_class
         ctx_name        = ctx.wm_name
         ctx_devn        = ctx.device_name
