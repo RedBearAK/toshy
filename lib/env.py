@@ -249,6 +249,7 @@ def get_env_info():
         'Sway':                     'sway',
         'SwayWM':                   'sway',
         'Trinity':                  'trinity',
+        'UKUI':                     'ukui',     # Ubuntu Kylin desktop shell
         'Unity':                    'unity',    # keep above "Ubuntu" to always catch 'unity' first
         'Ubuntu':                   'gnome',    # "Ubuntu" in XDG_CURRENT_DESKTOP, but DE is GNOME
         'Wayfire':                  'wayfire',
