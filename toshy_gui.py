@@ -4,7 +4,7 @@
 # Preferences app for Toshy, using tkinter GUI and "Sun Valley" theme
 TOSHY_PART      = 'gui'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Preferences app'  # pretty name to print out
-APP_VERSION     = '2023.1013'
+APP_VERSION     = '2024.0202'
 
 # -------- COMMON COMPONENTS --------------------------------------------------
 
