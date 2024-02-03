@@ -98,4 +98,4 @@ systemctl --user status toshy-config.service
 sleep $DELAY
 
 echo -e "\nFinished installing Toshy systemd services..."
-echo -e "\nHINT: Tap any modifier key once before trying shortcuts.\n"
+echo -e "\nHINT: In X11, tap a modifier key before trying shortcuts.\n"
