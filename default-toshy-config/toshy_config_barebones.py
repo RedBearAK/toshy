@@ -75,11 +75,12 @@ icon_file_inverse   = os.path.join(assets_path, "toshy_app_icon_rainbow_inverse.
 # Toshy config file
 TOSHY_PART      = 'config'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Barebones Config'
-APP_VERSION     = '2023.0816'
+APP_VERSION     = '2024.0202'
 
 # Settings object used to tweak preferences "live" between gui, tray and config.
 cnfg = Settings(current_folder_path)
-cnfg.watch_database()   # activate watchdog observer on the sqlite3 db file
+cnfg.watch_database()       # activate watchdog observer on the sqlite3 db file
+cnfg.watch_synergy_log()    # activate watchdog observer on the Synergy log file
 debug("")
 debug(cnfg, ctx="CG")
 
@@ -104,8 +105,10 @@ debug(cnfg, ctx="CG")
 # MANUALLY set any environment information if the auto-identification isn't working:
 OVERRIDE_DISTRO_NAME     = None
 OVERRIDE_DISTRO_VER      = None
+OVERRIDE_VARIANT_ID      = None
 OVERRIDE_SESSION_TYPE    = None
 OVERRIDE_DESKTOP_ENV     = None
+OVERRIDE_DE_MAJ_VER      = None
 
 ###  SLICE_MARK_END: env_overrides  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 ###################################################################################################
@@ -113,28 +116,33 @@ OVERRIDE_DESKTOP_ENV     = None
 # leave all of this alone!
 DISTRO_NAME     = None
 DISTRO_VER      = None
+VARIANT_ID      = None
 SESSION_TYPE    = None
 DESKTOP_ENV     = None
+DE_MAJ_VER      = None
 
 env_info: Dict[str, str] = lib.env.get_env_info()   # Returns a dict
 
-DISTRO_NAME     = OVERRIDE_DISTRO_NAME  or env_info.get('DISTRO_NAME')
-DISTRO_VER      = OVERRIDE_DISTRO_VER   or env_info.get('DISTRO_VER')
-SESSION_TYPE    = OVERRIDE_SESSION_TYPE or env_info.get('SESSION_TYPE')
-DESKTOP_ENV     = OVERRIDE_DESKTOP_ENV  or env_info.get('DESKTOP_ENV')
+DISTRO_NAME     = locals().get('OVERRIDE_DISTRO_NAME')  or env_info.get('DISTRO_NAME', 'keymissing')
+DISTRO_VER      = locals().get('OVERRIDE_DISTRO_VER')   or env_info.get('DISTRO_VER', 'keymissing')
+VARIANT_ID      = locals().get('OVERRIDE_VARIANT_ID')   or env_info.get('VARIANT_ID', 'keymissing')
+SESSION_TYPE    = locals().get('OVERRIDE_SESSION_TYPE') or env_info.get('SESSION_TYPE', 'keymissing')
+DESKTOP_ENV     = locals().get('OVERRIDE_DESKTOP_ENV')  or env_info.get('DESKTOP_ENV', 'keymissing')
+DE_MAJ_VER      = locals().get('OVERRIDE_DE_MAJ_VER')   or env_info.get('DE_MAJ_VER', 'keymissing')
 
 debug("")
 debug(  f'Toshy config sees this environment:'
         f'\n\t{DISTRO_NAME      = }'
         f'\n\t{DISTRO_VER       = }'
         f'\n\t{SESSION_TYPE     = }'
-        f'\n\t{DESKTOP_ENV      = }\n', ctx="CG")
+        f'\n\t{DESKTOP_ENV      = }'
+        f'\n\t{DE_MAJ_VER       = }\n', ctx="CG")
 
 try:
     # Pylance will complain if function undefined, without 'ignore' comment
     environ_api(session_type = SESSION_TYPE, wl_desktop_env = DESKTOP_ENV) # type: ignore
 except NameError:
-    debug(f"The API function 'environ_api' is not defined yet.")
+    debug(f"The API function 'environ_api' is not defined yet. Using wrong 'keyszer' branch?")
     pass
 
 
@@ -228,8 +236,8 @@ def negRgx(rgx_str):
 ###  SLICE_MARK_START: kbtype_override  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 
 keyboards_UserCustom_dct = {
-    # Add your keyboard device here if its type is misidentified by isKBtype() function
-    # Valid types to map device to: Apple, Windows, IBM, Chromebook
+    # Add your keyboard device here if its type is misidentified.
+    # Valid types to map device to: Apple, Windows, IBM, Chromebook (case sensitive)
     # Example:
     'My Keyboard Device Name': 'Apple',
 }
@@ -263,6 +271,7 @@ keyboards_Apple = [
     'Mitsumi Electric Apple Extended USB Keyboard',
     'Magic Keyboard with Numeric Keypad',
     'Magic Keyboard',
+    'MX Keys Mac Keyboard',
 ]
 
 kbtype_lists = {
@@ -309,8 +318,9 @@ not_win_type_rgx    = re.compile("IBM|Chromebook|Apple", re.I)
 ###########################################################################################
 
 
+
 # Instantiate a useful notification object class instance, to make notifications easier
-ntfy = NotificationManager(icon_file_active, title='Toshy Alert')
+ntfy = NotificationManager(icon_file_active, title='Toshy Alert (Config)')
 
 
 def isKBtype(kbtype: str, map=None):
@@ -321,7 +331,7 @@ def isKBtype(kbtype: str, map=None):
     kbtype_cf = kbtype.casefold()
     KBTYPE_cf = KBTYPE.casefold() if isinstance(KBTYPE, str) else None
 
-    def _isKBtype(ctx):
+    def _isKBtype(ctx: KeyContext):
         # debug(f"KBTYPE: '{KBTYPE}' | isKBtype check from map: '{map}'")
         return kbtype_cf == KBTYPE_cf
     return _isKBtype
@@ -340,34 +350,46 @@ def getKBtype():
     
     #### Hierarchy of validations:
     
-    1. Check if the device name is in the keyboards_UserCustom_dct dictionary.
-    2. Check if the device name matches any keyboard type list.
-    3. Check if any keyboard type string is found in the device name string.
-    4. Check if the device name indicates a "Windows" keyboard by excluding other types.
+    - Check if a forced override of keyboard type is applied by user preference.
+    - Check cache dictionary for device name stored from previous run of function.
+    - Check if the device name is in the keyboards_UserCustom_dct dictionary.
+    - Check if the device name matches any keyboard type list.
+    - Check if any keyboard type string is found in the device name string.
+    - Check if the device name indicates a "Windows" keyboard by excluding other types.
     """
 
+    valid_kbtypes = ['IBM', 'Chromebook', 'Windows', 'Apple']
+
     def _getKBtype(ctx: KeyContext):
+        # debug(f"Entering getKBtype with override value: '{cnfg.override_kbtype}'")
         global KBTYPE
         kbd_dev_name = ctx.device_name
 
-        def log_kbtype(msg=None, cache_dev=True):
+        def log_kbtype(msg, cache_dev):
             debug(f"KBTYPE: '{KBTYPE}' | {msg}: '{kbd_dev_name}'")
             if cache_dev:
                 kbtype_cache_dct[kbd_dev_name] = (KBTYPE, msg)
 
+        # If user wants to override, apply override and return.
+        # Breaks per-device adaptatation capability while engaged!
+        if cnfg.override_kbtype in valid_kbtypes:
+            KBTYPE = cnfg.override_kbtype
+            log_kbtype(f"WARNING: Override applied! Dev", cache_dev=False)
+            return
+
         # Check in the kbtype cache dict for the device
         if kbd_dev_name in kbtype_cache_dct:
             KBTYPE, cached_msg = kbtype_cache_dct[kbd_dev_name]
-            log_kbtype(f'{cached_msg} (cached)', cache_dev=False)
+            log_kbtype(f'(CACHED) {cached_msg}', cache_dev=False)
             return
 
         kbd_dev_name_cf = ctx.device_name.casefold()
 
         # Check if there is a custom type for the device
         custom_kbtype = kbds_UserCustom_dct_cf.get(kbd_dev_name_cf, '')
-        if custom_kbtype and custom_kbtype in ['IBM', 'Chromebook', 'Windows', 'Apple']:
+        if custom_kbtype and custom_kbtype in valid_kbtypes:
             KBTYPE = custom_kbtype
-            log_kbtype('Custom type for dev')
+            log_kbtype('Custom type for dev', cache_dev=True)
             return
 
         # Check against the keyboard type lists
@@ -375,14 +397,14 @@ def getKBtype():
             for rgx in regex_lst:
                 if rgx.search(kbd_dev_name_cf):
                     KBTYPE = kbtype
-                    log_kbtype('Rgx matched on dev')
+                    log_kbtype('Rgx matched on dev', cache_dev=True)
                     return
 
         # Check if any keyboard type string is found in the device name
         for kbtype in ['IBM', 'Chromebook', 'Windows', 'Apple']:
             if kbtype.casefold() in kbd_dev_name_cf:
                 KBTYPE = kbtype
-                log_kbtype('Type in dev name')
+                log_kbtype('Type in dev name', cache_dev=True)
                 return
 
         # Check if the device name indicates a "Windows" keyboard
@@ -390,7 +412,7 @@ def getKBtype():
             and not not_win_type_rgx.search(kbd_dev_name_cf) 
             and not all_kbds_rgx.search(kbd_dev_name_cf) ):
             KBTYPE = 'Windows'
-            log_kbtype('Default type for dev')
+            log_kbtype('Default type for dev', cache_dev=True)
             return
 
         # Default to None if no matching keyboard type is found
@@ -552,6 +574,10 @@ def matchProps(*,
     _name = not_name if name is None else name
     _devn = not_devn if devn is None else devn
 
+    def _isScreenFocusActive():
+        # If screen focus is lost, return False immediately
+        return False if cnfg.screen_focus is False else True
+
     # process lists of conditions
     if _lst is not None:
         if any([x is not None for x in lst_dct_params]): 
@@ -573,6 +599,8 @@ def matchProps(*,
                         f"See log output before traceback.\n")
 
         def _matchProps_Lst(ctx: KeyContext):
+            if not _isScreenFocusActive():
+                return False
             if not_lst is not None:
                 if logging_enabled: print(f"## _matchProps_Lst()[not_lst] ## {dbg=}")
                 return not any(matchProps(**dct)(ctx) for dct in not_lst)
@@ -582,24 +610,24 @@ def matchProps(*,
 
         return _matchProps_Lst      # outer function returning inner function
 
-    # compile case insentitive regex object for given params, unless cse=True
+    # compile case insensitive regex object for given params, unless cse=True
     if _clas is not None: clas_rgx = re.compile(_clas) if cse else re.compile(_clas, re.I)
     if _name is not None: name_rgx = re.compile(_name) if cse else re.compile(_name, re.I)
     if _devn is not None: devn_rgx = re.compile(_devn) if cse else re.compile(_devn, re.I)
 
     def _matchProps(ctx: KeyContext):
-        cond_list = []
+        if not _isScreenFocusActive():
+            return False
+        cond_list       = []
+        nt_err          = 'ERR: matchProps: NoneType in ctx.'
         if _clas is not None:
-            clas_match = re.search(clas_rgx,
-                                    ctx.wm_class or 'ERR: matchProps: NoneType in ctx.wm_class')
+            clas_match = re.search(clas_rgx, ctx.wm_class or nt_err + 'wm_class')
             cond_list.append(not clas_match if not_clas is not None else clas_match)
         if _name is not None:
-            name_match = re.search(name_rgx,
-                                    ctx.wm_name or 'ERR: matchProps: NoneType in ctx.wm_name')
+            name_match = re.search(name_rgx, ctx.wm_name or nt_err + 'wm_name')
             cond_list.append(not name_match if not_name is not None else name_match)
         if _devn is not None:
-            devn_match = re.search(devn_rgx,
-                                    ctx.device_name or 'ERR: matchProps: NoneType in ctx.device_name')
+            devn_match = re.search(devn_rgx, ctx.device_name or nt_err + 'device_name')
             cond_list.append(not devn_match if not_devn is not None else devn_match)
         # these two MUST check explicitly for "is not None" because external input is True/False,
         # and we want to be able to match the LED_on state of either "True" or "False"
@@ -608,7 +636,7 @@ def matchProps(*,
         if logging_enabled: # and all(cnd_lst): # << add this to show only "True" condition lists
             print(f'####  CND_LST ({all(cond_list)})  ####  {dbg=}')
             for elem in cond_list:
-                print('##', re.sub('^.*span=.*\), ', '', str(elem)).replace('>',''))
+                print('##', re.sub(r'^.*span=.*\), ', '', str(elem)).replace('>',''))
             print('-------------------------------------------------------------------')
         return all(cond_list)
 
@@ -620,12 +648,50 @@ def matchProps(*,
 _enter_is_F2 = True     # DON'T CHANGE THIS! Must be set to True here. 
 
 
-def is_Enter_F2(combo_if_true, latch_or_combo_if_false):
-    """
-    Send a different combo for Enter key depending on state of _enter_is_F2 variable,\n 
-    or latch the variable to True or False to control the Enter key state on next use.
+# def is_Enter_F2(combo_if_true, latch_or_combo_if_false):
+#     """
+#     Send a different combo for Enter key depending on state of _enter_is_F2 variable,\n 
+#     or latch the variable to True or False to control the Enter key state on next use.
     
-    This enables a simulation of the Finder "Enter to rename" capability.
+#     This enables a simulation of the Finder "Enter to rename" capability.
+#     """
+#     def _is_Enter_F2():
+#         global _enter_is_F2
+#         combo_list = [combo_if_true]
+#         if latch_or_combo_if_false in (True, False):    # Latch variable to given bool value
+#             _enter_is_F2 = latch_or_combo_if_false
+#         elif _enter_is_F2:                              # If Enter is F2 now, set to be Enter next
+#             _enter_is_F2 = False
+#         else:                                           # If Enter is Enter now, set to be F2 next
+#             combo_list = [latch_or_combo_if_false]
+#             _enter_is_F2 = True
+#         return combo_list
+#     return _is_Enter_F2
+
+
+def iEF2(combo_if_true, latch_or_combo_if_false, 
+                keep_value_if_true=False, keep_value_if_false=False):
+    """
+    Formerly 'is_Enter_F2'
+    Send a different combo for the Enter key based on the state of the _enter_is_F2 variable,
+    or latch the variable to True or False to control the Enter key output on the next use.
+    
+    Args:
+        combo_if_true:              The combo to send if _enter_is_F2 is True.
+        latch_or_combo_if_false:    The combo to send if _enter_is_F2 is False, or
+                                    a Boolean to latch _enter_is_F2 to a specific value.
+        keep_value_if_true (opt.):  If True, _enter_is_F2 will be kept True if it is currently True.
+                                    If False, _enter_is_F2 will be set to False if it is currently True.
+        keep_value_if_false (opt.): If True, _enter_is_F2 will be kept False if it is currently False.
+                                    If False, _enter_is_F2 will be set to True if it is currently False.
+    
+    Returns:
+        A function that, when called, returns the appropriate combo based on the current
+        state of _enter_is_F2 and the provided parameters, and updates _enter_is_F2
+        based on the provided parameters.
+    
+    This enables a simulation of the Finder "Enter to rename" capability, allowing
+    for complex control over the Enter key's behavior in various scenarios.
     """
     def _is_Enter_F2():
         global _enter_is_F2
@@ -633,15 +699,29 @@ def is_Enter_F2(combo_if_true, latch_or_combo_if_false):
         if latch_or_combo_if_false in (True, False):    # Latch variable to given bool value
             _enter_is_F2 = latch_or_combo_if_false
         elif _enter_is_F2:                              # If Enter is F2 now, set to be Enter next
-            _enter_is_F2 = False
+            if keep_value_if_true is False:
+                _enter_is_F2 = False
         else:                                           # If Enter is Enter now, set to be F2 next
             combo_list = [latch_or_combo_if_false]
-            _enter_is_F2 = True
+            if keep_value_if_false is False:
+                _enter_is_F2 = True
         return combo_list
     return _is_Enter_F2
 
 
+# def iEF2(*args, **kwargs):
+#     """wrapper to shorten name of `is_Enter_F2` function"""
+#     return is_Enter_F2(*args, **kwargs)
+
+
+def iEF2NT():
+    """Feed `is_Enter_F2` function `None` and `True` as arguments, with short name"""
+    return iEF2(None, True)
+
+
 def macro_tester():
+    """Type out a macro with useful info and a Unicode test.
+        WARNING: Safe only for use in apps that accept text blocks/typing of many characters."""
     def _macro_tester(ctx: KeyContext):
         return [
                     C("Enter"),
@@ -649,42 +729,89 @@ def macro_tester():
                     ST(f"Wind. Title: '{ctx.wm_name}'"), C("Enter"),
                     ST(f"Kbd. Device: '{ctx.device_name}'"), C("Enter"),
                     ST("Next test should come out on ONE LINE!"), C("Enter"),
-                    ST("Unicode and Shift Test: 🌹—€—\u2021—ÿ—\U00002021 12345 !@#$% |\ !!!!!!"),
+                    ST("Unicode and Shift Test: 🌹—€—\u2021—ÿ—\U00002021 12345 !@#$% |\\ !!!!!!"),
                     C("Enter")
         ]
     return _macro_tester
 
 
+def is_valid_command(command):
+    """Check if the command path is valid and executable"""
+    return command and os.path.isfile(command) and os.access(command, os.X_OK)
+
+
+zenity_is_qarma = False
+
+zenity_cmd = shutil.which('zenity-gtk')
+if not zenity_cmd:
+    zenity_cmd = shutil.which('qarma')
+    if zenity_cmd:
+        zenity_is_qarma = True
+if not zenity_cmd:
+    zenity_cmd = shutil.which('zenity')
+
+debug(f"Zenity command path: '{zenity_cmd}'")
+
 zenity_icon_option = None
-try:
-    zenity_help_output = subprocess.check_output(['zenity', '--help-info'])
-    help_text = str(zenity_help_output)
-    if '--icon=' in help_text:
-        zenity_icon_option = '--icon=toshy_app_icon_rainbow'
-    elif '--icon-name=' in help_text:
-        zenity_icon_option = '--icon-name=toshy_app_icon_rainbow'
-except subprocess.CalledProcessError:
-    pass  # zenity --help-info failed, assume icon is not supported
+
+if zenity_cmd:
+    try:
+        zenity_help_output = subprocess.check_output([zenity_cmd, '--help-info'])
+        help_text = str(zenity_help_output)
+        if '--icon=' in help_text:
+            zenity_icon_option = '--icon=toshy_app_icon_rainbow'
+        elif '--icon-name=' in help_text:
+            zenity_icon_option = '--icon-name=toshy_app_icon_rainbow'
+    except subprocess.CalledProcessError:
+        pass  # zenity --help-info failed, assume icon is not supported
+else:
+    error('ERR: Zenity command is missing! Diagnostic dialog not available!')
+
 
 def notify_context():
     """pop up a notification with context info"""
     def _notify_context(ctx: KeyContext):
-        global zenity_icon_option
-        zenity_cmd = [  'zenity', '--info', '--no-wrap', 
-                        '--title=Toshy Context Info',
-                        (
-                        '--text='
-                        f"Appl. Class   = '{ctx.wm_class}'"
-                        f"\nWndw. Title = '{ctx.wm_name}'"
-                        f"\nKbd. Device = '{ctx.device_name}'"
-                        )]
+        if not zenity_cmd:
+            error('ERR: Zenity command is missing! Diagnostic dialog not available!')
+            return
+
+        if not is_valid_command(zenity_cmd):
+            error(f"ERR: Zenity command not valid: '{zenity_cmd}'")
+            return
+
+        # fix a problem with zenity and <tags> in text
+        def escape_markup(text: str):
+            return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+
+        nwln_chr        = '<br>' if zenity_is_qarma else '\n'
+        ctx_clas        = ctx.wm_class
+        ctx_name        = ctx.wm_name
+        ctx_devn        = ctx.device_name
+        message         = ( f"{nwln_chr}<tt>"
+                            f"<b>Class =</b> '{escape_markup(ctx_clas)}'  {nwln_chr}"
+                            f"<b>Title =</b> '{escape_markup(ctx_name)}'  {nwln_chr}"
+                            f"<b>Keybd =</b> '{escape_markup(ctx_devn)}'  {nwln_chr}"
+                            f"</tt>" )
+
+        zenity_cmd_lst = [  zenity_cmd, '--info', '--no-wrap', 
+                            '--title=Toshy Context Info',
+                            '--text=' + message ]
+
         # insert the icon argument if it's supported
         if zenity_icon_option is not None:
-            zenity_cmd.insert(3, zenity_icon_option)
-        subprocess.Popen(zenity_cmd, cwd=icons_dir, stderr=DEVNULL, stdout=DEVNULL)
+            zenity_cmd_lst.insert(3, zenity_icon_option)
+        subprocess.Popen(zenity_cmd_lst, cwd=icons_dir, stderr=DEVNULL, stdout=DEVNULL)
+
+        # Optionally, also send a system notification:
+        # ntfy.send_notification(message)
     return _notify_context
 
 
+def is_pre_GNOME_45(de_ver):
+    pre_G45_ver_lst = [44, 43, 42, 41, 40, 3]
+    def _is_pre_GNOME_45(ctx: KeyContext):
+        return  DESKTOP_ENV == 'gnome' and str(de_ver).isdigit() and int(de_ver) in pre_G45_ver_lst
+    return _is_pre_GNOME_45
 
 ###################################################################################################
 ###  SLICE_MARK_START: barebones_user_cfg  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
