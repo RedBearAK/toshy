@@ -1186,8 +1186,6 @@ modmap("Cond modmap - GTK3 numpad nav keys fix",{
     Key.KP0:                    Key.INSERT, 
     Key.KPDOT:                  Key.DELETE, 
     Key.KPENTER:                Key.ENTER,
-# }, when = lambda ctx: ctx.numlock_on is False and forced_numpad is False)
-# }, when = lambda ctx: ctx.numlock_on is False and cnfg.forced_numpad is False )
 }, when = lambda ctx:
     matchProps(not_lst=exclude_kpad_devs_lod)(ctx) and 
     matchProps(not_lst=remotes_lod)(ctx) and 
@@ -1768,7 +1766,6 @@ keymap("DK-ABC - Double Grave", {
     C("Shift-O"):               UC(0x020C),                     # Ȍ Latin Capital Letter O with Double Grave
     C("Shift-R"):               UC(0x0210),                     # Ȑ Latin Capital Letter R with Double Grave
     C("Shift-U"):               UC(0x0214),                     # Ȕ Latin Capital Letter U with Double Grave
-# }, when = lambda _: (ac_Chr_main == 0x030F or ac_Chr_main == 0x02F5) and cnfg.optspec_layout == 'ABC')
 }, when=lambda _: ac_Chr_main in [0x030F, 0x02F5] and cnfg.optspec_layout == 'ABC')
 
 keymap("DK-ABC - Umlaut/Diaeresis", {
@@ -1866,7 +1863,6 @@ keymap("DK-ABC - Inverted Breve", {
     C("Shift-O"):               UC(0x020E),                     # Ȏ Latin Capital Letter O with Inverted Breve
     C("Shift-R"):               UC(0x0212),                     # Ȓ Latin Capital Letter R with Inverted Breve
     C("Shift-U"):               UC(0x0216),                     # Ȗ Latin Capital Letter U with Inverted Breve
-# }, when = lambda _: (ac_Chr_main == 0x0311 or ac_Chr_main == 0x1D16) and cnfg.optspec_layout == 'ABC')
 }, when = lambda _: ac_Chr_main in [0x0311, 0x1D16] and cnfg.optspec_layout == 'ABC')
 
 keymap("DK-ABC - Tilde Below", {
@@ -1880,7 +1876,6 @@ keymap("DK-ABC - Tilde Below", {
     C("Shift-E"):               UC(0x1E1A),                     # Ḛ Latin Capital Letter E with Tilde Below
     C("Shift-I"):               UC(0x1E2C),                     # Ḭ Latin Capital Letter I with Tilde Below
     C("Shift-U"):               UC(0x1E74),                     # Ṵ Latin Capital Letter U with Tilde Below
-# }, when = lambda _: (ac_Chr_main == 0x0330 or ac_Chr_main == 0x02F7) and cnfg.optspec_layout == 'ABC')
 }, when = lambda _: ac_Chr_main in [0x0330, 0x02F7] and cnfg.optspec_layout == 'ABC')
 
 keymap("DK-ABC - Caret/Circumflex Below", {
@@ -2558,7 +2553,6 @@ keymap("Escape actions for dead keys", {
     C("Shift-Slash"):           [getDK(),C("Shift-Slash"),setDK(None)],
 
 }, when = lambda _: ac_Chr_main in deadkeys_list)
-# }, when = lambda _: ac_Chr in deadkeys_US or ac_Chr in deadkeys_ABC)
 
 keymap("Disable Dead Keys Tripwire",{
     # Nothing needs to be here. Tripwire keymap to disable active dead keys keymap(s)
@@ -2732,7 +2726,6 @@ keymap("OptSpecialChars - ABC", {
 
     C("Shift-Alt-Slash"):       UC(0x00BF),                     # ¿ Inverted Question mark
 
-# }, when = lambda ctx: ctx.wm_class.casefold() not in terminals and cnfg.optspec_layout == 'ABC')
 }, when = lambda ctx: matchProps(not_lst=terminals_and_remotes_lod)(ctx) and cnfg.optspec_layout == 'ABC')
 
 
@@ -2880,7 +2873,6 @@ keymap("OptSpecialChars - US", {
     C("Shift-Alt-Dot"):         UC(0x02D8),                     # ˘ Breve diacritic (non-combining)
     C("Shift-Alt-Slash"):       UC(0x00BF),                     # ¿ Inverted Question mark
 
-# }, when = lambda ctx: ctx.wm_class.casefold() not in terminals and cnfg.optspec_layout == 'US')
 }, when = lambda ctx: matchProps(not_lst=terminals_and_remotes_lod)(ctx) and cnfg.optspec_layout == 'US')
 
 
@@ -3398,7 +3390,6 @@ keymap("Wordwise - not vscode", {
     #   https://superuser.com/questions/770301/pentadactyl-how-to-disable-menu-bar-toggle-by-alt
     # **
     #
-# }, when = lambda ctx: ctx.wm_class.casefold() not in mscodes)
 }, when = matchProps(not_clas=vscodeStr_ext))
 
 
@@ -3732,22 +3723,18 @@ keymap("Konsole terminal - not tab nav", {
 keymap("GenTerms overrides: elementary OS", {
     C("LC-Right"):              [bind,C("Super-Right")],        # SL - Change workspace (elementary)
     C("LC-Left"):               [bind,C("Super-Left")],         # SL - Change workspace (elementary)
-# }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DISTRO_NAME == 'elementary')
 }, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_NAME == 'elementary')
 keymap("GenTerms overrides: Fedora", {
     C("RC-H"):                  C("Super-h"),                   # Hide Window/Minimize app (gnome/fedora)
-# }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DISTRO_NAME in ['fedora', 'almalinux'] )
 }, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_NAME in ['fedora', 'almalinux'] )
 keymap("GenTerms overrides: Pop!_OS", {
     C("LC-Right"):              [bind,C("Super-C-Up")],         # SL - Change workspace (pop)
     C("LC-Left"):               [bind,C("Super-C-Down")],       # SL - Change workspace (pop)
-# }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DISTRO_NAME == 'pop')
 }, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_NAME == 'pop')
 keymap("GenTerms overrides: Ubuntu/Fedora", {
     C("LC-RC-Q"):               C("Super-L"),                   # Lock screen (ubuntu/fedora)
     C("LC-Right"):              [bind,C("Super-Page_Up")],      # SL - Change workspace (ubuntu/fedora)
     C("LC-Left"):               [bind,C("Super-Page_Down")],    # SL - Change workspace (ubuntu/fedora)
-# }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DISTRO_NAME in ['ubuntu', 'fedora'] )
 }, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_NAME in ['ubuntu', 'fedora'] )
 
 
@@ -3755,7 +3742,6 @@ keymap("GenTerms overrides: Ubuntu/Fedora", {
 keymap("GenTerms overrides: Budgie", {
     C("LC-Right"):              [bind,C("C-Alt-Right")],        # Default SL - Change workspace (budgie)
     C("LC-Left"):               [bind,C("C-Alt-Left")],         # Default SL - Change workspace (budgie)
-# }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DESKTOP_ENV == 'budgie' )
 }, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DESKTOP_ENV == 'budgie' )
 keymap("GenTerms overrides: GNOME", {
     ### Keyboard input source (language/layout) switching in GNOME
@@ -3763,7 +3749,6 @@ keymap("GenTerms overrides: GNOME", {
     # C("Shift-LC-Space"):        update_kb_layout,             # keyboard input source (language) switching (reverse) (gnome)
     C("LC-Space"):             [bind,C("Super-Space")],         # keyboard input source (language) switching (gnome)
     C("Shift-LC-Space"):       [bind,C("Super-Shift-Space")],   # keyboard input source (language) switching (reverse) (gnome)
-# }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DESKTOP_ENV == 'gnome' )
 }, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DESKTOP_ENV == 'gnome' )
 keymap("GenTerms overrides: swaywm", {
     C("RC-Q"):                  C("Shift-RC-Q"),                # Override sway GenGUI Cmd+Q
@@ -3773,7 +3758,6 @@ keymap("GenTerms overrides: Xfce4", {
     C("Shift-RC-Grave"):       [bind,C("Super-Shift-Tab")],     # xfce4 Switch within app group
     C("LC-Right"):             [bind,C("C-Alt-Home")],          # SL - Change workspace xfce4
     C("LC-Left"):              [bind,C("C-Alt-End")],           # SL - Change workspace xfce4
-# }, when = lambda ctx: matchProps(clas=termStr)(ctx) and DESKTOP_ENV == 'xfce' )
 }, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DESKTOP_ENV == 'xfce' )
 
 
@@ -3837,8 +3821,6 @@ keymap("General Terminals", {
     C("RC-Dot"):                C("LC-c"),                      # Mimic macOS Cmd+Dot to cancel command
     # C("RC-SLASH"):              C("C-Shift-SLASH"),             # No function - RE-ENABLE IF SOMEONE REPORTS
     # C("RC-KPASTERISK"):         C("C-Shift-KPASTERISK"),        # No function - RE-ENABLE IF SOMEONE REPORTS
-
-# }, when = matchProps(clas=termStr))
 }, when = matchProps(lst=terminals_lod))
 
 
@@ -3858,8 +3840,6 @@ keymap("General Terminals", {
 # Note: terminals extends to remotes as well
 keymap("Cmd+Dot not in terminals", {
     C("RC-Dot"):                C("Esc"),                       # Mimic macOS Cmd+dot = Escape key (not in terminals)
-# }, when = lambda ctx: ctx.wm_class.casefold() not in terminals)
-# }, when = matchProps(not_clas=termStr_ext) )
 }, when = matchProps(not_lst=terminals_and_remotes_lod) )
 
 
@@ -4064,8 +4044,6 @@ keymap("General GUI", {
     # C(""):                      ignore_combo,                   # cancel
     # C(""):                      C(""),                          #
 
-# }, when = lambda ctx: ctx.wm_class.casefold() not in remotes)   # original conditional
-# }, when = matchProps(not_clas=remoteStr))                       # matchProps with regex string
 }, when = matchProps(not_lst=remotes_lod))                      # matchProps with list-of-dicts
 
 
