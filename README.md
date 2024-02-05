@@ -984,6 +984,12 @@ And the last line in every section of a JSON formatted file can't have a comma a
 
 You may be prompted to restart the app after saving this particular set of lines, and it will change how the VSCode window looks, with a combined menu/titlebar. The `Option/Alt` key will no longer focus the menu bar.  
 
+### VSCode embedded terminal shortcuts
+
+To fix how some shortcuts work in the embedded terminal pane inside Visual Studio Code and variants like VSCodium and "Code - OSS", see this Wiki page: 
+
+https://github.com/RedBearAK/toshy/wiki/Embedded-terminal-in-VSCode-and-variants  
+
 ### Option-key Special Character Entry (or Macros) Acting Weird
 
 Sometimes, especially in virtual machines (but also on some bare metal installs) there is a problem in Linux with the "timing" of modifier key presses, leading to failures of some shortcut combos.  
