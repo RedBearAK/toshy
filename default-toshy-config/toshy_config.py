@@ -3724,6 +3724,9 @@ keymap("GenTerms overrides: elementary OS", {
     C("LC-Right"):              [bind,C("Super-Right")],        # SL - Change workspace (elementary)
     C("LC-Left"):               [bind,C("Super-Left")],         # SL - Change workspace (elementary)
 }, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_NAME == 'elementary')
+keymap("GenTerms overrides: Fedora KDE", {
+    C("RC-H"):                  C("Super-Page_Down"),           # Hide Window/Minimize app (Fedora KDE spin)
+}, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_NAME in ['fedora', 'almalinux'] and DESKTOP_ENV in ['kde', 'plasma'] )
 keymap("GenTerms overrides: Fedora", {
     C("RC-H"):                  C("Super-h"),                   # Hide Window/Minimize app (gnome/fedora)
 }, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_NAME in ['fedora', 'almalinux'] )
@@ -3871,6 +3874,9 @@ keymap("GenGUI overrides: elementary OS", {
     C("RC-Space"):             [iEF2NT(),C("Super-Space")],     # SL - Launch Application Menu (elementary)
     C("RC-LC-f"):               C("Super-Up"),                  # SL- Maximize app elementary
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'elementary' )
+keymap("GenGUI overrides: Fedora KDE", {
+    C("RC-H"):                  C("Super-Page_Down"),                   # Default SL - Minimize app (Fedora KDE spin)
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME in ['fedora', 'almalinux'] and DESKTOP_ENV in ['kde', 'plasma'] )
 keymap("GenGUI overrides: Fedora", {
     C("Super-RC-Q"):            C("Super-L"),                   # Lock screen (fedora)
     C("RC-H"):                  C("Super-h"),                   # Default SL - Minimize app (gnome/budgie/popos/fedora) not-deepin
