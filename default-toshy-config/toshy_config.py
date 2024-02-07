@@ -3724,12 +3724,9 @@ keymap("GenTerms overrides: elementary OS", {
     C("LC-Right"):              [bind,C("Super-Right")],        # SL - Change workspace (elementary)
     C("LC-Left"):               [bind,C("Super-Left")],         # SL - Change workspace (elementary)
 }, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_NAME == 'elementary')
-keymap("GenTerms overrides: Fedora KDE", {
-    C("RC-H"):                  C("Super-Page_Down"),           # Hide Window/Minimize app (Fedora KDE spin)
-}, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_NAME in ['fedora', 'almalinux'] and DESKTOP_ENV in ['kde', 'plasma'] )
-keymap("GenTerms overrides: Fedora", {
+keymap("GenTerms overrides: Fedora GNOME", {
     C("RC-H"):                  C("Super-h"),                   # Hide Window/Minimize app (gnome/fedora)
-}, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_NAME in ['fedora', 'almalinux'] )
+}, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_NAME in ['fedora', 'almalinux'] and DESKTOP_ENV in ['gnome'] )
 keymap("GenTerms overrides: Pop!_OS", {
     C("LC-Right"):              [bind,C("Super-C-Up")],         # SL - Change workspace (pop)
     C("LC-Left"):               [bind,C("Super-C-Down")],       # SL - Change workspace (pop)
@@ -3753,6 +3750,9 @@ keymap("GenTerms overrides: GNOME", {
     C("LC-Space"):             [bind,C("Super-Space")],         # keyboard input source (language) switching (gnome)
     C("Shift-LC-Space"):       [bind,C("Super-Shift-Space")],   # keyboard input source (language) switching (reverse) (gnome)
 }, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DESKTOP_ENV == 'gnome' )
+keymap("GenTerms overrides: KDE", {
+    C("RC-H"):                  C("Super-Page_Down"),           # Hide Window/Minimize app (KDE Plasma)
+}, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DESKTOP_ENV in ['kde', 'plasma'] )
 keymap("GenTerms overrides: swaywm", {
     C("RC-Q"):                  C("Shift-RC-Q"),                # Override sway GenGUI Cmd+Q
 }, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DESKTOP_ENV == 'sway' )
@@ -3849,20 +3849,20 @@ keymap("Cmd+Dot not in terminals", {
 # Overrides to General GUI shortcuts for specific keyboard types
 keymap("GenGUI overrides: Chromebook/IBM", {
     # In-App Tab switching
-    C("Alt-Tab"):              [iEF2NT(),bind,C("C-Tab")],               # Chromebook/IBM - In-App Tab switching
-    C("Alt-Shift-Tab"):        [iEF2NT(),bind,C("C-Shift-Tab")],         # Chromebook/IBM - In-App Tab switching
-    C("Alt-Grave") :           [iEF2NT(),bind,C("C-Shift-Tab")],         # Chromebook/IBM - In-App Tab switching
-    C("RAlt-Backspace"):        C("Delete"),                    # Chromebook/IBM - Delete
-    C("LAlt-Backspace"):        C("C-Backspace"),               # Chromebook/IBM - Delete Left Word of Cursor
+    C("Alt-Tab"):              [iEF2NT(),bind,C("C-Tab")],          # Chromebook/IBM - In-App Tab switching
+    C("Alt-Shift-Tab"):        [iEF2NT(),bind,C("C-Shift-Tab")],    # Chromebook/IBM - In-App Tab switching
+    C("Alt-Grave") :           [iEF2NT(),bind,C("C-Shift-Tab")],    # Chromebook/IBM - In-App Tab switching
+    C("RAlt-Backspace"):        C("Delete"),                        # Chromebook/IBM - Delete
+    C("LAlt-Backspace"):        C("C-Backspace"),                   # Chromebook/IBM - Delete Left Word of Cursor
 }, when = lambda ctx:
     matchProps(not_lst=remotes_lod)(ctx) and 
     (   isKBtype('Chromebook', map="gengui ovr cbook")(ctx) or 
         isKBtype('IBM', map="gengui ovr ibm")(ctx) ) )
 keymap("GenGUI overrides: not Chromebook", {
     # In-App Tab switching
-    C("Super-Tab"):            [iEF2NT(),bind,C("LC-Tab")],              # Default not-chromebook
-    C("Super-Shift-Tab"):      [iEF2NT(),bind,C("Shift-LC-Tab")],        # Default not-chromebook
-    C("Alt-Backspace"):         C("C-Backspace"),               # Default not-chromebook
+    C("Super-Tab"):            [iEF2NT(),bind,C("LC-Tab")],         # Default not-chromebook
+    C("Super-Shift-Tab"):      [iEF2NT(),bind,C("Shift-LC-Tab")],   # Default not-chromebook
+    C("Alt-Backspace"):         C("C-Backspace"),                   # Default not-chromebook
 }, when = lambda ctx:
     matchProps(not_lst=remotes_lod)(ctx) and 
     not isKBtype('Chromebook', map="gengui ovr not cbook")(ctx) )
@@ -3874,15 +3874,12 @@ keymap("GenGUI overrides: elementary OS", {
     C("RC-Space"):             [iEF2NT(),C("Super-Space")],     # SL - Launch Application Menu (elementary)
     C("RC-LC-f"):               C("Super-Up"),                  # SL- Maximize app elementary
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'elementary' )
-keymap("GenGUI overrides: Fedora KDE", {
-    C("RC-H"):                  C("Super-Page_Down"),                   # Default SL - Minimize app (Fedora KDE spin)
-}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME in ['fedora', 'almalinux'] and DESKTOP_ENV in ['kde', 'plasma'] )
-keymap("GenGUI overrides: Fedora", {
+keymap("GenGUI overrides: Fedora GNOME", {
     C("Super-RC-Q"):            C("Super-L"),                   # Lock screen (fedora)
     C("RC-H"):                  C("Super-h"),                   # Default SL - Minimize app (gnome/budgie/popos/fedora) not-deepin
     C("Super-Right"):          [bind,C("Super-Page_Up")],       # SL - Change workspace (ubuntu/fedora)
     C("Super-Left"):           [bind,C("Super-Page_Down")],     # SL - Change workspace (ubuntu/fedora)
-}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME in ['fedora', 'almalinux'] )
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME in ['fedora', 'almalinux'] and DESKTOP_ENV in ['gnome'] )
 keymap("GenGUI overrides: Manjaro GNOME", {
     C("RC-Q"):              C("Super-Q"),                       # Close window
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'manjaro' and DESKTOP_ENV == 'gnome' )
@@ -3919,17 +3916,20 @@ keymap("GenGUI overrides: Ubuntu", {
 # Overrides to General GUI shortcuts for specific desktop environments
 keymap("GenGUI overrides: Budgie", {
     C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # Open panel-main-menu (Budgie menu)
-    C("Super-Right"):           C("C-Alt-Right"),               # Default SL - Change workspace (budgie)
-    C("Super-Left"):            C("C-Alt-Left"),                # Default SL - Change workspace (budgie)
-    C("RC-H"):                  C("Super-h"),                   # Default SL - Minimize app (gnome/budgie/popos/fedora) not-deepin
+    C("Super-Right"):           C("C-Alt-Right"),               # Change workspace (budgie)
+    C("Super-Left"):            C("C-Alt-Left"),                # Change workspace (budgie)
+    C("RC-H"):                  C("Super-h"),                   # Minimize app (gnome/budgie/popos/fedora) not-deepin
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'budgie' )
 keymap("GenGUI overrides: Cinnamon", {
     C("RC-Space"):             [iEF2NT(),C("C-Esc")],           # Right click, configure Mint menu shortcut to Ctrl+Esc
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'cinnamon' )
 keymap("GenGUI overrides: Deepin", {
-    C("RC-H"):                  C("Super-n"),                   # Default SL - Minimize app (deepin)
+    C("RC-H"):                  C("Super-n"),                   # Minimize app (deepin)
     C("Alt-RC-Space"):          C("Super-e"),                   # Open Finder - (deepin)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'deepin' )
+keymap("GenGUI overrides: KDE", {
+    C("RC-H"):                  C("Super-Page_Down"),           # Minimize app (KDE Plasma)
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV in ['kde', 'plasma'] )
 
 
 keymap("GenGUI overrides: pre-GNOME 45 fix", {
