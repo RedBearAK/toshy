@@ -409,11 +409,13 @@ distro_groups_map = {
     'ubuntu-based':             ["ubuntu", "mint", "pop", "elementary", "neon", "tuxedo", "zorin"],
     'debian-based':             ["lmde", "peppermint", "debian", "kali", "q4os"],
 
-    'arch-based':               ["arch", "arcolinux", "endeavouros", "manjaro"],
+    'arch-based':               ["arch", "arcolinux", "endeavouros", "garuda", "manjaro"],
 
     'solus-based':              ["solus"],
 
     'void-based':               ["void"],
+
+    # 'kaos-based':               ["kaos"],
     # Add more as needed...
 }
 
@@ -518,7 +520,7 @@ pkg_groups_map = {
     'arch-based':          ["cairo",
                             "dbus",
                             "evtest",
-                            "git", "gobject-introspection",
+                            "gcc", "git", "gobject-introspection",
                             "libappindicator-gtk3", "libnotify",
                             "pkg-config", "python", "python-dbus", "python-pip",
                             "systemd",
@@ -542,6 +544,16 @@ pkg_groups_map = {
                                 "python3-pkgconfig", "python3-tkinter",
                             "wayland-devel", "wget",
                             "xset",
+                            "zenity"],
+
+    'kaos-based':          ["cairo",
+                            "dbus",
+                            "evtest",
+                            "git", "gobject-introspection",
+                            "libappindicator-gtk3", "libnotify",
+                            "pkg-config", "python", "python-dbus", "python-pip",
+                            "systemd",
+                            "tk",
                             "zenity"],
 
 }
