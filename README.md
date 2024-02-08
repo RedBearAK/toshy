@@ -585,6 +585,12 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - KDE (Plasma) desktop should work in X11/Xorg and Wayland
     - `plasma-wayland-session` can be installed
 
+- Garuda Linux (Arch-based)
+
+    - Garuda KDE Dr460nized works
+    - Hyprland should work, but wouldn't install in VM
+    - Most ither flavors should also work fine
+
 - Manjaro (Arch-based)
 
     - GNOME desktop variant tested
