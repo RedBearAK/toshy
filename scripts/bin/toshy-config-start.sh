@@ -29,4 +29,9 @@ sleep 2
 # shellcheck disable=SC1091
 source "$HOME/.config/toshy/.venv/bin/activate"
 
+# overcome a possible strange and rare problem connecting to X display
+if command xhost &> /dev/null; then
+    xhost +local:
+fi
+
 keyszer -w -c "$HOME/.config/toshy/toshy_config.py"

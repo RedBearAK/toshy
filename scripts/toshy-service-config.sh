@@ -67,4 +67,9 @@ fi
 pkill -f "bin/keyszer"
 pkill -f "bin/xkeysnail"
 
+# overcome a possible strange and rare problem connecting to X display
+if command xhost &> /dev/null; then
+    xhost +local:
+fi
+
 keyszer -w -c "$HOME/.config/toshy/toshy_config.py"
