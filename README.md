@@ -587,9 +587,13 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 - Garuda Linux (Arch-based)
 
-    - Garuda KDE Dr460nized works
-    - Hyprland should work, but wouldn't install in VM
-    - Most ither flavors should also work fine
+    - KDE Dr460nized works
+    - KDE Lite also works
+    - GNOME will need shell extension (see Requirements)
+    - Xfce, Cinnamon, i3wm, Qtile should work (not tested)
+    - Sway should work (not tested)
+    - Hyprland should work, but not tested, because:
+        - Installer failed to run in testing VM
 
 - Manjaro (Arch-based)
 
