@@ -411,6 +411,7 @@ browsers_chrome         = [x.casefold() for x in browsers_chrome]
 browsers_chromeStr      = "|".join('^'+x+'$' for x in browsers_chrome)
 
 browsers_firefox = [
+    "firedragon",               # Garuda Firefox fork
     "Firefox",
     "firefox-esr",
     "Firefox Developer Edition",

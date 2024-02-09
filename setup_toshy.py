@@ -6,7 +6,6 @@ import re
 import sys
 import pwd
 import grp
-import json
 import random
 import string
 import signal
@@ -549,7 +548,7 @@ pkg_groups_map = {
     'kaos-based':          ["cairo",
                             "dbus",
                             "evtest",
-                            "git", "gobject-introspection",
+                            "gcc", "git", "gobject-introspection",
                             "libappindicator-gtk3", "libnotify",
                             "pkg-config", "python", "python-dbus", "python-pip",
                             "systemd",
@@ -808,7 +807,7 @@ def install_distro_pkgs():
         print(f'Try some options in "./{this_file_name} --help"')
         safe_shutdown(1)
 
-    cnfg.pkgs_for_distro: list = pkg_groups_map[pkg_group]
+    cnfg.pkgs_for_distro = pkg_groups_map[pkg_group]
 
     # Add extra packages for specific distros and versions
     for version in [cnfg.distro_mjr_ver, None]:
