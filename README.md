@@ -59,7 +59,14 @@ If an app that you use frequently in Linux has some shortcut behavior that still
 >
 > - `Shift+Opt+Cmd+I,I` (quickly double-tap the "I" key)  
 >
-> This brings up a dialog showing app/window/keyboard info.  
+> This brings up a dialog showing app/window/keyboard info. Use the physical keys in the same position the keys with these names would be in on an Apple keyboard, even if you don't have an Apple keyboard.  
+> 
+> In a "remote" type of app (remote desktop or virtual machine apps), where most modmaps and the general keymap are disabled, the diagnostic shortcut will still work, but the physical keys will be different:  
+> 
+> - `Shift+Alt+RIGHT_CTRL+I,I` (quickly double-tap the "I" key)  
+>
+> In this case the literal physical keys matching these names must be used, including using the Ctrl key on the right side of the keyboard.  
+> </br>
 
 Still relevant, but unnecessary with the diagnostic tool in the note above:  
 
