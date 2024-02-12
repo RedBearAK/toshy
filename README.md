@@ -527,6 +527,10 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 ### Debian and Debian-based distros
 
+- Deepin 23 (Debian-based)
+
+    - NOTE: Long delay before services start (Zenity error?)
+
 - LMDE 5/6 (Linux Mint Debian Edition)
 
     - Default desktop is Cinnamon
