@@ -512,7 +512,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
     - Tray icons are not supported in Pantheon desktop
 
-- Linux Mint 21.1/21.2/21.3beta (Ubuntu-based)
+- Linux Mint 21.1/21.2/21.3 (Ubuntu-based)
 
     - Cinnamon desktop (X11/Xorg or Wayland)
     - Xfce desktop (X11/Xorg only)
@@ -526,6 +526,10 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - KDE Plasma desktop
 
 ### Debian and Debian-based distros
+
+- Deepin 23 (Debian-based)
+
+    - NOTE: Long delay before services start (Zenity error?)
 
 - LMDE 5/6 (Linux Mint Debian Edition)
 
