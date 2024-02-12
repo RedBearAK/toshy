@@ -3924,6 +3924,9 @@ keymap("GenGUI overrides: Budgie", {
 keymap("GenGUI overrides: Cinnamon", {
     C("RC-Space"):             [iEF2NT(),C("C-Esc")],           # Right click, configure Mint menu shortcut to Ctrl+Esc
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'cinnamon' )
+keymap("GenGUI overrides: DDE", {
+    C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # Open Launcher menu (Deeping Desktop Environment)
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'dde' )
 keymap("GenGUI overrides: Deepin", {
     C("RC-H"):                  C("Super-n"),                   # Minimize app (deepin)
     C("Alt-RC-Space"):          C("Super-e"),                   # Open Finder - (deepin)
