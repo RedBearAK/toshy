@@ -520,6 +520,11 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - All desktops can be installed on the same Mint system:
     - `sudo apt install mint-meta-mate mint-meta-xfce mint-meta-cinnamon`
 
+- Feren OS 2023.04 (Ubuntu LTS variant)
+
+    - Current base is Ubuntu 20.04 LTS
+    - Desktop is KDE Plasma 5.25.x
+
 - Tuxedo OS 1/2 (Ubuntu LTS variant)
 
     - X11/Xorg

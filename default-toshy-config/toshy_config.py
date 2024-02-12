@@ -406,6 +406,7 @@ browsers_chrome = [
     "microsoft-edge-dev",
     "org.deepin.browser",
     "org.kde.falkon",
+    "Vivaldi.*",
 ]
 browsers_chrome         = [x.casefold() for x in browsers_chrome]
 browsers_chromeStr      = "|".join('^'+x+'$' for x in browsers_chrome)
@@ -3218,6 +3219,11 @@ keymap("Firefox Browsers Overrides", {
     C("RC-Backspace"):         [C("Shift-Home"), C("Backspace")],     # Delete Entire Line Left of Cursor
     C("RC-Delete"):            [C("Shift-End"), C("Delete")],         # Delete Entire Line Right of Cursor
 }, when = matchProps(clas=browsers_firefoxStr))
+
+# Vivaldi is a Chromium based web browser
+keymap("Overrides for Vivaldi browser", {
+    C("RC-comma"):              C("C-F12"),                     # Open preferences
+}, when = matchProps(clas="^Vivaldi.*$"))
 
 # Falkon is a Chromium based web browser
 keymap("Overrides for Falkon browser", {
