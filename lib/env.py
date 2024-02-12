@@ -235,6 +235,7 @@ def get_env_info():
         'Budgie':                   'budgie',
         'Cinnamon':                 'cinnamon',
         'Cutefish':                 'cutefish',
+        'DDE':                      'dde',
         'Deepin':                   'deepin',
         'Enlightenment':            'enlightenment',
         'GNOME':                    'gnome',
