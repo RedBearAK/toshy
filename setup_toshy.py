@@ -406,7 +406,7 @@ distro_groups_map = {
     'mandriva-based':           ["openmandriva"],
 
     'ubuntu-based':             ["ubuntu", "mint", "pop", "elementary", "neon", "tuxedo", "zorin"],
-    'debian-based':             ["lmde", "peppermint", "debian", "kali", "q4os"],
+    'debian-based':             ["deepin", "lmde", "peppermint", "debian", "kali", "q4os"],
 
     'arch-based':               ["arch", "arcolinux", "endeavouros", "garuda", "manjaro"],
 
