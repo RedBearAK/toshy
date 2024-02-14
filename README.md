@@ -530,6 +530,10 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - X11/Xorg
     - KDE Plasma desktop
 
+- Rhino Linux (Ubuntu rolling release variant)
+
+    - Desktop is Xfce/Unicorn (X11/Xorg)
+
 ### Debian and Debian-based distros
 
 - Deepin 23 (Debian-based)
