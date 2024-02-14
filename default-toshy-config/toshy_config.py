@@ -3876,6 +3876,9 @@ keymap("GenGUI overrides: not Chromebook", {
 
 
 # Overrides to General GUI shortcuts for specific distros
+keymap("GenGUI overrides: Debian Xfce4", {
+    C("RC-Space"):             [iEF2NT(),C("Alt-F1")],     # Launch Application Menu xfce4 (Debian)
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'debian' and DESKTOP_ENV == 'xfce' )
 keymap("GenGUI overrides: elementary OS", {
     C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,elementary)
     C("RC-Space"):             [iEF2NT(),C("Super-Space")],     # SL - Launch Application Menu (elementary)
