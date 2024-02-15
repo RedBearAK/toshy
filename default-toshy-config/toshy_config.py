@@ -339,11 +339,6 @@ remotes_lod = [
     {clas:"^Wfica$"                      },
 ]
 
-# # OBSOLETED by "list of dicts" `terminals_lod` above
-# # Add remote desktop clients & VMs for no remapping
-# terminals.extend(remotes)
-# termStr_ext = toRgxStr(terminals)
-
 terminals_and_remotes_lod = [
     {lst:terminals_lod                  },
     {lst:remotes_lod                    },
