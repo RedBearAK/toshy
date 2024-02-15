@@ -235,52 +235,13 @@ def negRgx(rgx_str):
     return neg_rgx_str
 
 
-# # OBSOLETED by the "list of dicts" `terminals_lod` below
-# # Use the following for testing terminal keymaps
-# # terminals = [ "", ... ]
-# # xbindkeys -mk
-# terminals = [
-#     "alacritty",
-#     "cutefish-terminal",
-#     "deepin-terminal",
-#     "eterm",
-#     "gnome-terminal",
-#     "gnome-terminal-server",
-#     "guake",
-#     "hyper",
-#     "io.elementary.terminal",
-#     "kinto-gui.py",
-#     "kitty",
-#     "Kgx",  # GNOME Console terminal app (comes from "King's Cross")
-#     "konsole",
-#     "lxterminal",
-#     "mate-terminal",
-#     "org.gnome.Console",
-#     "org.kde.konsole",
-#     "roxterm",
-#     "qterminal",
-#     "st",
-#     "sakura",
-#     "station",
-#     "tabby",
-#     "terminator",
-#     "termite",
-#     "tilda",
-#     "tilix",
-#     "urxvt",
-#     "xfce4-terminal",
-#     "xterm",
-#     "yakuake",
-# ]
-# terminals = [x.casefold() for x in terminals]
-# termStr = toRgxStr(terminals)
-
 terminals_lod = [
     {clas:"^alacritty$"                 },
     {clas:"^com.raggesilver.BlackBox$"  },
     {clas:"^contour$"                   },
     {clas:"^cutefish-terminal$"         },
     {clas:"^deepin-terminal$"           },
+    {clas:"^dev.warp.Warp$"             },
     {clas:"^eterm$"                     },
     {clas:"^gnome-terminal$"            },
     {clas:"^gnome-terminal-server$"     },
