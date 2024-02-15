@@ -363,7 +363,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - Package layering is used currently
     - GNOME Wayland session requires extension
 
-- Fedora Asahi Remix 39 (Fedora for Apple Silicon MacBooks)
+- Fedora Asahi Remix 39 (Fedora for Apple Silicon Macs)
 
     - Reported working by user (See Toshy issue #98)
 
