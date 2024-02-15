@@ -350,7 +350,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 ### Fedora and Fedora Variants
 
-- Fedora 36/37/38/39 (upstream of CentOS Stream and RHEL)
+- Fedora 38/39/40 (upstream of CentOS Stream and RHEL)
 
     - Workstation (GNOME) works (Wayland session requires extension)
     - KDE Plasma variant works (X11/Xorg or Wayland session)
@@ -363,7 +363,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - Package layering is used currently
     - GNOME Wayland session requires extension
 
-- Fedora Asahi Remix 39 (Fedora for Apple Silicon MacBooks)
+- Fedora Asahi Remix 39 (Fedora for Apple Silicon Macs)
 
     - Reported working by user (See Toshy issue #98)
 
