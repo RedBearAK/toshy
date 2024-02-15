@@ -281,6 +281,7 @@ terminals_lod = [
     {clas:"^contour$"                   },
     {clas:"^cutefish-terminal$"         },
     {clas:"^deepin-terminal$"           },
+    {clas:"^dev.warp.Warp$"             },
     {clas:"^eterm$"                     },
     {clas:"^gnome-terminal$"            },
     {clas:"^gnome-terminal-server$"     },
