@@ -268,6 +268,7 @@ def negRgx(rgx_str):
 #     "tilda",
 #     "tilix",
 #     "urxvt",
+#     "warp.dev"
 #     "xfce4-terminal",
 #     "xterm",
 #     "yakuake",
@@ -309,6 +310,7 @@ terminals_lod = [
     {clas:"^tilda$"                     },
     {clas:"^tilix$"                     },
     {clas:"^urxvt$"                     },
+    {clas:"^dev.warp.Warp$"             },
     {clas:"^xfce4-terminal$"            },
     {clas:"^xterm$"                     },
     {clas:"^yakuake$"                   },
