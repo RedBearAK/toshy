@@ -588,6 +588,11 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
             - AppIndicator and KStatusNotifier (for tray icon)
             - Logo Menu (enable power options in settings)
 
+- Window Maker Live 0.96 (Debian-based)
+
+    - Tray icon may not auto-load at login. Gdk error?
+    - Tray icon can be reloaded from the application finder. 
+
 ### Arch, Arch-based and related distros
 
 - ArcoLinux (Arch-based)

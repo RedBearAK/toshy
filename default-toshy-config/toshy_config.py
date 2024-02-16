@@ -254,6 +254,7 @@ terminals_lod = [
     {clas:"^konsole$"                   },
     {clas:"^lxterminal$"                },
     {clas:"^mate-terminal$"             },
+    {clas:"^MateTerminal$"              },
     {clas:"^org.gnome.Console$"         },
     {clas:"^org.kde.konsole$"           },
     {clas:"^org.kde.yakuake$"           },
