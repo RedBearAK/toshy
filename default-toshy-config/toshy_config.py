@@ -1028,6 +1028,10 @@ def notify_context():
                             f"<b>browsers app class group?:</b>      '{ctx_brws}'  {nwln_chr}"
                             f"<b>filemanagers app class group?:</b>  '{ctx_fmgr}'  {nwln_chr}"
                             f"<b>dialogs app class group?:</b>       '{ctx_dlgs}'  {nwln_chr}"
+                            f"{nwln_chr}"
+                            f"<i>To copy this text: Select with mouse or triple-click to select all.</i>{nwln_chr}"
+                            f"<i>Then use the mouse to right-click and 'Copy' the selected text.</i>{nwln_chr}"
+                            f"<i>Keyboard shortcuts like Ctrl+C or Cmd+C may not work here.</i>{nwln_chr}"
                             f"</tt>" )
 
         zenity_cmd_lst = [  zenity_cmd, '--info', '--no-wrap', 
