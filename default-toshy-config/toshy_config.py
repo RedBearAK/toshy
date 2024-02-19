@@ -1001,13 +1001,33 @@ def notify_context():
             return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 
         nwln_chr        = '<br>' if zenity_is_qarma else '\n'
+
         ctx_clas        = ctx.wm_class
         ctx_name        = ctx.wm_name
         ctx_devn        = ctx.device_name
+
+        # ------ following are all True/False
+        ctx_rmte        = 'Yes' if matchProps(lst=remotes_lod)(ctx)         else 'No'
+        ctx_term        = 'Yes' if matchProps(lst=terminals_lod)(ctx)       else 'No'
+        ctx_brws        = 'Yes' if matchProps(clas=browsers_allStr)(ctx)    else 'No'
+        ctx_fmgr        = 'Yes' if matchProps(clas=filemanagerStr)(ctx)     else 'No'
+
+        if matchProps(lst=dialogs_CloseWin_lod)(ctx) or matchProps(lst=dialogs_Escape_lod)(ctx):
+            ctx_dlgs        = 'Yes'
+        else:
+            ctx_dlgs        = 'No'
+
         message         = ( f"{nwln_chr}<tt>"
                             f"<b>Class =</b> '{escape_markup(ctx_clas)}'  {nwln_chr}"
                             f"<b>Title =</b> '{escape_markup(ctx_name)}'  {nwln_chr}"
                             f"<b>Keybd =</b> '{escape_markup(ctx_devn)}'  {nwln_chr}"
+                            f"____________________________________________{nwln_chr}"
+                            f"{nwln_chr}"
+                            f"<b>remotes app class group?:</b>       '{ctx_rmte}'  {nwln_chr}"
+                            f"<b>terminals app class group?:</b>     '{ctx_term}'  {nwln_chr}"
+                            f"<b>browsers app class group?:</b>      '{ctx_brws}'  {nwln_chr}"
+                            f"<b>filemanagers app class group?:</b>  '{ctx_fmgr}'  {nwln_chr}"
+                            f"<b>dialogs app class group?:</b>       '{ctx_dlgs}'  {nwln_chr}"
                             f"</tt>" )
 
         zenity_cmd_lst = [  zenity_cmd, '--info', '--no-wrap', 
