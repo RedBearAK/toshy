@@ -1018,21 +1018,23 @@ def notify_context():
             ctx_dlgs        = 'No'
 
         message         = ( 
-            f"{nwln_chr}<tt>"
+            f"<tt>"
             f"<b>Class =</b> '{escape_markup(ctx_clas)}'  {nwln_chr}"
             f"<b>Title =</b> '{escape_markup(ctx_name)}'  {nwln_chr}"
             f"<b>Keybd =</b> '{escape_markup(ctx_devn)}'  {nwln_chr}"
-            f"____________________________________________{nwln_chr}"
             f"{nwln_chr}"
-            f"<b>remotes app class group?:</b>       '{ctx_rmte}'  {nwln_chr}"
-            f"<b>terminals app class group?:</b>     '{ctx_term}'  {nwln_chr}"
-            f"<b>browsers app class group?:</b>      '{ctx_brws}'  {nwln_chr}"
-            f"<b>filemanagers app class group?:</b>  '{ctx_fmgr}'  {nwln_chr}"
-            f"<b>dialogs app class group?:</b>       '{ctx_dlgs}'  {nwln_chr}"
+            f"<b>Keyboard type =</b>                    '{KBTYPE}'  {nwln_chr}"
             f"{nwln_chr}"
-            f"<i>To copy this text: Select with mouse or triple-click to select all.</i>{nwln_chr}"
-            f"<i>Then use the mouse to right-click and 'Copy' the selected text.</i>{nwln_chr}"
-            f"<i>Keyboard shortcuts like Ctrl+C or Cmd+C may not work here.</i>{nwln_chr}"
+            f"<b>remotes app class group?:</b>          '{ctx_rmte}'  {nwln_chr}"
+            f"<b>terminals app class group?:</b>        '{ctx_term}'  {nwln_chr}"
+            f"<b>browsers app class group?:</b>         '{ctx_brws}'  {nwln_chr}"
+            f"<b>filemanagers app class group?:</b>     '{ctx_fmgr}'  {nwln_chr}"
+            f"<b>dialogs app class group?:</b>          '{ctx_dlgs}'  {nwln_chr}"
+            f"{nwln_chr}"
+            f"{nwln_chr}"
+            f"<i>Keyboard shortcuts (Ctrl+C/Cmd+C) may not work here.</i>{nwln_chr}"
+            f"<i>Select text with mouse. Triple-click to select all.</i>{nwln_chr}"
+            f"<i>Right-click with mouse and choose 'Copy' from menu.</i>{nwln_chr}"
             f"</tt>"
         )
 
