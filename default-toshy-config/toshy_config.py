@@ -1000,7 +1000,7 @@ def notify_context():
         def escape_markup(text: str):
             return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 
-        nwln_chr        = '<br>' if zenity_is_qarma else '\n'
+        nwln_str        = '<br>' if zenity_is_qarma else '\n'
 
         ctx_clas        = ctx.wm_class
         ctx_name        = ctx.wm_name
@@ -1019,26 +1019,28 @@ def notify_context():
 
         message         = ( 
             f"<tt>"
-            f"<b>Class =</b> '{escape_markup(ctx_clas)}'  {nwln_chr}"
-            f"<b>Title =</b> '{escape_markup(ctx_name)}'  {nwln_chr}"
-            f"<b>Keybd =</b> '{escape_markup(ctx_devn)}'  {nwln_chr}"
-            f"{nwln_chr}"
-            f"<b>Keyboard type  =</b>                   '{KBTYPE}'  {nwln_chr}"
-            f"<b>Distro name    =</b>                   '{DISTRO_NAME}'  {nwln_chr}"
-            f"<b>Distro ver.    =</b>                   '{DISTRO_VER}'  {nwln_chr}"
-            f"<b>Desktop env.   =</b>                   '{DESKTOP_ENV}'  {nwln_chr}"
-            f"<b>DE maj. ver.   =</b>                   '{DE_MAJ_VER}'  {nwln_chr}"
-            f"<b>Session type   =</b>                   '{SESSION_TYPE}'  {nwln_chr}"
-            f"{nwln_chr}"
-            f"<b>remotes app class group?:</b>          '{ctx_rmte}'  {nwln_chr}"
-            f"<b>terminals app class group?:</b>        '{ctx_term}'  {nwln_chr}"
-            f"<b>browsers app class group?:</b>         '{ctx_brws}'  {nwln_chr}"
-            f"<b>filemanagers app class group?:</b>     '{ctx_fmgr}'  {nwln_chr}"
-            f"<b>dialogs app class group?:</b>          '{ctx_dlgs}'  {nwln_chr}"
-            f"___________________________________________________{nwln_chr}"
-            f"<i>Keyboard shortcuts (Ctrl+C/Cmd+C) may not work here.</i>{nwln_chr}"
-            f"<i>Select text with mouse. Triple-click to select all.</i>{nwln_chr}"
-            f"<i>Right-click with mouse and choose 'Copy' from menu.</i>{nwln_chr}"
+            f"<b>Class =</b> '{escape_markup(ctx_clas)}'  {nwln_str}"
+            f"<b>Title =</b> '{escape_markup(ctx_name)}'  {nwln_str}"
+            f"<b>Keybd =</b> '{escape_markup(ctx_devn)}'  {nwln_str}"
+            f"{nwln_str}"
+            f"<b>Keyboard type  =</b>   '{KBTYPE}'  {nwln_str}"
+            f"{nwln_str}"
+            f"<b>DISTRO_NAME    =</b>   '{DISTRO_NAME}'  {nwln_str}"
+            f"<b>DISTRO_VER     =</b>   '{DISTRO_VER}'  {nwln_str}"
+            f"<b>VARIANT_ID     =</b>   '{VARIANT_ID}'  {nwln_str}"
+            f"<b>DESKTOP_ENV    =</b>   '{DESKTOP_ENV}'  {nwln_str}"
+            f"<b>DE_MAJ_VER     =</b>   '{DE_MAJ_VER}'  {nwln_str}"
+            f"<b>SESSION_TYPE   =</b>   '{SESSION_TYPE}'  {nwln_str}"
+            f"{nwln_str}"
+            f"<b>remotes app class group?:</b>          '{ctx_rmte}'  {nwln_str}"
+            f"<b>terminals app class group?:</b>        '{ctx_term}'  {nwln_str}"
+            f"<b>browsers app class group?:</b>         '{ctx_brws}'  {nwln_str}"
+            f"<b>filemanagers app class group?:</b>     '{ctx_fmgr}'  {nwln_str}"
+            f"<b>dialogs app class group?:</b>          '{ctx_dlgs}'  {nwln_str}"
+            f"___________________________________________________{nwln_str}"
+            f"<i>Keyboard shortcuts (Ctrl+C/Cmd+C) may not work here.</i>{nwln_str}"
+            f"<i>Select text with mouse. Triple-click to select all.</i>{nwln_str}"
+            f"<i>Right-click with mouse and choose 'Copy' from menu.</i>{nwln_str}"
             f"</tt>"
         )
 
