@@ -1007,15 +1007,15 @@ def notify_context():
         ctx_devn        = ctx.device_name
 
         # ------ following are all True/False
-        ctx_rmte        = 'Yes' if matchProps(lst=remotes_lod)(ctx)         else 'No'
-        ctx_term        = 'Yes' if matchProps(lst=terminals_lod)(ctx)       else 'No'
-        ctx_brws        = 'Yes' if matchProps(clas=browsers_allStr)(ctx)    else 'No'
-        ctx_fmgr        = 'Yes' if matchProps(clas=filemanagerStr)(ctx)     else 'No'
+        ctx_rmte        = matchProps(lst=remotes_lod)(ctx)
+        ctx_term        = matchProps(lst=terminals_lod)(ctx)
+        ctx_brws        = matchProps(clas=browsers_allStr)(ctx)
+        ctx_fmgr        = matchProps(clas=filemanagerStr)(ctx)
 
         if matchProps(lst=dialogs_CloseWin_lod)(ctx) or matchProps(lst=dialogs_Escape_lod)(ctx):
-            ctx_dlgs        = 'Yes'
+            ctx_dlgs        = True
         else:
-            ctx_dlgs        = 'No'
+            ctx_dlgs        = False
 
         message         = ( 
             f"<tt>"
