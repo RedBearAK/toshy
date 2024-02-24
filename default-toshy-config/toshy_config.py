@@ -266,6 +266,7 @@ terminals_lod = [
     {clas:"^station$"                   },
     {clas:"^tabby$"                     },
     {clas:"^terminator$"                },
+    {clas:"^terminology$"               },
     {clas:"^termite$"                   },
     {clas:"^Termius$"                   },
     {clas:"^tilda$"                     },
