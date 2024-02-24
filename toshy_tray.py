@@ -4,7 +4,7 @@
 # Indicator tray icon menu app for Toshy, using pygobject/gi
 TOSHY_PART      = 'tray'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Tray Icon app'
-APP_VERSION     = '2024.0202'
+APP_VERSION     = '2024.0223'
 
 # -------- COMMON COMPONENTS --------------------------------------------------
 
@@ -461,6 +461,7 @@ def run_cmd_in_terminal(command):
         ("konsole", ["-e"]),
         ("xfce4-terminal", ["-e"]),
         ("mate-terminal", ["-e"]),
+        ("terminology", ["-e"]),
         ("xterm", ["-e"]),
         ("rxvt", ["-e"]),
         ("urxvt", ["-e"]),
