@@ -3206,7 +3206,7 @@ keymap("General File Managers - Finder Mods", {
 
 # Open preferences in Firefox browsers
 keymap("Firefox Browsers Overrides", {
-    C("C-comma"):              [C("C-t"),sleep(0.05),ST("about:preferences"),sleep(0.05),C("Enter")],
+    C("C-comma"):              [C("C-t"),sleep(0.1),ST("about:preferences"),sleep(0.1),C("Enter")],
     C("Shift-RC-N"):            C("Shift-RC-P"),                      # Open private window with Cmd+Shift+N like other browsers
     C("RC-Backspace"):         [C("Shift-Home"), C("Backspace")],     # Delete Entire Line Left of Cursor
     C("RC-Delete"):            [C("Shift-End"), C("Delete")],         # Delete Entire Line Right of Cursor
@@ -3223,7 +3223,8 @@ keymap("Overrides for Falkon browser", {
 }, when = matchProps(clas="^org.kde.falkon$|^Falkon$"))
 
 keymap("Chrome Browsers Overrides", {
-    C("C-comma"):              [C("Alt-e"), C("s"),C("Enter")], # Open preferences
+    # C("C-comma"):              [C("Alt-e"), C("s"),C("Enter")], # Open preferences
+    C("C-comma"):              [C("C-t"), sleep(0.1), ST("chrome://settings"), sleep(0.1), C("Enter")], # Open preferences
     C("RC-q"):                  C("Alt-F4"),                    # Quit Chrome(s) browsers with Cmd+Q
     # C("RC-Left"):               C("Alt-Left"),                  # Page nav: Back to prior page in history (conflict with wordwise)
     # C("RC-Right"):              C("Alt-Right"),                 # Page nav: Forward to next page in history (conflict with wordwise)
