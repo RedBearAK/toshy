@@ -534,6 +534,11 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
     - Desktop is Xfce/Unicorn (X11/Xorg)
 
+- Bodhi Linux 7.0 (Ubuntu-based)
+
+    - Desktop is Enlightenment
+    - Install package `xapp` to remove some errors from log
+
 ### Debian and Debian-based distros
 
 - Deepin 23 (Debian-based)
