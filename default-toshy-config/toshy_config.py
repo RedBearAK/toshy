@@ -3962,16 +3962,20 @@ keymap("GenGUI overrides: GNOME", {
     C("RC-Shift-Key_5"):        C("Print"),                     # Take a screenshot interactively (gnome)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'gnome' )
 
-keymap("GenGUI overrides: enlightenment", {
+keymap("GenGUI overrides: Enlightenment", {
     C("RC-q"):                  C("C-Alt-x"),                   # Close window (Cmd+Q)
-    C("RC-Space"):             [iEF2NT(),C("C-Alt-m")],         # enlightenment main menu (override in "User Apps" slice if necessary)
+    # C("RC-Space"):             [iEF2NT(),C("C-Alt-m")],         # enlightenment main menu (override in "User Apps" slice if necessary)
+    C("RC-Space"):             [iEF2NT(),C("C-Alt-Space")],     # enlightenment main menu (override in "User Apps" slice if necessary)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'enlightenment' )
+
 keymap("GenGUI overrides: Hyprland", {
     C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # Hyprland (override in "User Apps" slice if necessary)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'hyprland' )
+
 keymap("GenGUI overrides: IceWM", {
     C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # IceWM: Win95Keys=1 (Meta shows menu)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'icewm' )
+
 keymap("GenGUI overrides: KDE", {
     C("RC-Space"):             [iEF2NT(),C("Alt-F1")],          # Default SL - Launch Application Menu (gnome/kde)
     C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,elementary)
@@ -3981,19 +3985,24 @@ keymap("GenGUI overrides: KDE", {
     C("RC-Shift-Key_4"):        C("Alt-Print"),                 # Take a screenshot of a window (kde)
     C("RC-Shift-Key_5"):        C("Print"),                     # Take a screenshot interactively (kde)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'kde' )
+
 keymap("GenGUI overrides: MATE", {
     C("RC-Space"):             [iEF2NT(),C("Alt-Space")],       # Right click, configure Mint menu shortcut to match
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'mate' )
+
 keymap("GenGUI overrides: swaywm", {
     C("RC-Space"):             [iEF2NT(),C("Super-d")],         # Open sway launcher
     C("RC-Q"):                  C("RC-Q"),                      # Override General GUI Alt+F4 remap
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'sway' )
+
 keymap("GenGUI overrides: Trinity desktop", {
     C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # Trinity desktop (Q4OS)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'trinity' )
+
 keymap("GenGUI overrides: Unity desktop", {
     C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # Trinity desktop (Q4OS)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'unity' )
+
 keymap("GenGUI overrides: Xfce4", {
     C("RC-Grave"):             [bind,C("Super-Tab")],           # xfce4 Switch within app group
     C("Shift-RC-Grave"):       [bind,C("Super-Shift-Tab")],     # xfce4 Switch within app group
