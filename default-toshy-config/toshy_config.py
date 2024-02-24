@@ -3717,6 +3717,15 @@ keymap("Konsole terminal - not tab nav", {
     C("RC-comma"):              C("Shift-RC-comma"),            # Open Preferences dialog
 }, when = matchProps(clas="^Konsole$|^org.kde.Konsole$"))
 
+keymap("Terminology terminal", {
+    C("RC-w"):                  C("Shift-C-End"),               # Close focused tab
+    C("RC-c"):                  C("Alt-w"),                     # Copy selection to primary buffer
+    C("RC-v"):                  C("Alt-Enter"),                 # Paste primary buffer
+    C("RC-0"):                  C("C-Alt-0"),                   # Reset font size
+    C("RC-Minus"):              C("C-Alt-Minus"),               # Decrease font size
+    C("RC-Equal"):              C("C-Alt-Equal"),               # Increase font size
+}, when = matchProps(clas="^terminology$"))
+
 
 # Overrides to General Terminals shortcuts for specific distros (or are they really just desktop environments?)
 keymap("GenTerms overrides: elementary OS", {
