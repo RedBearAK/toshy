@@ -3953,6 +3953,10 @@ keymap("GenGUI overrides: GNOME", {
     C("RC-Shift-Key_5"):        C("Print"),                     # Take a screenshot interactively (gnome)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'gnome' )
 
+keymap("GenGUI overrides: enlightenment", {
+    C("RC-q"):                  C("C-Alt-x"),                   # Close window (Cmd+Q)
+    C("RC-Space"):             [iEF2NT(),C("C-Alt-m")],         # enlightenment main menu (override in "User Apps" slice if necessary)
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'enlightenment' )
 keymap("GenGUI overrides: Hyprland", {
     C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # Hyprland (override in "User Apps" slice if necessary)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'hyprland' )
