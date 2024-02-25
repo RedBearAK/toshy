@@ -3728,6 +3728,10 @@ keymap("Terminology terminal", {
     C("RC-Equal"):              C("C-Alt-Equal"),               # Increase font size
 }, when = matchProps(clas="^terminology$"))
 
+keymap("Xfce4 terminal", {
+    C("RC-comma"):      [C("Alt-e"), sleep(0.1), C("e")],       # Open Preferences dialog
+}, when = matchProps(clas="^xfce4-terminal$"))
+
 
 # Overrides to General Terminals shortcuts for specific distros (or are they really just desktop environments?)
 keymap("GenTerms overrides: elementary OS", {
