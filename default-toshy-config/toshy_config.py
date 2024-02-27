@@ -173,17 +173,17 @@ ignore_combo = ComboHint.IGNORE
 # inside the "lists of dicts" to be given to the matchProps() function.
 # Makes the variables evaluate to equivalent strings inside the dicts. 
 # Provides for nice syntax highlighting and visual separation of key:value. 
-clas = 'clas'           # key label for matchProps() arg to match: wm_class
-name = 'name'           # key label for matchProps() arg to match: wm_name
-devn = 'devn'           # key label for matchProps() arg to match: device_name
-not_clas = 'not_clas'   # key label for matchProps() arg to NEGATIVE match: wm_class
-not_name = 'not_name'   # key label for matchProps() arg to NEGATIVE match: wm_name
-not_devn = 'not_devn'   # key label for matchProps() arg to NEGATIVE match: device_name
-numlk = 'numlk'         # key label for matchProps() arg to match: numlock_on
-capslk = 'capslk'       # key label for matchProps() arg to match: capslock_on
-cse = 'cse'             # key label for matchProps() arg to enable: case sensitivity
-lst = 'lst'             # key label for matchProps() arg to pass in a [list] of {dicts}
-dbg = 'dbg'             # key label for matchProps() arg to set debugging info string
+clas        = 'clas'        # key label for matchProps() arg to match: wm_class
+name        = 'name'        # key label for matchProps() arg to match: wm_name
+devn        = 'devn'        # key label for matchProps() arg to match: device_name
+not_clas    = 'not_clas'    # key label for matchProps() arg to NEGATIVE match: wm_class
+not_name    = 'not_name'    # key label for matchProps() arg to NEGATIVE match: wm_name
+not_devn    = 'not_devn'    # key label for matchProps() arg to NEGATIVE match: device_name
+numlk       = 'numlk'       # key label for matchProps() arg to match: numlock_on
+capslk      = 'capslk'      # key label for matchProps() arg to match: capslock_on
+cse         = 'cse'         # key label for matchProps() arg to enable: case sensitivity
+lst         = 'lst'         # key label for matchProps() arg to pass in a [list] of {dicts}
+dbg         = 'dbg'         # key label for matchProps() arg to set debugging info string
 
 # global variables for the isDoubleTap() function
 tapTime1 = time.time()
