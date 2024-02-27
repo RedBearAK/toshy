@@ -534,6 +534,11 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
     - Desktop is Xfce/Unicorn (X11/Xorg)
 
+- Bodhi Linux 7.0 (Ubuntu-based)
+
+    - Desktop is Enlightenment
+    - Install package `xapp` to remove some errors from log
+
 ### Debian and Debian-based distros
 
 - Deepin 23 (Debian-based)
@@ -555,7 +560,6 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 - antiX 22.x/23.x (Debian-based, related to MX Linux)
 
-    - For 32-bit ISO: `sudo apt install libjpeg-dev` before running Toshy installer!
     - Preliminary support, no SysVinit services yet, so no auto-start.
     - Starting only the "config script" from the tray icon menu should work now.
     - Use `toshy-config-start` or `toshy-config-verbose-start` for manual start.
@@ -1172,6 +1176,20 @@ https://userbase.kde.org/Plasma/Tips#Windows.2FMeta_Key
 ### Manjaro/Arcolinux KDE shortcut for Application Menu
 
 Something strange is happening in Manjaro KDE and Arcolinux KDE desktops with the shortcut to open the application menu/launcher applet. In the primary shortcut settings control panel, there is a shortcut of `Alt+F1` set, which should work with the Toshy config. But the `Alt+F1` shortcut doesn't even work with Toshy disabled. If you right-click on the menu icon you can open the applet settings dialog and set the `Alt+F1` shortcut in its preferences (choose to reassign it) and then hit Apply, and it will start working with `Cmd+Space` when Toshy is enabled. And also it will now work even when Toshy is disabled. There are other identically named shortcut settings in the main KDE control panel for shortcuts, but they seem to want to open `krunner`, the search/launcher bar that pops out from the top of the screen.  
+
+### The `toshy-services-log` command shows no output
+
+This is a problem on openSUSE Leap 15.x, possibly on other distros where a regular user doesn't automatically have access to the output from `journalctl` without using `sudo`. Toshy doesn't need to show any "system" output, because all of the Toshy services are "user" services. But the user on some distros like Leap will still need to be added to the `systemd-journal` group in order to see any output when trying to use the `toshy-services-log` command in the terminal, or when trying to use the tray icon menu item "Show Services Log" (which just runs that command in a new terminal window).  
+
+Use the following command (change "testuser" to your actual user name) to add your user to the `systemd-journal` group, and then log out, wait 10 seconds, and log back in.  
+
+```sh
+sudo usermod -aG systemd-journal testuser
+```
+
+Using `usermod -aG` here will prevent the command from removing all other groups from the user. Very important!  
+
+This is not a problem on most tested distros, and it's a pretty easy fix and not essential for the functioning of the project, so I may not add this solution to the Toshy installer script unless the same problem pops up on some other distros.  
 
 ### More Will Follow...
 

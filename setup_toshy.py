@@ -168,9 +168,8 @@ class InstallerSettings:
 
         self.keyszer_tmp_path       = os.path.join(this_file_dir, 'keyszer-temp')
 
-        # self.keyszer_branch         = 'environ_api_kde'
-        self.keyszer_branch         = 'environ_api_hyprland'
-        # self.keyszer_branch         = 'environ_api_wlroots' # doesn't work yet
+        self.keyszer_branch         = 'device_grab_fix'
+        # self.keyszer_branch         = 'environ_api_hyprland'
         self.keyszer_url            = 'https://github.com/RedBearAK/keyszer.git'
         self.keyszer_clone_cmd      = f'git clone -b {self.keyszer_branch} {self.keyszer_url}'
 
@@ -500,7 +499,7 @@ pkg_groups_map = {
                             "git", "gir1.2-ayatanaappindicator3-0.1",
                             "input-utils",
                             "libcairo2-dev", "libdbus-1-dev", "libgirepository1.0-dev",
-                                "libnotify-bin", "libsystemd-dev", "libwayland-dev",
+                                "libjpeg-dev", "libnotify-bin", "libsystemd-dev", "libwayland-dev",
                             "python3-dbus", "python3-dev", "python3-pip", "python3-tk",
                                 "python3-venv",
                             "zenity"],
@@ -510,7 +509,7 @@ pkg_groups_map = {
                             "git", "gir1.2-ayatanaappindicator3-0.1",
                             "input-utils",
                             "libcairo2-dev", "libdbus-1-dev", "libgirepository1.0-dev",
-                                "libnotify-bin", "libsystemd-dev", "libwayland-dev",
+                                "libjpeg-dev", "libnotify-bin", "libsystemd-dev", "libwayland-dev",
                             "python3-dbus", "python3-dev", "python3-pip", "python3-tk",
                                 "python3-venv",
                             "zenity"],
@@ -1365,6 +1364,8 @@ def install_toshy_files():
             except (OSError, PermissionError, FileNotFoundError) as file_err:
                 error(f'Problem removing existing Toshy config folder after backup:\n\t{file_err}')
         patterns_to_ignore = [
+                '.git_hooks',
+                '.git_hooks_install.sh',
                 '.github',
                 '.gitignore',
                 '__pycache__',

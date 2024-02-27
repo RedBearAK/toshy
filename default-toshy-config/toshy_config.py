@@ -75,7 +75,7 @@ icon_file_inverse   = os.path.join(assets_path, "toshy_app_icon_rainbow_inverse.
 # Toshy config file
 TOSHY_PART      = 'config'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Config file'
-APP_VERSION     = '2024.0202'
+APP_VERSION     = '2024.0224'
 
 # Settings object used to tweak preferences "live" between gui, tray and config.
 cnfg = Settings(current_folder_path)
@@ -173,17 +173,17 @@ ignore_combo = ComboHint.IGNORE
 # inside the "lists of dicts" to be given to the matchProps() function.
 # Makes the variables evaluate to equivalent strings inside the dicts. 
 # Provides for nice syntax highlighting and visual separation of key:value. 
-clas = 'clas'           # key label for matchProps() arg to match: wm_class
-name = 'name'           # key label for matchProps() arg to match: wm_name
-devn = 'devn'           # key label for matchProps() arg to match: device_name
-not_clas = 'not_clas'   # key label for matchProps() arg to NEGATIVE match: wm_class
-not_name = 'not_name'   # key label for matchProps() arg to NEGATIVE match: wm_name
-not_devn = 'not_devn'   # key label for matchProps() arg to NEGATIVE match: device_name
-numlk = 'numlk'         # key label for matchProps() arg to match: numlock_on
-capslk = 'capslk'       # key label for matchProps() arg to match: capslock_on
-cse = 'cse'             # key label for matchProps() arg to enable: case sensitivity
-lst = 'lst'             # key label for matchProps() arg to pass in a [list] of {dicts}
-dbg = 'dbg'             # key label for matchProps() arg to set debugging info string
+clas        = 'clas'        # key label for matchProps() arg to match: wm_class
+name        = 'name'        # key label for matchProps() arg to match: wm_name
+devn        = 'devn'        # key label for matchProps() arg to match: device_name
+not_clas    = 'not_clas'    # key label for matchProps() arg to NEGATIVE match: wm_class
+not_name    = 'not_name'    # key label for matchProps() arg to NEGATIVE match: wm_name
+not_devn    = 'not_devn'    # key label for matchProps() arg to NEGATIVE match: device_name
+numlk       = 'numlk'       # key label for matchProps() arg to match: numlock_on
+capslk      = 'capslk'      # key label for matchProps() arg to match: capslock_on
+cse         = 'cse'         # key label for matchProps() arg to enable: case sensitivity
+lst         = 'lst'         # key label for matchProps() arg to pass in a [list] of {dicts}
+dbg         = 'dbg'         # key label for matchProps() arg to set debugging info string
 
 # global variables for the isDoubleTap() function
 tapTime1 = time.time()
@@ -266,6 +266,7 @@ terminals_lod = [
     {clas:"^station$"                   },
     {clas:"^tabby$"                     },
     {clas:"^terminator$"                },
+    {clas:"^terminology$"               },
     {clas:"^termite$"                   },
     {clas:"^Termius$"                   },
     {clas:"^tilda$"                     },
@@ -1000,15 +1001,49 @@ def notify_context():
         def escape_markup(text: str):
             return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 
-        nwln_chr        = '<br>' if zenity_is_qarma else '\n'
+        nwln_str        = '<br>' if zenity_is_qarma else '\n'
+
         ctx_clas        = ctx.wm_class
         ctx_name        = ctx.wm_name
         ctx_devn        = ctx.device_name
-        message         = ( f"{nwln_chr}<tt>"
-                            f"<b>Class =</b> '{escape_markup(ctx_clas)}'  {nwln_chr}"
-                            f"<b>Title =</b> '{escape_markup(ctx_name)}'  {nwln_chr}"
-                            f"<b>Keybd =</b> '{escape_markup(ctx_devn)}'  {nwln_chr}"
-                            f"</tt>" )
+
+        # ------ following are all True/False
+        ctx_rmte        = matchProps(lst=remotes_lod)(ctx)
+        ctx_term        = matchProps(lst=terminals_lod)(ctx)
+        ctx_brws        = matchProps(clas=browsers_allStr)(ctx)
+        ctx_fmgr        = matchProps(clas=filemanagerStr)(ctx)
+
+        if matchProps(lst=dialogs_CloseWin_lod)(ctx) or matchProps(lst=dialogs_Escape_lod)(ctx):
+            ctx_dlgs        = True
+        else:
+            ctx_dlgs        = False
+
+        message         = ( 
+            f"<tt>"
+            f"<b>Class =</b> '{escape_markup(ctx_clas)}'  {nwln_str}"
+            f"<b>Title =</b> '{escape_markup(ctx_name)}'  {nwln_str}"
+            f"<b>Keybd =</b> '{escape_markup(ctx_devn)}'  {nwln_str}"
+            f"{nwln_str}"
+            f"<b>Keyboard type  =</b>   '{KBTYPE}'  {nwln_str}"
+            f"{nwln_str}"
+            f"<b>DISTRO_NAME    =</b>   '{DISTRO_NAME}'  {nwln_str}"
+            f"<b>DISTRO_VER     =</b>   '{DISTRO_VER}'  {nwln_str}"
+            f"<b>VARIANT_ID     =</b>   '{VARIANT_ID}'  {nwln_str}"
+            f"<b>DESKTOP_ENV    =</b>   '{DESKTOP_ENV}'  {nwln_str}"
+            f"<b>DE_MAJ_VER     =</b>   '{DE_MAJ_VER}'  {nwln_str}"
+            f"<b>SESSION_TYPE   =</b>   '{SESSION_TYPE}'  {nwln_str}"
+            f"{nwln_str}"
+            f"<b>remotes app class group?:</b>          '{ctx_rmte}'  {nwln_str}"
+            f"<b>terminals app class group?:</b>        '{ctx_term}'  {nwln_str}"
+            f"<b>browsers app class group?:</b>         '{ctx_brws}'  {nwln_str}"
+            f"<b>filemanagers app class group?:</b>     '{ctx_fmgr}'  {nwln_str}"
+            f"<b>dialogs app class group?:</b>          '{ctx_dlgs}'  {nwln_str}"
+            f"___________________________________________________{nwln_str}"
+            f"<i>Keyboard shortcuts (Ctrl+C/Cmd+C) may not work here.</i>{nwln_str}"
+            f"<i>Select text with mouse. Triple-click to select all.</i>{nwln_str}"
+            f"<i>Right-click with mouse and choose 'Copy' from menu.</i>{nwln_str}"
+            f"</tt>"
+        )
 
         zenity_cmd_lst = [  zenity_cmd, '--info', '--no-wrap', 
                             '--title=Toshy Context Info',
@@ -3171,7 +3206,7 @@ keymap("General File Managers - Finder Mods", {
 
 # Open preferences in Firefox browsers
 keymap("Firefox Browsers Overrides", {
-    C("C-comma"):              [C("C-t"),sleep(0.05),ST("about:preferences"),sleep(0.05),C("Enter")],
+    C("C-comma"):              [C("C-t"),sleep(0.1),ST("about:preferences"),sleep(0.1),C("Enter")],
     C("Shift-RC-N"):            C("Shift-RC-P"),                      # Open private window with Cmd+Shift+N like other browsers
     C("RC-Backspace"):         [C("Shift-Home"), C("Backspace")],     # Delete Entire Line Left of Cursor
     C("RC-Delete"):            [C("Shift-End"), C("Delete")],         # Delete Entire Line Right of Cursor
@@ -3188,7 +3223,8 @@ keymap("Overrides for Falkon browser", {
 }, when = matchProps(clas="^org.kde.falkon$|^Falkon$"))
 
 keymap("Chrome Browsers Overrides", {
-    C("C-comma"):              [C("Alt-e"), C("s"),C("Enter")], # Open preferences
+    # C("C-comma"):              [C("Alt-e"), C("s"),C("Enter")], # Open preferences
+    C("C-comma"):              [C("C-t"), sleep(0.1), ST("chrome://settings"), sleep(0.1), C("Enter")], # Open preferences
     C("RC-q"):                  C("Alt-F4"),                    # Quit Chrome(s) browsers with Cmd+Q
     # C("RC-Left"):               C("Alt-Left"),                  # Page nav: Back to prior page in history (conflict with wordwise)
     # C("RC-Right"):              C("Alt-Right"),                 # Page nav: Forward to next page in history (conflict with wordwise)
@@ -3530,6 +3566,10 @@ keymap("Linux Mint xed text editor", {
     C("RC-T"):                  C("C-N"),                       # Open new tab (new file)
 }, when = matchProps(clas="^xed$") )
 
+keymap("KWrite text editor - Close Document dialog", {
+    C("RC-d"):                  C("Alt-d"),                     # [D]iscard file without saving (from Close Document dialog)
+    C("RC-s"):                  C("Alt-s"),                     # Save file (from Close Document dialog)
+}, when = matchProps(clas="^kwrite$|^org.kde.Kwrite$", name="^Close Document.*KWrite$") )
 keymap("KWrite text editor", {
     C("RC-comma"):              C("Shift-C-comma"),             # Open preferences dialog
 }, when = matchProps(clas="^kwrite$|^org.kde.Kwrite$") )
@@ -3680,7 +3720,21 @@ keymap("Kitty terminal - not tab nav", {
 
 keymap("Konsole terminal - not tab nav", {
     C("RC-comma"):              C("Shift-RC-comma"),            # Open Preferences dialog
+    C("RC-0"):                  C("C-Alt-0"),                   # Reset font size
 }, when = matchProps(clas="^Konsole$|^org.kde.Konsole$"))
+
+keymap("Terminology terminal", {
+    C("RC-w"):                  C("Shift-C-End"),               # Close focused tab
+    C("RC-c"):                  C("Alt-w"),                     # Copy selection to primary buffer
+    C("RC-v"):                  C("Alt-Enter"),                 # Paste primary buffer
+    C("RC-0"):                  C("C-Alt-0"),                   # Reset font size
+    C("RC-Minus"):              C("C-Alt-Minus"),               # Decrease font size
+    C("RC-Equal"):              C("C-Alt-Equal"),               # Increase font size
+}, when = matchProps(clas="^terminology$"))
+
+keymap("Xfce4 terminal", {
+    C("RC-comma"):      [C("Alt-e"), sleep(0.1), C("e")],       # Open Preferences dialog
+}, when = matchProps(clas="^xfce4-terminal$"))
 
 
 # Overrides to General Terminals shortcuts for specific distros (or are they really just desktop environments?)
@@ -3918,12 +3972,20 @@ keymap("GenGUI overrides: GNOME", {
     C("RC-Shift-Key_5"):        C("Print"),                     # Take a screenshot interactively (gnome)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'gnome' )
 
+keymap("GenGUI overrides: Enlightenment", {
+    C("RC-q"):                  C("C-Alt-x"),                   # Close window (Cmd+Q)
+    # C("RC-Space"):             [iEF2NT(),C("C-Alt-m")],         # enlightenment main menu (override in "User Apps" slice if necessary)
+    C("RC-Space"):             [iEF2NT(),C("C-Alt-Space")],     # enlightenment main menu (override in "User Apps" slice if necessary)
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'enlightenment' )
+
 keymap("GenGUI overrides: Hyprland", {
     C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # Hyprland (override in "User Apps" slice if necessary)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'hyprland' )
+
 keymap("GenGUI overrides: IceWM", {
     C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # IceWM: Win95Keys=1 (Meta shows menu)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'icewm' )
+
 keymap("GenGUI overrides: KDE", {
     C("RC-Space"):             [iEF2NT(),C("Alt-F1")],          # Default SL - Launch Application Menu (gnome/kde)
     C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,elementary)
@@ -3933,19 +3995,24 @@ keymap("GenGUI overrides: KDE", {
     C("RC-Shift-Key_4"):        C("Alt-Print"),                 # Take a screenshot of a window (kde)
     C("RC-Shift-Key_5"):        C("Print"),                     # Take a screenshot interactively (kde)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'kde' )
+
 keymap("GenGUI overrides: MATE", {
     C("RC-Space"):             [iEF2NT(),C("Alt-Space")],       # Right click, configure Mint menu shortcut to match
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'mate' )
+
 keymap("GenGUI overrides: swaywm", {
     C("RC-Space"):             [iEF2NT(),C("Super-d")],         # Open sway launcher
     C("RC-Q"):                  C("RC-Q"),                      # Override General GUI Alt+F4 remap
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'sway' )
+
 keymap("GenGUI overrides: Trinity desktop", {
     C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # Trinity desktop (Q4OS)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'trinity' )
+
 keymap("GenGUI overrides: Unity desktop", {
     C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # Trinity desktop (Q4OS)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'unity' )
+
 keymap("GenGUI overrides: Xfce4", {
     C("RC-Grave"):             [bind,C("Super-Tab")],           # xfce4 Switch within app group
     C("Shift-RC-Grave"):       [bind,C("Super-Shift-Tab")],     # xfce4 Switch within app group
