@@ -1364,11 +1364,11 @@ def install_toshy_files():
             except (OSError, PermissionError, FileNotFoundError) as file_err:
                 error(f'Problem removing existing Toshy config folder after backup:\n\t{file_err}')
         patterns_to_ignore = [
+                '.git_hooks',
+                '.git_hooks_install.sh',
                 '.github',
                 '.gitignore',
                 '__pycache__',
-                'git_hooks',
-                'git_hooks_install.sh',
                 keyszer_tmp_dir,
                 'kwin-application-switcher',
                 'LICENSE',
