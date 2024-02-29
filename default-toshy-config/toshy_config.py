@@ -417,6 +417,7 @@ filemanagerStr = "|".join('^'+x+'$' for x in filemanagers)
 
 ### dialogs_Escape_lod = send these windows the Escape key for Cmd+W
 dialogs_Escape_lod = [
+    {clas:"^com.github.rafostar.Clapper$", name:"^Preferences$"},
     {clas:"^krusader$|^org.kde.krusader$", name:"^Properties.*Krusader$"},
     {clas:"^.*nautilus$", name:"^.*Properties$|^Preferences$|^Create Archive$|^Rename.*Files$"},
     {clas:"^Transmission-gtk$|^com.transmissionbt.Transmission.*$", not_name:"^Transmission$"},
