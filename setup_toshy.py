@@ -571,6 +571,23 @@ remove_pkgs_map = {
 }
 
 
+pip_pkgs   = [
+    # pinning pygobject to 3.44.1 (or earlier) to get through install on RHEL 8.x and clones
+    # TODO: may need to pin other packages to go along with the pinned pygobject
+    "lockfile", "dbus-python", "systemd-python", "pygobject<=3.44.1", "tk",
+    "sv_ttk", "watchdog", "psutil", "hyprpy", "i3ipc", "pywayland", # "pywlroots",
+
+    # installing 'pywlroots' will require native pkg 'libxkbcommon-devel' (Fedora)
+
+    # TODO: Check on 'python-xlib' project by early-mid 2024 to see if this bug is fixed:
+    #   [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']
+    # If the bug is fixed, remove pinning to v0.31 here:
+
+    # everything from 'inotify-simple' to 'six' is just to make `keyszer` install smoother
+    "inotify-simple", "evdev", "appdirs", "ordered-set", "python-xlib==0.31", "six"
+]
+
+
 def get_distro_names():
     """Utility function to return list of available distro names (IDs)"""
     distro_list = []
@@ -618,6 +635,10 @@ class DistroQuirksHandler:
 
     def handle_quirks_CentOS_7(self):
         print('Doing prep/checks for CentOS 7...')
+
+        # pin 'evdev' pip package to version 1.6.1 for CentOS 7
+        global pip_pkgs
+        pip_pkgs = [pkg if pkg != "evdev" else "evdev==1.6.1" for pkg in pip_pkgs]
 
         native_pkg_installer.check_for_pkg_mgr_cmd('yum')
         yum_cmd_lst = ['sudo', 'yum', 'install', '-y']
@@ -1473,22 +1494,6 @@ def install_pip_packages():
     print(f'\n\n§  Installing/upgrading Python packages...\n{cnfg.separator}')
     venv_python_cmd = os.path.join(cnfg.venv_path, 'bin', 'python')
     venv_pip_cmd    = os.path.join(cnfg.venv_path, 'bin', 'pip')
-
-    pip_pkgs   = [
-        # pinning pygobject to 3.44.1 (or earlier) to get through install on RHEL 8.x and clones
-        # TODO: may need to pin other packages to go along with the pinned pygobject
-        "lockfile", "dbus-python", "systemd-python", "pygobject<=3.44.1", "tk",
-        "sv_ttk", "watchdog", "psutil", "hyprpy", "i3ipc", "pywayland", # "pywlroots",
-
-        # installing 'pywlroots' will require native pkg 'libxkbcommon-devel' (Fedora)
-
-        # TODO: Check on 'python-xlib' project by early-mid 2024 to see if this bug is fixed:
-        #   [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']
-        # If the bug is fixed, remove pinning to v0.31 here:
-
-        # everything from 'inotify-simple' to 'six' is just to make `keyszer` install smoother
-        "inotify-simple", "evdev", "appdirs", "ordered-set", "python-xlib==0.31", "six"
-    ]
 
     # Filter out systemd packages if no 'systemctl' present
     filtered_pip_pkgs   = [
