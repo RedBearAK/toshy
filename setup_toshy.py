@@ -893,35 +893,38 @@ def install_distro_pkgs():
     ###  DNF DISTROS  #########################################################
     ###########################################################################
     def install_on_dnf_distro():
-        """utility function that gets dispatched for distros that use DNF package manager"""
+        """Utility function that gets dispatched for distros that use DNF package manager."""
         call_attention_to_password_prompt()
 
-        # OpenMandriva uses DNF, so it's here in the "dnf_distros" block
-        if cnfg.DISTRO_NAME in distro_groups_map['mandriva-based']:
+        # Define helper functions for specific distro installations
+        def install_on_mandriva_based():
             cmd_lst = ['sudo', 'dnf', 'install', '-y']
             native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
-            return  # no need to continue after this
 
-        # do extra stuff only if distro is a RHEL type (not Fedora type)
-        if cnfg.DISTRO_NAME in distro_groups_map['rhel-based']:
-
-            # do extra prep/checks if distro is CentOS 7
-            if cnfg.DISTRO_NAME in ['centos'] and cnfg.distro_mjr_ver == '7':
+        def install_on_rhel_based():
+            if cnfg.DISTRO_NAME == 'centos' and cnfg.distro_mjr_ver == '7':
                 quirks_handler.handle_quirks_CentOS_7()
-
-            # do extra prep/checks if distro is CentOS Stream 8
-            if cnfg.DISTRO_NAME in ['centos'] and cnfg.distro_mjr_ver == '8':
+            if cnfg.DISTRO_NAME == 'centos' and cnfg.distro_mjr_ver == '8':
                 quirks_handler.handle_quirks_CentOS_Stream_8()
-
             quirks_handler.handle_quirks_RHEL()
             cmd_lst = ['sudo', 'dnf', 'install', '-y']
             native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
-            return  # no need to continue after this
 
-        if cnfg.DISTRO_NAME in distro_groups_map['fedora-based']:
-            # TODO: insert check to see if a Fedora distro is actually an immutable (rpm-ostree)
+        def install_on_fedora_based():
+            # TODO: insert check to see if Fedora distro is actually immutable/atomic (rpm-ostree)
             cmd_lst = ['sudo', 'dnf', 'install', '-y']
             native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+
+        # Dispatch installation sub-function based on DNF distro type
+        if cnfg.DISTRO_NAME in distro_groups_map['mandriva-based']:
+            install_on_mandriva_based()
+        elif cnfg.DISTRO_NAME in distro_groups_map['rhel-based']:
+            install_on_rhel_based()
+        elif cnfg.DISTRO_NAME in distro_groups_map['fedora-based']:
+            install_on_fedora_based()
+        else:
+            error(f"Distro {cnfg.DISTRO_NAME} is not supported by this installation script.")
+            safe_shutdown(1)
 
     ###########################################################################
     ###  ZYPPER DISTROS  ######################################################
