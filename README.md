@@ -541,18 +541,23 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 ### Debian and Debian-based distros
 
-- Deepin 23 (Debian-based)
-
-    - NOTE: Long delay before services start (Zenity error?)
-
 - LMDE 5/6 (Linux Mint Debian Edition)
 
     - Default desktop is Cinnamon
+
+- Kali Linux 2023/2024 (Debian-based)
+
+    - Tested with default desktop of Xfce
+    - GNOME & KDE Plasma available in Kali installer
 
 - PeppermintOS (Debian-based)
 
     - New release based on Debian 12 tested
     - Desktop is Xfce4 v4.18
+
+- Deepin 23 (Debian-based)
+
+    - NOTE: Long delay before services start (Zenity error?)
 
 - Q4OS 5.2 (Debian-based)
 
