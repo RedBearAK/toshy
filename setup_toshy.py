@@ -571,6 +571,23 @@ remove_pkgs_map = {
 }
 
 
+pip_pkgs   = [
+    # pinning pygobject to 3.44.1 (or earlier) to get through install on RHEL 8.x and clones
+    # TODO: may need to pin other packages to go along with the pinned pygobject
+    "lockfile", "dbus-python", "systemd-python", "pygobject<=3.44.1", "tk",
+    "sv_ttk", "watchdog", "psutil", "hyprpy", "i3ipc", "pywayland", # "pywlroots",
+
+    # installing 'pywlroots' will require native pkg 'libxkbcommon-devel' (Fedora)
+
+    # TODO: Check on 'python-xlib' project by early-mid 2024 to see if this bug is fixed:
+    #   [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']
+    # If the bug is fixed, remove pinning to v0.31 here:
+
+    # everything from 'inotify-simple' to 'six' is just to make `keyszer` install smoother
+    "inotify-simple", "evdev", "appdirs", "ordered-set", "python-xlib==0.31", "six"
+]
+
+
 def get_distro_names():
     """Utility function to return list of available distro names (IDs)"""
     distro_list = []
@@ -618,6 +635,11 @@ class DistroQuirksHandler:
 
     def handle_quirks_CentOS_7(self):
         print('Doing prep/checks for CentOS 7...')
+
+        # pin 'evdev' pip package to version 1.6.1 for CentOS 7 to
+        # deal with ImportError and undefined symbol UI_GET_SYSNAME
+        global pip_pkgs
+        pip_pkgs = [pkg if pkg != "evdev" else "evdev==1.6.1" for pkg in pip_pkgs]
 
         native_pkg_installer.check_for_pkg_mgr_cmd('yum')
         yum_cmd_lst = ['sudo', 'yum', 'install', '-y']
@@ -893,35 +915,38 @@ def install_distro_pkgs():
     ###  DNF DISTROS  #########################################################
     ###########################################################################
     def install_on_dnf_distro():
-        """utility function that gets dispatched for distros that use DNF package manager"""
+        """Utility function that gets dispatched for distros that use DNF package manager."""
         call_attention_to_password_prompt()
 
-        # OpenMandriva uses DNF, so it's here in the "dnf_distros" block
-        if cnfg.DISTRO_NAME in distro_groups_map['mandriva-based']:
+        # Define helper functions for specific distro installations
+        def install_on_mandriva_based():
             cmd_lst = ['sudo', 'dnf', 'install', '-y']
             native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
-            return  # no need to continue after this
 
-        # do extra stuff only if distro is a RHEL type (not Fedora type)
-        if cnfg.DISTRO_NAME in distro_groups_map['rhel-based']:
-
-            # do extra prep/checks if distro is CentOS 7
-            if cnfg.DISTRO_NAME in ['centos'] and cnfg.distro_mjr_ver == '7':
+        def install_on_rhel_based():
+            if cnfg.DISTRO_NAME == 'centos' and cnfg.distro_mjr_ver == '7':
                 quirks_handler.handle_quirks_CentOS_7()
-
-            # do extra prep/checks if distro is CentOS Stream 8
-            if cnfg.DISTRO_NAME in ['centos'] and cnfg.distro_mjr_ver == '8':
+            if cnfg.DISTRO_NAME == 'centos' and cnfg.distro_mjr_ver == '8':
                 quirks_handler.handle_quirks_CentOS_Stream_8()
-
             quirks_handler.handle_quirks_RHEL()
             cmd_lst = ['sudo', 'dnf', 'install', '-y']
             native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
-            return  # no need to continue after this
 
-        if cnfg.DISTRO_NAME in distro_groups_map['fedora-based']:
-            # TODO: insert check to see if a Fedora distro is actually an immutable (rpm-ostree)
+        def install_on_fedora_based():
+            # TODO: insert check to see if Fedora distro is actually immutable/atomic (rpm-ostree)
             cmd_lst = ['sudo', 'dnf', 'install', '-y']
             native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+
+        # Dispatch installation sub-function based on DNF distro type
+        if cnfg.DISTRO_NAME in distro_groups_map['mandriva-based']:
+            install_on_mandriva_based()
+        elif cnfg.DISTRO_NAME in distro_groups_map['rhel-based']:
+            install_on_rhel_based()
+        elif cnfg.DISTRO_NAME in distro_groups_map['fedora-based']:
+            install_on_fedora_based()
+        else:
+            error(f"Distro {cnfg.DISTRO_NAME} is not supported by this installation script.")
+            safe_shutdown(1)
 
     ###########################################################################
     ###  ZYPPER DISTROS  ######################################################
@@ -1470,22 +1495,6 @@ def install_pip_packages():
     print(f'\n\n§  Installing/upgrading Python packages...\n{cnfg.separator}')
     venv_python_cmd = os.path.join(cnfg.venv_path, 'bin', 'python')
     venv_pip_cmd    = os.path.join(cnfg.venv_path, 'bin', 'pip')
-
-    pip_pkgs   = [
-        # pinning pygobject to 3.44.1 (or earlier) to get through install on RHEL 8.x and clones
-        # TODO: may need to pin other packages to go along with the pinned pygobject
-        "lockfile", "dbus-python", "systemd-python", "pygobject<=3.44.1", "tk",
-        "sv_ttk", "watchdog", "psutil", "hyprpy", "i3ipc", "pywayland", # "pywlroots",
-
-        # installing 'pywlroots' will require native pkg 'libxkbcommon-devel' (Fedora)
-
-        # TODO: Check on 'python-xlib' project by early-mid 2024 to see if this bug is fixed:
-        #   [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']
-        # If the bug is fixed, remove pinning to v0.31 here:
-
-        # everything from 'inotify-simple' to 'six' is just to make `keyszer` install smoother
-        "inotify-simple", "evdev", "appdirs", "ordered-set", "python-xlib==0.31", "six"
-    ]
 
     # Filter out systemd packages if no 'systemctl' present
     filtered_pip_pkgs   = [
