@@ -636,7 +636,8 @@ class DistroQuirksHandler:
     def handle_quirks_CentOS_7(self):
         print('Doing prep/checks for CentOS 7...')
 
-        # pin 'evdev' pip package to version 1.6.1 for CentOS 7
+        # pin 'evdev' pip package to version 1.6.1 for CentOS 7 to
+        # deal with ImportError and undefined symbol UI_GET_SYSNAME
         global pip_pkgs
         pip_pkgs = [pkg if pkg != "evdev" else "evdev==1.6.1" for pkg in pip_pkgs]
 
