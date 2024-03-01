@@ -417,25 +417,26 @@ filemanagerStr = "|".join('^'+x+'$' for x in filemanagers)
 
 ### dialogs_Escape_lod = send these windows the Escape key for Cmd+W
 dialogs_Escape_lod = [
-    {clas:"^com.github.rafostar.Clapper$", name:"^Preferences$"},
-    {clas:"^krusader$|^org.kde.krusader$", name:"^Properties.*Krusader$"},
-    {clas:"^.*nautilus$", name:"^.*Properties$|^Preferences$|^Create Archive$|^Rename.*Files$"},
-    {clas:"^Transmission-gtk$|^com.transmissionbt.Transmission.*$", not_name:"^Transmission$"},
-    {clas:"^org.gnome.Software$", not_name:"^Software$"},
-    {clas:"^gnome-text-editor$|^org.gnome.TextEditor$", name:"^Preferences$"},
-    {clas:"^org.gnome.Shell.Extensions$"},
-    {clas:"^konsole$|^org.kde.konsole$", name:"^Configure.*Konsole$|^Edit Profile.*Konsole$"},
-    {clas:"^org.kde.KWrite$", name:"^Configure.*KWrite$"},
-    {clas:"^org.kde.Dolphin$", name:"^Configure.*Dolphin$|^Properties.*Dolphin$"},
-    {clas:"^org.kde.falkon$|^Falkon$", name:"^Preferences.*Falkon$"},
-    {clas:"^xfce4-terminal$", name:"^Terminal Preferences$"},
-    {clas:"^epiphany$|^org.gnome.Epiphany$", name:"^Preferences$"},
     {clas:"^Angry.*IP.*Scanner$",
         name:"^IP.*address.*details.*$|^Preferences.*$|^Scan.*Statistics.*$|^Edit.*openers.*$"},
     # TODO: add or change Atoms class to "pm.mirko.Atoms" if the app gets updated
     # TODO: remove "atoms" from "name:" entry patterns if "Shortcuts" dialog gets updated
     # Reference: https://github.com/AtomsDevs/Atoms/issues/61
     {clas:"^atoms$", name:"^Preferences$|^Shortcuts$|^About$|^atoms$"},
+    {clas:"^com.github.rafostar.Clapper$", name:"^Preferences$"},
+    {clas:"^epiphany$|^org.gnome.Epiphany$", name:"^Preferences$"},
+    {clas:"^gnome-text-editor$|^org.gnome.TextEditor$", name:"^Preferences$"},
+    {clas:"^konsole$|^org.kde.konsole$", name:"^Configure.*Konsole$|^Edit Profile.*Konsole$"},
+    {clas:"^krusader$|^org.kde.krusader$", name:"^Properties.*Krusader$"},
+    {clas:"^.*nautilus$", name:"^.*Properties$|^Preferences$|^Create Archive$|^Rename.*Files$"},
+    {clas:"^org.gnome.Shell.Extensions$"},
+    {clas:"^org.kde.Dolphin$", name:"^Configure.*Dolphin$|^Properties.*Dolphin$"},
+    {clas:"^org.kde.falkon$|^Falkon$", name:"^Preferences.*Falkon$"},
+    {clas:"^org.kde.KWrite$", name:"^Configure.*KWrite$"},
+    {clas:"^org.gnome.Software$", not_name:"^Software$"},
+    {clas:"^Transmission-gtk$|^com.transmissionbt.Transmission.*$", not_name:"^Transmission$"},
+    {clas:"^xfce4-terminal$", name:"^Terminal Preferences$"},
+    {clas:"^zenity$|^qarma$"}
 ]
 
 ### dialogs_CloseWin_lod = send these windows the "Close window" combo for Cmd+W
