@@ -3996,18 +3996,8 @@ keymap("GenGUI overrides: IceWM", {
     C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # IceWM: Win95Keys=1 (Meta shows menu)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'icewm' )
 
-keymap("GenGUI overrides: KDE pre-KF6", {
-    # KDE Frameworks 6 assigns F10 to "Open Main Manu" so this is only valid for KF5 now
-    # (Reference https://planet.kde.org/felix-ernst-2023-10-13-f10-for-accessibility-in-kf6/)
-    C("RC-Space"):             [iEF2NT(),C("Alt-F1")],          # Default SL - Launch Application Menu (pre-KF6!)
-}, when = lambda ctx: 
-    matchProps(not_lst=remotes_lod)(ctx) and 
-    DESKTOP_ENV == 'kde' and 
-    DE_MAJ_VER == '5'
-)
-
 keymap("GenGUI overrides: KDE", {
-    C("RC-Space"):             [iEF2NT(),C("F10")],             # Default SL - Launch Application Menu (gnome/kde)
+    C("RC-Space"):             [iEF2NT(),C("Alt-F1")],          # Default SL - Launch Application Menu (gnome/kde)
     C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,elementary)
     C("RC-Super-f"):            C("Alt-F10"),                   # Default SL - Maximize app (gnome/kde)
     # Screenshot shortcuts for KDE Plasma desktops (Spectacle app)
