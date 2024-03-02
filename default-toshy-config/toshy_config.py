@@ -925,6 +925,8 @@ def iEF2(combo_if_true, latch_or_combo_if_false,
             combo_list = [latch_or_combo_if_false]
             if keep_value_if_false is False:
                 _enter_is_F2 = True
+        debug(f"_is_Enter_F2:  {combo_list      = }")
+        debug(f"_is_Enter_F2:  {_enter_is_F2    = }")
         return combo_list
     return _is_Enter_F2
 
