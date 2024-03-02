@@ -3009,6 +3009,14 @@ keymap("Overrides for DDE File Manager - Finder Mods", {
 
 # Keybindings overrides for Dolphin (KDE file manager)
 # (overrides some bindings from general file manager code block below)
+keymap("Overrides for Dolphin - Finder Mods pre-KF6", {
+    # KDE Frameworks 6 assigns F10 to "Open Main Manu" so this is only valid for KF5 now
+    # (Reference https://planet.kde.org/felix-ernst-2023-10-13-f10-for-accessibility-in-kf6/)
+    C("Shift-RC-n"):            iEF2(C("F10"), False),          # Create new folder (F10), toggle Enter to be Enter (pre-KF6!)
+}, when = lambda ctx: 
+    matchProps(clas="^dolphin$|^org.kde.dolphin$")(ctx) and 
+    DESKTOP_ENV == 'kde' and 
+    DE_MAJ_VER == '5' )
 keymap("Overrides for Dolphin - Finder Mods", {
     C("RC-KEY_2"):              C("C-KEY_3"),                   # View as List (Detailed)
     C("RC-KEY_3"):              C("C-KEY_2"),                   # View as List (Compact)
@@ -3017,9 +3025,9 @@ keymap("Overrides for Dolphin - Finder Mods", {
     ### in Dolphin's keyboard shortcuts. There is no default shortcut set for this function.
     ##########################################################################################
     C("RC-Super-o"):            C("Shift-RC-o"),                # Open in new window (or new tab, user's choice, see above)
-    C("Shift-RC-N"):            iEF2(C("F10"), False),          # Create new folder (F10), toggle Enter to be Enter
+    C("Shift-RC-n"):            iEF2(C("Shift-C-n"), False),    # Create new folder, toggle Enter to be Enter (KF6 and later)
     C("RC-comma"):              C("Shift-RC-comma"),            # Open preferences dialog
-}, when = matchProps(clas="^dolphin|org.kde.dolphin$"))
+}, when = matchProps(clas="^dolphin$|^org.kde.dolphin$"))
 
 # Keybindings overrides for elementary OS Files (Pantheon)
 # (overrides some bindings from general file manager code block below)
@@ -3988,8 +3996,18 @@ keymap("GenGUI overrides: IceWM", {
     C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # IceWM: Win95Keys=1 (Meta shows menu)
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'icewm' )
 
+keymap("GenGUI overrides: KDE pre-KF6", {
+    # KDE Frameworks 6 assigns F10 to "Open Main Manu" so this is only valid for KF5 now
+    # (Reference https://planet.kde.org/felix-ernst-2023-10-13-f10-for-accessibility-in-kf6/)
+    C("RC-Space"):             [iEF2NT(),C("Alt-F1")],          # Default SL - Launch Application Menu (pre-KF6!)
+}, when = lambda ctx: 
+    matchProps(not_lst=remotes_lod)(ctx) and 
+    DESKTOP_ENV == 'kde' and 
+    DE_MAJ_VER == '5'
+)
+
 keymap("GenGUI overrides: KDE", {
-    C("RC-Space"):             [iEF2NT(),C("Alt-F1")],          # Default SL - Launch Application Menu (gnome/kde)
+    C("RC-Space"):             [iEF2NT(),C("F10")],             # Default SL - Launch Application Menu (gnome/kde)
     C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,elementary)
     C("RC-Super-f"):            C("Alt-F10"),                   # Default SL - Maximize app (gnome/kde)
     # Screenshot shortcuts for KDE Plasma desktops (Spectacle app)
