@@ -1,6 +1,8 @@
 # Current status: Stable Beta (Please Read)
 
-WARNING: There is a very annoying "bug" going around where there is a problem with services like `xdg-desktop-portal` and `xdg-desktop-portal-gnome` (or `xdg-desktop-portal-gtk`) causing very long delays with launching certain applications (particularly GTK apps like Firefox, but also reportedly Qt apps sometimes) in a Wayland session. Some distros seem to have a fix for this, others have not fixed it yet.  
+Did your system just update itself from KDE Plasma 5 to Plasma 6, and Toshy stopped working? And you installed Toshy before January 2024? Just grab a new zip file from the big green "Code" button and reinstall. Your config customizations and preference choices should be preserved (if you made your config changes within the "slice marks").
+
+WARNING: There is a very annoying "bug" going around where there is a problem with services like `xdg-desktop-portal` and `xdg-desktop-portal-gnome` (or `xdg-desktop-portal-gtk`) causing very long delays with launching certain applications (particularly GTK apps like Firefox, but also reportedly Qt apps sometimes) in a Wayland session. Some distros seem to have a fix for this, others have not fixed it yet. I think this occurs mainly on systems that have both KDE Plasma and some GTK-based desktop environment installed at the same time, leading to multiple desktop "portal" services trying to run at the same time.  
 
 Symptoms for Toshy are that the systemd services can't start up properly until anywhere from 30 seconds to a minute or more after logging in. They will eventually start, and restarting the services later (after the glitchy desktop portal service times out) works without issue. I've been observing this on KDE in multiple Linux distros. One "fix" is to mask the `xdg-desktop-portal-gnome` (or `xdg-desktop-portal-gtk`) service to keep it from clogging things up:  
 
@@ -665,17 +667,17 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 - Wayland sessions
 
-    - Cinnamon
-    - GNOME (needs shell extension, see Requirements)
+    - Cinnamon 6.0 or later
+    - GNOME 3.38 or later (needs shell extension, see Requirements)
     - Hyprland
-    - KDE
+    - Plasma 5 and 6 (KDE)
     - Sway
 
 If you are in an X11/Xorg login session, the desktop environment or window manager doesn't really matter. The keymapper gets the window class/name/title information directly from the X server with `Xlib`.  
 
-On the other hand, if you are in a Wayland session, it is only possible to obtain the per-application or per-window information (for specific shortcut keymaps) by using solutions that are custom to a limited set of desktop environments (or window managers).  
+On the other hand, if you are in a Wayland session, it is only possible to obtain the per-application or per-window information (for the app-specific shortcut keymaps) by using solutions that are custom to a limited set of desktop environments (or window managers).  
 
-For Wayland+GNOME this requires at least one of the known compatible GNOME Shell extensions to be installed. See above in "Requirements".  
+For Wayland+GNOME this requires at least one of the known compatible GNOME Shell extensions to be installed and enabled. See above in "Requirements".  
 
 There are specific remaps or overrides of default remaps for several common desktop environments (or distros which have shortcut peculiarities in their default desktop setups). They become active if the desktop environment is detected correctly by the `env.py` module used by the config file, or the information about the desktop can be placed in some `OVERRIDE` variables in the config file.  
 
