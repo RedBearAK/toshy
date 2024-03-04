@@ -156,9 +156,6 @@ class InstallerSettings:
         self.py_interp_ver          = f'{py_ver_mjr}.{py_ver_mnr}'
         self.py_interp_path         = shutil.which('python3')
 
-        # TODO: See if this can be removed. Unused now?
-        # self.KDE_ver                = '5'   # default to KDE 5 tools unless overridden
-
         self.toshy_dir_path         = os.path.join(home_dir, '.config', 'toshy')
         self.db_file_name           = 'toshy_user_preferences.sqlite'
         self.db_file_path           = os.path.join(self.toshy_dir_path, self.db_file_name)
