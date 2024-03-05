@@ -1004,6 +1004,7 @@ def notify_context():
 
         if kdialog_cmd:
             dialog_cmd          = kdialog_cmd
+            nwln_str            = '<br>'
         elif zenity_cmd:
             dialog_cmd          = zenity_cmd
             nwln_str            = '<br>' if zenity_is_qarma else '\n'
