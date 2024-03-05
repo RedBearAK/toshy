@@ -432,6 +432,7 @@ dialogs_Escape_lod = [
     {clas:"^org.gnome.Shell.Extensions$"},
     {clas:"^org.kde.Dolphin$", name:"^Configure.*Dolphin$|^Properties.*Dolphin$"},
     {clas:"^org.kde.falkon$|^Falkon$", name:"^Preferences.*Falkon$"},
+    {clas:"^org.kde.kdialog$"},
     {clas:"^org.kde.KWrite$", name:"^Configure.*KWrite$"},
     {clas:"^org.gnome.Software$", not_name:"^Software$"},
     {clas:"^Transmission-gtk$|^com.transmissionbt.Transmission.*$", not_name:"^Transmission$"},
