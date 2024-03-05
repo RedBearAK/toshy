@@ -962,6 +962,10 @@ def is_valid_command(command):
     return command and os.path.isfile(command) and os.access(command, os.X_OK)
 
 
+# Result will be None if DE is not in list OR if 'kdialog' not available.
+kdialog_cmd = shutil.which('kdialog') if DESKTOP_ENV.casefold() in ['kde', 'lxqt'] else None
+
+
 zenity_is_qarma = False
 
 zenity_cmd = shutil.which('zenity-gtk')
@@ -991,21 +995,30 @@ else:
 
 
 def notify_context():
-    """pop up a notification with context info"""
+    """pop up a dialog with context info"""
+    # TODO: adapt this to use native dialogs for non-GTK desktops, like 'kdialog' if possible
     def _notify_context(ctx: KeyContext):
-        if not zenity_cmd:
-            error('ERR: Zenity command is missing! Diagnostic dialog not available!')
+
+        dialog_cmd              = None
+        nwln_str                = '\n'
+
+        if kdialog_cmd:
+            dialog_cmd          = kdialog_cmd
+            nwln_str            = '<br>'
+        elif zenity_cmd:
+            dialog_cmd          = zenity_cmd
+            nwln_str            = '<br>' if zenity_is_qarma else '\n'
+        elif not zenity_cmd and not kdialog_cmd:
+            error('ERR: Diagnostic dialog not available. Necessary commands missing.')
             return
 
-        if not is_valid_command(zenity_cmd):
-            error(f"ERR: Zenity command not valid: '{zenity_cmd}'")
+        if not is_valid_command(dialog_cmd):
+            error(f"ERR: Dialog command not valid: '{dialog_cmd}'")
             return
 
         # fix a problem with zenity and <tags> in text
         def escape_markup(text: str):
             return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-
-        nwln_str        = '<br>' if zenity_is_qarma else '\n'
 
         ctx_clas        = ctx.wm_class
         ctx_name        = ctx.wm_name
@@ -1028,20 +1041,20 @@ def notify_context():
             f"<b>Title =</b> '{escape_markup(ctx_name)}'  {nwln_str}"
             f"<b>Keybd =</b> '{escape_markup(ctx_devn)}'  {nwln_str}"
             f"{nwln_str}"
-            f"<b>Keyboard type  =</b>   '{KBTYPE}'  {nwln_str}"
+            f"<b>Keyboard type ___ =</b> ___ '{KBTYPE}'  {nwln_str}"
             f"{nwln_str}"
-            f"<b>DISTRO_NAME    =</b>   '{DISTRO_NAME}'  {nwln_str}"
-            f"<b>DISTRO_VER     =</b>   '{DISTRO_VER}'  {nwln_str}"
-            f"<b>VARIANT_ID     =</b>   '{VARIANT_ID}'  {nwln_str}"
-            f"<b>SESSION_TYPE   =</b>   '{SESSION_TYPE}'  {nwln_str}"
-            f"<b>DESKTOP_ENV    =</b>   '{DESKTOP_ENV}'  {nwln_str}"
-            f"<b>DE_MAJ_VER     =</b>   '{DE_MAJ_VER}'  {nwln_str}"
+            f"<b>DISTRO_NAME _____ =</b> ___ '{DISTRO_NAME}'  {nwln_str}"
+            f"<b>DISTRO_VER ______ =</b> ___ '{DISTRO_VER}'  {nwln_str}"
+            f"<b>VARIANT_ID ______ =</b> ___ '{VARIANT_ID}'  {nwln_str}"
+            f"<b>SESSION_TYPE ____ =</b> ___ '{SESSION_TYPE}'  {nwln_str}"
+            f"<b>DESKTOP_ENV _____ =</b> ___ '{DESKTOP_ENV}'  {nwln_str}"
+            f"<b>DE_MAJ_VER ______ =</b> ___ '{DE_MAJ_VER}'  {nwln_str}"
             f"{nwln_str}"
-            f"<b>remotes app class group?:</b>          '{ctx_rmte}'  {nwln_str}"
-            f"<b>terminals app class group?:</b>        '{ctx_term}'  {nwln_str}"
-            f"<b>browsers app class group?:</b>         '{ctx_brws}'  {nwln_str}"
-            f"<b>filemanagers app class group?:</b>     '{ctx_fmgr}'  {nwln_str}"
-            f"<b>dialogs app class group?:</b>          '{ctx_dlgs}'  {nwln_str}"
+            f"<b>remotes app class group?:</b> ________ '{ctx_rmte}'  {nwln_str}"
+            f"<b>terminals app class group?:</b> ______ '{ctx_term}'  {nwln_str}"
+            f"<b>browsers app class group?:</b> _______ '{ctx_brws}'  {nwln_str}"
+            f"<b>filemanagers app class group?:</b> ___ '{ctx_fmgr}'  {nwln_str}"
+            f"<b>dialogs app class group?:</b> ________ '{ctx_dlgs}'  {nwln_str}"
             f"___________________________________________________{nwln_str}"
             f"<i>Keyboard shortcuts (Ctrl+C/Cmd+C) may not work here.</i>{nwln_str}"
             f"<i>Select text with mouse. Triple-click to select all.</i>{nwln_str}"
@@ -1056,7 +1069,15 @@ def notify_context():
         # insert the icon argument if it's supported
         if zenity_icon_option is not None:
             zenity_cmd_lst.insert(3, zenity_icon_option)
-        subprocess.Popen(zenity_cmd_lst, cwd=icons_dir, stderr=DEVNULL, stdout=DEVNULL)
+
+        kdialog_cmd_lst = [kdialog_cmd, '--msgbox', message, '--title', 'Toshy Context Info']
+        # Add icon if needed: kdialog_cmd_lst += ['--icon', '/path/to/icon']
+        kdialog_cmd_lst += ['--icon', 'toshy_app_icon_rainbow']
+
+        if dialog_cmd == kdialog_cmd:
+            subprocess.Popen(kdialog_cmd_lst, cwd=icons_dir, stderr=DEVNULL, stdout=DEVNULL)
+        elif dialog_cmd == zenity_cmd:
+            subprocess.Popen(zenity_cmd_lst, cwd=icons_dir, stderr=DEVNULL, stdout=DEVNULL)
 
         # Optionally, also send a system notification:
         # ntfy.send_notification(message)
@@ -1064,6 +1085,7 @@ def notify_context():
 
 
 def is_pre_GNOME_45(de_ver):
+    """Utility function to check if GNOME version is older than GNOME 45"""
     pre_G45_ver_lst = [44, 43, 42, 41, 40, 3]
     def _is_pre_GNOME_45(ctx: KeyContext):
         return  DESKTOP_ENV == 'gnome' and str(de_ver).isdigit() and int(de_ver) in pre_G45_ver_lst
