@@ -234,6 +234,7 @@ def get_env_info():
     desktop_env_names = {
         'Budgie':                   'budgie',
         'Cinnamon':                 'cinnamon',
+        'COSMIC':                   'cosmic',
         'Cutefish':                 'cutefish',
         'DDE':                      'dde',
         'Deepin':                   'deepin',
