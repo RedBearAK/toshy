@@ -997,7 +997,6 @@ else:
 
 def notify_context():
     """pop up a dialog with context info"""
-    # TODO: adapt this to use native dialogs for non-GTK desktops, like 'kdialog' if possible
     def _notify_context(ctx: KeyContext):
 
         dialog_cmd              = None
@@ -1073,6 +1072,7 @@ def notify_context():
 
         kdialog_cmd_lst = [kdialog_cmd, '--msgbox', message, '--title', 'Toshy Context Info']
         # Add icon if needed: kdialog_cmd_lst += ['--icon', '/path/to/icon']
+        # TODO: Figure out why icon argument doesn't work. Need a proper icon theme folder?
         kdialog_cmd_lst += ['--icon', 'toshy_app_icon_rainbow']
 
         if dialog_cmd == kdialog_cmd:
