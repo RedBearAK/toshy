@@ -107,6 +107,6 @@ class ZwlrForeignToplevelManagerV1Global(Global):
 
 
 ZwlrForeignToplevelManagerV1._gen_c()
-ZwlrForeignToplevelManagerV1.proxy_class = ZwlrForeignToplevelManagerV1Proxy
+ZwlrForeignToplevelManagerV1.proxy_class = ZwlrForeignToplevelManagerV1
 ZwlrForeignToplevelManagerV1.resource_class = ZwlrForeignToplevelManagerV1Resource
 ZwlrForeignToplevelManagerV1.global_class = ZwlrForeignToplevelManagerV1Global
