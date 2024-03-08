@@ -75,7 +75,7 @@ icon_file_inverse   = os.path.join(assets_path, "toshy_app_icon_rainbow_inverse.
 # Toshy config file
 TOSHY_PART      = 'config'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Config file'
-APP_VERSION     = '2024.0224'
+APP_VERSION     = '2024.0307'
 
 # Settings object used to tweak preferences "live" between gui, tray and config.
 cnfg = Settings(current_folder_path)
@@ -523,6 +523,16 @@ kbtype_lists_rgx    = {
 all_kbds_rgx        = re.compile(toRgxStr(all_keyboards), re.I)
 
 not_win_type_rgx    = re.compile("IBM|Chromebook|Apple", re.I)
+
+
+# Suggested location for customizing lists and variables for use with the "when" conditions.
+###################################################################################################
+###  SLICE_MARK_START: user_custom_lists  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
+
+
+
+###  SLICE_MARK_END: user_custom_lists  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
+###################################################################################################
 
 
 
@@ -1093,6 +1103,16 @@ def is_pre_GNOME_45(de_ver):
     return _is_pre_GNOME_45
 
 
+# Suggested location for adding custom functions for personal use.
+###################################################################################################
+###  SLICE_MARK_START: user_custom_functions  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
+
+
+
+###  SLICE_MARK_END: user_custom_functions  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
+###################################################################################################
+
+
 
 #################################  MODMAPS  ####################################
 ###                                                                          ###
@@ -1435,6 +1455,17 @@ modmap("Cond modmap - Terms - Mac kbd", {
     matchProps(lst=terminals_lod)(ctx) and 
     isKBtype('Apple', map='mmap terms Apple')(ctx)
 )
+
+
+
+# Suggested location for adding custom modmaps for personal use.
+###################################################################################################
+###  SLICE_MARK_START: user_custom_modmaps  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
+
+
+
+###  SLICE_MARK_END: user_custom_modmaps  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
+###################################################################################################
 
 
 
