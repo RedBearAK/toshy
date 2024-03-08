@@ -277,6 +277,13 @@ terminals_lod = [
     {clas:"^yakuake$"                   },
 ]
 
+# new app classes show up on JetBrains apps installed via Snap
+jetbrains_lod = [
+    {clas:"^jetbrains-(?!.*toolbox).*$"                         },
+    {clas:"^jetbrains-webstorm$"                                },
+    {clas:"^jetbrains-phpstorm$"                                },
+]
+
 # TODO: remove usage of this in favor of `vscodes_lod` below it
 vscodes = [
     "code",
@@ -3433,7 +3440,8 @@ keymap("Jetbrains", {
     # VCS/Local History
     C("Super-v"):               C("Alt-Grave"),                 # VCS quick popup
     C("Super-c"):               C("LC-c"),                      # Sigints - interrupt
-}, when = matchProps(clas="^jetbrains-(?!.*toolbox).*$"))
+# }, when = matchProps(clas="^jetbrains-(?!.*toolbox).*$"))
+}, when = matchProps(lst=jetbrains_lod) )
 
 keymap("Wordwise - not vscode", {
     # Wordwise remaining - for Everything but VS Code
