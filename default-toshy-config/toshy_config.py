@@ -277,13 +277,6 @@ terminals_lod = [
     {clas:"^yakuake$"                   },
 ]
 
-# new app classes show up on JetBrains apps installed via Snap
-jetbrains_lod = [
-    {clas:"^jetbrains-(?!.*toolbox).*$"                         },
-    {clas:"^jetbrains-webstorm$"                                },
-    {clas:"^jetbrains-phpstorm$"                                },
-]
-
 # TODO: remove usage of this in favor of `vscodes_lod` below it
 vscodes = [
     "code",
@@ -3440,8 +3433,7 @@ keymap("Jetbrains", {
     # VCS/Local History
     C("Super-v"):               C("Alt-Grave"),                 # VCS quick popup
     C("Super-c"):               C("LC-c"),                      # Sigints - interrupt
-# }, when = matchProps(clas="^jetbrains-(?!.*toolbox).*$"))
-}, when = matchProps(lst=jetbrains_lod) )
+}, when = matchProps(clas="^jetbrains-(?!.*toolbox).*$"))
 
 keymap("Wordwise - not vscode", {
     # Wordwise remaining - for Everything but VS Code
@@ -3464,35 +3456,35 @@ keymap("Wordwise - not vscode", {
     #   https://superuser.com/questions/770301/pentadactyl-how-to-disable-menu-bar-toggle-by-alt
     # **
     #
-}, when = matchProps(not_clas=vscodeStr_ext))
-
+# }, when = matchProps(not_clas=vscodeStr_ext))
+}, when = matchProps(not_lst=vscodes_and_remotes_lod))
 
 # Keybindings for VS Code and variants
 keymap("VSCodes overrides for Chromebook/IBM - Sublime", {
     C("C-Alt-g"):               C("C-f2"),                      # Chromebook/IBM - Sublime - find_all_under
 }, when = lambda ctx:
-    matchProps(clas=vscodeStr)(ctx) and 
+    matchProps(lst=vscodes_lod)(ctx) and 
     (   isKBtype('Chromebook', map="vscodes ovr cbook - sublime")(ctx) or 
         isKBtype('IBM', map="vscodes ovr ibm - sublime")(ctx) ) and 
     cnfg.ST3_in_VSCode)
 keymap("VSCodes overrides for not Chromebook/IBM - Sublime", {
     C("Super-C-g"):             C("C-f2"),                      # Default - Sublime - find_all_under
 }, when = lambda ctx:
-    matchProps(clas=vscodeStr)(ctx) and 
+    matchProps(lst=vscodes_lod)(ctx) and 
     not ( isKBtype('Chromebook', map="vscodes ovr not cbook - sublime")(ctx) or 
     isKBtype('IBM', map="vscodes ovr not ibm - sublime")(ctx) ) and cnfg.ST3_in_VSCode)
 keymap("VSCodes overrides for Chromebook/IBM", {
     C("Alt-c"):                 C("LC-c"),                      #  Chromebook/IBM - Terminal - Sigint
     C("Alt-x"):                 C("LC-x"),                      #  Chromebook/IBM - Terminal - Exit nano
 }, when = lambda ctx:
-    matchProps(clas=vscodeStr)(ctx) and 
+    matchProps(lst=vscodes_lod)(ctx) and 
     (   isKBtype('Chromebook', map="vscodes ovr cbook")(ctx) or 
         isKBtype('IBM', map="vscodes ovr ibm")(ctx) ) )
 keymap("VSCodes overrides for not Chromebook/IBM", {
     C("Super-c"):               C("LC-c"),                      # Default - Terminal - Sigint
     C("Super-x"):               C("LC-x"),                      # Default - Terminal - Exit nano
 }, when = lambda ctx:
-    matchProps(clas=vscodeStr)(ctx) and 
+    matchProps(lst=vscodes_lod)(ctx) and 
     not (   isKBtype('Chromebook', map="vscodes ovr not cbook")(ctx) or 
             isKBtype('IBM', map="vscodes ovr not ibm")(ctx) ) )
 keymap("VSCodes", {
@@ -3546,7 +3538,7 @@ keymap("VSCodes", {
     C("C-g"):                   C("f3"),                        # find_next
     C("Shift-f3"):              ignore_combo,                   # cancel find_prev
     C("C-Shift-g"):             C("Shift-f3"),                  # find_prev
-}, when = matchProps(clas=vscodeStr))
+}, when = matchProps(lst=vscodes_lod))
 
 # Keybindings for Sublime Text
 keymap("Sublime Text overrides for Chromebook/IBM", {
