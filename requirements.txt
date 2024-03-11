@@ -1,0 +1,53 @@
+###############################################################################
+# WARNING: This is just a sample 'requirements.txt' file for Toshy. 
+# This is NOT actually meant to be used manually!
+# 
+# The main purpose of making this file is for GitHub to be able to show dependencies.
+# Native package installs are used to provide additional Python modules not named here, 
+# and prep build/compile dependencies for some of these pip packages. 
+# The 'setup_toshy.py' script handles native package installs and all these pip 
+# package installs automatically. 
+# It also installs all pip packages in a 'venv' Python virtual environment, 
+# to be more compatible with "managed" Python environments where 'pip' usage
+# is restricted. 
+
+# The Toshy installer upgrades these first, to avoid showing error messages in the log.
+pip
+wheel
+setuptools
+pillow
+
+# Pinning pygobject to 3.44.1 (or earlier) to ensure compatibility with RHEL 8.x and its clones.
+pygobject<=3.44.1
+
+# Standard packages required for the application.
+lockfile
+dbus-python
+systemd-python
+tk
+sv_ttk
+watchdog
+psutil
+hyprpy
+i3ipc
+pywayland
+
+# Installing 'pywlroots' requires native package 'libxkbcommon-devel' on Fedora.
+# pywlroots
+
+# All dependencies below here are to smooth out the installation of the custom
+# development branch of `keyszer` needed to make Toshy work.
+# Will leave these exposed here even if they are not technically 
+# direct dependencies of Toshy, since Toshy functionality 
+# depends entirely on `keyszer`.
+
+inotify-simple
+evdev
+appdirs
+ordered-set
+six
+
+# TODO: Check on 'python-xlib' project by early-mid 2024 for a bug fix related to:
+# [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']
+# If the bug is fixed, consider updating the version pinning.
+python-xlib==0.31
