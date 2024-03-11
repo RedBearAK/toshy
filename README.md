@@ -454,7 +454,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - KDE desktop works (X11/Xorg or Wayland)
     - Other desktop choices should work, if session is X11/Xorg
 
-- openSUSE Leap 15.5 (fixed release) **_WORKING!_**
+- openSUSE Leap 15.5/15.6 (SLES-based, fixed release) **_WORKING!_**
 
     - GNOME desktop works (Wayland session needs extension, see Requirements)
     - KDE desktop works (X11/Xorg or Wayland)
@@ -498,13 +498,13 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
     - X11/Xorg or Wayland+Plasma session
 
-- Zorin OS 17 (Ubuntu-based)
+- Zorin OS 17/17.1 Core/Lite (Ubuntu-based)
 
     - X11/Xorg or Wayland+GNOME (requires extension)
     - Wayland+GNOME requires extension (see Requirements)
     - GNOME Shell is version 43.x, any extension should work now
 
-- Zorin OS 16.2 (Ubuntu-based)
+- Zorin OS 16.2/16.3 Core/Lite (Ubuntu-based)
 
     - X11/Xorg or Wayland+GNOME (requires extension)
     - NOTE: GNOME Shell on Zorin 16.x is old: 3.38
