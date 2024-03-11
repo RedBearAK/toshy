@@ -1,0 +1,3 @@
+# This file will just mirror the warning in the 'requirements.txt' file that
+# it should not be used manually like 'pip install -r requirements.txt'
+# The 'requirements.txt' file is for information only. 

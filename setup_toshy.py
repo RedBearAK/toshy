@@ -571,7 +571,6 @@ remove_pkgs_map = {
 
 pip_pkgs   = [
     # pinning pygobject to 3.44.1 (or earlier) to get through install on RHEL 8.x and clones
-    # TODO: may need to pin other packages to go along with the pinned pygobject
     "lockfile", "dbus-python", "systemd-python", "pygobject<=3.44.1", "tk",
     "sv_ttk", "watchdog", "psutil", "hyprpy", "i3ipc", "pywayland", # "pywlroots",
 
@@ -1392,11 +1391,13 @@ def install_toshy_files():
                 '.github',
                 '.gitignore',
                 '__pycache__',
+                'DO_NOT_USE_requirements.txt',
                 keyszer_tmp_dir,
                 'kwin-application-switcher',
                 'LICENSE',
                 'packages.json',
                 'README.md',
+                'requirements.txt',
                 this_file_name,
         ]
         # must use list unpacking (*) ignore_patterns() requires individual pattern arguments

@@ -223,8 +223,13 @@ There is a weird bug with searching for extensions by name sometimes, where you 
 
 ## How to Install  
 
+> [!IMPORTANT]
+> **_DO NOT_** attempt to manually install Python dependencies 
+> with `pip` using the `requirements.txt` file. That file only 
+> exists to let GitHub show some dependency info.
+
 > [!NOTE]  
-> Installer commands and options have changed.  
+> Installer commands and options are now different from early Toshy releases.  
 
 1. Download the latest zip from the big green `Code ˇ` button near the top of the page.  
 1. Unzip the archive, and open a terminal in the resulting folder.  
