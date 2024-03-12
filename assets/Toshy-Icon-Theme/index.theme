@@ -1,0 +1,12 @@
+[Icon Theme]
+Name=Toshy-Icon-Theme
+Comment=Some custom icons for Toshy app
+Inherits=Adwaita
+Directories=48x48/apps
+
+[48x48/apps]
+Size=48
+Context=Applications
+Type=Scalable
+MinSize=16
+MaxSize=128
