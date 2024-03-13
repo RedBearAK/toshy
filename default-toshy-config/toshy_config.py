@@ -327,18 +327,21 @@ remotes = [x.casefold() for x in remotes]
 remoteStr = toRgxStr(remotes)
 
 remotes_lod = [
-    {clas:"^Gnome-boxes$"                },
-    {clas:"^org.remmina.Remmina$", not_name:"^Remmina Remote Desktop Client$|^Remote Connection Profile$"},
-    {clas:"^Nxplayer.bin$"               },
-    {clas:"^remmina$"                    },
-    {clas:"^qemu-system-.*$"             },
-    {clas:"^qemu$"                       },
-    {clas:"^Spicy$"                      },
-    {clas:"^Virt-manager$"               },
-    {clas:"^VirtualBox$"                 },
-    {clas:"^VirtualBox Machine$"         },
-    {clas:"^xfreerdp$"                   },
-    {clas:"^Wfica$"                      },
+    {clas:"^Anydesk$"                       },
+    {clas:"^Gnome-boxes$"                   },
+    {clas:"^gnome-connections$"             },
+    {clas:"^org.remmina.Remmina$", 
+        not_name:"^Remmina Remote Desktop Client$|^Remote Connection Profile$"},
+    {clas:"^Nxplayer.bin$"                  },
+    {clas:"^remmina$"                       },
+    {clas:"^qemu-system-.*$"                },
+    {clas:"^qemu$"                          },
+    {clas:"^Spicy$"                         },
+    {clas:"^Virt-manager$"                  },
+    {clas:"^VirtualBox$"                    },
+    {clas:"^VirtualBox Machine$"            },
+    {clas:"^xfreerdp$"                      },
+    {clas:"^Wfica$"                         },
 ]
 
 terminals_and_remotes_lod = [
@@ -3488,6 +3491,7 @@ keymap("VSCodes overrides for not Chromebook/IBM", {
     not (   isKBtype('Chromebook', map="vscodes ovr not cbook")(ctx) or 
             isKBtype('IBM', map="vscodes ovr not ibm")(ctx) ) )
 keymap("VSCodes", {
+
     # C("Super-Space"):           C("LC-Space"),                  # Basic code completion (conflicts with input switching)
 
     # Override the global Cmd+Dot (Escape/cancel) shortcut for QuickFix in VSCode(s)
@@ -3505,6 +3509,12 @@ keymap("VSCodes", {
     C("Alt-RC-P"):              C("Alt-P"),                     # Replace: toggle "Preserve Case"
 
     C("Alt-RC-Z"):              C("Alt-Z"),                     # View: toggle "Word Wrap"
+
+    C("Shift-Super-Right"):     C("Shift-Alt-Right"),           # Expand Selection (increase logical scope of smart selection)
+    C("Shift-Super-Left"):      C("Shift-Alt-Left"),            # Shrink Selection (reduce logical scope of smart selection)
+
+    C("Shift-Super-RC-Right"):  C("Shift-Alt-Right"),           # Expand Selection (increase logical scope of smart selection) [alt]
+    C("Shift-Super-RC-Left"):   C("Shift-Alt-Left"),            # Shrink Selection (reduce logical scope of smart selection) [alt]
 
     # Wordwise remaining - for VS Code
     # Alt-F19 hack fixes Alt menu activation
