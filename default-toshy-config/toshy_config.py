@@ -793,7 +793,7 @@ def matchProps(*,
     if all([x is None for x in allowed_params]): 
         raise ValueError(f"\n\n(EE) matchProps(): Received no valid argument\n")
     if any([x not in (True, False, None) for x in (numlk, capslk, cse)]): 
-        raise TypeError(f"\n\n(EE) matchProps(): Params 'nlk|clk|cse' are bools\n")
+        raise TypeError(f"\n\n(EE) matchProps(): Params 'numlk|capslk|cse' are bools\n")
     if any([x is not None and not isinstance(x, str) for x in string_params]):
         raise TypeError(    f"\n\n(EE) matchProps(): These parameters must be strings:"
                             f"\n\t'clas|name|devn|not_clas|not_name|not_devn|dbg'\n")
