@@ -3136,6 +3136,9 @@ keymap("Overrides for Nemo - Finder Mods", {
 
 # Keybindings overrides for PCManFM and PCManFM-Qt
 # (overrides some bindings from general file manager code block below)
+keymap("Overrides for PCManFM-Qt - Finder Mods - LXQt desktop", {
+    C("Enter"):                 C("Enter"),                     # Use Enter as Enter on the LXQt desktop
+}, when = matchProps(clas="^pcmanfm-qt$", name="^$pcmanfm-desktop.*"))
 keymap("Overrides for PCManFM-Qt - Finder Mods", {
     C("RC-Backspace"):          C("Delete"),                    # Move to Trash (delete, bypass dialog)
 }, when = matchProps(clas="^pcmanfm-qt$"))
