@@ -3141,6 +3141,11 @@ keymap("Overrides for PCManFM-Qt - Finder Mods - LXQt desktop", {
 }, when = matchProps(clas="^pcmanfm-qt$", name="^pcmanfm-desktop.*$"))
 keymap("Overrides for PCManFM-Qt - Finder Mods", {
     C("RC-Backspace"):          C("Delete"),                    # Move to Trash (delete, bypass dialog)
+    # Change folder view
+    C("RC-KEY_1"):  [C("Alt-V"), sleep(0.1), C("V"), sleep(0.1), C("I")],   # View as Icons
+    C("RC-KEY_2"):  [C("Alt-V"), sleep(0.1), C("V"), sleep(0.1), C("D")],   # View as List (Detailed)
+    C("RC-KEY_3"):  [C("Alt-V"), sleep(0.1), C("V"), sleep(0.1), C("C")],   # View as List (Compact)
+    C("RC-KEY_4"):  [C("Alt-V"), sleep(0.1), C("V"), sleep(0.1), C("T")],   # View as Thumbnails
 }, when = matchProps(clas="^pcmanfm-qt$"))
 
 keymap("Overrides for PCManFM - Finder Mods", {
