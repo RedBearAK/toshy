@@ -964,6 +964,7 @@ def macro_tester():
                     ST(f"Class: '{ctx.wm_class}'"), C("Enter"),
                     ST(f"Title: '{ctx.wm_name}'"), C("Enter"),
                     ST(f"Keybd: '{ctx.device_name}'"), C("Enter"),
+                    ST(f"Keyboard type: '{KBTYPE}'"), C("Enter"),
                     ST("Next test should come out on ONE LINE!"), C("Enter"),
                     ST("Unicode and Shift Test: 🌹—€—\u2021—ÿ—\U00002021 12345 !@#$% |\\ !!!!!!"),
                     C("Enter")
