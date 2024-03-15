@@ -826,9 +826,10 @@ Unicode and Shift Test: 🌹—€—‡—ÿ—‡ 12345 !@#$% |\ !!!!!!
 Here's an example of the whole macro that will be typed out:  
 
 ```
-Appl. Class: 'Code'
-Wind. Title: '● README.md - toshy (Workspace) - Visual Studio Code'
-Kbd. Device: 'AT Translated Set 2 keyboard'
+Class: 'org.gnome.TextEditor'
+Title: 'Appl Class org gnome TextEditor (Draft) - Text Editor'
+Keybd: 'AT Translated Set 2 keyboard'
+Keyboard type: 'Windows'
 Next test should come out on ONE LINE!
 Unicode and Shift Test: 🌹—€—‡—ÿ—‡ 12345 !@#$% |\ !!!!!!
 ```
