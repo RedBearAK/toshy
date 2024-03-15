@@ -961,9 +961,9 @@ def macro_tester():
     def _macro_tester(ctx: KeyContext):
         return [
                     C("Enter"),
-                    ST(f"Appl. Class: '{ctx.wm_class}'"), C("Enter"),
-                    ST(f"Wind. Title: '{ctx.wm_name}'"), C("Enter"),
-                    ST(f"Kbd. Device: '{ctx.device_name}'"), C("Enter"),
+                    ST(f"Class: '{ctx.wm_class}'"), C("Enter"),
+                    ST(f"Title: '{ctx.wm_name}'"), C("Enter"),
+                    ST(f"Keybd: '{ctx.device_name}'"), C("Enter"),
                     ST("Next test should come out on ONE LINE!"), C("Enter"),
                     ST("Unicode and Shift Test: 🌹—€—\u2021—ÿ—\U00002021 12345 !@#$% |\\ !!!!!!"),
                     C("Enter")
