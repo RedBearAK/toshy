@@ -789,7 +789,7 @@ toshy-tray
 
 This section will list some common questions, issues and fixes/tweaks that may be necessary for different distros, desktops or devices (and are not yet handled by the Toshy installer or config file). 
 
-### How do I know Toshy is working correctly? (or, It sort of works but sort of doesn't, what's going on?)
+### How do I know Toshy is working correctly? <br> (or, It sort of works but sort of doesn't, what's going on?)
 
 There are two levels to what the Toshy config does (just like Kinto, from which the base config file was taken). Level one is the shifting of some of the modifier keys. In most cases, even on an unsupported Wayland environment, the shifting of the modifier keys will work and some basic "global" shortcuts like cut/copy/paste (X/C/V) will appear to work, and you'll be able to open new tabs and close them in a browser with the expected `Cmd` key shortcuts. This can create a false impression that the whole thing is "working" when it actually isn't.  
 
@@ -949,7 +949,7 @@ I'm going to recommend that such keyboards be placed in the "Windows" mode. Most
 
 If that doesn't work out well, you'll need to add it to the custom dictionary described in the FAQ entry above to force the device to be identified as an "Apple" keyboard type, and try to use it in the Mac-compatibility mode.  
 
-### CLI/Shell commands missing/unavailable
+### Terminal/CLI/Shell commands missing/unavailable
 
 If you don't have `~/.local/bin` in your shell path, or you answered `n` when prompted during install to add it to the path, you will have to add it to the path yourself, or re-run the installer or run this command:  
 
@@ -1189,6 +1189,32 @@ https://userbase.kde.org/Plasma/Tips#Windows.2FMeta_Key
 ### Manjaro/Arcolinux KDE shortcut for Application Menu
 
 Something strange is happening in Manjaro KDE and Arcolinux KDE desktops with the shortcut to open the application menu/launcher applet. In the primary shortcut settings control panel, there is a shortcut of `Alt+F1` set, which should work with the Toshy config. But the `Alt+F1` shortcut doesn't even work with Toshy disabled. If you right-click on the menu icon you can open the applet settings dialog and set the `Alt+F1` shortcut in its preferences (choose to reassign it) and then hit Apply, and it will start working with `Cmd+Space` when Toshy is enabled. And also it will now work even when Toshy is disabled. There are other identically named shortcut settings in the main KDE control panel for shortcuts, but they seem to want to open `krunner`, the search/launcher bar that pops out from the top of the screen.  
+
+### How to disable the tray icon from autostarting at login
+
+Currently the Toshy tray icon indicator app loads at login through a `.desktop` file placed in the standard XDG autostart folder location: `~/.config/autostart/`. The Toshy setup script places a symlink to `~/.local/share/applications/Toshy_Tray.desktop` in that folder, and most Linux desktop environments will automatically run anything in that folder when you log in. (The original `Toshy_Tray.desktop` in `~/.local/share/applications/` is what makes the "Toshy Tray Icon" app show up in your app menu or app launcher. You don't want to remove that unless you no longer want to see the app in your app menu at all.)  
+
+To stop the tray icon indicator from appearing every time you log in, just find a way to remove the `Toshy_Tray.desktop` file from `~/.config/autostart/`. You can do it in the terminal:  
+
+```sh
+rm ~/.config/autostart/Toshy_Tray.desktop
+```
+
+Or you can use the GUI startup settings panel your Linux desktop environment might provide. Just remove the item that says something like "Toshy Tray".  
+
+I don't recommend not having the tray icon available. Not all functions are replicated in the GUI "Toshy Preferences" app window, which doesn't have the keyboard type temporary override, the item to quickly open the config folder, and can't stop or (re)start the manual config option. When something is going wrong with the keymapper that somehow affects overall keyboard usage, the tray icon can be very helpful.  
+
+But if you are not having any problems with Toshy and don't have a habit of changing your config file, or you use the `toshy-config-verbose-start` command in a terminal for testing config changes before restarting the background services, it should be fine to disable the tray icon.  
+
+### How to re-enable autostarting the tray icon at login
+
+If you disabled autostarting the Toshy tray icon indicator app at login with the instructions above and want to get it back, this should work:  
+
+```sh
+ln -s ~/.local/share/applications/Toshy_Tray.desktop ~/.config/autostart/Toshy_Tray.desktop
+```
+
+This will load the tray icon automatically whenever you log in to your desktop, just like what happens after you run the Toshy setup script. The tray icon app can be manually started from your app menu or app launcher (without needing to log out) using the "Toshy Tray Icon" app you should find in a "Utilities" or "Accessories" sub-menu (depends on the type of app menu your desktop environment is using). Or just search in the app launcher for "tray" and it will often be the only thing that appears.  
 
 ### The `toshy-services-log` command shows no output
 
