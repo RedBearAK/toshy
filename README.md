@@ -890,12 +890,43 @@ If you edit outside the "slice marks" that enable the merging process to work, y
 
 Right now, the sections marked for attempted retention through upgrades/reinstalls are:  
 
-- API function settings for the keymapper (`keyszer`).  
-- Environment overrides (custom distro name, session type, etc.)  
-- Keyboard type override (**_submit an issue if you have this problem!_**)  
-- "User Apps" area, intended as a good place for things like laptop hardware/function keys remaps, or apps that haven't been added to the default config file yet.  
+- `keyszer_api`
+    - Allows customized API function settings for the keymapper: 
+        - Diagnostic dump key (use any **_unused_** single key)
+        - Emergency eject key (use any **_unused_** single key)
+        - Multipurpose timeout
+        - Suspend timeout
+        - Throttle delays (to fix macros/Unicode/combos)
+    - Add a new modifier here if needed (with `add_modifier()`)
 
-**_Original, now slightly obsolete text of this FAQ entry below:_**  
+- `env_overrides`
+    - Allows persistently overriding environment info detections
+    - If you have to do this, the `env` module should be updated
+
+- `kbtype_override`
+    - Allows fixing a keyboard device type, if misidentified
+    - (**_Submit an issue if you have this problem!_**)
+
+- `user_custom_lists`
+    - Good place to add custom or manipulate existing lists
+
+- `user_custom_functions`
+    - Add new functions here to keep them near other functions
+
+- `exclude_kpad_devs`
+    - Allows excluding some devices from the keypad modmaps
+
+- `user_custom_modmaps`
+    - Add your own custom modmaps here
+
+- `user_apps`
+    - Good place for user hardware keys, or special apps
+    - Also a good spot to override remaps you have issues with
+    - For more info about that, see Wiki page at the link below: 
+
+https://github.com/RedBearAK/toshy/wiki/How-to-(persistently)-change-the-Cmd-Space-remap
+
+**_Original, now slightly obsolete text of this FAQ entry continues below:_**  
 
 * * *  
 
@@ -951,7 +982,7 @@ If that doesn't work out well, you'll need to add it to the custom dictionary de
 
 ### Terminal/CLI/Shell commands missing/unavailable
 
-If you don't have `~/.local/bin` in your shell path, or you answered `n` when prompted during install to add it to the path, you will have to add it to the path yourself, or re-run the installer or run this command:  
+If you don't have `~/.local/bin` in your shell path, or you answered `n` when prompted during install to add it to the path, you will have to add it to the path yourself, or re-run the Toshy installer, or just run this command:  
 
 ```sh
 ~/.config/toshy/scripts/toshy-bincommands-setup.sh
