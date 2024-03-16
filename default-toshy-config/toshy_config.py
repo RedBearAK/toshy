@@ -277,14 +277,14 @@ terminals_lod = [
     {clas:"^yakuake$"                   },
 ]
 
-# TODO: remove usage of this in favor of `vscodes_lod` below it
-vscodes = [
-    "code",
-    "vscodium",
-    "code - oss",
-]
-vscodes = [x.casefold() for x in vscodes]
-vscodeStr = toRgxStr(vscodes)
+# DEPRECATED by `vscodes_lod` "list of dicts" below
+# vscodes = [
+#     "code",
+#     "vscodium",
+#     "code - oss",
+# ]
+# vscodes = [x.casefold() for x in vscodes]
+# vscodeStr = toRgxStr(vscodes)
 
 vscodes_lod = [
     {clas:"^code$"},
@@ -304,28 +304,32 @@ JDownloader_lod = [
     {clas: "^java-lang-Thread$", name: "^JDownloader.*$"}   # Happens after auto-update of app
 ]
 
+# DEPRECATED BY 'remotes_lod' "list of dicts" below
 # Add remote desktop clients & VM software here
 # Ideally we'd only exclude the client window,
 # but that may not be easily done. 
 # (Can be done now with `keyszer`, as long as main window has a 
 # different WM_NAME than client windows. See `remotes_lod` below.)
-remotes = [
-    "Gnome-boxes",
-    "org.remmina.Remmina",
-    "Nxplayer.bin",
-    "remmina",
-    "qemu-system-.*",
-    "qemu",
-    "Spicy",
-    "Virt-manager",
-    "VirtualBox",
-    "VirtualBox Machine",
-    "xfreerdp",
-    "Wfica",
-]
-remotes = [x.casefold() for x in remotes]
-remoteStr = toRgxStr(remotes)
+# remotes = [
+#     "Anydesk",
+#     "Gnome-boxes",
+#     "gnome-connections",
+#     "org.remmina.Remmina",
+#     "Nxplayer.bin",
+#     "remmina",
+#     "qemu-system-.*",
+#     "qemu",
+#     "Spicy",
+#     "Virt-manager",
+#     "VirtualBox",
+#     "VirtualBox Machine",
+#     "xfreerdp",
+#     "Wfica",
+# ]
+# remotes = [x.casefold() for x in remotes]
+# remoteStr = toRgxStr(remotes)
 
+# Add remote desktop clients & VM software here
 remotes_lod = [
     {clas:"^Anydesk$"                       },
     {clas:"^Gnome-boxes$"                   },
@@ -349,8 +353,9 @@ terminals_and_remotes_lod = [
     {lst:remotes_lod                    },
 ]
 
-vscodes.extend(remotes)
-vscodeStr_ext = toRgxStr(vscodes)
+# DEPRECATED by 'vscodes_and_remotes_lod' "list of dicts" below
+# vscodes.extend(remotes)
+# vscodeStr_ext = toRgxStr(vscodes)
 
 vscodes_and_remotes_lod = [
     {lst:vscodes_lod                    },
@@ -417,6 +422,24 @@ filemanagers = [
 ]
 filemanagers = [x.casefold() for x in filemanagers]
 filemanagerStr = "|".join('^'+x+'$' for x in filemanagers)
+
+# TODO: put this in conditionals instead of 'filemanagerStr'?
+filemanagers_lod = [
+    {clas:"^caja$"                          },
+    {clas:"^dde-file-manager$"              },
+    {clas:"^dolphin$"                       },
+    {clas:"^io.elementary.files$"           },
+    {clas:"^krusader$"                      },
+    {clas:"^nautilus$"                      },
+    {clas:"^nemo$"                          },
+    {clas:"^org.gnome.nautilus$"            },
+    {clas:"^org.kde.dolphin$"               },
+    {clas:"^org.kde.krusader$"              },
+    {clas:"^pcmanfm$"                       },
+    {clas:"^pcmanfm-qt$"                    },
+    {clas:"^spacefm$"                       },
+    {clas:"^thunar$"                        },
+]
 
 ### dialogs_Escape_lod = send these windows the Escape key for Cmd+W
 dialogs_Escape_lod = [
