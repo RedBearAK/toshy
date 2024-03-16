@@ -2490,11 +2490,11 @@ keymap("Escape actions for dead keys", {
     C("Shift-RC-Tab"):  [getDK(),bind,C("Shift-Alt-Grave"),setDK(None)],    # Leave accent char, in-app window switch (reverse)
 
     # common shortcuts that should also cancel dead keys
-    C("RC-a"):                  [getDK(),C("RC-a"),setDK(None)],            # Leave accent char, select all
-    C("RC-z"):                  [getDK(),C("RC-z"),setDK(None)],            # Leave accent char, undo
-    C("RC-x"):                  [getDK(),C("RC-x"),setDK(None)],            # Leave accent char, cut
-    C("RC-c"):                  [getDK(),C("RC-c"),setDK(None)],            # Leave accent char, copy
-    C("RC-v"):                  [getDK(),C("RC-v"),setDK(None)],            # Leave accent char, paste
+    C("RC-a"):                  [getDK(),C("C-a"),setDK(None)],             # Leave accent char, select all
+    C("RC-z"):                  [getDK(),C("C-z"),setDK(None)],             # Leave accent char, undo
+    C("RC-x"):                  [getDK(),C("C-x"),setDK(None)],             # Leave accent char, cut
+    C("RC-c"):                  [getDK(),C("C-c"),setDK(None)],             # Leave accent char, copy
+    C("RC-v"):                  [getDK(),C("C-v"),setDK(None)],             # Leave accent char, paste
 
     ###  activate other dead keys correctly while one is active
 
@@ -2995,14 +2995,14 @@ keymap("User hardware keys", {
 # Miscellaneous apps that need a few fixes
 
 keymap("Thunderbird email client", {
-    C("Alt-RC-I"):              C("Shift-RC-I"),                # Dev tools
+    C("Alt-RC-I"):              C("Shift-C-I"),                 # Dev tools
     # Enable Cmd+Option+Left/Right for tab navigation
     C("RC-Alt-Left"):           C("C-Page_Up"),                 # Go to prior tab (macOS Thunderbird tab nav shortcut)
     C("RC-Alt-Right"):          C("C-Page_Down"),               # Go to next tab (macOS Thunderbird tab nav shortcut)
 }, when = matchProps(clas="^thunderbird.*$|^org.mozilla.thunderbird$") )
 
 keymap("Angry IP Scanner", {
-    C("RC-comma"):              C("Shift-RC-P"),                # Open preferences
+    C("RC-comma"):              C("Shift-C-P"),                 # Open preferences
     C("RC-i"):                  C("Alt-Enter"),                 # Get info (details)
     C("RC-h"):                  C("C-h"),                       # Go to next live host (override hide window)
     C("Shift-RC-i"):            C("C-i"),                       # Invert selection
@@ -3051,16 +3051,16 @@ keymap("LibreOffice Writer", {
 # Keybindings overrides for Caja
 # (overrides some bindings from general file manager code block below)
 keymap("Overrides for Caja - Finder Mods", {
-    C("RC-Super-o"):            C("Shift-RC-Enter"),            # Open in new tab
-    # C("RC-Super-o"):            C("Shift-RC-W"),                # Open in new window
+    C("RC-Super-o"):            C("Shift-C-Enter"),             # Open in new tab
+    # C("RC-Super-o"):            C("Shift-C-W"),                 # Open in new window
 }, when = matchProps(clas="^caja$"))
 
 # Keybindings overrides for DDE (Deepin) File Manager
 # (overrides some bindings from general file manager code block below)
 keymap("Overrides for DDE File Manager - Finder Mods", {
-    C("RC-i"):                  C("RC-i"),                      # File properties dialog (Get Info)
+    C("RC-i"):                  C("C-i"),                       # File properties dialog (Get Info)
     C("RC-comma"):              None,                           # Disable preferences shortcut (no shortcut available)
-    C("RC-Up"):                 C("RC-Up"),                     # Go Up dir
+    C("RC-Up"):                 C("C-Up"),                      # Go Up dir
     C("Shift-RC-Left_Brace"):   C("C-Shift-Tab"),               # Go to prior tab
     C("Shift-RC-Right_Brace"):  C("C-Tab"),                     # Go to next tab
     C("Shift-RC-Left"):         C("C-Shift-Tab"),               # Go to prior tab
@@ -3084,9 +3084,9 @@ keymap("Overrides for Dolphin - Finder Mods", {
     ### "Open in new window" (or new tab) requires manually setting custom shortcut of Ctrl+Shift+o
     ### in Dolphin's keyboard shortcuts. There is no default shortcut set for this function.
     ##########################################################################################
-    C("RC-Super-o"):            C("Shift-RC-o"),                # Open in new window (or new tab, user's choice, see above)
+    C("RC-Super-o"):            C("Shift-C-o"),                 # Open in new window (or new tab, user's choice, see above)
     C("Shift-RC-n"):            iEF2(C("Shift-C-n"), False),    # Create new folder, toggle Enter to be Enter (KF6 and later)
-    C("RC-comma"):              C("Shift-RC-comma"),            # Open preferences dialog
+    C("RC-comma"):              C("Shift-C-comma"),             # Open preferences dialog
 }, when = matchProps(clas="^dolphin$|^org.kde.dolphin$"))
 
 # Keybindings overrides for elementary OS Files (Pantheon)
@@ -3124,9 +3124,9 @@ keymap("Overrides for Nautilus - Finder Mods", {
     C("RC-KEY_1"):              C("C-KEY_2"),                   # View as Icons
     C("RC-KEY_2"):              C("C-KEY_1"),                   # View as List (Detailed)
     # C("RC-Super-o"):            C("Shift-Enter"),               # Open in new window (disable line below)
-    C("RC-Super-o"):            C("RC-Enter"),                  # Open in new tab (disable line above)
-    C("RC-comma"):              C("RC-comma"),                  # Overrides "Open preferences dialog" shortcut below
-    C("RC-F"):                  C("RC-F"),                      # Don't toggle Enter key, pass Cmd+F
+    C("RC-Super-o"):            C("C-Enter"),                   # Open in new tab (disable line above)
+    C("RC-comma"):              C("C-comma"),                   # Overrides "Open preferences dialog" shortcut below
+    C("RC-F"):                  C("C-F"),                       # Don't toggle Enter key, pass Cmd+F
 }, when = matchProps(clas="^org.gnome.nautilus$|^nautilus$"))
 
 # Keybindings overrides for Nemo
@@ -3152,7 +3152,7 @@ keymap("Overrides for PCManFM-Qt - Finder Mods", {
 keymap("Overrides for PCManFM - Finder Mods", {
     C("RC-KEY_2"):              C("C-KEY_4"),                   # View as List (Detailed) [Not in PCManFM-Qt]
     C("RC-Backspace"):         [C("Delete"),C("Space")],        # Move to Trash (delete, bypass dialog)
-    C("RC-F"):                  C("RC-F"),                      # Don't toggle Enter key state, pass Cmd+F
+    C("RC-F"):                  C("C-F"),                       # Don't toggle Enter key state, pass Cmd+F (Ctrl+F)
 }, when = matchProps(clas="^pcmanfm$|^pcmanfm-qt$"))
 
 # Keybindings overrides for SpaceFM
@@ -3170,7 +3170,7 @@ keymap("Overrides for SpaceFM - Finder Mods", {
     C("Shift-RC-Right_Brace"):  C("C-Tab"),                     # Go to next tab
     C("Shift-RC-Left"):         C("C-Shift-Tab"),               # Go to prior tab
     C("Shift-RC-Right"):        C("C-Tab"),                     # Go to next tab
-    C("Shift-RC-N"):            iEF2(C("RC-F"), False),         # Switch Enter to Enter. New folder is Ctrl+F(???)
+    C("Shift-RC-N"):            iEF2(C("C-F"), False),          # Switch Enter to Enter. New folder is Ctrl+F(???)
     # Need to catch WM_NAME of "Find Files" and override Enter key state back to being Enter. See above keymap.
     C("RC-F"):                  None,                           # No direct shortcut available and menu macros don't work in SpaceFM.
     C("RC-Backspace"):         [C("Delete"),C("Space")],        # Move to Trash (delete, bypass dialog)
@@ -3182,9 +3182,9 @@ keymap("Overrides for SpaceFM - Finder Mods", {
 # Keybindings overrides for Thunar
 # (overrides some bindings from general file manager code block below)
 keymap("Overrides for Thunar - Finder Mods", {
-    C("RC-Super-o"):            C("Shift-RC-P"),                # Open in new tab
+    C("RC-Super-o"):            C("Shift-C-P"),                 # Open in new tab
     C("RC-comma"):             [C("Alt-E"),C("E")],             # Overrides "Open preferences dialog" shortcut below
-    C("RC-F"):                  C("RC-F"),                      # Don't toggle Enter key, pass Cmd+F
+    C("RC-F"):                  C("C-F"),                       # Don't toggle Enter key, pass Cmd+F (Ctrl+F)
 }, when = matchProps(clas="^thunar$"))
 
 # Keybindings overrides for GNOME XDG "Save As" and "Open File" dialogs
@@ -3226,7 +3226,7 @@ keymap("General File Managers - Finder Mods", {
     ###########################################################################################################
     C("RC-i"):                  C("Alt-Enter"),                 # File properties dialog (Get Info)
     C("RC-comma"):             [C("Alt-E"),C("N")],             # Open preferences dialog
-    C("Shift-RC-dot"):          C("RC-H"),                      # Toggle hidden files visibility ("dot" files)
+    C("Shift-RC-dot"):          C("C-H"),                       # Toggle hidden files visibility ("dot" files)
     ###########################################################################################################
     ###  Navigation                                                                                         ###
     ###########################################################################################################
@@ -3248,23 +3248,23 @@ keymap("General File Managers - Finder Mods", {
     C("RC-Down"):           iEF2(C("Enter"), True),             # Go Down dir (open folder/file) [universal]
     #
     # C("RC-Down"):               C("Alt-Down"),                  # Go Down dir (only works on folders) [not universal]
-    # C("RC-Down"):               C("RC-O"),                      # Go Down dir (open folder/file) [not universal]
+    # C("RC-Down"):               C("C-O"),                       # Go Down dir (open folder/file) [not universal]
     ###########################################################################################################
     ###  Open in New Window | Move to Trash                                                                 ###
     ###########################################################################################################
-    C("RC-Super-o"):            C("Shift-RC-o"),                # Open in new window (or tab, depends) [not universal]
+    C("RC-Super-o"):            C("Shift-C-o"),                 # Open in new window (or tab, depends) [not universal]
     C("RC-Backspace"):          C("Delete"),	                # Move to Trash (delete)
     C("RC-Delete"):             None,                           # Block Ctrl+Delete from performing any action (error in macOS)
     ###########################################################################################################
     ###  ENTER-KEY-TO-RENAME CUSTOM FUNCTION SHORTCUTS                                                      ###
     ###########################################################################################################
     C("Enter"):             iEF2(C("F2"),C("Enter")),           # Send F2 to rename files, unless var is False
-    C("Shift-RC-N"):        iEF2(C("Shift-RC-N"), False),       # New folder, set Enter to Enter
-    C("RC-L"):              iEF2(C("RC-L"), False),             # Set Enter to Enter for Location field
-    C("RC-F"):              iEF2(C("RC-F"), False),             # Set Enter to Enter for Find field
+    C("Shift-RC-N"):        iEF2(C("Shift-C-N"), False),        # New folder, set Enter to Enter
+    C("RC-L"):              iEF2(C("C-L"), False),              # Set Enter to Enter for Location field
+    C("RC-F"):              iEF2(C("C-F"), False),              # Set Enter to Enter for Find field
     C("Esc"):               iEF2(C("Esc"), True),               # Send Escape, set Enter to be F2 next
     # C("Tab"):               iEF2(C("Tab"), C("Tab"), True, True),       # Set Enter to Enter after using Tab key
-    C("Shift-RC-Space"):    iEF2(C("Shift-RC-Space"), False),   # Set Enter to Enter for alternate overview shortcut
+    C("Shift-RC-Space"):    iEF2(C("Shift-C-Space"), False),    # Set Enter to Enter for alternate overview shortcut
     C("Shift-RC-Enter"):        C("Enter"),                             # alternative "Enter" key for unusual cases
 }, when = matchProps(clas=filemanagerStr))
 
@@ -3285,9 +3285,9 @@ keymap("General File Managers - Finder Mods", {
 # Open preferences in Firefox browsers
 keymap("Firefox Browsers Overrides", {
     C("C-comma"):              [C("C-t"),sleep(0.1),ST("about:preferences"),sleep(0.1),C("Enter")],
-    C("Shift-RC-N"):            C("Shift-RC-P"),                      # Open private window with Cmd+Shift+N like other browsers
-    C("RC-Backspace"):         [C("Shift-Home"), C("Backspace")],     # Delete Entire Line Left of Cursor
-    C("RC-Delete"):            [C("Shift-End"), C("Delete")],         # Delete Entire Line Right of Cursor
+    C("Shift-RC-N"):            C("Shift-C-P"),                     # Open private window with Cmd+Shift+N like other browsers
+    C("RC-Backspace"):         [C("Shift-Home"), C("Backspace")],   # Delete Entire Line Left of Cursor
+    C("RC-Delete"):            [C("Shift-End"), C("Delete")],       # Delete Entire Line Right of Cursor
 }, when = matchProps(clas=browsers_firefoxStr))
 
 # Vivaldi is a Chromium based web browser
@@ -3311,15 +3311,15 @@ keymap("Chrome Browsers Overrides", {
 
     C("RC-y"):                  C("C-H"),                       # Browser History
     C("Alt-RC-u"):              C("C-U"),                       # View Page Source
-    C("Shift-RC-j"):            C("RC-J"),                      # Show Downloads view
+    C("Shift-RC-j"):            C("C-J"),                       # Show Downloads view
 
 }, when = matchProps(clas=browsers_chromeStr))
 
 # Keybindings for General Web Browsers
 keymap("General Web Browsers", {
-    C("RC-Q"):                  C("RC-Q"),                      # Close all browsers Instances
-    C("Alt-RC-I"):              C("Shift-RC-I"),                # Dev tools
-    C("Alt-RC-J"):              C("Shift-RC-J"),                # Dev tools
+    C("RC-Q"):                  C("C-Q"),                       # Close all browsers Instances
+    C("Alt-RC-I"):              C("Shift-C-I"),                 # Dev tools
+    C("Alt-RC-J"):              C("Shift-C-J"),                 # Dev tools
     C("RC-Key_1"):              C("Alt-Key_1"),                 # Jump to Tab #1-#8
     C("RC-Key_2"):              C("Alt-Key_2"),
     C("RC-Key_3"):              C("Alt-Key_3"),
@@ -3383,8 +3383,8 @@ keymap("Jetbrains", {
     C("C-Super-g"):             C("C-Alt-Shift-j"),             # Select all occurrences
     C("Super-Shift-g"):         C("Alt-Shift-j"),               # Unselect occurrence
     # Editing
-    # C("Super-Space"):           C("LC-Space"),                  # Basic code completion (conflicts with input switching)
-    # C("Super-Shift-Space"):     C("Shift-LC-Space"),            # Smart code completion (conflicts with input switching)
+    # C("Super-Space"):           C("C-Space"),                   # Basic code completion (conflicts with input switching)
+    # C("Super-Shift-Space"):     C("Shift-C-Space"),             # Smart code completion (conflicts with input switching)
     C("Super-j"):               C("C-q"),                       # Quick documentation lookup
     C("C-n"):                   C("Alt-Insert"),                # Generate code...
     C("Super-o"):               C("C-o"),                       # Override methods
@@ -3444,7 +3444,7 @@ keymap("Jetbrains", {
     C("Super-Shift-d"):         C("C-Shift-F9"),                # Debug context configuration from editor
     # VCS/Local History
     C("Super-v"):               C("Alt-Grave"),                 # VCS quick popup
-    C("Super-c"):               C("LC-c"),                      # Sigints - interrupt
+    C("Super-c"):               C("C-c"),                       # Sigints - interrupt
 }, when = matchProps(clas="^jetbrains-(?!.*toolbox).*$"))
 
 keymap("Wordwise - not vscode", {
@@ -3486,25 +3486,25 @@ keymap("VSCodes overrides for not Chromebook/IBM - Sublime", {
     not ( isKBtype('Chromebook', map="vscodes ovr not cbook - sublime")(ctx) or 
     isKBtype('IBM', map="vscodes ovr not ibm - sublime")(ctx) ) and cnfg.ST3_in_VSCode)
 keymap("VSCodes overrides for Chromebook/IBM", {
-    C("Alt-c"):                 C("LC-c"),                      #  Chromebook/IBM - Terminal - Sigint
-    C("Alt-x"):                 C("LC-x"),                      #  Chromebook/IBM - Terminal - Exit nano
+    C("Alt-c"):                 C("C-c"),                       #  Chromebook/IBM - Terminal - Sigint
+    C("Alt-x"):                 C("C-x"),                       #  Chromebook/IBM - Terminal - Exit nano
 }, when = lambda ctx:
     matchProps(lst=vscodes_lod)(ctx) and 
     (   isKBtype('Chromebook', map="vscodes ovr cbook")(ctx) or 
         isKBtype('IBM', map="vscodes ovr ibm")(ctx) ) )
 keymap("VSCodes overrides for not Chromebook/IBM", {
-    C("Super-c"):               C("LC-c"),                      # Default - Terminal - Sigint
-    C("Super-x"):               C("LC-x"),                      # Default - Terminal - Exit nano
+    C("Super-c"):               C("C-c"),                       # Default - Terminal - Sigint
+    C("Super-x"):               C("C-x"),                       # Default - Terminal - Exit nano
 }, when = lambda ctx:
     matchProps(lst=vscodes_lod)(ctx) and 
     not (   isKBtype('Chromebook', map="vscodes ovr not cbook")(ctx) or 
             isKBtype('IBM', map="vscodes ovr not ibm")(ctx) ) )
 keymap("VSCodes", {
 
-    # C("Super-Space"):           C("LC-Space"),                  # Basic code completion (conflicts with input switching)
+    # C("Super-Space"):           C("C-Space"),                  # Basic code completion (conflicts with input switching)
 
     # Override the global Cmd+Dot (Escape/cancel) shortcut for QuickFix in VSCode(s)
-    C("RC-Dot"):                C("RC-Dot"),                    # QuickFix, overriding global shortcut
+    C("RC-Dot"):                C("C-Dot"),                     # QuickFix, overriding global shortcut
 
     # In-app terminal operations (Cmd+J is "Toggle Panel Visibility" for problems/output/debug/terminal panel)
     C("Super-Grave"):           C("C-Grave"),                   # Terminal: Toggle Terminal
@@ -3561,8 +3561,8 @@ keymap("VSCodes", {
 
 # Keybindings for Sublime Text
 keymap("Sublime Text overrides for Chromebook/IBM", {
-    C("Alt-c"):                 C("LC-c"),                      #  Chromebook/IBM - Terminal - Sigint
-    C("Alt-x"):                 C("LC-x"),                      #  Chromebook/IBM - Terminal - Exit nano
+    C("Alt-c"):                 C("C-c"),                       #  Chromebook/IBM - Terminal - Sigint
+    C("Alt-x"):                 C("C-x"),                       #  Chromebook/IBM - Terminal - Exit nano
     C("Alt-Refresh"):           ignore_combo,                   # Chromebook/IBM - cancel find_all_under
     C("Alt-C-g"):               C("Alt-Refresh"),               # Chromebook/IBM - find_all_under
 }, when = lambda ctx:
@@ -3570,8 +3570,8 @@ keymap("Sublime Text overrides for Chromebook/IBM", {
     (   isKBtype('Chromebook', map="sublime ovr cbook")(ctx) or 
         isKBtype('IBM', map="sublime ovr ibm")(ctx) ) )
 keymap("Sublime Text overrides for not Chromebook/IBM", {
-    # C("Super-c"):               C("LC-c"),                      # Default - Terminal - Sigint
-    # C("Super-x"):               C("LC-x"),                      # Default - Terminal - Exit nano
+    # C("Super-c"):               C("C-c"),                       # Default - Terminal - Sigint
+    # C("Super-x"):               C("C-x"),                       # Default - Terminal - Exit nano
     C("Alt-f3"):                ignore_combo,                   # Default - cancel find_all_under
     C("Super-C-g"):             C("Alt-f3"),                    # Default - find_all_under
 }, when = lambda ctx:
@@ -3579,10 +3579,10 @@ keymap("Sublime Text overrides for not Chromebook/IBM", {
     not (   isKBtype('Chromebook', map="sublime ovr not cbook")(ctx) or 
             isKBtype('IBM', map="sublime ovr not ibm")(ctx) ) )
 keymap("Sublime Text", {
-    # C("Super-c"):               C("LC-c"),                      # Default - Terminal - Sigint
-    # C("Super-x"):               C("LC-x"),                      # Default - Terminal - Exit nano
-    # C("Alt-c"):                 C("LC-c"),                      #  Chromebook/IBM - Terminal - Sigint
-    # C("Alt-x"):                 C("LC-x"),                      #  Chromebook/IBM - Terminal - Exit nano
+    # C("Super-c"):               C("C-c"),                       # Default - Terminal - Sigint
+    # C("Super-x"):               C("C-x"),                       # Default - Terminal - Exit nano
+    # C("Alt-c"):                 C("C-c"),                       #  Chromebook/IBM - Terminal - Sigint
+    # C("Alt-x"):                 C("C-x"),                       #  Chromebook/IBM - Terminal - Exit nano
     # C("Super-Space"):           C("C-Space"),                   # Basic code completion (conflicts with input switching)
     C("C-Super-up"):            C("Alt-o"),                     # Switch file
     C("Super-RC-f"):            C("f11"),                       # toggle_full_screen
@@ -3762,9 +3762,9 @@ keymap("Konsole tab switching", {
 
 keymap("Elementary Terminal tab switching", {
     # Ctrl Tab - In App Tab Switching
-    C("LC-Tab") :               C("Shift-LC-Right"),
-    C("Shift-LC-Tab") :         C("Shift-LC-Left"),
-    C("LC-Grave") :             C("Shift-LC-Left"),
+    C("LC-Tab") :               C("Shift-C-Right"),             # Go to next tab (Right)
+    C("Shift-LC-Tab") :         C("Shift-C-Left"),              # Go to prior tab (Left)
+    C("LC-Grave") :             C("Shift-C-Left"),              # Go to prior tab (Left)
 }, when = matchProps(clas="^Io.elementary.terminal$|^kitty$"))
 
 
@@ -3794,8 +3794,8 @@ keymap("Deepin Terminal overrides", {
 
 keymap("Hyper terminal tab switching", {
     C("RC-Equal"):              C("C-Equal"),                   # Increase font size [override general terminals remap]
-    C("Shift-LC-Tab"):          C("Shift-LC-Tab"),              # Tab nav: Go to prior tab (left) [override general remap]
-    C("LC-Tab"):                C("LC-Tab"),                    # Tab nav: Go to next tab (right) [override general remap]
+    C("Shift-LC-Tab"):          C("Shift-C-Tab"),               # Tab nav: Go to prior tab (left) [override general remap]
+    C("LC-Tab"):                C("C-Tab"),                     # Tab nav: Go to next tab (right) [override general remap]
 }, when = matchProps(clas="^hyper$"))
 
 keymap("Kitty terminal - not tab nav", {
@@ -3804,7 +3804,7 @@ keymap("Kitty terminal - not tab nav", {
 }, when = matchProps(clas="^kitty$"))
 
 keymap("Konsole terminal - not tab nav", {
-    C("RC-comma"):              C("Shift-RC-comma"),            # Open Preferences dialog
+    C("RC-comma"):              C("Shift-C-comma"),             # Open Preferences dialog
     C("RC-0"):                  C("C-Alt-0"),                   # Reset font size
 }, when = matchProps(clas="^Konsole$|^org.kde.Konsole$"))
 
@@ -3857,7 +3857,7 @@ keymap("GenTerms overrides: KDE", {
     C("RC-H"):                  C("Super-Page_Down"),           # Hide Window/Minimize app (KDE Plasma)
 }, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DESKTOP_ENV in ['kde', 'plasma'] )
 keymap("GenTerms overrides: swaywm", {
-    C("RC-Q"):                  C("Shift-RC-Q"),                # Override sway GenGUI Cmd+Q
+    C("RC-Q"):                  C("Shift-C-Q"),                 # Override sway GenGUI Cmd+Q
 }, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DESKTOP_ENV == 'sway' )
 keymap("GenTerms overrides: Xfce4", {
     C("RC-Grave"):             [bind,C("Super-Tab")],           # xfce4 Switch within app group
@@ -3882,9 +3882,9 @@ keymap("General Terminals", {
     C("Shift-LC-Space"):        [bind,C("Super-Shift-Space")],  # keyboard input source (language) switching (reverse) (gnome)
     C("LC-RC-f"):               C("Alt-F10"),                   # Toggle window maximized state
     # Ctrl Tab - In App Tab Switching
-    C("LC-Tab") :               C("LC-PAGE_DOWN"),
-    C("Shift-LC-Tab") :         C("LC-PAGE_UP"),
-    C("LC-Grave") :             C("LC-PAGE_UP"),
+    C("LC-Tab") :               C("C-PAGE_DOWN"),
+    C("Shift-LC-Tab") :         C("C-PAGE_UP"),
+    C("LC-Grave") :             C("C-PAGE_UP"),
     # C("Alt-Tab"):               ignore_combo,                   # Default - Cmd Tab - App Switching Default
     # C("RC-Tab"):                C("Alt-Tab"),                   # Default - Cmd Tab - App Switching Default
     # C("Shift-RC-Tab"):          C("Alt-Shift-Tab"),             # Default - Cmd Tab - App Switching Default
@@ -3924,7 +3924,7 @@ keymap("General Terminals", {
     C("RC-N"):                  C("C-Shift-N"),                 # Open new window in many terminals
     # C("RC-M"):                  C("C-Shift-M"),                 # No function - RE-ENABLE IF SOMEONE REPORTS
     # C("RC-COMMA"):              C("C-Shift-COMMA"),             # Open Preferences (Replaced by per-app remaps if needed)
-    C("RC-Dot"):                C("LC-c"),                      # Mimic macOS Cmd+Dot to cancel command
+    C("RC-Dot"):                C("C-c"),                       # Mimic macOS Cmd+Dot to cancel command
     # C("RC-SLASH"):              C("C-Shift-SLASH"),             # No function - RE-ENABLE IF SOMEONE REPORTS
     # C("RC-KPASTERISK"):         C("C-Shift-KPASTERISK"),        # No function - RE-ENABLE IF SOMEONE REPORTS
 }, when = matchProps(lst=terminals_lod))
@@ -3963,8 +3963,8 @@ keymap("GenGUI overrides: Chromebook/IBM", {
         isKBtype('IBM', map="gengui ovr ibm")(ctx) ) )
 keymap("GenGUI overrides: not Chromebook", {
     # In-App Tab switching
-    C("Super-Tab"):            [iEF2NT(),bind,C("LC-Tab")],         # Default not-chromebook
-    C("Super-Shift-Tab"):      [iEF2NT(),bind,C("Shift-LC-Tab")],   # Default not-chromebook
+    C("Super-Tab"):            [iEF2NT(),bind,C("C-Tab")],          # Default not-chromebook
+    C("Super-Shift-Tab"):      [iEF2NT(),bind,C("Shift-C-Tab")],    # Default not-chromebook
     C("Alt-Backspace"):         C("C-Backspace"),                   # Default not-chromebook
 }, when = lambda ctx:
     matchProps(not_lst=remotes_lod)(ctx) and 
@@ -4087,7 +4087,7 @@ keymap("GenGUI overrides: MATE", {
 
 keymap("GenGUI overrides: swaywm", {
     C("RC-Space"):             [iEF2NT(),C("Super-d")],         # Open sway launcher
-    C("RC-Q"):                  C("RC-Q"),                      # Override General GUI Alt+F4 remap
+    C("RC-Q"):                  C("C-Q"),                       # Override General GUI Alt+F4 remap
 }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'sway' )
 
 keymap("GenGUI overrides: Trinity desktop", {
