@@ -236,45 +236,45 @@ def negRgx(rgx_str):
 
 
 terminals_lod = [
-    {clas:"^alacritty$"                 },
-    {clas:"^com.raggesilver.BlackBox$"  },
-    {clas:"^contour$"                   },
-    {clas:"^cutefish-terminal$"         },
-    {clas:"^deepin-terminal$"           },
-    {clas:"^dev.warp.Warp$"             },
-    {clas:"^eterm$"                     },
-    {clas:"^gnome-terminal$"            },
-    {clas:"^gnome-terminal-server$"     },
-    {clas:"^guake$"                     },
-    {clas:"^hyper$"                     },
-    {clas:"^io.elementary.terminal$"    },
-    {clas:"^kinto-gui.py$"              },
-    {clas:"^kitty$"                     },
-    {clas:"^Kgx$"                       },
-    {clas:"^konsole$"                   },
-    {clas:"^lxterminal$"                },
-    {clas:"^mate-terminal$"             },
-    {clas:"^MateTerminal$"              },
-    {clas:"^org.gnome.Console$"         },
-    {clas:"^org.kde.konsole$"           },
-    {clas:"^org.kde.yakuake$"           },
-    {clas:"^org.wezfurlong.wezterm$"    },
-    {clas:"^roxterm$"                   },
-    {clas:"^qterminal$"                 },
-    {clas:"^st$"                        },
-    {clas:"^sakura$"                    },
-    {clas:"^station$"                   },
-    {clas:"^tabby$"                     },
-    {clas:"^terminator$"                },
-    {clas:"^terminology$"               },
-    {clas:"^termite$"                   },
-    {clas:"^Termius$"                   },
-    {clas:"^tilda$"                     },
-    {clas:"^tilix$"                     },
-    {clas:"^urxvt$"                     },
-    {clas:"^xfce4-terminal$"            },
-    {clas:"^xterm$"                     },
-    {clas:"^yakuake$"                   },
+    {clas: "^alacritty$"                 },
+    {clas: "^com.raggesilver.BlackBox$"  },
+    {clas: "^contour$"                   },
+    {clas: "^cutefish-terminal$"         },
+    {clas: "^deepin-terminal$"           },
+    {clas: "^dev.warp.Warp$"             },
+    {clas: "^eterm$"                     },
+    {clas: "^gnome-terminal$"            },
+    {clas: "^gnome-terminal-server$"     },
+    {clas: "^guake$"                     },
+    {clas: "^hyper$"                     },
+    {clas: "^io.elementary.terminal$"    },
+    {clas: "^kinto-gui.py$"              },
+    {clas: "^kitty$"                     },
+    {clas: "^Kgx$"                       },
+    {clas: "^konsole$"                   },
+    {clas: "^lxterminal$"                },
+    {clas: "^mate-terminal$"             },
+    {clas: "^MateTerminal$"              },
+    {clas: "^org.gnome.Console$"         },
+    {clas: "^org.kde.konsole$"           },
+    {clas: "^org.kde.yakuake$"           },
+    {clas: "^org.wezfurlong.wezterm$"    },
+    {clas: "^roxterm$"                   },
+    {clas: "^qterminal$"                 },
+    {clas: "^st$"                        },
+    {clas: "^sakura$"                    },
+    {clas: "^station$"                   },
+    {clas: "^tabby$"                     },
+    {clas: "^terminator$"                },
+    {clas: "^terminology$"               },
+    {clas: "^termite$"                   },
+    {clas: "^Termius$"                   },
+    {clas: "^tilda$"                     },
+    {clas: "^tilix$"                     },
+    {clas: "^urxvt$"                     },
+    {clas: "^xfce4-terminal$"            },
+    {clas: "^xterm$"                     },
+    {clas: "^yakuake$"                   },
 ]
 
 # DEPRECATED by `vscodes_lod` "list of dicts" below
@@ -287,9 +287,9 @@ terminals_lod = [
 # vscodeStr = toRgxStr(vscodes)
 
 vscodes_lod = [
-    {clas:"^code$"},
-    {clas:"^vscodium$"},
-    {clas:"^code - oss$"},
+    {clas: "^code$"},
+    {clas: "^vscodium$"},
+    {clas: "^code - oss$"},
 ]
 
 sublimes = [
@@ -331,26 +331,26 @@ JDownloader_lod = [
 
 # Add remote desktop clients & VM software here
 remotes_lod = [
-    {clas:"^Anydesk$"                       },
-    {clas:"^Gnome-boxes$"                   },
-    {clas:"^gnome-connections$"             },
-    {clas:"^org.remmina.Remmina$", 
-        not_name:"^Remmina Remote Desktop Client$|^Remote Connection Profile$"},
-    {clas:"^Nxplayer.bin$"                  },
-    {clas:"^remmina$"                       },
-    {clas:"^qemu-system-.*$"                },
-    {clas:"^qemu$"                          },
-    {clas:"^Spicy$"                         },
-    {clas:"^Virt-manager$"                  },
-    {clas:"^VirtualBox$"                    },
-    {clas:"^VirtualBox Machine$"            },
-    {clas:"^xfreerdp$"                      },
-    {clas:"^Wfica$"                         },
+    {clas: "^Anydesk$"                       },
+    {clas: "^Gnome-boxes$"                   },
+    {clas: "^gnome-connections$"             },
+    {clas: "^org.remmina.Remmina$", 
+        not_name: "^Remmina Remote Desktop Client$|^Remote Connection Profile$"},
+    {clas: "^Nxplayer.bin$"                  },
+    {clas: "^remmina$"                       },
+    {clas: "^qemu-system-.*$"                },
+    {clas: "^qemu$"                          },
+    {clas: "^Spicy$"                         },
+    {clas: "^Virt-manager$"                  },
+    {clas: "^VirtualBox$"                    },
+    {clas: "^VirtualBox Machine$"            },
+    {clas: "^xfreerdp$"                      },
+    {clas: "^Wfica$"                         },
 ]
 
 terminals_and_remotes_lod = [
-    {lst:terminals_lod                  },
-    {lst:remotes_lod                    },
+    {lst: terminals_lod                  },
+    {lst: remotes_lod                    },
 ]
 
 # DEPRECATED by 'vscodes_and_remotes_lod' "list of dicts" below
@@ -358,8 +358,8 @@ terminals_and_remotes_lod = [
 # vscodeStr_ext = toRgxStr(vscodes)
 
 vscodes_and_remotes_lod = [
-    {lst:vscodes_lod                    },
-    {lst:remotes_lod                    },
+    {lst: vscodes_lod                    },
+    {lst: remotes_lod                    },
 ]
 
 browsers_chrome = [
@@ -425,57 +425,57 @@ filemanagerStr = "|".join('^'+x+'$' for x in filemanagers)
 
 # TODO: put this in conditionals instead of 'filemanagerStr'?
 filemanagers_lod = [
-    {clas:"^caja$"                          },
-    {clas:"^dde-file-manager$"              },
-    {clas:"^dolphin$"                       },
-    {clas:"^io.elementary.files$"           },
-    {clas:"^krusader$"                      },
-    {clas:"^nautilus$"                      },
-    {clas:"^nemo$"                          },
-    {clas:"^org.gnome.nautilus$"            },
-    {clas:"^org.kde.dolphin$"               },
-    {clas:"^org.kde.krusader$"              },
-    {clas:"^pcmanfm$"                       },
-    {clas:"^pcmanfm-qt$"                    },
-    {clas:"^spacefm$"                       },
-    {clas:"^thunar$"                        },
+    {clas: "^caja$"                          },
+    {clas: "^dde-file-manager$"              },
+    {clas: "^dolphin$"                       },
+    {clas: "^io.elementary.files$"           },
+    {clas: "^krusader$"                      },
+    {clas: "^nautilus$"                      },
+    {clas: "^nemo$"                          },
+    {clas: "^org.gnome.nautilus$"            },
+    {clas: "^org.kde.dolphin$"               },
+    {clas: "^org.kde.krusader$"              },
+    {clas: "^pcmanfm$"                       },
+    {clas: "^pcmanfm-qt$"                    },
+    {clas: "^spacefm$"                       },
+    {clas: "^thunar$"                        },
 ]
 
 ### dialogs_Escape_lod = send these windows the Escape key for Cmd+W
 dialogs_Escape_lod = [
-    {clas:"^Angry.*IP.*Scanner$",
-        name:"^IP.*address.*details.*$|^Preferences.*$|^Scan.*Statistics.*$|^Edit.*openers.*$"},
+    {clas: "^Angry.*IP.*Scanner$",
+        name: "^IP.*address.*details.*$|^Preferences.*$|^Scan.*Statistics.*$|^Edit.*openers.*$"},
     # TODO: add or change Atoms class to "pm.mirko.Atoms" if the app gets updated
-    # TODO: remove "atoms" from "name:" entry patterns if "Shortcuts" dialog gets updated
+    # TODO: remove "atoms" from "name: " entry patterns if "Shortcuts" dialog gets updated
     # Reference: https://github.com/AtomsDevs/Atoms/issues/61
-    {clas:"^atoms$", name:"^Preferences$|^Shortcuts$|^About$|^atoms$"},
-    {clas:"^com.github.rafostar.Clapper$", name:"^Preferences$"},
-    {clas:"^epiphany$|^org.gnome.Epiphany$", name:"^Preferences$"},
-    {clas:"^gnome-text-editor$|^org.gnome.TextEditor$", name:"^Preferences$"},
-    {clas:"^konsole$|^org.kde.konsole$", name:"^Configure.*Konsole$|^Edit Profile.*Konsole$"},
-    {clas:"^krusader$|^org.kde.krusader$", name:"^Properties.*Krusader$"},
-    {clas:"^.*nautilus$", name:"^.*Properties$|^Preferences$|^Create Archive$|^Rename.*Files$"},
-    {clas:"^org.gnome.Shell.Extensions$"},
-    {clas:"^org.kde.Dolphin$", name:"^Configure.*Dolphin$|^Properties.*Dolphin$"},
-    {clas:"^org.kde.falkon$|^Falkon$", name:"^Preferences.*Falkon$"},
-    {clas:"^org.kde.kdialog$"},
-    {clas:"^org.kde.KWrite$", name:"^Configure.*KWrite$"},
-    {clas:"^org.gnome.Software$", not_name:"^Software$"},
-    {clas:"^Transmission-gtk$|^com.transmissionbt.Transmission.*$", not_name:"^Transmission$"},
-    {clas:"^xfce4-terminal$", name:"^Terminal Preferences$"},
-    {clas:"^zenity$|^qarma$"}
+    {clas: "^atoms$", name: "^Preferences$|^Shortcuts$|^About$|^atoms$"},
+    {clas: "^com.github.rafostar.Clapper$", name: "^Preferences$"},
+    {clas: "^epiphany$|^org.gnome.Epiphany$", name: "^Preferences$"},
+    {clas: "^gnome-text-editor$|^org.gnome.TextEditor$", name: "^Preferences$"},
+    {clas: "^konsole$|^org.kde.konsole$", name: "^Configure.*Konsole$|^Edit Profile.*Konsole$"},
+    {clas: "^krusader$|^org.kde.krusader$", name: "^Properties.*Krusader$"},
+    {clas: "^.*nautilus$", name: "^.*Properties$|^Preferences$|^Create Archive$|^Rename.*Files$"},
+    {clas: "^org.gnome.Shell.Extensions$"},
+    {clas: "^org.kde.Dolphin$", name: "^Configure.*Dolphin$|^Properties.*Dolphin$"},
+    {clas: "^org.kde.falkon$|^Falkon$", name: "^Preferences.*Falkon$"},
+    {clas: "^org.kde.kdialog$"},
+    {clas: "^org.kde.KWrite$", name: "^Configure.*KWrite$"},
+    {clas: "^org.gnome.Software$", not_name: "^Software$"},
+    {clas: "^Transmission-gtk$|^com.transmissionbt.Transmission.*$", not_name: "^Transmission$"},
+    {clas: "^xfce4-terminal$", name: "^Terminal Preferences$"},
+    {clas: "^zenity$|^qarma$"}
 ]
 
 ### dialogs_CloseWin_lod = send these windows the "Close window" combo for Cmd+W
 dialogs_CloseWin_lod = [
-    {clas:"^Angry.*IP.*Scanner$", name:"^Fetchers.*$|^Edit.*favorites.*$"},
-    {clas:"^com.mattjakeman.ExtensionManager$|^extension-manager$", not_name:"^Extension Manager$"},
-    {clas:"^Gnome-control-center$", not_name:"^Settings$"},
-    {clas:"^gnome-terminal.*$", name:"^Preferences.*$"},
-    {clas:"^gnome-terminal-pref.*$", name:"^Preferences.*$"},
-    {clas:"^fr.handbrake.ghb$", not_name:"^HandBrake$"},
-    {clas:"^pcloud$"},
-    {clas:"^Totem$", not_name:"^Videos$"},
+    {clas: "^Angry.*IP.*Scanner$", name: "^Fetchers.*$|^Edit.*favorites.*$"},
+    {clas: "^com.mattjakeman.ExtensionManager$|^extension-manager$", not_name: "^Extension Manager$"},
+    {clas: "^Gnome-control-center$", not_name: "^Settings$"},
+    {clas: "^gnome-terminal.*$", name: "^Preferences.*$"},
+    {clas: "^gnome-terminal-pref.*$", name: "^Preferences.*$"},
+    {clas: "^fr.handbrake.ghb$", not_name: "^HandBrake$"},
+    {clas: "^pcloud$"},
+    {clas: "^Totem$", not_name: "^Videos$"},
 ]
 
 
@@ -1202,7 +1202,7 @@ modmap("Cond modmap - Media Arrows Fix",{
 # including the comma after each dictionary.
 
 exclude_kpad_devs_UserCustom_lod = [
-    # {devn:'My Keyboard Device'},
+    # {devn: 'My Keyboard Device'},
     #
 ]
 
@@ -1212,7 +1212,7 @@ exclude_kpad_devs_UserCustom_lod = [
 
 # List of devices with keypads to exclude from Forced Numpad and GTK3 fix modmaps
 exclude_kpad_devs_lod = [
-    {devn:'Razer Razer Naga X'},
+    {devn: 'Razer Razer Naga X'},
     *exclude_kpad_devs_UserCustom_lod,
 ]
 
@@ -3212,8 +3212,10 @@ keymap("Overrides for Thunar - Finder Mods", {
 
 # Keybindings overrides for GNOME XDG "Save As" and "Open File" dialogs
 file_open_save_dialogs = [
-    {clas:"^xdg-desktop-portal-gnome$|^Firefox.*$|^LibreWolf$|^Waterfox$", name:"^Open File$"},
-    {clas:"^xdg-desktop-portal-gnome$|^Firefox.*$|^LibreWolf$|^Waterfox$", name:"^Save As$"},
+    {
+        clas: "^xdg-desktop-portal-gnome$|^Firefox.*$|^LibreWolf$|^Waterfox$", 
+        name: "^Open File$|^Save As$"
+    },
 ]
 keymap("XDG file dialogs", {
     C("RC-Left"):               C("Alt-Left"),                  # Go Back
@@ -3745,18 +3747,18 @@ keymap("Cmd+W dialog fix - Alt+F4", {
 ### Various fixes for supporting tab navigation shortcuts like Shift+Cmd+Braces
 
 tab_UI_fix_CtrlShiftTab = [
-    {clas:"^com.raggesilver.BlackBox$"},
-    {clas:"^org.gnome.Console$|^Console$"},
-    {clas:"^deepin-terminal$"},
-    {clas:"^hyper$"},
-    {lst:JDownloader_lod},
-    {clas:"^kitty$"},
-    {clas:"^Kgx$"},
+    {clas: "^com.raggesilver.BlackBox$"},
+    {clas: "^org.gnome.Console$|^Console$"},
+    {clas: "^deepin-terminal$"},
+    {clas: "^hyper$"},
+    {lst:  JDownloader_lod},
+    {clas: "^kitty$"},
+    {clas: "^Kgx$"},
 ]
 
 tab_UI_fix_CtrlAltPgUp = [
-    {clas:"^gedit$"},
-    {clas:"^xed$"},
+    {clas: "^gedit$"},
+    {clas: "^xed$"},
 ]
 
 # Tab navigation overrides for tabbed UI apps that use Ctrl+Shift+Tab/Ctrl+Tab instead of Ctrl+PgUp/PgDn
