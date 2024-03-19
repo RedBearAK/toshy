@@ -290,7 +290,7 @@ def fancy_str(text, color_name, *, bold=False):
         return text
 
 
-def call_attention_to_password_prompt():
+def call_attn_to_pwd_prompt_if_sudo_tkt_exp():
     """Utility function to emphasize the sudo password prompt"""
     try:
         subprocess.run( ['sudo', '-n', 'true'], stdout=DEVNULL, stderr=DEVNULL, check=True)
@@ -378,7 +378,7 @@ def ask_add_home_local_bin():
 
 def elevate_privileges():
     """Elevate privileges early in the installer process"""
-    call_attention_to_password_prompt()
+    call_attn_to_pwd_prompt_if_sudo_tkt_exp()
     subprocess.run(['sudo', 'bash', '-c', 'echo -e "\nUsing elevated privileges..."'], check=True)
 
 
@@ -772,7 +772,7 @@ class NativePackageInstaller:
 
     def check_for_pkg_mgr_cmd(self, pkg_mgr_cmd):
         """Make sure native package installer command exists before using it, or exit"""
-        call_attention_to_password_prompt()
+        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
         if not shutil.which(pkg_mgr_cmd):
             print()
             error(f'Package manager command ({pkg_mgr_cmd}) not available. Unable to continue.')
@@ -798,7 +798,7 @@ class NativePackageInstaller:
             error(f'No valid package manager command in provided command list:\n\t{cmd_lst}')
             safe_shutdown(1)
         
-        call_attention_to_password_prompt()
+        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
         self.check_for_pkg_mgr_cmd(pkg_mgr_cmd)
         
         # Execute the package installation command
@@ -913,7 +913,7 @@ def install_distro_pkgs():
     ###########################################################################
     def install_on_dnf_distro():
         """Utility function that gets dispatched for distros that use DNF package manager."""
-        call_attention_to_password_prompt()
+        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
 
         # Define helper functions for specific distro installations
         def install_on_mandriva_based():
@@ -1042,7 +1042,7 @@ def load_uinput_module():
         print('The "uinput" module is already loaded.')
     except subprocess.CalledProcessError:
         print('The "uinput" module is not loaded, loading now...')
-        call_attention_to_password_prompt()
+        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
         subprocess.run(['sudo', 'modprobe', 'uinput'], check=True)
 
     # Check if /etc/modules-load.d/ directory exists
@@ -1051,7 +1051,7 @@ def load_uinput_module():
         if not os.path.exists("/etc/modules-load.d/uinput.conf"):
             # If not, create it and add "uinput"
             try:
-                call_attention_to_password_prompt()
+                call_attn_to_pwd_prompt_if_sudo_tkt_exp()
                 command = "echo 'uinput' | sudo tee /etc/modules-load.d/uinput.conf >/dev/null"
                 subprocess.run(command, shell=True, check=True)
             except subprocess.CalledProcessError as proc_err:
@@ -1067,7 +1067,7 @@ def load_uinput_module():
                 if "uinput" not in f.read():
                     # If "uinput" is not listed, append it
                     try:
-                        call_attention_to_password_prompt()
+                        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
                         command = "echo 'uinput' | sudo tee -a /etc/modules >/dev/null"
                         subprocess.run(command, shell=True, check=True)
                     except subprocess.CalledProcessError as proc_err:
@@ -1080,9 +1080,11 @@ def load_uinput_module():
 def reload_udev_rules():
     """utility function to reload udev rules in case of changes to rules file"""
     try:
-        call_attention_to_password_prompt()
-        subprocess.run(['sudo', 'udevadm', 'control', '--reload-rules'], check=True)
-        subprocess.run(['sudo', 'udevadm', 'trigger'], check=True)
+        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+        cmd_lst_reload                 = ['sudo', 'udevadm', 'control', '--reload-rules']
+        subprocess.run(cmd_lst_reload, check=True)
+        cmd_lst_trigger                 = ['sudo', 'udevadm', 'trigger']
+        subprocess.run(cmd_lst_trigger, check=True)
         print('Reloaded the "udev" rules successfully.')
     except subprocess.CalledProcessError as proc_err:
         print(f'Failed to reload "udev" rules:\n\t{proc_err}')
@@ -1092,40 +1094,69 @@ def reload_udev_rules():
 def install_udev_rules():
     """Set up `udev` rules file to give user/keyszer access to uinput"""
     print(f'\n\n§  Installing "udev" rules file for keymapper...\n{cnfg.separator}')
-    rules_dir           = '/etc/udev/rules.d'
-    rules_file          = '90-toshy-keymapper-input.rules'
-    rules_file_path     = os.path.join(rules_dir, rules_file)
+
+    rules_dir                   = '/etc/udev/rules.d'
+
+    # systemd init systems can use the 'uaccess' tag to set owner of device to current user,
+    # but this also requires the rules file to be lexically earlier than '73-'. Trying '70-'.
+    rules_file                  = '70-toshy-keymapper-input.rules'
+    rules_file_path             = os.path.join(rules_dir, rules_file)
+
+    # older DEPRECATED '90-' rules file name, must be removed if found
+    old_rules_file              = '90-toshy-keymapper-input.rules'          # DEPRECATED
+    old_rules_file_path         = os.path.join(rules_dir, old_rules_file)
 
     # Check if the /etc/udev/rules.d directory exists, if not, create it
     if not os.path.exists(rules_dir):
         print(f"Creating directory: '{rules_dir}'")
         try:
-            call_attention_to_password_prompt()
+            call_attn_to_pwd_prompt_if_sudo_tkt_exp()
             cmd_lst = ['sudo', 'mkdir', '-p', rules_dir]
             subprocess.run(cmd_lst, check=True)
         except subprocess.CalledProcessError as proc_err:
             error(f"Problem while creating udev rules folder:\n\t{proc_err}")
             safe_shutdown(1)
 
-    setfacl_path = shutil.which('setfacl')
-    acl_rule = ''
+    setfacl_path                = shutil.which('setfacl')
+    acl_rule                    = ''
+
     if setfacl_path is not None:
-        acl_rule = f', RUN+="{setfacl_path} -m g::rw /dev/uinput"'
-    rule_content = (
+        acl_rule                = f', RUN+="{setfacl_path} -m g::rw /dev/uinput"'
+    new_rules_content           = (
         'SUBSYSTEM=="input", GROUP="input"\n'
-        f'KERNEL=="uinput", SUBSYSTEM=="misc", GROUP="input", MODE="0660"{acl_rule}\n'
+        # f'KERNEL=="uinput", SUBSYSTEM=="misc", GROUP="input", MODE="0660"{acl_rule}\n'
+        f'KERNEL=="uinput", SUBSYSTEM=="misc", GROUP="input", MODE="0660", TAG+="uaccess"{acl_rule}\n'
     )
-    # Only write the file if it doesn't exist or its contents are different
-    if not os.path.exists(rules_file_path) or open(rules_file_path).read() != rule_content:
-        command = f'sudo tee {rules_file_path}'
+
+    def rules_file_missing_or_content_differs():
+        if not os.path.exists(rules_file_path):
+            return True
         try:
-            call_attention_to_password_prompt()
+            with open(rules_file_path, 'r') as file:
+                return file.read() != new_rules_content
+        except PermissionError as perm_err:
+            error(f"Permission denied when accessing '{rules_file_path}':\n\t{perm_err}")
+            safe_shutdown(1)
+        except IOError as io_err:
+            error(f"Error reading file '{rules_file_path}':\n\t{io_err}")
+            error("Rules file exists but cannot be read. File corrupted?")
+            safe_shutdown(1)
+
+    # Only write the file if it doesn't exist or its contents are different from current rule
+    if rules_file_missing_or_content_differs():
+        command_str             = f'sudo tee {rules_file_path}'
+        try:
+            call_attn_to_pwd_prompt_if_sudo_tkt_exp()
             print(f'Using these "udev" rules for "uinput" device: ')
             print()
-            subprocess.run(command, input=rule_content.encode(), shell=True, check=True)
-            print()
-            print(f'Toshy "udev" rules file successfully installed.')
-            reload_udev_rules()
+            subprocess.run(command_str, input=new_rules_content.encode(), shell=True, check=True)
+            if not rules_file_missing_or_content_differs():
+                print()
+                print(f'Toshy "udev" rules file successfully installed.')
+                reload_udev_rules()
+            else:
+                error(f'Toshy "udev" rules file install failed.')
+                safe_shutdown(1)
         except subprocess.CalledProcessError as proc_err:
             print()
             error(f'ERROR: Problem while installing "udev" rules file for keymapper.\n')
@@ -1133,10 +1164,20 @@ def install_udev_rules():
             # Deal with possible 'NoneType' error output
             error(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
             print()
-            error(f'ERROR: Install failed.')
+            error(f'ERROR: Toshy install failed.')
             safe_shutdown(1)
     else:
         print(f'Correct "udev" rules already in place.')
+
+    # remove older '90-' rules file (cannot use 'uaccess' tag unless processed earlier than '73-')
+    if os.path.exists(old_rules_file_path):
+        try:
+            call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+            print(f'Removing old udev rules file: {old_rules_file}')
+            subprocess.run(['sudo', 'rm', old_rules_file_path], check=True)
+        except subprocess.CalledProcessError as proc_err:
+            error(f'ERROR: Problem while removing old udev rules file:\n\t{proc_err}')
+
     show_task_completed_msg()
 
 
@@ -1156,7 +1197,7 @@ def create_group(group_name):
         print(f'Group "{group_name}" already exists.')
     else:
         print(f'Creating "{group_name}" group...')
-        call_attention_to_password_prompt()
+        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
         if cnfg.DISTRO_NAME in distro_groups_map['fedora-immutables']:
             # Special handling for Fedora immutable distributions
             with open('/etc/group') as f:
@@ -1197,7 +1238,7 @@ def verify_user_groups():
     else:
         # Add the user to the input group
         try:
-            call_attention_to_password_prompt()
+            call_attn_to_pwd_prompt_if_sudo_tkt_exp()
             subprocess.run(
                 ['sudo', 'usermod', '-aG', cnfg.input_group, cnfg.user_name], check=True)
         except subprocess.CalledProcessError as proc_err:
