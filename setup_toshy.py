@@ -2236,31 +2236,32 @@ def apply_tweaks_KDE():
         subprocess.run(SingleClick_cmd, check=True)
         print('Disabled single-click to open/launch files/folders')
 
-        if shutil.which(kstart_cmd):
-            plasmashell_stopped = False
-            # Restart Plasma shell to make the new setting active
-            # kquitapp5/6 plasmashell && kstart5/6 plasmashell
-            try:
-                if shutil.which(kquitapp_cmd):
-                    print('Stopping Plasma shell... ', flush=True, end='')
-                    subprocess.run([kquitapp_cmd, 'plasmashell'], check=True,
-                                    stdout=PIPE, stderr=PIPE)
-                    print('Plasma shell stopped.')
-                    plasmashell_stopped = True
-                else:
-                    error(f'The "{kquitapp_cmd}" command is missing. Skipping plasmashell restart.')
-            except subprocess.CalledProcessError as proc_err:
-                err_output: bytes = proc_err.stderr             # type hint error output
-                error(f'\nProblem while stopping Plasma shell:\n\t{err_output.decode()}')
-            if plasmashell_stopped:
-                print('Starting Plasma shell (backgrounded)... ')
-                subprocess.Popen([kstart_cmd, 'plasmashell'], stdout=PIPE, stderr=PIPE)
-            else:
-                error('Plasma shell was not stopped. Skipping restarting Plasma shell.')
-                print('You should probably log out or restart.')
-        else:
-            error(f'The "{kstart_cmd}" command is missing. Skipping restarting Plasma shell.')
-            print('You should probably log out or restart.')
+        # Try not restarting Plasma shell anymore. 
+        # if shutil.which(kstart_cmd):
+        #     plasmashell_stopped = False
+        #     # Restart Plasma shell to make the new setting active
+        #     # kquitapp5/6 plasmashell && kstart5/6 plasmashell
+        #     try:
+        #         if shutil.which(kquitapp_cmd):
+        #             print('Stopping Plasma shell... ', flush=True, end='')
+        #             subprocess.run([kquitapp_cmd, 'plasmashell'], check=True,
+        #                             stdout=PIPE, stderr=PIPE)
+        #             print('Plasma shell stopped.')
+        #             plasmashell_stopped = True
+        #         else:
+        #             error(f'The "{kquitapp_cmd}" command is missing. Skipping plasmashell restart.')
+        #     except subprocess.CalledProcessError as proc_err:
+        #         err_output: bytes = proc_err.stderr             # type hint error output
+        #         error(f'\nProblem while stopping Plasma shell:\n\t{err_output.decode()}')
+        #     if plasmashell_stopped:
+        #         print('Starting Plasma shell (backgrounded)... ')
+        #         subprocess.Popen([kstart_cmd, 'plasmashell'], stdout=PIPE, stderr=PIPE)
+        #     else:
+        #         error('Plasma shell was not stopped. Skipping restarting Plasma shell.')
+        #         print('You should probably log out or restart.')
+        # else:
+        #     error(f'The "{kstart_cmd}" command is missing. Skipping restarting Plasma shell.')
+        #     print('You should probably log out or restart.')
 
 
 def remove_tweaks_KDE():
