@@ -483,7 +483,7 @@ pkg_groups_map = {
                             "zenity"],
 
     # NOTE: This is a copy of Tumbleweed-based package list! For use with 'transactional-update'.
-    # But this needs to use the versioned package names for some reason.
+    # But this needs to use the versioned package names because we are checking with 'rpm -q'.
     'microos-based':       ["cairo-devel",
                             "dbus-1-daemon", "dbus-1-devel",
                             "gcc", "git", "gobject-introspection-devel",
@@ -865,14 +865,14 @@ def install_distro_pkgs():
         if cnfg.systemctl_present or 'systemd' not in pkg
     ]
 
-    transupd_distros            = []    # openSUSE MicroOS/Aeon/Kalpa 'transactional-update'
-    rpmostree_distros           = []    # Fedora atomic/immutables 'rpm-ostree'
-    dnf_distros                 = []    # Fedora/RHEL/OpenMandriva
-    zypper_distros              = []    # openSUSE Tumbleweed/Leap
-    apt_distros                 = []    # Debian/Ubuntu
-    pacman_distros              = []    # Arch, BTW
-    eopkg_distros               = []    # Solus
-    xbps_distros                = []    # Void
+    transupd_distros            = []    # 'transactional-update': openSUSE MicroOS/Aeon/Kalpa
+    rpmostree_distros           = []    # 'rpm-ostree': Fedora atomic/immutables
+    dnf_distros                 = []    # 'dnf': Fedora/RHEL/OpenMandriva
+    zypper_distros              = []    # 'zypper': openSUSE Tumbleweed/Leap
+    apt_distros                 = []    # 'apt': Debian/Ubuntu
+    pacman_distros              = []    # 'pacman': Arch, BTW
+    eopkg_distros               = []    # 'eopkg': Solus
+    xbps_distros                = []    # 'xbps-install': Void
 
     # assemble specific pkg mgr distro lists
 
@@ -927,12 +927,13 @@ def install_distro_pkgs():
                 cmd_lst = ['sudo', 'transactional-update', '--non-interactive', 'pkg', 'in']
                 native_pkg_installer.install_pkg_list(cmd_lst, filtered_pkg_lst)
                 show_reboot_prompt()
-                warn('WARNING: Toshy setup is NOT complete!')
-                print('You MUST reboot now to make the new packages available.')
-                print('After REBOOTING, run the Toshy setup script a second time.')
+                print()
+                warn('#########  WARNING: Toshy setup is NOT yet complete!  #########')
+                print('##  You MUST reboot now to make the new packages available.  ##')
+                print('#  After REBOOTING, run the Toshy setup script a second time. #')
                 safe_shutdown(0)
             else:
-                print('All needed packages are already installed. Continuing setup...')
+                print('All needed packages are already available. Continuing setup...')
 
     ###########################################################################
     ###  RPM-OSTREE DISTROS  ##################################################
