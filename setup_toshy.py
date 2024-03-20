@@ -923,6 +923,7 @@ def install_distro_pkgs():
                     print(fancy_str(f"Package '{pkg}' is already installed. Skipping.", "green"))
 
             if filtered_pkg_lst:
+                print(f'Packages left to install:\n{filtered_pkg_lst}')
                 cmd_lst = ['sudo', 'transactional-update', '--non-interactive', 'pkg', 'in']
                 native_pkg_installer.install_pkg_list(cmd_lst, filtered_pkg_lst)
                 show_reboot_prompt()
