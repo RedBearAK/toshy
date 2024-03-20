@@ -926,6 +926,9 @@ def install_distro_pkgs():
                 print(f'Packages left to install:\n{filtered_pkg_lst}')
                 cmd_lst = ['sudo', 'transactional-update', '--non-interactive', 'pkg', 'in']
                 native_pkg_installer.install_pkg_list(cmd_lst, filtered_pkg_lst)
+                # might as well take care of user group and udev here, if rebooting is necessary. 
+                verify_user_groups()
+                install_udev_rules()
                 show_reboot_prompt()
                 print()
                 print('###############################################################################')
