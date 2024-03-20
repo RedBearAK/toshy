@@ -920,7 +920,7 @@ def install_distro_pkgs():
 
             if filtered_pkg_lst:
                 cmd_lst = ['sudo', 'transactional-update', '--non-interactive', 'pkg', 'in']
-                native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+                native_pkg_installer.install_pkg_list(cmd_lst, filtered_pkg_lst)
                 show_reboot_prompt()
                 warn('WARNING: Toshy setup is NOT complete!')
                 print('You MUST reboot now to make the new packages available.')
