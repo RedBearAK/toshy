@@ -69,7 +69,9 @@ pkill -f "bin/xkeysnail"
 
 # overcome a possible strange and rare problem connecting to X display
 if command xhost &> /dev/null; then
-    xhost +local:
+    if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
+        xhost +local:
+    fi
 fi
 
 keyszer -w -c "$HOME/.config/toshy/toshy_config.py"
