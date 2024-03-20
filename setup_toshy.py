@@ -399,6 +399,7 @@ distro_groups_map = {
     # separate references for Tumbleweed types versus Leap types
     'tumbleweed-based':         ["opensuse-tumbleweed"],
     'leap-based':               ["opensuse-leap"],
+    'microos-based':            ["opensuse-microos", "opensuse-aeon", "opensuse-kalpa"],
 
     'mandriva-based':           ["openmandriva"],
 
@@ -477,6 +478,18 @@ pkg_groups_map = {
                                 "python311",
                                 "python311-devel",
                                 "python311-tk",
+                            "systemd-devel",
+                            "tk", "typelib-1_0-AyatanaAppIndicator3-0_1",
+                            "zenity"],
+
+    # NOTE: This is a copy of Tumbleweed-based package list! For use with 'transactional-update'
+    'microos-based':       ["cairo-devel",
+                            "dbus-1-daemon", "dbus-1-devel",
+                            "gcc", "git", "gobject-introspection-devel",
+                            "libappindicator3-devel", "libnotify-tools",
+                            "python3-dbus-python-devel",
+                            "python3-devel",
+                            "python3-tk",
                             "systemd-devel",
                             "tk", "typelib-1_0-AyatanaAppIndicator3-0_1",
                             "zenity"],
@@ -848,17 +861,19 @@ def install_distro_pkgs():
         if cnfg.systemctl_present or 'systemd' not in pkg
     ]
 
-    rpmostree_distros           = []
-    dnf_distros                 = []
-    zypper_distros              = []
-    apt_distros                 = []
-    pacman_distros              = []
-    eopkg_distros               = []
-    xbps_distros                = []
+    transupd_distros            = []    # openSUSE MicroOS/Aeon/Kalpa 'transactional-update'
+    rpmostree_distros           = []    # Fedora atomic/immutables 'rpm-ostree'
+    dnf_distros                 = []    # Fedora/RHEL/OpenMandriva
+    zypper_distros              = []    # openSUSE Tumbleweed/Leap
+    apt_distros                 = []    # Debian/Ubuntu
+    pacman_distros              = []    # Arch, BTW
+    eopkg_distros               = []    # Solus
+    xbps_distros                = []    # Void
 
     # assemble specific pkg mgr distro lists
 
     try:
+        transupd_distros        += distro_groups_map['microos-based']
 
         rpmostree_distros       += distro_groups_map['fedora-immutables']
 
@@ -887,12 +902,23 @@ def install_distro_pkgs():
     quirks_handler              = DistroQuirksHandler()
 
     ###########################################################################
+    ###  TRANSACTIONAL-UPDATE DISTROS  ########################################
+    ###########################################################################
+    def install_on_transupd_distro():
+        """utility function that gets dispatched for distros that use Transactional-Update"""
+        if cnfg.DISTRO_NAME in distro_groups_map['microos-based']:
+            print('Distro is openSUSE MicroOS/Aeon/Kalpa immutable. Using "transactional-update".')
+
+        cmd_lst = ['sudo', 'transactional-update', '--non-interactive', 'pkg', 'in']
+        native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+
+    ###########################################################################
     ###  RPM-OSTREE DISTROS  ##################################################
     ###########################################################################
     def install_on_rpmostree_distro():
         """utility function that gets dispatched for distros that use RPM-OSTree"""
         if cnfg.DISTRO_NAME in distro_groups_map['fedora-immutables']:
-            print(f'Distro is Fedora-type immutable. Using "rpm-ostree" instead of DNF.')
+            print('Distro is Fedora-type immutable. Using "rpm-ostree" instead of DNF.')
 
             # Filter out packages that are already installed
             filtered_pkg_lst = []
@@ -1006,6 +1032,7 @@ def install_distro_pkgs():
     ###########################################################################
     # map installer sub-functions to each pkg mgr distro list
     pkg_mgr_dispatch_map = {
+        tuple(transupd_distros):        install_on_transupd_distro,
         tuple(rpmostree_distros):       install_on_rpmostree_distro,
         tuple(dnf_distros):             install_on_dnf_distro,
         tuple(zypper_distros):          install_on_zypper_distro,
