@@ -386,7 +386,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - Enable the AppIndicator extension (pre-installed) for tray icon
     - Install an extension from `Requirements` if using Wayland+GNOME
 
-### Red Hat Enterprise Linux, Clones, CentOS Stream
+### Red Hat Enterprise Linux (RHEL), Clones, CentOS Stream
 
 - AlmaLinux 9.3 (RHEL compatible)
 
