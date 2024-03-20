@@ -909,8 +909,25 @@ def install_distro_pkgs():
         if cnfg.DISTRO_NAME in distro_groups_map['microos-based']:
             print('Distro is openSUSE MicroOS/Aeon/Kalpa immutable. Using "transactional-update".')
 
-        cmd_lst = ['sudo', 'transactional-update', '--non-interactive', 'pkg', 'in']
-        native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+            # Filter out packages that are already installed
+            filtered_pkg_lst = []
+            for pkg in cnfg.pkgs_for_distro:
+                result = subprocess.run(["rpm", "-q", pkg], stdout=PIPE, stderr=PIPE)
+                if result.returncode != 0:
+                    filtered_pkg_lst.append(pkg)
+                else:
+                    print(fancy_str(f"Package '{pkg}' is already installed. Skipping.", "green"))
+
+            if filtered_pkg_lst:
+                cmd_lst = ['sudo', 'transactional-update', '--non-interactive', 'pkg', 'in']
+                native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+                show_reboot_prompt()
+                warn('WARNING: Toshy setup is NOT complete!')
+                print('You MUST reboot now to make the new packages available.')
+                print('After REBOOTING, run the Toshy setup script a second time.')
+                safe_shutdown(0)
+            else:
+                print('All needed packages are already installed. Continuing setup...')
 
     ###########################################################################
     ###  RPM-OSTREE DISTROS  ##################################################
