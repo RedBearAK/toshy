@@ -465,6 +465,12 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - KDE desktop works (X11/Xorg or Wayland)
     - Other desktop choices should work, if session is X11/Xorg
 
+- openSUSE Aeon/Kalpa (OpenSUSE MicroOS-based, rolling release?)
+
+    - Aeon Wayland needs GNOME shell extension (see Requirements)
+    - Kalpa (KDE Plasma) fully supported
+    - Uses `transactional-update` to install native packages
+
 ### OpenMandriva (DNF/RPM-based, descended from Mandriva, Mandrake)
 
 - OpenMandriva ROME 2023/2024 (rolling release variant)
