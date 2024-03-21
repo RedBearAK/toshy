@@ -807,7 +807,9 @@ One of the best simple tests, if you have Firefox installed, is if using the `Cm
 
 If you think app-specific remaps are working in general, but for some reason they aren't working in a specific app, the app's "class" may be different than expected by the config file. Try to identify it, and let us know what the "class" and "name" attributes are.  
 
-UPDATE: There are now a couple of "diagnostic" functions in the config file that should reveal the window attributes (and the keyboard device name) more easily in both X11/Xorg and Wayland environments, when you use one of these shortcuts:  
+#### UPDATE:  
+
+There are now a couple of "diagnostic" functions in the config file that should reveal the window attributes (and the keyboard device name) more easily in both X11/Xorg and Wayland environments, when you use one of these shortcuts:  
 
 Safe to do in any application window:  
 
@@ -1229,7 +1231,13 @@ Something strange is happening in Manjaro KDE and Arcolinux KDE desktops with th
 
 ### How to disable the tray icon from autostarting at login
 
-Currently the Toshy tray icon indicator app loads at login through a `.desktop` file placed in the standard XDG autostart folder location: `~/.config/autostart/`. The Toshy setup script places a symlink to `~/.local/share/applications/Toshy_Tray.desktop` in that folder, and most Linux desktop environments will automatically run anything in that folder when you log in. (The original `Toshy_Tray.desktop` in `~/.local/share/applications/` is what makes the "Toshy Tray Icon" app show up in your app menu or app launcher. You don't want to remove that unless you no longer want to see the app in your app menu at all.)  
+#### UPDATE:  
+
+The info in this FAQ entry is obsolete as of March 21, 2024. A new tray icon menu item will take care of enabling/disabling the tray icon autostart setting. Any Toshy install performed from an older state of the repo will not have this feature, but you can download a new zip and reinstall to get it. After the tray icon autostart is disabled, the Toshy installer will no longer (re)start the tray icon at the end of the install. The tray icon app can still be started manually from your app menu or launcher.  
+
+#### DEPRECATED but would apply to older Toshy installs:  
+
+The Toshy tray icon indicator app loads at login through a `.desktop` file placed in the standard XDG autostart folder location: `~/.config/autostart/`. The Toshy setup script places a symlink to `~/.local/share/applications/Toshy_Tray.desktop` in that folder, and most Linux desktop environments will automatically run anything in that folder when you log in. (The original `Toshy_Tray.desktop` in `~/.local/share/applications/` is what makes the "Toshy Tray Icon" app show up in your app menu or app launcher. You don't want to remove that unless you no longer want to see the app in your app menu at all.)  
 
 To stop the tray icon indicator from appearing every time you log in, just find a way to remove the `Toshy_Tray.desktop` file from `~/.config/autostart/`. You can do it in the terminal:  
 
@@ -1244,6 +1252,12 @@ I don't recommend not having the tray icon available. Not all functions are repl
 But if you are not having any problems with Toshy and don't have a habit of changing your config file, or you use the `toshy-config-verbose-start` command in a terminal for testing config changes before restarting the background services, it should be fine to disable the tray icon.  
 
 ### How to re-enable autostarting the tray icon at login
+
+#### UPDATE:  
+
+The info in this FAQ entry is obsolete as of March 21, 2024. A new tray icon menu item will take care of enabling/disabling the tray icon autostart setting. Any Toshy install performed from an older state of the repo will not have this feature, but you can download a new zip and reinstall to get it. After the tray icon autostart is disabled, the Toshy installer will no longer (re)start the tray icon at the end of the install. The tray icon app can still be started manually from your app menu or launcher.  
+
+#### DEPRECATED but would apply to older Toshy installs:  
 
 If you disabled autostarting the Toshy tray icon indicator app at login with the instructions above and want to get it back, this should work:  
 
