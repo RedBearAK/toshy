@@ -176,6 +176,7 @@ class InstallerSettings:
         self.user_name              = pwd.getpwuid(os.getuid()).pw_name
 
         self.barebones_config       = None
+        self.autostart_tray_icon    = True
         self.skip_native            = None
         self.fancy_pants            = None
         self.tweak_applied          = None
@@ -2034,6 +2035,7 @@ def autostart_tray_icon():
             error(f'Problem while setting up tray icon autostart:\n\t{proc_err}')
             safe_shutdown(1)
     else:
+        cnfg.autostart_tray_icon = False    # to disable setup from starting the tray icon
         print("Toshy tray icon autostart is disabled by user preference. Skipping.")
 
     show_task_completed_msg()
@@ -2773,11 +2775,15 @@ def main(cnfg: InstallerSettings):
         print(cnfg.separator)
         print()
     else:
-        # Try to start the tray icon immediately, if reboot is not indicated
-        tray_icon_cmd = [os.path.join(home_dir, '.local', 'bin', 'toshy-tray')]
-        # Try to launch the tray icon in a separate process not linked to current shell
-        # Also, suppress output that might confuse the user
-        subprocess.Popen(tray_icon_cmd, close_fds=True, stdout=DEVNULL, stderr=DEVNULL)
+
+        # Do not (re)start the tray icon here unless user preference allows it
+        if cnfg.autostart_tray_icon:
+            # Try to start the tray icon immediately, if reboot is not indicated
+            tray_icon_cmd = [os.path.join(home_dir, '.local', 'bin', 'toshy-tray')]
+            # Try to launch the tray icon in a separate process not linked to current shell
+            # Also, suppress output that might confuse the user
+            subprocess.Popen(tray_icon_cmd, close_fds=True, stdout=DEVNULL, stderr=DEVNULL)
+
         print()
         print()
         print()
