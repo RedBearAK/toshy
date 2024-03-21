@@ -4,7 +4,7 @@
 # Indicator tray icon menu app for Toshy, using pygobject/gi
 TOSHY_PART      = 'tray'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Tray Icon app'
-APP_VERSION     = '2024.0228'
+APP_VERSION     = '2024.0321'
 
 # -------- COMMON COMPONENTS --------------------------------------------------
 
@@ -721,6 +721,54 @@ menu.append(show_services_log_item)
 separator_above_remove_icon_item = Gtk.SeparatorMenuItem()
 menu.append(separator_above_remove_icon_item)  #-------------------------------------#
 
+if not barebones_config:
+
+
+    def load_autostart_tray_icon_setting():
+        cnfg.load_settings()
+        set_item_active_with_retry(autostart_tray_icon_item, cnfg.autostart_tray_icon)
+
+
+    def save_autostart_tray_icon_setting(menu_item):
+        autostart_tray_icon_setting = autostart_tray_icon_item.get_active()
+        # debug(f'{autostart_tray_icon_setting = }')
+        cnfg.autostart_tray_icon    = autostart_tray_icon_setting
+        cnfg.save_settings()
+        load_autostart_tray_icon_setting()
+
+        tray_dt_file_name       = 'Toshy_Tray.desktop'
+        home_apps_path          = os.path.join(home_dir, '.local', 'share', 'applications')
+        tray_dt_file_path       = os.path.join(home_apps_path, tray_dt_file_name)
+
+        home_autostart_path     = os.path.join(home_dir, '.config', 'autostart')
+        tray_link_file_path     = os.path.join(home_autostart_path, tray_dt_file_name)
+
+        if autostart_tray_icon_setting:
+            # do the enabling of tray icon autostart:
+            # create symlink file ~/.config/autostart/Toshy_Tray.desktop
+            #   with target file ~/.local/share/applications/Toshy_Tray.desktop
+            # alternative: os.symlink(source, dest, target_is_directory=False)
+            cmd_lst = ['ln', '-sf', tray_dt_file_path, tray_link_file_path]
+            try:
+                subprocess.run(cmd_lst, check=True) #, stdout=DEVNULL, stderr=DEVNULL)
+            except subprocess.CalledProcessError as proc_err:
+                error(f'Problem enabling tray icon autostart:\n\t{proc_err}')
+        else:
+            # do the disabling of tray icon autostart:
+            # remove the symlink file ~/.config/autostart/Toshy_Tray.desktop
+            # alternative: os.remove(path) or os.unlink(path)
+            cmd_lst = ['rm', '-f', tray_link_file_path]
+            try:
+                subprocess.run(cmd_lst, check=True) # , stdout=DEVNULL, stderr=DEVNULL)
+            except subprocess.CalledProcessError as proc_err:
+                error(f'Problem disabling tray icon autostart:\n\t{proc_err}')
+
+
+    autostart_tray_icon_item = Gtk.CheckMenuItem(label="Autostart Tray Icon")
+    autostart_tray_icon_item.set_active(cnfg.autostart_tray_icon)
+    autostart_tray_icon_item.connect("toggled", save_autostart_tray_icon_setting)
+    menu.append(autostart_tray_icon_item)
+
 remove_tray_icon_item = Gtk.MenuItem(label="Remove Icon from Tray")
 remove_tray_icon_item.connect("activate", fn_remove_tray_icon)
 menu.append(remove_tray_icon_item)
@@ -733,10 +781,10 @@ def is_init_systemd():
         with open("/proc/1/comm", "r") as f:
             return f.read().strip() == 'systemd'
     except FileNotFoundError:
-        print("Toshy_GUI: The /proc/1/comm file does not exist.")
+        print("Toshy_Tray: The /proc/1/comm file does not exist.")
         return False
     except PermissionError:
-        print("Toshy_GUI: Permission denied when trying to read the /proc/1/comm file.")
+        print("Toshy_Tray: Permission denied when trying to read the /proc/1/comm file.")
         return False
 
 
@@ -771,6 +819,8 @@ def main():
         load_optspec_layout_submenu_settings()
         # load the settings for the keyboard type submenu
         load_kbtype_submenu_settings()
+        # load the setting for the autostart tray icon item
+        load_autostart_tray_icon_setting()
 
     # GUI loop event
     loop = GLib.MainLoop()

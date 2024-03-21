@@ -10,16 +10,17 @@ import random
 import string
 import signal
 import shutil
+import sqlite3
 import zipfile
 import argparse
+import builtins
 import datetime
 import platform
 import textwrap
-import builtins
 import subprocess
 
 from subprocess import DEVNULL, PIPE
-from typing import Dict
+from typing import Dict, Tuple, Optional
 
 # local import
 import lib.env as env
@@ -1992,24 +1993,51 @@ def autostart_systemd_kickstarter():
 def autostart_tray_icon():
     """Set up the tray icon to autostart at login"""
     print(f'\n\n§  Setting up tray icon to load automatically at login...\n{cnfg.separator}')
+    
+    # Path to the database file
+    toshy_cfg_dir_path          = os.path.join(home_dir, '.config', 'toshy')
+    prefs_db_file_name          = 'toshy_user_preferences.sqlite'
+    prefs_db_file_path          = os.path.join(toshy_cfg_dir_path, prefs_db_file_name)
+    
+    autostart_preference        = True  # Default to autostarting tray icon
+    
+    # Check if the database file exists
+    if os.path.isfile(prefs_db_file_path):
+        try:
+            sql_query = "SELECT value FROM config_preferences WHERE name = 'autostart_tray_icon'"
 
-    ensure_XDG_autostart_dir_exists()
+            with sqlite3.connect(prefs_db_file_path) as cnxn:
+                cursor = cnxn.cursor()
+                cursor.execute(sql_query)
+                row: Optional[Tuple[str]] = cursor.fetchone()
+            
+            if row is not None:
+                # Convert the string value to a boolean
+                autostart_preference = row[0].lower() == 'true'
 
-    tray_dt_file_name       = 'Toshy_Tray.desktop'
-    desktop_files_path      = os.path.join(home_dir, '.local', 'share', 'applications')
-    tray_desktop_file       = os.path.join(desktop_files_path, tray_dt_file_name)
-    autostart_dir_path      = os.path.join(home_dir, '.config', 'autostart')
-    dest_link_file          = os.path.join(autostart_dir_path, tray_dt_file_name)
+        except sqlite3.Error as db_err:
+            error(f"Could not read tray icon autostart preference from database:\n\t{db_err}")
+            print("Defaulting to enabling autostart of tray icon.")
 
-    cmd_lst                 = ['ln', '-sf', tray_desktop_file, dest_link_file]
-    try:
-        subprocess.run(cmd_lst, check=True)
-    except subprocess.CalledProcessError as proc_err:
-        error(f'Problem while setting up tray icon autostart:\n\t{proc_err}')
-        safe_shutdown(1)
+    if autostart_preference is True:
+        tray_dt_file_name       = 'Toshy_Tray.desktop'
+        home_apps_path          = os.path.join(home_dir, '.local', 'share', 'applications')
+        tray_dt_file_path       = os.path.join(home_apps_path, tray_dt_file_name)
+        home_autostart_path     = os.path.join(home_dir, '.config', 'autostart')
+        tray_link_file_path     = os.path.join(home_autostart_path, tray_dt_file_name)
+        try:
+            ensure_XDG_autostart_dir_exists()
+            cmd_lst                 = ['ln', '-sf', tray_dt_file_path, tray_link_file_path]
+            subprocess.run(cmd_lst, check=True)
+            print(f'Toshy tray icon should appear in system tray at each login.')
+        except subprocess.CalledProcessError as proc_err:
+            error(f'Problem while setting up tray icon autostart:\n\t{proc_err}')
+            safe_shutdown(1)
+    else:
+        print("Toshy tray icon autostart is disabled by user preference. Skipping.")
 
-    print(f'Toshy tray icon should appear in system tray at each login.')
     show_task_completed_msg()
+
 
 
 ###################################################################################################
