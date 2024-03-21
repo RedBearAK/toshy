@@ -1784,13 +1784,13 @@ def setup_kwin2dbus_script():
         error("ERROR: Asked to install Toshy KWin script, but DE is not KDE.")
         return
 
-    if KDE_ver not in ['6', '5', '4']:
+    if KDE_ver not in ['6', '5', '4', '3']:
         error("ERROR: Toshy KWin script cannot be installed.")
         error(f"KDE major version invalid: '{KDE_ver}'")
         return
 
-    if KDE_ver == '4':
-        print('KDE 4 is not Wayland compatible. Toshy KWin script unnecessary.')
+    if KDE_ver in ['4', '3']:
+        print('KDE 4/3 is not Wayland compatible. Toshy KWin script unnecessary.')
         return
 
     kpackagetool_cmd        = f'kpackagetool{KDE_ver}'

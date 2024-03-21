@@ -309,7 +309,7 @@ def get_env_info():
     def get_kde_version():
         kde_session_version = os.environ.get('KDE_SESSION_VERSION')
         if kde_session_version:
-            if kde_session_version in ['4', '5', '6']:
+            if kde_session_version in ['3', '4', '5', '6']:
                 return kde_session_version
             else:
                 error(f"KDE_SESSION_VERSION contains unrecognized value: '{kde_session_version}'")
