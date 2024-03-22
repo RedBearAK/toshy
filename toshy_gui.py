@@ -932,6 +932,7 @@ if __name__ == "__main__":
         cmd_lst = [
             "systemctl", "--user", "import-environment",
             "KDE_SESSION_VERSION",
+            "PATH",
             "XDG_SESSION_TYPE",
             "XDG_SESSION_DESKTOP",
             "XDG_CURRENT_DESKTOP",
