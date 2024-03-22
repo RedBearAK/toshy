@@ -291,7 +291,7 @@ def get_env_info():
                     pass
 
         processes = {
-            'kde':          ['plasmashell', 'kwin_ft', 'kwin_wayland', 'kwin_x11'],
+            'kde':          ['plasmashell', 'kwin_ft', 'kwin_wayland', 'kwin_x11', 'kwin'],
             'gnome':        ['gnome-shell'],
             'sway':         ['sway', 'swaywm'],
             'hyprland':     ['hyprland'],
@@ -321,6 +321,7 @@ def get_env_info():
             # In KDE 4, these tools don't have a version number in their name
             # Additional check for KDE 4 versioning can be done here if necessary
             return '4'
+        # no 'kpackagetool' command in KDE 3?
         return 'kde_ver_check_err'
 
     if DESKTOP_ENV == 'gnome':
