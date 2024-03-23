@@ -794,14 +794,15 @@ def main():
 
     if shutil.which('systemctl') and is_init_systemd():
         # help out the config file user service
-        subprocess.run([
-            "systemctl", 
-            "--user", 
-            "import-environment", 
-            "XDG_SESSION_TYPE", 
-            "XDG_SESSION_DESKTOP", 
-            "XDG_CURRENT_DESKTOP"
-        ])    
+        cmd_lst = [
+            "systemctl", "--user", "import-environment",
+            "KDE_SESSION_VERSION",
+            "PATH",
+            "XDG_SESSION_TYPE",
+            "XDG_SESSION_DESKTOP",
+            "XDG_CURRENT_DESKTOP",
+        ]
+        subprocess.run(cmd_lst)
         # Start a separate thread to watch the status of Toshy systemd services (or script?)
         monitor_toshy_services_thread = threading.Thread(target=fn_monitor_toshy_services)
         monitor_toshy_services_thread.daemon = True

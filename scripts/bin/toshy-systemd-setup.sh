@@ -55,7 +55,7 @@ sleep $DELAY
 # XDG_SESSION_TYPE XDG_SESSION_DESKTOP XDG_CURRENT_DESKTOP
 # Do this BEFORE daemon-reload? Maybe not necessary. 
 # But silence errors (e.g., "XDG_SESSION_DESKTOP not set, ignoring")
-vars_to_import="XDG_SESSION_TYPE XDG_SESSION_DESKTOP XDG_CURRENT_DESKTOP"
+vars_to_import="KDE_SESSION_VERSION PATH XDG_SESSION_TYPE XDG_SESSION_DESKTOP XDG_CURRENT_DESKTOP"
 # shellcheck disable=SC2086
 systemctl --user import-environment $vars_to_import >/dev/null 2>&1
 

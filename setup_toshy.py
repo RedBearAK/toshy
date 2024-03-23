@@ -140,6 +140,8 @@ class InstallerSettings:
         self.distro_mjr_ver: str    = ""
         self.distro_mnr_ver: str    = ""
 
+        self.valid_KDE_vers         = ['6', '5', '4', '3']
+
         self.systemctl_present      = shutil.which('systemctl') is not None
         self.init_system            = None
 
@@ -1784,13 +1786,13 @@ def setup_kwin2dbus_script():
         error("ERROR: Asked to install Toshy KWin script, but DE is not KDE.")
         return
 
-    if KDE_ver not in ['6', '5', '4']:
+    if KDE_ver not in cnfg.valid_KDE_vers:
         error("ERROR: Toshy KWin script cannot be installed.")
         error(f"KDE major version invalid: '{KDE_ver}'")
         return
 
-    if KDE_ver == '4':
-        print('KDE 4 is not Wayland compatible. Toshy KWin script unnecessary.')
+    if KDE_ver in ['4', '3']:
+        print(f'KDE {KDE_ver} is not Wayland compatible. Toshy KWin script unnecessary.')
         return
 
     kpackagetool_cmd        = f'kpackagetool{KDE_ver}'
@@ -2142,13 +2144,13 @@ def apply_tweaks_KDE():
         return
 
     # check that major release ver from env module is rational
-    if KDE_ver not in ['6', '5', '4']:
+    if KDE_ver not in cnfg.valid_KDE_vers:
         error("ERROR: Desktop tweaks for KDE cannot be applied.")
         error(f"KDE major version invalid: '{KDE_ver}'")
         return
 
-    if KDE_ver == '4':
-        print('No tweaks available for KDE 4.')
+    if KDE_ver in ['4', '3']:
+        print(f'No tweaks available for KDE {KDE_ver}. Skipping.')
         return
 
     kstart_cmd          = f'kstart{KDE_ver}'

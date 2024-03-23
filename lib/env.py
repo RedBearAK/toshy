@@ -291,7 +291,7 @@ def get_env_info():
                     pass
 
         processes = {
-            'kde':          ['plasmashell', 'kwin_ft', 'kwin_wayland', 'kwin_x11'],
+            'kde':          ['plasmashell', 'kwin_ft', 'kwin_wayland', 'kwin_x11', 'kwin'],
             'gnome':        ['gnome-shell'],
             'sway':         ['sway', 'swaywm'],
             'hyprland':     ['hyprland'],
@@ -309,7 +309,7 @@ def get_env_info():
     def get_kde_version():
         kde_session_version = os.environ.get('KDE_SESSION_VERSION')
         if kde_session_version:
-            if kde_session_version in ['4', '5', '6']:
+            if kde_session_version in ['3', '4', '5', '6']:
                 return kde_session_version
             else:
                 error(f"KDE_SESSION_VERSION contains unrecognized value: '{kde_session_version}'")
@@ -321,6 +321,7 @@ def get_env_info():
             # In KDE 4, these tools don't have a version number in their name
             # Additional check for KDE 4 versioning can be done here if necessary
             return '4'
+        # no 'kpackagetool' command in KDE 3?
         return 'kde_ver_check_err'
 
     if DESKTOP_ENV == 'gnome':
