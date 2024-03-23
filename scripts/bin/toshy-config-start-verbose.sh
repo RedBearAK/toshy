@@ -31,7 +31,9 @@ source "$HOME/.config/toshy/.venv/bin/activate"
 
 # overcome a possible strange and rare problem connecting to X display
 if command xhost &> /dev/null; then
-    xhost +local:
+    if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
+        xhost +local:
+    fi
 fi
 
 # Start keyszer with verbose flag [-v] and anti-buffering flag [--flush]

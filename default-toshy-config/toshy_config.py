@@ -75,7 +75,7 @@ icon_file_inverse   = os.path.join(assets_path, "toshy_app_icon_rainbow_inverse.
 # Toshy config file
 TOSHY_PART      = 'config'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Config file'
-APP_VERSION     = '2024.0307'
+APP_VERSION     = '2024.0322'
 
 # Settings object used to tweak preferences "live" between gui, tray and config.
 cnfg = Settings(current_folder_path)
@@ -3689,6 +3689,7 @@ keymap("KWrite text editor - Close Document dialog", {
 }, when = matchProps(clas="^kwrite$|^org.kde.Kwrite$", name="^Close Document.*KWrite$") )
 keymap("KWrite text editor", {
     C("RC-comma"):              C("Shift-C-comma"),             # Open preferences dialog
+    C("RC-t"):                  C("C-n"),                       # New tab (new document)
 }, when = matchProps(clas="^kwrite$|^org.kde.Kwrite$") )
 
 keymap("GNOME Text Editor", {
