@@ -231,7 +231,7 @@ There is a weird bug with searching for extensions by name sometimes, where you 
 > [!NOTE]  
 > Installer commands and options are now different from early Toshy releases.  
 
-1. Download the latest zip from the big green `Code ˇ` button near the top of the page.  
+1. Download the latest zip file from the drop-down you see when you click the big green `  <> Code  ▼  ` button near the top of the page.  
 1. Unzip the archive, and open a terminal in the resulting folder.  
 1. Run the `setup_toshy.py` script in the terminal, like this:  
 
