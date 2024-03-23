@@ -34,11 +34,7 @@ else
     timeout_cmd=""
 fi
 
-if command -v kdialog &> /dev/null; then
-    ${timeout_cmd} kdialog --title="${title}" --icon "${icon_file}" \
-        --msgbox "${message}" >/dev/null 2>&1
-    exit 0
-elif command -v zenity &> /dev/null; then
+if command -v zenity &> /dev/null; then
     if zenity --help-info | grep -q -- '--icon='; then
         ${timeout_cmd} zenity --info --no-wrap --title="${title}" --icon="${icon_name}" \
             --text="${message}" --timeout=${time2_s} >/dev/null 2>&1
@@ -49,6 +45,10 @@ elif command -v zenity &> /dev/null; then
         ${timeout_cmd} zenity --info --no-wrap --title="${title}" \
             --text="${message}" --timeout=${time2_s} >/dev/null 2>&1
     fi
+    exit 0
+elif command -v kdialog &> /dev/null; then
+    ${timeout_cmd} kdialog --title="${title}" --icon "${icon_file}" \
+        --msgbox "${message}" >/dev/null 2>&1
     exit 0
 elif command -v xmessage &> /dev/null; then
     ${timeout_cmd} xmessage "${message}" -timeout ${time2_s} >/dev/null 2>&1
