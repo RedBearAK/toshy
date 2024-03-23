@@ -824,7 +824,7 @@ def notify_context():
             f"<b>Input keyboard name:</b> '{ctx_devn}' {nwln_str}"
             f"<b>Device seen as type:</b> '{KBTYPE}' {nwln_str}"
             f"{nwln_str}"
-            f"<b>Toshy config file sees this environment:</b>  {nwln_str}"
+            f"<b>Toshy (barebones) config sees this environment:</b>  {nwln_str}"
             f"<b> • DISTRO_ID ____________</b> '{DISTRO_ID      }' {nwln_str}"
             f"<b> • DISTRO_VER ___________</b> '{DISTRO_VER     }' {nwln_str}"
             f"<b> • VARIANT_ID ___________</b> '{VARIANT_ID     }' {nwln_str}"
