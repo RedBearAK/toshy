@@ -3684,12 +3684,12 @@ keymap("Linux Mint xed text editor", {
 }, when = matchProps(clas="^xed$") )
 
 keymap("KWrite text editor - Close Document dialog", {
-    C("RC-t"):                  C("C-n"),                       # New tab (new document)
     C("RC-d"):                  C("Alt-d"),                     # [D]iscard file without saving (from Close Document dialog)
     C("RC-s"):                  C("Alt-s"),                     # Save file (from Close Document dialog)
 }, when = matchProps(clas="^kwrite$|^org.kde.Kwrite$", name="^Close Document.*KWrite$") )
 keymap("KWrite text editor", {
     C("RC-comma"):              C("Shift-C-comma"),             # Open preferences dialog
+    C("RC-t"):                  C("C-n"),                       # New tab (new document)
 }, when = matchProps(clas="^kwrite$|^org.kde.Kwrite$") )
 
 keymap("GNOME Text Editor", {
