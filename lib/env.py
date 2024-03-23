@@ -50,7 +50,7 @@ def info(*args, ctx="--"):
 
 
 def get_env_info():
-    DISTRO_NAME     = None
+    DISTRO_ID       = None
     DISTRO_VER      = None
     VARIANT_ID      = None
     SESSION_TYPE    = None
@@ -93,7 +93,7 @@ def get_env_info():
     if _distro_name == "" and release_files['/etc/arch-release']:
         _distro_name = 'arch'
 
-    distro_names = {            # simplify distro names
+    distro_names = {            # simplify distro names to an ID, if necessary
         'Debian.*':             'debian',
         # 'elementary':           'eos',
         'Fedora.*':             'fedora',
@@ -116,18 +116,18 @@ def get_env_info():
     for k, v in distro_names.items():
         # debug(f'{k = :<10} {v = :<10}')
         if re.search(k, _distro_name, re.I):
-            DISTRO_NAME = v
+            DISTRO_ID = v
             break
 
     # If distro name not found in list, just show original name
-    if not DISTRO_NAME:
-        DISTRO_NAME = _distro_name
+    if not DISTRO_ID:
+        DISTRO_ID = _distro_name
 
     # filter distro name to lower case if not `None`
-    if isinstance(DISTRO_NAME, str):
-        DISTRO_NAME = DISTRO_NAME.casefold()
+    if isinstance(DISTRO_ID, str):
+        DISTRO_ID = DISTRO_ID.casefold()
 
-    env_info_dct['DISTRO_NAME'] = DISTRO_NAME
+    env_info_dct['DISTRO_ID'] = DISTRO_ID
 
     ########################################################################
     ##  Get distro version
@@ -351,7 +351,7 @@ if __name__ == '__main__':
     _env_info = get_env_info()
     print('')
     debug(  f'Toshy env module sees this environment:'
-            f'\n\t\t DISTRO_NAME     = \'{_env_info["DISTRO_NAME"]}\''
+            f'\n\t\t DISTRO_ID       = \'{_env_info["DISTRO_ID"]}\''
             f'\n\t\t DISTRO_VER      = \'{_env_info["DISTRO_VER"]}\''
             f'\n\t\t VARIANT_ID      = \'{_env_info["VARIANT_ID"]}\''
             f'\n\t\t SESSION_TYPE    = \'{_env_info["SESSION_TYPE"]}\''

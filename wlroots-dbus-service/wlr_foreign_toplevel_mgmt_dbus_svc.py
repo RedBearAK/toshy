@@ -82,7 +82,7 @@ separator       = sep_char * sep_reps
 
 LOG_PFX = 'TOSHY_WLR_DBUS_SVC'
 
-DISTRO_NAME     = None
+DISTRO_ID       = None
 DISTRO_VER      = None
 VARIANT_ID      = None
 SESSION_TYPE    = None
@@ -93,8 +93,8 @@ DE_MAJ_VER      = None
 def check_environment():
     """Retrieve the current environment from env module"""
     env_info: Dict[str, str] = env.get_env_info()   # Returns a dict
-    global DISTRO_NAME, DISTRO_VER, VARIANT_ID, SESSION_TYPE, DESKTOP_ENV, DE_MAJ_VER
-    DISTRO_NAME     = env_info.get('DISTRO_NAME')
+    global DISTRO_ID, DISTRO_VER, VARIANT_ID, SESSION_TYPE, DESKTOP_ENV, DE_MAJ_VER
+    DISTRO_ID       = env_info.get('DISTRO_ID')
     DISTRO_VER      = env_info.get('DISTRO_VER')
     VARIANT_ID      = env_info.get('VARIANT_ID')
     SESSION_TYPE    = env_info.get('SESSION_TYPE')
@@ -115,7 +115,7 @@ else:
 
 debug("")
 debug(  f'Toshy KDE D-Bus service script sees this environment:'
-        f'\n\t{DISTRO_NAME      = }'
+        f'\n\t{DISTRO_ID        = }'
         f'\n\t{DISTRO_VER       = }'
         f'\n\t{VARIANT_ID       = }'
         f'\n\t{SESSION_TYPE     = }'

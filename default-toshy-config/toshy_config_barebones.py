@@ -103,18 +103,18 @@ debug(cnfg, ctx="CG")
 ###  SLICE_MARK_START: env_overrides  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 
 # MANUALLY set any environment information if the auto-identification isn't working:
-OVERRIDE_DISTRO_NAME     = None
-OVERRIDE_DISTRO_VER      = None
-OVERRIDE_VARIANT_ID      = None
-OVERRIDE_SESSION_TYPE    = None
-OVERRIDE_DESKTOP_ENV     = None
-OVERRIDE_DE_MAJ_VER      = None
+OVERRIDE_DISTRO_ID          = None
+OVERRIDE_DISTRO_VER         = None
+OVERRIDE_VARIANT_ID         = None
+OVERRIDE_SESSION_TYPE       = None
+OVERRIDE_DESKTOP_ENV        = None
+OVERRIDE_DE_MAJ_VER         = None
 
 ###  SLICE_MARK_END: env_overrides  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 ###################################################################################################
 
 # leave all of this alone!
-DISTRO_NAME     = None
+DISTRO_ID       = None
 DISTRO_VER      = None
 VARIANT_ID      = None
 SESSION_TYPE    = None
@@ -123,7 +123,7 @@ DE_MAJ_VER      = None
 
 env_info: Dict[str, str] = lib.env.get_env_info()   # Returns a dict
 
-DISTRO_NAME     = locals().get('OVERRIDE_DISTRO_NAME')  or env_info.get('DISTRO_NAME', 'keymissing')
+DISTRO_ID       = locals().get('OVERRIDE_DISTRO_ID')    or env_info.get('DISTRO_ID', 'keymissing')
 DISTRO_VER      = locals().get('OVERRIDE_DISTRO_VER')   or env_info.get('DISTRO_VER', 'keymissing')
 VARIANT_ID      = locals().get('OVERRIDE_VARIANT_ID')   or env_info.get('VARIANT_ID', 'keymissing')
 SESSION_TYPE    = locals().get('OVERRIDE_SESSION_TYPE') or env_info.get('SESSION_TYPE', 'keymissing')
@@ -132,7 +132,7 @@ DE_MAJ_VER      = locals().get('OVERRIDE_DE_MAJ_VER')   or env_info.get('DE_MAJ_
 
 debug("")
 debug(  f'Toshy config sees this environment:'
-        f'\n\t{DISTRO_NAME      = }'
+        f'\n\t{DISTRO_ID        = }'
         f'\n\t{DISTRO_VER       = }'
         f'\n\t{SESSION_TYPE     = }'
         f'\n\t{DESKTOP_ENV      = }'

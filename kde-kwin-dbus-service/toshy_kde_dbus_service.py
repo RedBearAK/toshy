@@ -63,20 +63,23 @@ separator       = sep_char * sep_reps
 
 LOG_PFX = 'TOSHY_KDE_DBUS_SVC'
 
-DISTRO_NAME     = None
+DISTRO_ID       = None
 DISTRO_VER      = None
+VARIANT_ID      = None
 SESSION_TYPE    = None
 DESKTOP_ENV     = None
-
+DE_MAJ_VER      = None
 
 def check_environment():
     """Retrieve the current environment from env module"""
     env_info: Dict[str, str] = env.get_env_info()   # Returns a dict
-    global DISTRO_NAME, DISTRO_VER, SESSION_TYPE, DESKTOP_ENV
-    DISTRO_NAME     = env_info.get('DISTRO_NAME')
-    DISTRO_VER      = env_info.get('DISTRO_VER')
-    SESSION_TYPE    = env_info.get('SESSION_TYPE')
-    DESKTOP_ENV     = env_info.get('DESKTOP_ENV')
+    global DISTRO_ID, DISTRO_VER, VARIANT_ID, SESSION_TYPE, DESKTOP_ENV, DE_MAJ_VER
+    DISTRO_ID       = env_info.get('DISTRO_ID', 'keymissing')
+    DISTRO_VER      = env_info.get('DISTRO_VER', 'keymissing')
+    VARIANT_ID      = env_info.get('VARIANT_ID', 'keymissing')
+    SESSION_TYPE    = env_info.get('SESSION_TYPE', 'keymissing')
+    DESKTOP_ENV     = env_info.get('DESKTOP_ENV', 'keymissing')
+    DE_MAJ_VER      = env_info.get('DE_MAJ_VER', 'keymissing')
 
 
 check_environment()
@@ -91,10 +94,12 @@ else:
 
 # debug("")
 # debug(  f'Toshy KDE D-Bus service script sees this environment:'
-#         f'\n\t{DISTRO_NAME      = }'
+#         f'\n\t{DISTRO_ID        = }'
 #         f'\n\t{DISTRO_VER       = }'
+#         f'\n\t{VARIANT_ID       = }'
 #         f'\n\t{SESSION_TYPE     = }'
-#         f'\n\t{DESKTOP_ENV      = }\n', ctx="CG")
+#         f'\n\t{DESKTOP_ENV      = }')
+#         f'\n\t{DE_MAJ_VER       = }\n', ctx="CG")
 
 
 TOSHY_KDE_DBUS_SVC_PATH         = '/org/toshy/Toshy'
