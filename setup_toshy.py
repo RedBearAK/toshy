@@ -1344,11 +1344,11 @@ def clone_keyszer_branch():
 
 def extract_slices(data: str) -> Dict[str, str]:
     """Utility function to store user content slices from existing config file data"""
-    slices              = {}
-    pattern_start       = r'###  SLICE_MARK_START: (\w+)  ###.*'
-    pattern_end         = r'###  SLICE_MARK_END: (\w+)  ###.*'
-    matches_start       = list(re.finditer(pattern_start, data))
-    matches_end         = list(re.finditer(pattern_end, data))
+    slices_dct: Dict[str, str]  = {}
+    pattern_start               = r'###  SLICE_MARK_START: (\w+)  ###.*'
+    pattern_end                 = r'###  SLICE_MARK_END: (\w+)  ###.*'
+    matches_start               = list(re.finditer(pattern_start, data))
+    matches_end                 = list(re.finditer(pattern_end, data))
     if len(matches_start) != len(matches_end):
         raise ValueError(   f'Mismatched slice markers in config file:'
                             f'\n\t{matches_start}, {matches_end}')
@@ -1356,11 +1356,27 @@ def extract_slices(data: str) -> Dict[str, str]:
         slice_name = begin.group(1)
         if end.group(1) != slice_name:
             raise ValueError(f'Mismatched slice markers in config file:\n\t{slice_name}')
-        slice_start         = begin.end()
-        slice_end           = end.start()
-        slices[slice_name]  = data[slice_start:slice_end]
+        slice_start             = begin.end()
+        slice_end               = end.start()
+        slices_dct[slice_name]  = data[slice_start:slice_end]
+
+    # Fix some deprecated variable names here, now that slice contents are 
+    # in memory, prior to merging slices back into new config file.
+    # Using a List of Tuples instead of a dict to guarantee processing order.
+    deprecated_object_names_ordered_LoT = [
+        ('OVERRIDE_DISTRO_NAME  ', 'OVERRIDE_DISTRO_ID    '),
+        ('DISTRO_NAME  ', 'DISTRO_ID    '),
+        ('OVERRIDE_DISTRO_NAME', 'OVERRIDE_DISTRO_ID'),
+        ('DISTRO_NAME', 'DISTRO_ID'),
+    ]
+
+    for slice_name, content in slices_dct.items():
+        for deprecated_name, new_name in deprecated_object_names_ordered_LoT:
+            content = content.replace(deprecated_name, new_name)
+        slices_dct[slice_name] = content
+
     # Protect the barebones config file if a slice tagged with "barebones" found, 
-    if 'barebones_user_cfg' in slices or any('barebones' in key for key in slices):
+    if 'barebones_user_cfg' in slices_dct or any('barebones' in key for key in slices_dct):
         cnfg.barebones_config = True
         print(f'Found "barebones" type config file. Will upgrade with same type.')
     # Confirm replacement of regular config file with barebones config if CLI option is used
@@ -1388,7 +1404,7 @@ def extract_slices(data: str) -> Dict[str, str]:
         print('User input invalid. Exiting...')
         safe_shutdown(1)
     # 
-    return slices
+    return slices_dct
 
 
 def merge_slices(data: str, slices: Dict[str, str]) -> str:
