@@ -131,7 +131,7 @@ DESKTOP_ENV     = locals().get('OVERRIDE_DESKTOP_ENV')  or env_info.get('DESKTOP
 DE_MAJ_VER      = locals().get('OVERRIDE_DE_MAJ_VER')   or env_info.get('DE_MAJ_VER', 'keymissing')
 
 debug("")
-debug(  f'Toshy config sees this environment:'
+debug(  f'Toshy (barebones) config sees this environment:'
         f'\n\t{DISTRO_ID        = }'
         f'\n\t{DISTRO_VER       = }'
         f'\n\t{SESSION_TYPE     = }'
