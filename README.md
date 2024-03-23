@@ -803,7 +803,8 @@ The second level of remapping is the application group/class-specific modmaps an
 
 One of the best simple tests, if you have Firefox installed, is if using the `Cmd+comma` shortcut (which opens preferences in many macOS applications) opens a new tab in Firefox, then rapidly types the string "about:preferences", and opens the Firefox preferences. If this works, or even if it just gets through typing the "about:preferences" in the address bar, it's a clear indication that the app-specific keymaps are working. Because this is only supposed to happen when a Firefox web browser window class is detected.  
 
-> NB: If you wind up with a string like `about;preferences` (note the semicolon instead of colon) and it does a google search each time instead of opening the Firefox preferences, you're having a problem with modifier timing in the output of macros from the keymapper. You'll need to look for the FAQ entry on changing the delays in the `throttle_delays` API in the beginning of the config file, and set longer delays to make that go away. Wayland environments and virtual machines will generally require longer delays to avoid this issue.  
+> [!NOTE]
+> If you wind up with a string like `about;preferences` (note the semicolon instead of colon) and it does a google search each time instead of opening the Firefox preferences, you're having a problem with modifier timing in the output of macros from the keymapper. You'll need to look for the FAQ entry on changing the delays in the `throttle_delays` API in the beginning of the config file, and set longer delays to make that go away. Wayland environments and virtual machines will generally require longer delays to avoid this issue.  
 
 If you think app-specific remaps are working in general, but for some reason they aren't working in a specific app, the app's "class" may be different than expected by the config file. Try to identify it, and let us know what the "class" and "name" attributes are.  
 
