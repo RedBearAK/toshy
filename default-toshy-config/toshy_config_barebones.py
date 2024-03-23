@@ -25,7 +25,7 @@ emergency_eject_key(Key.F16)    # default key: F16
 
 timeouts(
     multipurpose        = 1,        # default: 1 sec
-    suspend             = 0.1,        # default: 1 sec, try 0.1 sec for touchpads
+    suspend             = 1,        # default: 1 sec, try 0.1 sec for touchpads
 )
 
 # Delays often needed for Wayland (at least in GNOME using shell extensions)
@@ -173,17 +173,17 @@ ignore_combo = ComboHint.IGNORE
 # inside the "lists of dicts" to be given to the matchProps() function.
 # Makes the variables evaluate to equivalent strings inside the dicts. 
 # Provides for nice syntax highlighting and visual separation of key:value. 
-clas = 'clas'           # key label for matchProps() arg to match: wm_class
-name = 'name'           # key label for matchProps() arg to match: wm_name
-devn = 'devn'           # key label for matchProps() arg to match: device_name
-not_clas = 'not_clas'   # key label for matchProps() arg to NEGATIVE match: wm_class
-not_name = 'not_name'   # key label for matchProps() arg to NEGATIVE match: wm_name
-not_devn = 'not_devn'   # key label for matchProps() arg to NEGATIVE match: device_name
-numlk = 'numlk'         # key label for matchProps() arg to match: numlock_on
-capslk = 'capslk'       # key label for matchProps() arg to match: capslock_on
-cse = 'cse'             # key label for matchProps() arg to enable: case sensitivity
-lst = 'lst'             # key label for matchProps() arg to pass in a [list] of {dicts}
-dbg = 'dbg'             # key label for matchProps() arg to set debugging info string
+clas        = 'clas'        # key label for matchProps() arg to match: wm_class
+name        = 'name'        # key label for matchProps() arg to match: wm_name
+devn        = 'devn'        # key label for matchProps() arg to match: device_name
+not_clas    = 'not_clas'    # key label for matchProps() arg to NEGATIVE match: wm_class
+not_name    = 'not_name'    # key label for matchProps() arg to NEGATIVE match: wm_name
+not_devn    = 'not_devn'    # key label for matchProps() arg to NEGATIVE match: device_name
+numlk       = 'numlk'       # key label for matchProps() arg to match: numlock_on
+capslk      = 'capslk'      # key label for matchProps() arg to match: capslock_on
+cse         = 'cse'         # key label for matchProps() arg to enable: case sensitivity
+lst         = 'lst'         # key label for matchProps() arg to pass in a [list] of {dicts}
+dbg         = 'dbg'         # key label for matchProps() arg to set debugging info string
 
 # global variables for the isDoubleTap() function
 tapTime1 = time.time()
@@ -302,6 +302,16 @@ kbtype_lists_rgx    = {
 all_kbds_rgx        = re.compile(toRgxStr(all_keyboards), re.I)
 
 not_win_type_rgx    = re.compile("IBM|Chromebook|Apple", re.I)
+
+
+# Suggested location for customizing lists and variables for use with the "when" conditions.
+###################################################################################################
+###  SLICE_MARK_START: user_custom_lists  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
+
+
+
+###  SLICE_MARK_END: user_custom_lists  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
+###################################################################################################
 
 
 
@@ -559,7 +569,7 @@ def matchProps(*,
     if all([x is None for x in allowed_params]): 
         raise ValueError(f"\n\n(EE) matchProps(): Received no valid argument\n")
     if any([x not in (True, False, None) for x in (numlk, capslk, cse)]): 
-        raise TypeError(f"\n\n(EE) matchProps(): Params 'nlk|clk|cse' are bools\n")
+        raise TypeError(f"\n\n(EE) matchProps(): Params 'numlk|capslk|cse' are bools\n")
     if any([x is not None and not isinstance(x, str) for x in string_params]):
         raise TypeError(    f"\n\n(EE) matchProps(): These parameters must be strings:"
                             f"\n\t'clas|name|devn|not_clas|not_name|not_devn|dbg'\n")
@@ -705,6 +715,8 @@ def iEF2(combo_if_true, latch_or_combo_if_false,
             combo_list = [latch_or_combo_if_false]
             if keep_value_if_false is False:
                 _enter_is_F2 = True
+        debug(f"_is_Enter_F2:  {combo_list      = }")
+        debug(f"_is_Enter_F2:  {_enter_is_F2    = }")
         return combo_list
     return _is_Enter_F2
 
@@ -725,9 +737,10 @@ def macro_tester():
     def _macro_tester(ctx: KeyContext):
         return [
                     C("Enter"),
-                    ST(f"Appl. Class: '{ctx.wm_class}'"), C("Enter"),
-                    ST(f"Wind. Title: '{ctx.wm_name}'"), C("Enter"),
-                    ST(f"Kbd. Device: '{ctx.device_name}'"), C("Enter"),
+                    ST(f"Class: '{ctx.wm_class}'"), C("Enter"),
+                    ST(f"Title: '{ctx.wm_name}'"), C("Enter"),
+                    ST(f"Keybd: '{ctx.device_name}'"), C("Enter"),
+                    ST(f"Keyboard type: '{KBTYPE}'"), C("Enter"),
                     ST("Next test should come out on ONE LINE!"), C("Enter"),
                     ST("Unicode and Shift Test: 🌹—€—\u2021—ÿ—\U00002021 12345 !@#$% |\\ !!!!!!"),
                     C("Enter")
@@ -738,6 +751,12 @@ def macro_tester():
 def is_valid_command(command):
     """Check if the command path is valid and executable"""
     return command and os.path.isfile(command) and os.access(command, os.X_OK)
+
+
+# Result will be None if DE is not in list OR if 'kdialog' not available.
+# kdialog_cmd = shutil.which('kdialog') if DESKTOP_ENV.casefold() in ['kde', 'lxqt'] else None
+# DISABLING KDIALOG BECAUSE IT KIND OF SUCKS QUITE A BIT COMPARED TO ZENITY/QARMA
+kdialog_cmd = shutil.which('kdialog') if DESKTOP_ENV.casefold() in ['kdialog_is_lame'] else None
 
 
 zenity_is_qarma = False
@@ -769,29 +788,56 @@ else:
 
 
 def notify_context():
-    """pop up a notification with context info"""
+    """pop up a dialog with context info"""
     def _notify_context(ctx: KeyContext):
-        if not zenity_cmd:
-            error('ERR: Zenity command is missing! Diagnostic dialog not available!')
+
+        dialog_cmd              = None
+        nwln_str                = '\n'
+
+        if kdialog_cmd:
+            dialog_cmd          = kdialog_cmd
+            nwln_str            = '<br>'
+        elif zenity_cmd:
+            dialog_cmd          = zenity_cmd
+            nwln_str            = '<br>' if zenity_is_qarma else '\n'
+        elif not zenity_cmd and not kdialog_cmd:
+            error('ERR: Diagnostic dialog not available. Necessary commands missing.')
             return
 
-        if not is_valid_command(zenity_cmd):
-            error(f"ERR: Zenity command not valid: '{zenity_cmd}'")
+        if not is_valid_command(dialog_cmd):
+            error(f"ERR: Dialog command not valid: '{dialog_cmd}'")
             return
 
         # fix a problem with zenity and <tags> in text
         def escape_markup(text: str):
             return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 
-        nwln_chr        = '<br>' if zenity_is_qarma else '\n'
         ctx_clas        = ctx.wm_class
         ctx_name        = ctx.wm_name
         ctx_devn        = ctx.device_name
-        message         = ( f"{nwln_chr}<tt>"
-                            f"<b>Class =</b> '{escape_markup(ctx_clas)}'  {nwln_chr}"
-                            f"<b>Title =</b> '{escape_markup(ctx_name)}'  {nwln_chr}"
-                            f"<b>Keybd =</b> '{escape_markup(ctx_devn)}'  {nwln_chr}"
-                            f"</tt>" )
+
+        message         = ( 
+            f"<tt>"
+            f"<b>Class:</b> '{escape_markup(ctx_clas)}' {nwln_str}"
+            f"<b>Title:</b> '{escape_markup(ctx_name)}' {nwln_str}"
+            f"{nwln_str}"
+            f"<b>Input keyboard name:</b> '{ctx_devn}' {nwln_str}"
+            f"<b>Device seen as type:</b> '{KBTYPE}' {nwln_str}"
+            f"{nwln_str}"
+            f"<b>Toshy config file sees this environment:</b>  {nwln_str}"
+            f"<b> • DISTRO_ID ____________</b> '{DISTRO_ID      }' {nwln_str}"
+            f"<b> • DISTRO_VER ___________</b> '{DISTRO_VER     }' {nwln_str}"
+            f"<b> • VARIANT_ID ___________</b> '{VARIANT_ID     }' {nwln_str}"
+            f"<b> • SESSION_TYPE _________</b> '{SESSION_TYPE   }' {nwln_str}"
+            f"<b> • DESKTOP_ENV __________</b> '{DESKTOP_ENV    }' {nwln_str}"
+            f"<b> • DE_MAJ_VER ___________</b> '{DE_MAJ_VER     }' {nwln_str}"
+            f"{nwln_str}"
+            f"<b> __________________________________________________ </b>{nwln_str}"
+            f"<i>Keyboard shortcuts (Ctrl+C/Cmd+C) may not work here.</i>{nwln_str}"
+            f"<i>Select text with mouse. Triple-click to select all. </i>{nwln_str}"
+            f"<i>Right-click with mouse and choose 'Copy' from menu. </i>{nwln_str}"
+            f"</tt>"
+        )
 
         zenity_cmd_lst = [  zenity_cmd, '--info', '--no-wrap', 
                             '--title=Toshy Context Info',
@@ -800,7 +846,16 @@ def notify_context():
         # insert the icon argument if it's supported
         if zenity_icon_option is not None:
             zenity_cmd_lst.insert(3, zenity_icon_option)
-        subprocess.Popen(zenity_cmd_lst, cwd=icons_dir, stderr=DEVNULL, stdout=DEVNULL)
+
+        kdialog_cmd_lst = [kdialog_cmd, '--msgbox', message, '--title', 'Toshy Context Info']
+        # Add icon if needed: kdialog_cmd_lst += ['--icon', '/path/to/icon']
+        # TODO: Figure out why icon argument doesn't work. Need a proper icon theme folder?
+        kdialog_cmd_lst += ['--icon', 'toshy_app_icon_rainbow']
+
+        if dialog_cmd == kdialog_cmd:
+            subprocess.Popen(kdialog_cmd_lst, cwd=icons_dir, stderr=DEVNULL, stdout=DEVNULL)
+        elif dialog_cmd == zenity_cmd:
+            subprocess.Popen(zenity_cmd_lst, cwd=icons_dir, stderr=DEVNULL, stdout=DEVNULL)
 
         # Optionally, also send a system notification:
         # ntfy.send_notification(message)
@@ -808,6 +863,7 @@ def notify_context():
 
 
 def is_pre_GNOME_45(de_ver):
+    """Utility function to check if GNOME version is older than GNOME 45"""
     pre_G45_ver_lst = [44, 43, 42, 41, 40, 3]
     def _is_pre_GNOME_45(ctx: KeyContext):
         return  DESKTOP_ENV == 'gnome' and str(de_ver).isdigit() and int(de_ver) in pre_G45_ver_lst
@@ -827,3 +883,7 @@ keymap("Currency character overlay", {
 
 ###  SLICE_MARK_END: barebones_user_cfg  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 ###################################################################################################
+keymap("Diagnostics", {
+    C("Shift-Alt-RC-i"):        isDoubleTap(notify_context),
+    C("Shift-Alt-RC-t"):        isDoubleTap(macro_tester),
+}, when = lambda ctx: ctx is ctx )
