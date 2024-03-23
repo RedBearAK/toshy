@@ -884,6 +884,6 @@ keymap("Currency character overlay", {
 ###  SLICE_MARK_END: barebones_user_cfg  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 ###################################################################################################
 keymap("Diagnostics", {
-    C("Shift-Alt-RC-i"):        isDoubleTap(notify_context),
-    C("Shift-Alt-RC-t"):        isDoubleTap(macro_tester),
+    C("Shift-Super-Alt-i"):        isDoubleTap(notify_context),
+    C("Shift-Super-Alt-t"):        isDoubleTap(macro_tester),
 }, when = lambda ctx: ctx is ctx )
