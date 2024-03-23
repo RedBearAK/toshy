@@ -1,6 +1,6 @@
 # Current status: Stable Beta (Please Read)
 
-Did your system just update itself from KDE Plasma 5 to Plasma 6, and Toshy stopped working? And you installed Toshy before January 2024? Just grab a new zip file from the big green "Code" button and reinstall. Your config customizations and preference choices should be preserved (if you made your config changes within the "slice marks").
+Did your system just update itself from KDE Plasma 5 to Plasma 6, and Toshy stopped working? And you installed Toshy before January 2024? Just grab a new zip file from the big green **`  <> Code  ▼  `** button and reinstall. Your config customizations and preference choices should be preserved (if you made your config changes within the "slice marks").
 
 WARNING: There is a very annoying "bug" going around where there is a problem with services like `xdg-desktop-portal` and `xdg-desktop-portal-gnome` (or `xdg-desktop-portal-gtk`) causing very long delays with launching certain applications (particularly GTK apps like Firefox, but also reportedly Qt apps sometimes) in a Wayland session. Some distros seem to have a fix for this, others have not fixed it yet. I think this occurs mainly on systems that have both KDE Plasma and some GTK-based desktop environment installed at the same time, leading to multiple desktop "portal" services trying to run at the same time.  
 
@@ -231,7 +231,7 @@ There is a weird bug with searching for extensions by name sometimes, where you 
 > [!NOTE]  
 > Installer commands and options are now different from early Toshy releases.  
 
-1. Download the latest zip file from the drop-down you see when you click the big green `  <> Code  ▼  ` button near the top of the page.  
+1. Download the latest zip file from the drop-down you see when you click the big green **`  <> Code  ▼  `** button near the top of the page.  
 1. Unzip the archive, and open a terminal in the resulting folder.  
 1. Run the `setup_toshy.py` script in the terminal, like this:  
 
