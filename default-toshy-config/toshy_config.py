@@ -103,18 +103,18 @@ debug(cnfg, ctx="CG")
 ###  SLICE_MARK_START: env_overrides  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 
 # MANUALLY set any environment information if the auto-identification isn't working:
-OVERRIDE_DISTRO_NAME     = None
-OVERRIDE_DISTRO_VER      = None
-OVERRIDE_VARIANT_ID      = None
-OVERRIDE_SESSION_TYPE    = None
-OVERRIDE_DESKTOP_ENV     = None
-OVERRIDE_DE_MAJ_VER      = None
+OVERRIDE_DISTRO_ID          = None
+OVERRIDE_DISTRO_VER         = None
+OVERRIDE_VARIANT_ID         = None
+OVERRIDE_SESSION_TYPE       = None
+OVERRIDE_DESKTOP_ENV        = None
+OVERRIDE_DE_MAJ_VER         = None
 
 ###  SLICE_MARK_END: env_overrides  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 ###################################################################################################
 
 # leave all of this alone!
-DISTRO_NAME     = None
+DISTRO_ID       = None
 DISTRO_VER      = None
 VARIANT_ID      = None
 SESSION_TYPE    = None
@@ -123,7 +123,7 @@ DE_MAJ_VER      = None
 
 env_info: Dict[str, str] = lib.env.get_env_info()   # Returns a dict
 
-DISTRO_NAME     = locals().get('OVERRIDE_DISTRO_NAME')  or env_info.get('DISTRO_NAME', 'keymissing')
+DISTRO_ID       = locals().get('OVERRIDE_DISTRO_ID')    or env_info.get('DISTRO_ID', 'keymissing')
 DISTRO_VER      = locals().get('OVERRIDE_DISTRO_VER')   or env_info.get('DISTRO_VER', 'keymissing')
 VARIANT_ID      = locals().get('OVERRIDE_VARIANT_ID')   or env_info.get('VARIANT_ID', 'keymissing')
 SESSION_TYPE    = locals().get('OVERRIDE_SESSION_TYPE') or env_info.get('SESSION_TYPE', 'keymissing')
@@ -132,7 +132,7 @@ DE_MAJ_VER      = locals().get('OVERRIDE_DE_MAJ_VER')   or env_info.get('DE_MAJ_
 
 debug("")
 debug(  f'Toshy config sees this environment:'
-        f'\n\t{DISTRO_NAME      = }'
+        f'\n\t{DISTRO_ID        = }'
         f'\n\t{DISTRO_VER       = }'
         f'\n\t{SESSION_TYPE     = }'
         f'\n\t{DESKTOP_ENV      = }'
@@ -1001,7 +1001,9 @@ def is_valid_command(command):
 
 
 # Result will be None if DE is not in list OR if 'kdialog' not available.
-kdialog_cmd = shutil.which('kdialog') if DESKTOP_ENV.casefold() in ['kde', 'lxqt'] else None
+# kdialog_cmd = shutil.which('kdialog') if DESKTOP_ENV.casefold() in ['kde', 'lxqt'] else None
+# DISABLING KDIALOG BECAUSE IT KIND OF SUCKS QUITE A BIT COMPARED TO ZENITY/QARMA
+kdialog_cmd = shutil.which('kdialog') if DESKTOP_ENV.casefold() in ['kdialog_is_lame'] else None
 
 
 zenity_is_qarma = False
@@ -1064,8 +1066,9 @@ def notify_context():
         # ------ following are all True/False
         ctx_rmte        = matchProps(lst=remotes_lod)(ctx)
         ctx_term        = matchProps(lst=terminals_lod)(ctx)
-        ctx_brws        = matchProps(clas=browsers_allStr)(ctx)
         ctx_fmgr        = matchProps(clas=filemanagerStr)(ctx)
+        ctx_brws        = matchProps(clas=browsers_allStr)(ctx)
+        ctx_vscd        = matchProps(lst=vscodes_lod)(ctx)
 
         if matchProps(lst=dialogs_CloseWin_lod)(ctx) or matchProps(lst=dialogs_Escape_lod)(ctx):
             ctx_dlgs        = True
@@ -1074,28 +1077,32 @@ def notify_context():
 
         message         = ( 
             f"<tt>"
-            f"<b>Class =</b> '{escape_markup(ctx_clas)}'  {nwln_str}"
-            f"<b>Title =</b> '{escape_markup(ctx_name)}'  {nwln_str}"
-            f"<b>Keybd =</b> '{escape_markup(ctx_devn)}'  {nwln_str}"
+            f"<b>Class:</b> '{escape_markup(ctx_clas)}' {nwln_str}"
+            f"<b>Title:</b> '{escape_markup(ctx_name)}' {nwln_str}"
             f"{nwln_str}"
-            f"<b>Keyboard type ___ =</b> ___ '{KBTYPE}'  {nwln_str}"
+            f"<b>Input keyboard name:</b> '{ctx_devn}' {nwln_str}"
+            f"<b>Device seen as type:</b> '{KBTYPE}' {nwln_str}"
             f"{nwln_str}"
-            f"<b>DISTRO_NAME _____ =</b> ___ '{DISTRO_NAME}'  {nwln_str}"
-            f"<b>DISTRO_VER ______ =</b> ___ '{DISTRO_VER}'  {nwln_str}"
-            f"<b>VARIANT_ID ______ =</b> ___ '{VARIANT_ID}'  {nwln_str}"
-            f"<b>SESSION_TYPE ____ =</b> ___ '{SESSION_TYPE}'  {nwln_str}"
-            f"<b>DESKTOP_ENV _____ =</b> ___ '{DESKTOP_ENV}'  {nwln_str}"
-            f"<b>DE_MAJ_VER ______ =</b> ___ '{DE_MAJ_VER}'  {nwln_str}"
+            f"<b>Toshy config file sees this environment:</b>  {nwln_str}"
+            f"<b> • DISTRO_ID ____________</b> '{DISTRO_ID      }' {nwln_str}"
+            f"<b> • DISTRO_VER ___________</b> '{DISTRO_VER     }' {nwln_str}"
+            f"<b> • VARIANT_ID ___________</b> '{VARIANT_ID     }' {nwln_str}"
+            f"<b> • SESSION_TYPE _________</b> '{SESSION_TYPE   }' {nwln_str}"
+            f"<b> • DESKTOP_ENV __________</b> '{DESKTOP_ENV    }' {nwln_str}"
+            f"<b> • DE_MAJ_VER ___________</b> '{DE_MAJ_VER     }' {nwln_str}"
             f"{nwln_str}"
-            f"<b>remotes app class group?:</b> ________ '{ctx_rmte}'  {nwln_str}"
-            f"<b>terminals app class group?:</b> ______ '{ctx_term}'  {nwln_str}"
-            f"<b>browsers app class group?:</b> _______ '{ctx_brws}'  {nwln_str}"
-            f"<b>filemanagers app class group?:</b> ___ '{ctx_fmgr}'  {nwln_str}"
-            f"<b>dialogs app class group?:</b> ________ '{ctx_dlgs}'  {nwln_str}"
-            f"___________________________________________________{nwln_str}"
+            f"<b>Do any app class groups match on this window?:</b>  {nwln_str}"
+            f"<b> • Terminals ____________</b> '{ctx_term}' {nwln_str}"
+            f"<b> • Remotes/VMs __________</b> '{ctx_rmte}' {nwln_str}"
+            f"<b> • File Managers ________</b> '{ctx_fmgr}' {nwln_str}"
+            f"<b> • Web Browsers _________</b> '{ctx_brws}' {nwln_str}"
+            f"<b> • VSCode(s) ____________</b> '{ctx_vscd}' {nwln_str}"
+            f"<b> • Dialogs ______________</b> '{ctx_dlgs}' {nwln_str}"
+            f"{nwln_str}"
+            f"<b> __________________________________________________ </b>{nwln_str}"
             f"<i>Keyboard shortcuts (Ctrl+C/Cmd+C) may not work here.</i>{nwln_str}"
-            f"<i>Select text with mouse. Triple-click to select all.</i>{nwln_str}"
-            f"<i>Right-click with mouse and choose 'Copy' from menu.</i>{nwln_str}"
+            f"<i>Select text with mouse. Triple-click to select all. </i>{nwln_str}"
+            f"<i>Right-click with mouse and choose 'Copy' from menu. </i>{nwln_str}"
             f"</tt>"
         )
 
@@ -3724,7 +3731,7 @@ keymap("Cmd+W dialog fix - Super+Q Manjaro GNOME", {
     C("RC-W"):                  iEF2(C("Super-Q"), True),
 }, when = lambda ctx:
     matchProps(lst=dialogs_CloseWin_lod)(ctx) and
-    ( DISTRO_NAME == 'manjaro' and DESKTOP_ENV == 'gnome' ) )
+    ( DISTRO_ID == 'manjaro' and DESKTOP_ENV == 'gnome' ) )
 
 keymap("Cmd+W dialog fix - Alt+F4", {
     C("RC-W"):                  iEF2(C("Alt-F4"), True),
@@ -3851,19 +3858,19 @@ keymap("Xfce4 terminal", {
 keymap("GenTerms overrides: elementary OS", {
     C("LC-Right"):              [bind,C("Super-Right")],        # SL - Change workspace (elementary)
     C("LC-Left"):               [bind,C("Super-Left")],         # SL - Change workspace (elementary)
-}, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_NAME == 'elementary')
+}, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_ID == 'elementary')
 keymap("GenTerms overrides: Fedora GNOME", {
     C("RC-H"):                  C("Super-h"),                   # Hide Window/Minimize app (gnome/fedora)
-}, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_NAME in ['fedora', 'almalinux'] and DESKTOP_ENV in ['gnome'] )
+}, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_ID in ['fedora', 'almalinux'] and DESKTOP_ENV in ['gnome'] )
 keymap("GenTerms overrides: Pop!_OS", {
     C("LC-Right"):              [bind,C("Super-C-Up")],         # SL - Change workspace (pop)
     C("LC-Left"):               [bind,C("Super-C-Down")],       # SL - Change workspace (pop)
-}, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_NAME == 'pop')
+}, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_ID == 'pop')
 keymap("GenTerms overrides: Ubuntu/Fedora", {
     C("LC-RC-Q"):               C("Super-L"),                   # Lock screen (ubuntu/fedora)
     C("LC-Right"):              [bind,C("Super-Page_Up")],      # SL - Change workspace (ubuntu/fedora)
     C("LC-Left"):               [bind,C("Super-Page_Down")],    # SL - Change workspace (ubuntu/fedora)
-}, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_NAME in ['ubuntu', 'fedora'] )
+}, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DISTRO_ID in ['ubuntu', 'fedora'] )
 
 
 # Overrides to General Terminals shortcuts for specific desktop environments
@@ -3999,49 +4006,49 @@ keymap("GenGUI overrides: not Chromebook", {
 # Overrides to General GUI shortcuts for specific distros
 keymap("GenGUI overrides: Debian Xfce4", {
     C("RC-Space"):             [iEF2NT(),C("Alt-F1")],     # Launch Application Menu xfce4 (Debian)
-}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'debian' and DESKTOP_ENV == 'xfce' )
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_ID == 'debian' and DESKTOP_ENV == 'xfce' )
 keymap("GenGUI overrides: elementary OS", {
     C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,elementary)
     C("RC-Space"):             [iEF2NT(),C("Super-Space")],     # SL - Launch Application Menu (elementary)
     C("RC-LC-f"):               C("Super-Up"),                  # SL- Maximize app elementary
-}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'elementary' )
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_ID == 'elementary' )
 keymap("GenGUI overrides: Fedora GNOME", {
     C("Super-RC-Q"):            C("Super-L"),                   # Lock screen (fedora)
     C("RC-H"):                  C("Super-h"),                   # Default SL - Minimize app (gnome/budgie/popos/fedora) not-deepin
     C("Super-Right"):          [bind,C("Super-Page_Up")],       # SL - Change workspace (ubuntu/fedora)
     C("Super-Left"):           [bind,C("Super-Page_Down")],     # SL - Change workspace (ubuntu/fedora)
-}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME in ['fedora', 'almalinux'] and DESKTOP_ENV in ['gnome'] )
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_ID in ['fedora', 'almalinux'] and DESKTOP_ENV in ['gnome'] )
 keymap("GenGUI overrides: Manjaro GNOME", {
     C("RC-Q"):              C("Super-Q"),                       # Close window
-}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'manjaro' and DESKTOP_ENV == 'gnome' )
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_ID == 'manjaro' and DESKTOP_ENV == 'gnome' )
 keymap("GenGUI overrides: Manjaro Xfce", {
     C("RC-Space"):             [iEF2NT(),C("Alt-F1")],          # Open Whisker Menu with Cmd+Space
-}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'manjaro' and DESKTOP_ENV == 'xfce' )
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_ID == 'manjaro' and DESKTOP_ENV == 'xfce' )
 keymap("GenGUI overrides: Manjaro", {
     # TODO: figure out why these two are the same!
     C("RC-LC-f"):               C("Super-PAGE_UP"),             # SL- Maximize app manjaro
     C("RC-LC-f"):               C("Super-PAGE_DOWN"),           # SL - Minimize app manjaro
-}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'manjaro' )
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_ID == 'manjaro' )
 keymap("GenGUI overrides: Mint Xfce4", {
     C("RC-Space"):             [iEF2NT(),C("Super-Space")],     # Launch Application Menu xfce4 (Linux Mint)
-}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'mint' and DESKTOP_ENV == 'xfce' )
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_ID == 'mint' and DESKTOP_ENV == 'xfce' )
 keymap("GenGUI overrides: KDE Neon", {
     C("RC-Super-f"):            C("Super-Page_Up"),             # SL - Toggle maximized window state (kde_neon)
     C("RC-H"):                  C("Super-Page_Down"),           # SL - Minimize app (kde_neon)
                                                                 # SL - Default SL - Change workspace (kde_neon)
-}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'neon' )
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_ID == 'neon' )
 keymap("GenGUI overrides: Pop!_OS", {
     C("RC-Space"):             [iEF2NT(),C("Super-slash")],     # "Launch and switch applications" (pop)
     C("RC-H"):                  C("Super-h"),                   # Default SL - Minimize app (gnome/budgie/popos/fedora) not-deepin
     C("Super-Right"):          [bind,C("Super-C-Up")],          # SL - Change workspace (pop)
     C("Super-Left"):           [bind,C("Super-C-Down")],        # SL - Change workspace (pop)
     C("RC-Q"):                  C("Super-q"),                   # SL - Close Apps (pop)
-}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'pop' )
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_ID == 'pop' )
 keymap("GenGUI overrides: Ubuntu", {
     C("Super-RC-Q"):            C("Super-L"),                   # Lock screen (ubuntu)
     C("Super-Right"):          [bind,C("Super-Page_Up")],       # SL - Change workspace (ubuntu)
     C("Super-Left"):           [bind,C("Super-Page_Down")],     # SL - Change workspace (ubuntu)
-}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_NAME == 'ubuntu' )
+}, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DISTRO_ID == 'ubuntu' )
 
 
 # Overrides to General GUI shortcuts for specific desktop environments

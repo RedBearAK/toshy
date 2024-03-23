@@ -130,7 +130,7 @@ class InstallerSettings:
         self.sep_char               = '='
         self.separator              = self.sep_char * sep_reps
         self.override_distro        = None
-        self.DISTRO_NAME            = None
+        self.DISTRO_ID            = None
         self.DISTRO_VER: str        = ""
         self.VARIANT_ID             = None
         self.SESSION_TYPE           = None
@@ -252,9 +252,9 @@ def get_environment_info():
 
     # Avoid casefold() errors by converting all to strings
     if cnfg.override_distro:
-        cnfg.DISTRO_NAME    = str(cnfg.override_distro).casefold()
+        cnfg.DISTRO_ID    = str(cnfg.override_distro).casefold()
     else:
-        cnfg.DISTRO_NAME    = str(env_info_dct.get('DISTRO_NAME',   'keymissing')).casefold()
+        cnfg.DISTRO_ID    = str(env_info_dct.get('DISTRO_ID',     'keymissing')).casefold()
     cnfg.DISTRO_VER     = str(env_info_dct.get('DISTRO_VER',    'keymissing')).casefold()
     cnfg.VARIANT_ID     = str(env_info_dct.get('VARIANT_ID',    'keymissing')).casefold()
     cnfg.SESSION_TYPE   = str(env_info_dct.get('SESSION_TYPE',  'keymissing')).casefold()
@@ -267,7 +267,7 @@ def get_environment_info():
     cnfg.distro_mnr_ver         = distro_ver_parts[1] if len(distro_ver_parts) > 1 else 'no_mnr_ver'
 
     debug('Toshy installer sees this environment:'
-        f"\n\t DISTRO_NAME      = '{cnfg.DISTRO_NAME}'"
+        f"\n\t DISTRO_ID        = '{cnfg.DISTRO_ID}'"
         f"\n\t DISTRO_VER       = '{cnfg.DISTRO_VER}'"
         f"\n\t VARIANT_ID       = '{cnfg.VARIANT_ID}'"
         f"\n\t SESSION_TYPE     = '{cnfg.SESSION_TYPE}'"
@@ -634,7 +634,7 @@ def get_distro_names():
 def exit_with_invalid_distro_error(pkg_mgr_err=None):
     """Utility function to show error message and exit when distro is not valid"""
     print()
-    error(f'ERROR: Installer does not know how to handle distro: "{cnfg.DISTRO_NAME}"')
+    error(f'ERROR: Installer does not know how to handle distro: "{cnfg.DISTRO_ID}"')
     if pkg_mgr_err:
         error('ERROR: No valid package manager logic was encountered for this distro.')
     print()
@@ -734,7 +734,7 @@ class DistroQuirksHandler:
             safe_shutdown(1)
 
         # Need to do this AFTER the 'epel-release' install
-        if cnfg.DISTRO_NAME != 'centos' and cnfg.distro_mjr_ver in ['8']:
+        if cnfg.DISTRO_ID != 'centos' and cnfg.distro_mjr_ver in ['8']:
             # enable CRB repo on RHEL 8.x distros, but not CentOS Stream 8:
             cmd_lst = ['sudo', '/usr/bin/crb', 'enable']
             try:
@@ -836,13 +836,13 @@ def install_distro_pkgs():
 
     pkg_group = None
     for group, distros in distro_groups_map.items():
-        if cnfg.DISTRO_NAME in distros:
+        if cnfg.DISTRO_ID in distros:
             pkg_group = group
             break
 
     if pkg_group is None:
         print()
-        print(f"ERROR: No list of packages found for this distro: '{cnfg.DISTRO_NAME}'")
+        print(f"ERROR: No list of packages found for this distro: '{cnfg.DISTRO_ID}'")
         print(f'Installation cannot proceed without a list of packages. Sorry.')
         print(f'Try some options in "./{this_file_name} --help"')
         safe_shutdown(1)
@@ -851,13 +851,13 @@ def install_distro_pkgs():
 
     # Add extra packages for specific distros and versions
     for version in [cnfg.distro_mjr_ver, None]:
-        distro_key = (cnfg.DISTRO_NAME, version)
+        distro_key = (cnfg.DISTRO_ID, version)
         if distro_key in extra_pkgs_map:
             cnfg.pkgs_for_distro.extend(extra_pkgs_map[distro_key])
 
     # Remove packages for specific distros and versions
     for version in [cnfg.distro_mjr_ver, None]:
-        distro_key = (cnfg.DISTRO_NAME, version)
+        distro_key = (cnfg.DISTRO_ID, version)
         if distro_key in remove_pkgs_map:
             for pkg in remove_pkgs_map[distro_key]:
                 if pkg in cnfg.pkgs_for_distro:
@@ -914,7 +914,7 @@ def install_distro_pkgs():
     ###########################################################################
     def install_on_transupd_distro():
         """utility function that gets dispatched for distros that use Transactional-Update"""
-        if cnfg.DISTRO_NAME in distro_groups_map['microos-based']:
+        if cnfg.DISTRO_ID in distro_groups_map['microos-based']:
             print('Distro is openSUSE MicroOS/Aeon/Kalpa immutable. Using "transactional-update".')
 
             # Filter out packages that are already installed
@@ -950,7 +950,7 @@ def install_distro_pkgs():
     ###########################################################################
     def install_on_rpmostree_distro():
         """utility function that gets dispatched for distros that use RPM-OSTree"""
-        if cnfg.DISTRO_NAME in distro_groups_map['fedora-immutables']:
+        if cnfg.DISTRO_ID in distro_groups_map['fedora-immutables']:
             print('Distro is Fedora-type immutable. Using "rpm-ostree" instead of DNF.')
 
             # Filter out packages that are already installed
@@ -980,9 +980,9 @@ def install_distro_pkgs():
             native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
         def install_on_rhel_based():
-            if cnfg.DISTRO_NAME == 'centos' and cnfg.distro_mjr_ver == '7':
+            if cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '7':
                 quirks_handler.handle_quirks_CentOS_7()
-            if cnfg.DISTRO_NAME == 'centos' and cnfg.distro_mjr_ver == '8':
+            if cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '8':
                 quirks_handler.handle_quirks_CentOS_Stream_8()
             quirks_handler.handle_quirks_RHEL()
             cmd_lst = ['sudo', 'dnf', 'install', '-y']
@@ -994,14 +994,14 @@ def install_distro_pkgs():
             native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
         # Dispatch installation sub-function based on DNF distro type
-        if cnfg.DISTRO_NAME in distro_groups_map['mandriva-based']:
+        if cnfg.DISTRO_ID in distro_groups_map['mandriva-based']:
             install_on_mandriva_based()
-        elif cnfg.DISTRO_NAME in distro_groups_map['rhel-based']:
+        elif cnfg.DISTRO_ID in distro_groups_map['rhel-based']:
             install_on_rhel_based()
-        elif cnfg.DISTRO_NAME in distro_groups_map['fedora-based']:
+        elif cnfg.DISTRO_ID in distro_groups_map['fedora-based']:
             install_on_fedora_based()
         else:
-            error(f"Distro {cnfg.DISTRO_NAME} is not supported by this installation script.")
+            error(f"Distro {cnfg.DISTRO_ID} is not supported by this installation script.")
             safe_shutdown(1)
 
     ###########################################################################
@@ -1078,7 +1078,7 @@ def install_distro_pkgs():
 
     # Determine the correct installation function
     for distro_list, installer_function in pkg_mgr_dispatch_map.items():
-        if cnfg.DISTRO_NAME in distro_list:
+        if cnfg.DISTRO_ID in distro_list:
             installer_function()
             native_pkg_installer.show_pkg_install_success_msg()
             show_task_completed_msg()
@@ -1258,7 +1258,7 @@ def create_group(group_name):
     else:
         print(f'Creating "{group_name}" group...')
         call_attn_to_pwd_prompt_if_sudo_tkt_exp()
-        if cnfg.DISTRO_NAME in distro_groups_map['fedora-immutables']:
+        if cnfg.DISTRO_ID in distro_groups_map['fedora-immutables']:
             # Special handling for Fedora immutable distributions
             with open('/etc/group') as f:
                 if not re.search(rf'^{group_name}:', f.read(), re.MULTILINE):
@@ -1566,7 +1566,7 @@ def setup_python_vir_env():
     if not os.path.exists(cnfg.venv_path):
         # change the Python interpreter path to use current release version from pkg list
         # if distro is openSUSE Leap type (instead of old 3.6 version)
-        if cnfg.DISTRO_NAME in distro_groups_map['leap-based']:
+        if cnfg.DISTRO_ID in distro_groups_map['leap-based']:
             if shutil.which(f'python{cnfg.curr_py_rel_ver_str}'):
                 cnfg.py_interp_path = shutil.which(f'python{cnfg.curr_py_rel_ver_str}')
                 print(f'Using Python version {cnfg.curr_py_rel_ver_str}.')
@@ -1579,7 +1579,7 @@ def setup_python_vir_env():
             venv_cmd_lst = [cnfg.py_interp_path, '-m', 'venv', cnfg.venv_path]
             subprocess.run(venv_cmd_lst, check=True)
             # need to run the same command twice on OpenMandriva, for some reason
-            if cnfg.DISTRO_NAME in ['openmandriva']:
+            if cnfg.DISTRO_ID in ['openmandriva']:
                 subprocess.run(venv_cmd_lst, check=True)
         except subprocess.CalledProcessError as proc_err:
             error(f'ERROR: Problem creating the Python virtual environment:\n\t{proc_err}')
@@ -2706,7 +2706,7 @@ def main(cnfg: InstallerSettings):
 
     get_environment_info()
 
-    if cnfg.DISTRO_NAME not in get_distro_names():
+    if cnfg.DISTRO_ID not in get_distro_names():
         exit_with_invalid_distro_error()
 
     elevate_privileges()
