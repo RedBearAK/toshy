@@ -945,9 +945,10 @@ https://github.com/RedBearAK/toshy/wiki/How-to-(persistently)-change-the-Cmd-Spa
 
 So the best solution I've come up with so far is to have the installer make a backup of your whole `~/.config/toshy` folder to a timestamped folder in `~/.config/toshy_config_backups`.  
 
-> PLEASE NOTE: If you run the Toshy installer multiple times you may find that the most recent dated "backup" is just a backup of a fresh Toshy config folder, as it will make a new backup whenever a `toshy` folder is found in `~/.config`. In this case, the folder with your custom changes may be in an older backup folder.  
+> [!NOTE] 
+> If you run the Toshy installer multiple times you may find that the most recent dated "backup" is just a backup of a fresh Toshy config folder, as it will make a new backup whenever a `toshy` folder is found in `~/.config`. In this case, the folder with your custom changes may be in an older timestamped backup folder.  
 
-The backup folders are typically less than 1 MB in size, as the Python virtual environment folder inside (~50 MB in size) is not copied. So they should never take up too much space even if you run the installer multiple times on the same system.  
+The backup folders are typically less than 1 MB in size, as the Python virtual environment folder inside (~65 MB in size) is not copied. So they should never take up too much space even if you run the installer multiple times on the same system.  
 
 Using some software like Visual Studio Code, it is possible to compare the old and new config files in a "diff" sort of view and quickly see the differences. This can make it very easy to merge your custom changes back into the new config file with a few clicks. Then all you need to do is save the new config and restart the Toshy services or config script.  
 
@@ -1210,7 +1211,7 @@ Which task-switching style works for you is down to personal preference, and how
 
 KDE Plasma desktops tend to have the Meta/Super/Win/Cmd key bound to open the application menu. Like the other desktop environments that bind the `Meta` key to do something by itself, this appears to be an alien concept as far as the regular keyboard shortcut control panel is concerned. You won't find it there.  
 
-To disable this secret Meta-only binding, use these commands:   
+To disable this secret Meta-only binding, use these commands (on KDE Plasma 5):   
 
 ```sh
 kwriteconfig5 --file kwinrc --group ModifierOnlyShortcuts --key Meta ''
