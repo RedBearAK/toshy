@@ -4,7 +4,7 @@
 # Indicator tray icon menu app for Toshy, using pygobject/gi
 TOSHY_PART      = 'tray'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Tray Icon app'
-APP_VERSION     = '2024.0321'
+APP_VERSION     = '2024.0323'
 
 # -------- COMMON COMPONENTS --------------------------------------------------
 
