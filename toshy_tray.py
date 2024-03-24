@@ -247,12 +247,12 @@ user_sysctl     = f'{sysctl_cmd} --user'
 toshy_svc_sessmon           = 'toshy-session-monitor.service'
 toshy_svc_config            = 'toshy-config.service'
 
-svc_status_sessmon          = '❓'              # 'Undefined'
-svc_status_config           = '❓'              # 'Undefined'
+svc_status_sessmon          = '???'              #  ❓  # 'Undefined'
+svc_status_config           = '???'              #  ❓  # 'Undefined'
 
-svc_status_glyph_active     = '✅'              # 😀 ✅  #
-svc_status_glyph_inactive   = '❌'              # ❌ ⏸ 🛑 #
-svc_status_glyph_unknown    = '❓'              # ❔  #
+svc_status_glyph_active     = 'Active'               #  ✅  #  😀  #
+svc_status_glyph_inactive   = 'Inactive'              #  ❌  #  ⏸  #  🛑  #
+svc_status_glyph_unknown    = 'Unknown'              #  ❓  #  ❔  #
 
 
 # -------- CREATE MENU --------------------------------------------------------
@@ -377,7 +377,7 @@ def fn_monitor_toshy_services():
             continue
 
         if curr_svcs_state_tup != last_svcs_state_tup:
-            config_label_text = f'         Config: {svc_status_config}'
+            config_label_text = f'       Config: {svc_status_config}'
             sessmon_label_text = f'     SessMon: {svc_status_sessmon}'
             for attempt in range(max_attempts):
                 try:
@@ -510,7 +510,7 @@ services_label_item = Gtk.MenuItem(label=" ---- Services Status ---- ")
 services_label_item.set_sensitive(False)
 menu.append(services_label_item)
 
-toshy_config_status_item = Gtk.MenuItem(    label="         Config: (?)")
+toshy_config_status_item = Gtk.MenuItem(    label="      Config: (?)")
 toshy_config_status_item.set_sensitive(False)
 menu.append(toshy_config_status_item)
 
