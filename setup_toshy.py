@@ -1508,6 +1508,7 @@ def install_toshy_files():
                 '.github',
                 '.gitignore',
                 '__pycache__',
+                'CONTRIBUTING.md',
                 'DO_NOT_USE_requirements.txt',
                 keyszer_tmp_dir,
                 'kwin-application-switcher',
