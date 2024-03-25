@@ -4,7 +4,7 @@
 # Indicator tray icon menu app for Toshy, using pygobject/gi
 TOSHY_PART      = 'tray'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Tray Icon app'
-APP_VERSION     = '2024.0323'
+APP_VERSION     = '2024.0325'
 
 # -------- COMMON COMPONENTS --------------------------------------------------
 
@@ -20,6 +20,7 @@ import signal
 import threading
 # import traceback
 import subprocess
+
 from subprocess import DEVNULL
 
 # Local imports
@@ -244,15 +245,16 @@ def fn_monitor_internal_settings():
 sysctl_cmd      = f"{shutil.which('systemctl')}"
 user_sysctl     = f'{sysctl_cmd} --user'
 
-toshy_svc_sessmon           = 'toshy-session-monitor.service'
-toshy_svc_config            = 'toshy-config.service'
+toshy_svc_sessmon               = 'toshy-session-monitor.service'
+toshy_svc_config                = 'toshy-config.service'
+toshy_svc_kde_dbus              = 'toshy-kde-dbus.service'
 
-svc_status_sessmon          = '???'              #  ❓  # 'Undefined'
-svc_status_config           = '???'              #  ❓  # 'Undefined'
+svc_status_sessmon              = '???'              #  ❓  # 'Undefined'
+svc_status_config               = '???'              #  ❓  # 'Undefined'
 
-svc_status_glyph_active     = 'Active'               #  ✅  #  😀  #
-svc_status_glyph_inactive   = 'Inactive'              #  ❌  #  ⏸  #  🛑  #
-svc_status_glyph_unknown    = 'Unknown'              #  ❓  #  ❔  #
+svc_status_glyph_active         = 'Active'               #  ✅  #  😀  #
+svc_status_glyph_inactive       = 'Inactive'              #  ❌  #  ⏸  #  🛑  #
+svc_status_glyph_unknown        = 'Unknown'              #  ❓  #  ❔  #
 
 
 # -------- CREATE MENU --------------------------------------------------------
@@ -322,7 +324,7 @@ def fn_monitor_toshy_services():
                 toshy_svc_config_unit_path = systemd1_mgr_iface.GetUnit(toshy_svc_config)
                 toshy_svc_sessmon_unit_path = systemd1_mgr_iface.GetUnit(toshy_svc_sessmon)
             except dbus.exceptions.DBusException as dbus_err:
-                debug(f'TOSHY_TRAY: DBusException trying to get proxies:\n\t{dbus_err}')
+                # debug(f'TOSHY_TRAY: DBusException trying to get proxies:\n\t{dbus_err}')
                 time.sleep(3)
                 continue
 
@@ -494,6 +496,12 @@ def fn_remove_tray_icon(widget):
 
 def set_item_active_with_retry(menu_item, state=True, max_retries=5):
     """Attempt to set the menu item's active state with retries."""
+    return
+    # RETURNING EARLY TO TEST WHETHER THIS FUNCTION IS ACTUALLY NECESSARY!!!
+    # Was I mistakenly trying to force-update Gtk.CheckMenuItem() without needing to all along???
+    # SEEMS THE ANSWER MIGHT BE YES.
+    # TODO: Remove all the instances of this function? 
+
     for _ in range(max_retries):
         menu_item.set_active(state)
         time.sleep(0.1)
@@ -528,6 +536,60 @@ menu.append(restart_toshy_svcs_item)
 quit_toshy_svcs_item = Gtk.MenuItem(label="Stop Toshy Services")
 quit_toshy_svcs_item.connect("activate", fn_stop_toshy_services)
 menu.append(quit_toshy_svcs_item)
+
+
+def is_service_enabled(service_name):
+    """Check if a user service is enabled using systemctl."""
+    is_enabled_cmd_lst = ["systemctl", "--user", "is-enabled"]
+    try:
+        subprocess.run(is_enabled_cmd_lst + [service_name],
+                        check=True, stdout=DEVNULL, stderr=DEVNULL)
+        return True  # is-enabled succeeds
+    except subprocess.CalledProcessError:
+        return False  # is-enabled fails, service is disabled or not found
+
+
+toshy_svc_config_unit_enabled   = is_service_enabled("toshy-config.service")
+toshy_svc_sessmon_unit_enabled  = is_service_enabled("toshy-session-monitor.service")
+
+
+def fn_toggle_toshy_svcs_autostart(widget):
+    """Check the status of Toshy services, flip the status, change the menu item label"""
+    global toshy_svc_config_unit_enabled, toshy_svc_sessmon_unit_enabled
+
+    try:
+        if widget.get_active():
+            # Enable user services
+            enable_cmd_lst = ["systemctl", "--user", "enable"]
+            subprocess.run(enable_cmd_lst + [toshy_svc_sessmon], check=True)
+            subprocess.run(enable_cmd_lst + [toshy_svc_kde_dbus], check=True)
+            subprocess.run(enable_cmd_lst + [toshy_svc_config], check=True)
+            debug("Toshy systemd services enabled. Will autostart at login.")
+            _ntfy_icon_file = icon_file_active
+            _ntfy_msg = ('Toshy systemd services are ENABLED.\n'
+                            'Toshy will start at login.')
+        else:
+            # Disable user services
+            disable_cmd_lst = ["systemctl", "--user", "disable"]
+            subprocess.run(disable_cmd_lst + [toshy_svc_config], check=True)
+            subprocess.run(disable_cmd_lst + [toshy_svc_kde_dbus], check=True)
+            subprocess.run(disable_cmd_lst + [toshy_svc_sessmon], check=True)
+            debug("Toshy systemd services disabled. Will NOT autostart at login.")
+            _ntfy_icon_file = icon_file_grayscale
+            _ntfy_msg = ('Toshy systemd services are DISABLED.\n'
+                            'Toshy will NOT start at login.')
+    except subprocess.CalledProcessError as proc_err:
+        debug(f"Error toggling Toshy systemd user services: {proc_err}")
+
+    time.sleep(0.5)
+    ntfy.send_notification(_ntfy_msg, _ntfy_icon_file)
+
+
+autostart_toshy_svcs_item = Gtk.CheckMenuItem(label="Autostart Toshy Services")
+autostart_toshy_svcs_item.set_active(   toshy_svc_sessmon_unit_enabled and 
+                                        toshy_svc_config_unit_enabled       )
+autostart_toshy_svcs_item.connect("toggled", fn_toggle_toshy_svcs_autostart)
+menu.append(autostart_toshy_svcs_item)
 
 separator_below_svcs_item = Gtk.SeparatorMenuItem()
 menu.append(separator_below_svcs_item)  #-------------------------------------#
@@ -726,7 +788,7 @@ if not barebones_config:
 
     def load_autostart_tray_icon_setting():
         cnfg.load_settings()
-        set_item_active_with_retry(autostart_tray_icon_item, cnfg.autostart_tray_icon)
+        # set_item_active_with_retry(autostart_tray_icon_item, cnfg.autostart_tray_icon)
 
 
     def save_autostart_tray_icon_setting(menu_item):
