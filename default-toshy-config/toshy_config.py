@@ -3106,7 +3106,7 @@ keymap("Overrides for Dolphin - Finder Mods pre-KF6", {
 }, when = lambda ctx: 
     matchProps(clas="^dolphin$|^org.kde.dolphin$")(ctx) and 
     DESKTOP_ENV == 'kde' and 
-    DE_MAJ_VER == '5' )
+    DE_MAJ_VER in ['5', '4', '3'] )
 keymap("Overrides for Dolphin - Finder Mods", {
     C("RC-KEY_2"):              C("C-KEY_3"),                   # View as List (Detailed)
     C("RC-KEY_3"):              C("C-KEY_2"),                   # View as List (Compact)
