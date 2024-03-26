@@ -496,12 +496,8 @@ def fn_remove_tray_icon(widget):
 
 def set_item_active_with_retry(menu_item, state=True, max_retries=5):
     """Attempt to set the menu item's active state with retries."""
-    return
-    # RETURNING EARLY TO TEST WHETHER THIS FUNCTION IS ACTUALLY NECESSARY!!!
-    # Was I mistakenly trying to force-update Gtk.CheckMenuItem() without needing to all along???
-    # SEEMS THE ANSWER MIGHT BE YES.
-    # TODO: Remove all the instances of this function? 
 
+    # This function is necessary to set the items active state when another app changes the setting.
     for _ in range(max_retries):
         menu_item.set_active(state)
         time.sleep(0.1)
