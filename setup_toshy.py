@@ -156,7 +156,7 @@ class InstallerSettings:
         self.curr_py_rel_ver_tup     = (self.curr_py_rel_ver_mjr, self.curr_py_rel_ver_mnr)
         self.curr_py_rel_ver_str     = f'{self.curr_py_rel_ver_mjr}.{self.curr_py_rel_ver_mnr}'
 
-        self.py_interp_ver          = f'{py_ver_mjr}.{py_ver_mnr}'
+        self.py_interp_ver_str      = f'{py_ver_mjr}.{py_ver_mnr}'
         self.py_interp_path         = shutil.which('python3')
 
         self.toshy_dir_path         = os.path.join(home_dir, '.config', 'toshy')
@@ -663,7 +663,7 @@ class DistroQuirksHandler:
         yum_cmd_lst = ['sudo', 'yum', 'install', '-y']
         if py_interp_ver_tup >= (3, 8):
             print(f"Good, Python version is 3.8 or later: "
-                    f"'{cnfg.py_interp_ver}'")
+                    f"'{cnfg.py_interp_ver_str}'")
         else:
             try:
                 scl_repo = ['centos-release-scl']
@@ -675,8 +675,8 @@ class DistroQuirksHandler:
                 subprocess.run(yum_cmd_lst + py38_pkgs, check=True)
                 #
                 # set new Python interpreter version and path to reflect what was installed
-                cnfg.py_interp_path = '/opt/rh/rh-python38/root/usr/bin/python3.8'
-                cnfg.py_interp_ver  = '3.8'
+                cnfg.py_interp_path     = '/opt/rh/rh-python38/root/usr/bin/python3.8'
+                cnfg.py_interp_ver_str  = '3.8'
                 # avoid using systemd packages/services for CentOS
                 cnfg.systemctl_present = False
             except subprocess.CalledProcessError as proc_err:
@@ -702,8 +702,8 @@ class DistroQuirksHandler:
             for check_py_minor_ver in py_minor_ver_rng:
                 if shutil.which(f'python3.{check_py_minor_ver}'):
                     cnfg.py_interp_path = shutil.which(f'python3.{check_py_minor_ver}')
-                    cnfg.py_interp_ver = f'3.{check_py_minor_ver}'
-                    print(f'Found Python version {cnfg.py_interp_ver} available.')
+                    cnfg.py_interp_ver_str = f'3.{check_py_minor_ver}'
+                    print(f'Found Python version {cnfg.py_interp_ver_str} available.')
                     break
             else:
                 error(  f'ERROR: Did not find any appropriate Python interpreter version.')
@@ -711,10 +711,10 @@ class DistroQuirksHandler:
         try:
             # for dbus-python
             subprocess.run(['sudo', 'dnf', 'install', '-y',
-                            f'python{cnfg.py_interp_ver}-devel'], check=True)
+                            f'python{cnfg.py_interp_ver_str}-devel'], check=True)
             # for Toshy Preferences GUI app
             subprocess.run(['sudo', 'dnf', 'install', '-y',
-                            f'python{cnfg.py_interp_ver}-tkinter'], check=True)
+                            f'python{cnfg.py_interp_ver_str}-tkinter'], check=True)
         except subprocess.CalledProcessError as proc_err:
             error(f'ERROR: Problem installing necessary packages on CentOS Stream 8:'
                     f'\n\t{proc_err}')
@@ -750,8 +750,8 @@ class DistroQuirksHandler:
             for version in potential_versions:
                 # check if the version is already installed
                 if shutil.which(f'python{version}'):
-                    cnfg.py_interp_path = f'/usr/bin/python{version}'
-                    cnfg.py_interp_ver  = version
+                    cnfg.py_interp_path     = f'/usr/bin/python{version}'
+                    cnfg.py_interp_ver_str  = version
                     break
                 # try to install the corresponding packages
                 cmd_lst = ['sudo', 'dnf', 'install', '-y']
@@ -759,8 +759,8 @@ class DistroQuirksHandler:
                 try:
                     subprocess.run(cmd_lst + pkg_lst, check=True)
                     # if the installation succeeds, set the interpreter path and version
-                    cnfg.py_interp_path = f'/usr/bin/python{version}'
-                    cnfg.py_interp_ver  = version
+                    cnfg.py_interp_path     = f'/usr/bin/python{version}'
+                    cnfg.py_interp_ver_str  = version
                     break
                 # if the installation fails, continue with the next version
                 except subprocess.CalledProcessError:
@@ -1575,35 +1575,54 @@ def install_toshy_files():
     show_task_completed_msg()
 
 
+class PythonVenvQuirksHandler():
+    """Object to contain methods for prepping specific distro variants that
+        need some extra work while installing the Python virtual environment"""
+
+    def __init__(self) -> None:
+        pass
+
+    def handle_quirks_Leap(self):
+        print('Handling a Python virtual environment quirk in Leap...')
+        # Change the Python interpreter path to use current release version from pkg list
+        # if distro is openSUSE Leap type (instead of using old 3.6 Python version).
+        if shutil.which(f'python{cnfg.curr_py_rel_ver_str}'):
+            cnfg.py_interp_path = shutil.which(f'python{cnfg.curr_py_rel_ver_str}')
+            print(f'Using Python version {cnfg.curr_py_rel_ver_str}.')
+        else:
+            print(  f'Current stable Python release version '
+                    f'({cnfg.curr_py_rel_ver_str}) not found. ')
+            safe_shutdown(1)
+
+    def handle_quirks_OpenMandriva(self, venv_cmd_lst):
+        print('Handling a Python virtual environment quirk in OpenMandriva...')
+        # We need to run the exact same command twice on OpenMandriva, for unknown reasons.
+        # So this instance of the command is just "prep" for the seemingly duplicate
+        # command that follows it in setup_python_vir_env(). 
+        subprocess.run(venv_cmd_lst, check=True)
+
+
 def setup_python_vir_env():
     """Setup a virtual environment to install Python packages"""
     print(f'\n\n§  Setting up the Python virtual environment...\n{cnfg.separator}')
-    #
+    venv_quirks_handler = PythonVenvQuirksHandler()
     # Create the virtual environment if it doesn't exist
     if not os.path.exists(cnfg.venv_path):
-        # change the Python interpreter path to use current release version from pkg list
-        # if distro is openSUSE Leap type (instead of old 3.6 version)
         if cnfg.DISTRO_ID in distro_groups_map['leap-based']:
-            if shutil.which(f'python{cnfg.curr_py_rel_ver_str}'):
-                cnfg.py_interp_path = shutil.which(f'python{cnfg.curr_py_rel_ver_str}')
-                print(f'Using Python version {cnfg.curr_py_rel_ver_str}.')
-            else:
-                print(  f'Current stable Python release version '
-                        f'({cnfg.curr_py_rel_ver_str}) not found. ')
+            venv_quirks_handler.handle_quirks_Leap()
         else:
-            print(f'Using Python version {cnfg.py_interp_ver}.')
+            print(f'Using Python version {cnfg.py_interp_ver_str}.')
         try:
             venv_cmd_lst = [cnfg.py_interp_path, '-m', 'venv', cnfg.venv_path]
-            subprocess.run(venv_cmd_lst, check=True)
-            # need to run the same command twice on OpenMandriva, for some reason
             if cnfg.DISTRO_ID in ['openmandriva']:
-                subprocess.run(venv_cmd_lst, check=True)
+                venv_quirks_handler.handle_quirks_OpenMandriva(venv_cmd_lst)
+            subprocess.run(venv_cmd_lst, check=True)
         except subprocess.CalledProcessError as proc_err:
             error(f'ERROR: Problem creating the Python virtual environment:\n\t{proc_err}')
             safe_shutdown(1)
-    #
     # We do not need to "activate" the venv right now, just create it
     print(f'Python virtual environment setup complete.')
+    print(f"Location: '{cnfg.venv_path}'")
     show_task_completed_msg()
 
 
