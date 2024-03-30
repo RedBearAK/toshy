@@ -80,7 +80,7 @@ xprop WM_CLASS _NET_WM_NAME
 
 The mouse cursor will change to a cross shape. Click on the window in question and the attributes will appear in the terminal.  
 
-If you're in one of the compatible Wayland environments (GNOME or KDE, so far), you'll have to rely on other tools, or the verbose logging output from `toshy-config-verbose-start`. When a window has the focus and you use a keyboard shortcut that gets remapped by the keymapper config file, you will see additional output in the terminal showing the window's class and name/title. A good shortcut to use for this that usually won't do anything unless the app has a tabbed UI is `Shift+Cmd+Left_Brace` or `Shift+Cmd+Right_Brace` (those are the defined names of the square bracket keys). Utilities like `xprop` will generally have no output in a Wayland session.  
+If you're in one of the compatible Wayland environments (see the current list [here](#currently-working-desktop-environments-or-window-managers)), you'll have to rely on other tools, or the verbose logging output from `toshy-config-verbose-start`. When a window has the focus and you use a keyboard shortcut that gets remapped by the keymapper config file, you will see additional output in the terminal showing the window's class and name/title. A good shortcut to use for this that usually won't do anything unless the app has a tabbed UI is `Shift+Cmd+Left_Brace` or `Shift+Cmd+Right_Brace` (those are the defined names of the square bracket keys). Utilities like `xprop` will generally have no output in a Wayland session.  
 
 ## Windows Support
 
@@ -670,7 +670,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
         - Runit service script to run terminal command
         - Put a desktop entry file in `~/.config/autostart`
 
-## Currently working desktop environments / window managers
+## Currently working desktop environments or window managers
 
 - X11/Xorg sessions
 
@@ -1275,7 +1275,9 @@ This will load the tray icon automatically whenever you log in to your desktop, 
 
 This is a problem on openSUSE Leap 15.x, possibly on other distros where a regular user doesn't automatically have access to the output from `journalctl` without using `sudo`. Toshy doesn't need to show any "system" output, because all of the Toshy services are "user" services. But the user on some distros like Leap will still need to be added to the `systemd-journal` group in order to see any output when trying to use the `toshy-services-log` command in the terminal, or when trying to use the tray icon menu item "Show Services Log" (which just runs that command in a new terminal window).  
 
-Use the following command (change "testuser" to your actual user name) to add your user to the `systemd-journal` group, and then log out, wait 10 seconds, and log back in.  
+Personally I think this is a configuration error in Leap, but I'm not a distro maintainer, so maybe there is a good reason for users to be... restricted from seeing output from their own user service units... ? No, doesn't really make much sense.  
+
+To fix this, use the following command (change "testuser" to your actual user name) to add your user to the `systemd-journal` group, and then log out, wait 10 seconds (to allow user services like Toshy to be completely stopped), and log back in.  
 
 ```sh
 sudo usermod -aG systemd-journal testuser
@@ -1284,6 +1286,8 @@ sudo usermod -aG systemd-journal testuser
 Using `usermod -aG` here will prevent the command from removing all other groups from the user. Very important!  
 
 This is not a problem on most tested distros, and it's a pretty easy fix and not essential for the functioning of the project, so I may not add this solution to the Toshy installer script unless the same problem pops up on some other distros.  
+
+The message about not being in the `systemd-journal` group also appears on Tumbleweed, but is only superficial in that case since the user is not actually restricted from seeing the output from Toshy's "user" services. The same command can be run to get rid of the superficial message.  
 
 ### More Will Follow...
 
