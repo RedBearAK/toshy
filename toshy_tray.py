@@ -489,6 +489,8 @@ def run_cmd_lst_in_terminal(command_list: List[str]):
         ('rxvt',                ['-e'],     []                                          ),
         ('urxvt',               ['-e'],     []                                          ),
         ('st',                  ['-e'],     []                                          ),
+        # 'kgx' is short for "King's Cross" and represents GNOME Console
+        ('kgx',                 ['-e'],     []                                          ),
     ]
 
     def _run_cmd_lst_in_term(term_app_cmd_path, term_app_args_lst, command_list: List[str]):
@@ -508,7 +510,8 @@ def run_cmd_lst_in_terminal(command_list: List[str]):
 
     # Try to find a matching terminal for the current desktop environment first
     for terminal_app_cmd, term_app_args_lst, *DE_lst in terminal_apps_lst_of_tup:
-        desktop_env_lst = DE_lst if DE_lst else ['no_specific_de']
+        # DE list element will be inside another list due to the unpacking syntax!
+        desktop_env_lst = DE_lst[0] if DE_lst else ['no_specific_de']
         if DESKTOP_ENV in desktop_env_lst:
             term_app_cmd_path = shutil.which(terminal_app_cmd)
         if _run_cmd_lst_in_term(term_app_cmd_path, term_app_args_lst, command_list):
