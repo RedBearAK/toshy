@@ -818,7 +818,7 @@ Safe to do in any application window:
 Shift+Opt+Cmd+I,I (double-tap the "I" key while holding the mods)
 ```
 
-This should display a pop-up dialog box with the application class, window name/title, and the name of the keyboard device.  
+This should display a pop-up dialog box with useful info like the application class, window name/title, the name of the keyboard device, the keyboard type, environment info, and whether the focused app window is in any of the major app groups in the config file.  
 
 ONLY DO THE SHORTCUT BELOW IN A TEXT AREA OR TEXT EDITOR APPLICATION:  
 
