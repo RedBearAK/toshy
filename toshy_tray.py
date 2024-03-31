@@ -4,15 +4,15 @@
 # Indicator tray icon menu app for Toshy, using pygobject/gi
 TOSHY_PART      = 'tray'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Tray Icon app'
-APP_VERSION     = '2024.0325'
+APP_VERSION     = '2024.0330'
 
 # -------- COMMON COMPONENTS --------------------------------------------------
 
 import os
 import re
 import sys
-import time
 import dbus
+import time
 import fcntl
 import psutil
 import shutil
@@ -22,8 +22,10 @@ import threading
 import subprocess
 
 from subprocess import DEVNULL
+from typing import List, Dict, Tuple
 
 # Local imports
+import lib.env as env
 from lib.logger import *
 from lib import logger
 from lib.settings_class import Settings
@@ -456,32 +458,79 @@ def fn_open_config_folder(widget):
         error(e)
 
 
-def run_cmd_in_terminal(command):
+def run_cmd_lst_in_terminal(command_list: List[str]):
+    """Give a command composed of a list of strings to a terminal emulator app 
+        that may be appropriate for the environment, using different techniques to 
+        determine which terminal emulator app might be the most correct."""
+
+    # Check if command_list is a list of strings
+    if not isinstance(command_list, list) or not all(isinstance(item, str) for item in command_list):
+        debug('The function run_cmd_lst_in_terminal() expects a list of strings.')
+        return
+
     # List of common terminal emulators in descending order of commonness.
-    terminal_app_cmd_lst = [
-        ("gnome-terminal", ["--"]),
-        ("konsole", ["-e"]),
-        ("xfce4-terminal", ["-e"]),
-        ("mate-terminal", ["-e"]),
-        ("qterminal", ["-e"]),
-        ("terminology", ["-e"]),
-        ("xterm", ["-e"]),
-        ("rxvt", ["-e"]),
-        ("urxvt", ["-e"]),
+    # Each element is a tuple composed of: 
+    # (terminal command name, option used to pass a command to shell, DE list)
+    # Each terminal app option can be associated with multiple DEs to 
+    # somewhat intelligently use the "correct" terminal for a DE. 
+    terminal_apps_lst_of_tup: List[Tuple[str, List[str], ]] = [
+        ('gnome-terminal',      ['--'],     ['gnome', 'unity', 'cinnamon']              ),
+        ('konsole',             ['-e'],     ['kde']                                     ),
+        ('xfce4-terminal',      ['-e'],     ['xfce']                                    ),
+        ('mate-terminal',       ['-e'],     ['mate']                                    ),
+        ('qterminal',           ['-e'],     ['lxqt']                                    ),
+        ('lxterminal',          ['-e'],     ['lxde']                                    ),
+        ('terminology',         ['-e'],     ['enlightenment']                           ),
+        ('kitty',               ['-e'],     []                                          ),
+        ('alacritty',           ['-e'],     []                                          ),
+        ('tilix',               ['-e'],     []                                          ),
+        ('terminator',          ['-e'],     []                                          ),
+        ('xterm',               ['-e'],     []                                          ),
+        ('rxvt',                ['-e'],     []                                          ),
+        ('urxvt',               ['-e'],     []                                          ),
+        ('st',                  ['-e'],     []                                          ),
+        # 'kgx' is short for "King's Cross" and represents GNOME Console
+        ('kgx',                 ['-e'],     []                                          ),
     ]
-    for terminal, terminal_args in terminal_app_cmd_lst:
-        terminal_path = shutil.which(terminal)
-        if terminal_path is not None:
-            # run the terminal emulator with the command
-            subprocess.Popen([terminal_path] + terminal_args + [command])
+
+    def _run_cmd_lst_in_term(term_app_cmd_path, term_app_args_lst, command_list: List[str]):
+        """Utility closure function to actually run the command in a specific terminal"""
+        if term_app_cmd_path is None:
+            return False
+        cmd_lst_for_Popen: List[str] = [term_app_cmd_path] + term_app_args_lst + command_list
+        try:
+            # run the terminal emulator and give it the provided command list argument
+            subprocess.Popen(cmd_lst_for_Popen)
+            return True
+        except subprocess.SubprocessError as proc_err:
+            debug(f'Error opening terminal to run command list:\n\t{proc_err}')
+            return False
+
+    term_app_cmd_path = None
+
+    # Try to find a matching terminal for the current desktop environment first
+    for terminal_app_cmd, term_app_args_lst, *DE_lst in terminal_apps_lst_of_tup:
+        # DE list element will be inside another list due to the unpacking syntax!
+        desktop_env_lst = DE_lst[0] if DE_lst else ['no_specific_de']
+        if DESKTOP_ENV in desktop_env_lst:
+            term_app_cmd_path = shutil.which(terminal_app_cmd)
+        if _run_cmd_lst_in_term(term_app_cmd_path, term_app_args_lst, command_list):
             return
-    _ntfy_icon_file = icon_file_inverse
-    _ntfy_msg = "ERROR: No suitable terminal emulator found.\nFile an issue on GitHub."
-    ntfy.send_notification(_ntfy_msg, _ntfy_icon_file)
+
+    # If no DE-specific terminal is found, iterate through the list again without DE consideration
+    for terminal_app_cmd, term_app_args_lst, *_ in terminal_apps_lst_of_tup:
+        term_app_cmd_path = shutil.which(terminal_app_cmd)
+        if _run_cmd_lst_in_term(term_app_cmd_path, term_app_args_lst, command_list):
+            return
+
+    ntfy_icon_file = icon_file_inverse  # predefined path to icon file
+    ntfy_msg = "ERROR: No suitable terminal emulator could be opened."
+    ntfy.send_notification(ntfy_msg, ntfy_icon_file)
+    debug(f'{ntfy_msg}')
 
 
 def fn_show_services_log(widget):
-    run_cmd_in_terminal('toshy-services-log')
+    run_cmd_lst_in_terminal(['toshy-services-log'])
 
 
 def fn_remove_tray_icon(widget):
@@ -847,6 +896,9 @@ def is_init_systemd():
 def main():
 
     global loop
+    global DESKTOP_ENV
+    env_info_dct = env.get_env_info()
+    DESKTOP_ENV = str(env_info_dct.get('DESKTOP_ENV', None)).casefold()
 
     if shutil.which('systemctl') and is_init_systemd():
         # help out the config file user service
