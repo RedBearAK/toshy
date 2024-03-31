@@ -231,13 +231,16 @@ There is a weird bug with searching for extensions by name sometimes, where you 
 > [!NOTE]  
 > Installer commands and options are now different from early Toshy releases.  
 
-1. Download the latest zip file from the drop-down you see when you click the big green **`  <> Code  ▼  `** button near the top of the page.  
+1. Click the big green **`  <> Code  ▼  `** button near the top of the page.
+1. Download the latest zip file from the drop-down. ("Releases" are older.)  
 1. Unzip the archive, and open a terminal in the resulting folder.  
 1. Run the `setup_toshy.py` script in the terminal, like this:  
 
 ```sh
 ./setup_toshy.py install
 ```
+
+(See the `--options` in the next section if the basic install doesn't work.)  
 
 If for any reason the script is not executable, you can fix that with this command:  
 
@@ -247,7 +250,7 @@ chmod +x setup_toshy.py
 
 ### Options for installer script
 
-The installer script has a few different commands and options available, as shown in this section.  
+The installer script has a few different `commands` and `--options` available, as shown in this section.  
 
 ```sh
 ./setup_toshy.py --help
@@ -286,6 +289,10 @@ In theory, you could use this option to get Toshy working on a new distro type t
 If you go through this process I hope you'll keep track of exactly what packages you ended up needing to install, and take the time to submit an issue with the package list, distro details, and the native package command(s) you needed to use, so support for the the distro type can be added to the installer.  
 
 One pitfall that is hard to avoid in this process is installing packages that don't actually solve any issue, and then not removing them to verify whether they are truly dependencies. Be careful about that.  
+
+#### Avoiding package layering on Fedora atomic/immutable distros  
+
+I've also recently found the `--skip-native` option to be useful on Fedora atomic/immutable distros, after running the installer initially inside a distrobox Fedora container (same version as the host). This is potentially a way to get Toshy's `venv` working without needing to use package layering on the host immutable. But the process of installing inside the container would probably need to be repeated any time the packages downloaded with `pip` change versions, because that process relies on some native packages to complete the build/caching step.  
 
 Last, but definitely not least, the "extra" install option:  
 
