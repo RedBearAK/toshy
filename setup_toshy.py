@@ -20,7 +20,7 @@ import textwrap
 import subprocess
 
 from subprocess import DEVNULL, PIPE
-from typing import Dict, Tuple, Optional
+from typing import Dict, List, Tuple, Optional
 
 # local import
 import lib.env as env
@@ -391,7 +391,7 @@ def elevate_privileges():
 #####################################################################################################
 
 
-distro_groups_map = {
+distro_groups_map: Dict[str, List[str]] = {
 
     # separate references for RHEL types versus Fedora types
     'fedora-based':             ["fedora", "fedoralinux", "ultramarine", "nobara"],
@@ -420,7 +420,7 @@ distro_groups_map = {
     # Add more as needed...
 }
 
-pkg_groups_map = {
+pkg_groups_map: Dict[str, List[str]] = {
 
     # NOTE: Do not add 'gnome-shell-extension-appindicator' to Fedora/RHELs.
     #       This will install extension but requires logging out of GNOME to activate.
@@ -606,29 +606,36 @@ pip_pkgs   = [
 ]
 
 
-def get_distro_names():
+def get_supported_distro_ids() -> str:
     """Utility function to return list of available distro names (IDs)"""
-    distro_list = []
+    distro_list: List[str] = []
+
     for group in distro_groups_map.values():
         distro_list.extend(group)
-    sorted_distro_list = sorted(distro_list)
+
+    sorted_distro_list: List[str] = sorted(distro_list)
     prev_char: str = sorted_distro_list[0][0]
     # start index with the initial letter
     distro_index = prev_char.upper() + ": "
+    line_length = len(distro_index)             # initial line length
+
     for distro in sorted_distro_list:
         if distro[0] != prev_char:
-            # type hint to help out VSCode syntax highlighter
-            distro: str
-            # remove last comma and space from previous line
-            distro_index = distro_index[:-2]
-            # start a new line with new initial letter
-            distro_index += "\n\t" + distro[0].upper() + ": " + distro + ", "
+            distro_index = distro_index[:-2]    # remove last comma and space
+            line_length -= 2
+            distro_index += "\n\t" + distro[0].upper() + ": "
+            line_length = len(distro[0]) + 2    # reset line length
             prev_char = distro[0]
-        else:
-            distro_index += distro + ", "
-    # remove last comma and space from the final line
-    distro_index = distro_index[:-2]
-    return distro_index
+        
+        next_distro_with_comma = distro + ", "
+        if line_length + len(next_distro_with_comma) > 80:
+            distro_index += "\n\t    "          # insert newline and tab/spaces for continuation
+            line_length = len("\t    ")         # reset line length to indent size
+
+        distro_index += next_distro_with_comma
+        line_length += len(next_distro_with_comma)
+
+    return distro_index[:-2]  # remove the last comma and space
 
 
 def exit_with_invalid_distro_error(pkg_mgr_err=None):
@@ -640,7 +647,7 @@ def exit_with_invalid_distro_error(pkg_mgr_err=None):
     print()
     print(f'Try some options in "./{this_file_name} --help".')
     print()
-    print(f'Maybe try one of these with "--override-distro" option:\n\n\t{get_distro_names()}')
+    print(f'Maybe try one of these with "--override-distro" option:\n\n\t{get_supported_distro_ids()}')
     safe_shutdown(1)
 
 
@@ -2741,7 +2748,7 @@ def handle_cli_arguments():
 
     if args.command == 'list-distros':
         print(  f'Distros known to the Toshy installer (use with "--override-distro" arg):'
-                f'\n\n\t{get_distro_names()}')
+                f'\n\n\t{get_supported_distro_ids()}')
         safe_shutdown(0)
 
     if args.command == 'show-env':
@@ -2780,7 +2787,7 @@ def main(cnfg: InstallerSettings):
 
     get_environment_info()
 
-    if cnfg.DISTRO_ID not in get_distro_names():
+    if cnfg.DISTRO_ID not in get_supported_distro_ids():
         exit_with_invalid_distro_error()
 
     elevate_privileges()
