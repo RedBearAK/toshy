@@ -1342,6 +1342,33 @@ def clone_keyszer_branch():
     show_task_completed_msg()
 
 
+def is_barebones_config_file() -> bool:
+    """
+    Determines whether the existing Toshy configuration file is of the 
+    'barebones' type by reading and checking its contents.
+
+    :param config_directory: The directory where the configuration file is located.
+    :return: True if the config is of the 'barebones' type, False otherwise.
+    """
+    cfg_file_name               = 'toshy_config.py'
+    cfg_file_path               = os.path.join(cnfg.toshy_dir_path, cfg_file_name)
+
+    if os.path.isfile(cfg_file_path):
+        try:
+            with open(cfg_file_path, 'r', encoding='UTF-8') as file:
+                cnfg.existing_cfg_data = file.read()
+        except (FileNotFoundError, PermissionError, OSError) as file_err:
+            print(f'Problem reading config file: {file_err}')
+            return False
+
+        pattern = r'###  SLICE_MARK_(?:START|END): (\w+)  ###.*'
+        matches = re.findall(pattern, cnfg.existing_cfg_data)
+        return 'barebones_user_cfg' in matches or any('barebones' in slice_name for slice_name in matches)
+    else:
+        print(f"No existing config file found at '{cfg_file_path}'.")
+        return False
+
+
 def extract_slices(data: str) -> Dict[str, str]:
     """Utility function to store user content slices from existing config file data"""
     slices_dct: Dict[str, str]  = {}
@@ -1444,7 +1471,8 @@ def backup_toshy_config():
         print(f'No existing Toshy folder to backup.')
         cnfg.backup_succeeded = True
     else:
-        cfg_file_path   = os.path.join(cnfg.toshy_dir_path, 'toshy_config.py')
+        cfg_file_name           = 'toshy_config.py'
+        cfg_file_path           = os.path.join(cnfg.toshy_dir_path, cfg_file_name)
 
         if os.path.isfile(cfg_file_path):
             try:
@@ -1460,7 +1488,7 @@ def backup_toshy_config():
                 except ValueError as value_err:
                     error(f'Problem extracting marked slices from existing config.\n\t{value_err}')
         else:
-            print(f"No existing config file found in {cnfg.toshy_dir_path}.")
+            print(f"No existing config file found at '{cfg_file_path}'.")
 
         if os.path.isfile(cnfg.db_file_path):
             try:
@@ -2342,13 +2370,13 @@ def remove_tweaks_KDE():
         return
 
     # check that major release ver from env module is rational
-    if KDE_ver not in ['6', '5', '4']:
+    if KDE_ver not in cnfg.valid_KDE_vers:
         error("ERROR: Desktop tweaks for KDE cannot be removed.")
         error(f"KDE major version invalid: '{KDE_ver}'")
         return
 
-    if KDE_ver == '4':
-        print('No tweaks were applied for KDE 4. Nothing to remove.')
+    if KDE_ver in ['4', '3']:
+        print('No tweaks were applied for KDE 4 or 3. Nothing to remove.')
         return
 
     kwriteconfig_cmd    = f'kwriteconfig{KDE_ver}'
@@ -2387,6 +2415,11 @@ def apply_desktop_tweaks():
     """
 
     print(f'\n\n§  Applying any known desktop environment tweaks...\n{cnfg.separator}')
+
+    if cnfg.barebones_config or is_barebones_config_file():
+        print('Not applying tweaks due to barebones config flag or file.')
+        show_task_completed_msg()
+        return
 
     if cnfg.fancy_pants:
         print(f'Fancy-Pants install invoked. Additional steps will be taken.')
@@ -2480,6 +2513,11 @@ def remove_desktop_tweaks():
     """Undo the relevant desktop tweaks"""
 
     print(f'\n\n§  Removing any applied desktop environment tweaks...\n{cnfg.separator}')
+
+    if cnfg.barebones_config or is_barebones_config_file():
+        print('Not removing tweaks due to barebones config flag or file.')
+        show_task_completed_msg()
+        return
 
     # if GNOME, re-enable `overlay-key`
     # gsettings reset org.gnome.mutter overlay-key
