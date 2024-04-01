@@ -2173,6 +2173,10 @@ def remove_tweaks_GNOME():
 def apply_tweaks_KDE():
     """Utility function to add desktop tweaks to KDE"""
 
+    if cnfg.barebones_config:
+        print('Not doing tweaks due to barebones config flag.')
+        return
+
     if cnfg.DESKTOP_ENV == 'kde':
         KDE_ver = cnfg.DE_MAJ_VER
     else:
@@ -2335,6 +2339,10 @@ def apply_tweaks_KDE():
 def remove_tweaks_KDE():
     """Utility function to remove the tweaks applied to KDE"""
 
+    if cnfg.barebones_config:
+        print('Not removing tweaks due to barebones config flag.')
+        return
+
     if cnfg.DESKTOP_ENV == 'kde':
         KDE_ver = cnfg.DE_MAJ_VER
     else:
@@ -2342,13 +2350,13 @@ def remove_tweaks_KDE():
         return
 
     # check that major release ver from env module is rational
-    if KDE_ver not in ['6', '5', '4']:
+    if KDE_ver not in cnfg.valid_KDE_vers:
         error("ERROR: Desktop tweaks for KDE cannot be removed.")
         error(f"KDE major version invalid: '{KDE_ver}'")
         return
 
-    if KDE_ver == '4':
-        print('No tweaks were applied for KDE 4. Nothing to remove.')
+    if KDE_ver in ['4', '3']:
+        print('No tweaks were applied for KDE 4 or 3. Nothing to remove.')
         return
 
     kwriteconfig_cmd    = f'kwriteconfig{KDE_ver}'
