@@ -2417,7 +2417,7 @@ def apply_desktop_tweaks():
     print(f'\n\n§  Applying any known desktop environment tweaks...\n{cnfg.separator}')
 
     if cnfg.barebones_config or is_barebones_config_file():
-        print('Not doing tweaks due to barebones config flag or file.')
+        print('Not applying tweaks due to barebones config flag or file.')
         show_task_completed_msg()
         return
 
