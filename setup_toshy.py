@@ -577,14 +577,14 @@ pkg_groups_map: Dict[str, List[str]] = {
 
 extra_pkgs_map = {
     # Add a tuple with distro name (ID), major version (or None) and packages to be added...
-    # ('distro_name', '22'): ["pkg1", "pkg2", ...],
-    # ('distro_name', None): ["pkg1", "pkg2", ...],
+    # ('distro_id', '22'): ["pkg1", "pkg2", ...],
+    # ('distro_id', None): ["pkg1", "pkg2", ...],
 }
 
 remove_pkgs_map = {
     # Add a tuple with distro name (ID), major version (or None) and packages to be removed...
-    # ('distro_name', '22'): ["pkg1", "pkg2", ...],
-    # ('distro_name', None): ["pkg1", "pkg2", ...],
+    # ('distro_id', '22'): ["pkg1", "pkg2", ...],
+    # ('distro_id', None): ["pkg1", "pkg2", ...],
     ('centos', '7'):            ['dbus-daemon', 'gnome-shell-extension-appindicator'],
     ('deepin', None):           ['input-utils'],
 }
