@@ -72,6 +72,30 @@ if original_PATH_str is None:
     print()
     sys.exit(1)
 
+
+# TODO: Integrate this into the rest of the setup script?
+def get_linux_app_dirs(app_name):
+    # Default XDG directories
+    xdg_data_home = os.environ.get('XDG_DATA_HOME', os.path.join(os.environ['HOME'], '.local', 'share'))
+    xdg_config_home = os.environ.get('XDG_CONFIG_HOME', os.path.join(os.environ['HOME'], '.config'))
+    xdg_cache_home = os.environ.get('XDG_CACHE_HOME', os.path.join(os.environ['HOME'], '.cache'))
+    xdg_state_home = os.environ.get('XDG_STATE_HOME', os.path.join(os.environ['HOME'], '.local', 'state'))
+
+    app_dirs = {
+        'data_dir': os.path.join(xdg_data_home, app_name),
+        'config_dir': os.path.join(xdg_config_home, app_name),
+        'cache_dir': os.path.join(xdg_cache_home, app_name),
+        'log_dir': os.path.join(xdg_state_home, app_name)
+    }
+
+    return app_dirs
+
+# Example usage
+app_name = 'MyApp'
+app_dirs = get_linux_app_dirs(app_name)
+# print(app_dirs)
+
+
 home_dir                = os.path.expanduser('~')
 trash_dir               = os.path.join(home_dir, '.local', 'share', 'Trash')
 this_file_path          = os.path.realpath(__file__)
@@ -151,10 +175,10 @@ class InstallerSettings:
 
         # current stable Python release version (TODO: update when needed):
         # 3.11 Release Date: Oct. 24, 2022
-        self.curr_py_rel_ver_mjr     = 3
-        self.curr_py_rel_ver_mnr     = 11
-        self.curr_py_rel_ver_tup     = (self.curr_py_rel_ver_mjr, self.curr_py_rel_ver_mnr)
-        self.curr_py_rel_ver_str     = f'{self.curr_py_rel_ver_mjr}.{self.curr_py_rel_ver_mnr}'
+        self.curr_py_rel_ver_mjr    = 3
+        self.curr_py_rel_ver_mnr    = 11
+        self.curr_py_rel_ver_tup    = (self.curr_py_rel_ver_mjr, self.curr_py_rel_ver_mnr)
+        self.curr_py_rel_ver_str    = f'{self.curr_py_rel_ver_mjr}.{self.curr_py_rel_ver_mnr}'
 
         self.py_interp_ver_str      = f'{py_ver_mjr}.{py_ver_mnr}'
         self.py_interp_path         = shutil.which('python3')
@@ -167,12 +191,19 @@ class InstallerSettings:
         self.existing_cfg_slices    = None
         self.venv_path              = os.path.join(self.toshy_dir_path, '.venv')
 
-        self.keyszer_tmp_path       = os.path.join(this_file_dir, 'keyszer-temp')
+        self.keymapper_tmp_path     = os.path.join(this_file_dir, 'keymapper-temp')
 
-        self.keyszer_branch         = 'device_grab_fix'
-        # self.keyszer_branch         = 'environ_api_hyprland'
-        self.keyszer_url            = 'https://github.com/RedBearAK/keyszer.git'
-        self.keyszer_clone_cmd      = f'git clone -b {self.keyszer_branch} {self.keyszer_url}'
+        # Older branches of the 'keyszer' fork with Wayland support:
+        # self.keymapper_branch       = 'device_grab_fix'           # most recent before 'xwaykeyz'
+        # self.keymapper_branch       = 'environ_api_hyprland'      # before 'device_grab_fix'
+
+        self.keymapper_branch       = 'toshy_main'
+        # self.keymapper_branch       = 'main'          # new branch when switched to 'xwaykeyz'
+
+        self.keymapper_url          = 'https://github.com/RedBearAK/keyszer.git'
+        # self.keymapper_url          = 'https://github.com/RedBearAK/xwaykeyz.git'
+
+        self.keymapper_clone_cmd    = f'git clone -b {self.keymapper_branch} {self.keymapper_url}'
 
         self.input_group            = 'input'
         self.user_name              = pwd.getpwuid(os.getuid()).pw_name
@@ -601,7 +632,8 @@ pip_pkgs   = [
     #   [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']
     # If the bug is fixed, remove pinning to v0.31 here:
 
-    # everything from 'inotify-simple' to 'six' is just to make `keyszer` install smoother
+    # everything from 'inotify-simple' to 'six' is just to make keymapper install smoother
+    # keymapper may be 'keyszer' or a derivative/fork with same requirements
     "inotify-simple", "evdev", "appdirs", "ordered-set", "python-xlib==0.31", "six"
 ]
 
@@ -1159,7 +1191,7 @@ def reload_udev_rules():
 
 
 def install_udev_rules():
-    """Set up `udev` rules file to give user/keyszer access to uinput"""
+    """Set up `udev` rules file to give user/keymapper process access to uinput"""
     print(f'\n\n§  Installing "udev" rules file for keymapper...\n{cnfg.separator}')
 
     rules_dir                   = '/etc/udev/rules.d'
@@ -1324,9 +1356,9 @@ def verify_user_groups():
     show_task_completed_msg()
 
 
-def clone_keyszer_branch():
-    """Clone the designated `keyszer` branch from GitHub"""
-    print(f'\n\n§  Cloning keyszer branch ({cnfg.keyszer_branch})...\n{cnfg.separator}')
+def clone_keymapper_branch():
+    """Clone the designated keymapper branch from GitHub"""
+    print(f'\n\n§  Cloning keymapper branch ({cnfg.keymapper_branch})...\n{cnfg.separator}')
     
     # Check if `git` command exists. If not, exit script with error.
     has_git = shutil.which('git')
@@ -1334,17 +1366,17 @@ def clone_keyszer_branch():
         print(f'ERROR: "git" is not installed, for some reason. Cannot continue.')
         safe_shutdown(1)
 
-    if os.path.exists(cnfg.keyszer_tmp_path):
-        # force a fresh copy of keyszer every time script is run
+    if os.path.exists(cnfg.keymapper_tmp_path):
+        # force a fresh copy of keymapper every time script is run
         try:
-            shutil.rmtree(cnfg.keyszer_tmp_path)
+            shutil.rmtree(cnfg.keymapper_tmp_path)
         except (OSError, PermissionError, FileNotFoundError) as file_err:
-            error(f"Problem removing existing '{cnfg.keyszer_tmp_path}' folder:\n\t{file_err}")
+            error(f"Problem removing existing '{cnfg.keymapper_tmp_path}' folder:\n\t{file_err}")
     try:
-        subprocess.run(cnfg.keyszer_clone_cmd.split() + [cnfg.keyszer_tmp_path], check=True)
+        subprocess.run(cnfg.keymapper_clone_cmd.split() + [cnfg.keymapper_tmp_path], check=True)
     except subprocess.CalledProcessError as proc_err:
         print()
-        error(f'Problem while cloning keyszer branch from GitHub:\n\t{proc_err}')
+        error(f'Problem while cloning keymapper branch from GitHub:\n\t{proc_err}')
         safe_shutdown(1)
     show_task_completed_msg()
 
@@ -1530,7 +1562,7 @@ def install_toshy_files():
     if not cnfg.backup_succeeded:
         error(f'Backup of Toshy config folder failed? Bailing out.')
         safe_shutdown(1)
-    keyszer_tmp_dir     = os.path.basename(cnfg.keyszer_tmp_path)
+    keymapper_tmp_dir           = os.path.basename(cnfg.keymapper_tmp_path)
     try:
         if os.path.exists(cnfg.toshy_dir_path):
             try:
@@ -1545,7 +1577,7 @@ def install_toshy_files():
                 '__pycache__',
                 'CONTRIBUTING.md',
                 'DO_NOT_USE_requirements.txt',
-                keyszer_tmp_dir,
+                keymapper_tmp_dir,
                 'kwin-application-switcher',
                 'LICENSE',
                 'packages.json',
@@ -1685,13 +1717,13 @@ def install_pip_packages():
         if result.returncode != 0:
             print(f'Error installing/upgrading Python packages. Installer exiting.')
             safe_shutdown(1)
-    if os.path.exists(cnfg.keyszer_tmp_path):
-        result = subprocess.run([venv_pip_cmd, 'install', '--upgrade', cnfg.keyszer_tmp_path])
+    if os.path.exists(cnfg.keymapper_tmp_path):
+        result = subprocess.run([venv_pip_cmd, 'install', '--upgrade', cnfg.keymapper_tmp_path])
         if result.returncode != 0:
-            print(f'Error installing/upgrading "keyszer".')
+            print(f'Error installing/upgrading keymapper utility.')
             safe_shutdown(1)
     else:
-        print(f'Temporary "keyszer" clone folder missing. Unable to install "keyszer".')
+        print(f'Temporary keymapper clone folder missing. Unable to install keymapper.')
         safe_shutdown(1)
     show_task_completed_msg()
 
@@ -2799,7 +2831,7 @@ def main(cnfg: InstallerSettings):
     install_udev_rules()
     verify_user_groups()
 
-    clone_keyszer_branch()
+    clone_keymapper_branch()
 
     backup_toshy_config()
     install_toshy_files()
