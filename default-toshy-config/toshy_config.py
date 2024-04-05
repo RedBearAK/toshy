@@ -11,9 +11,9 @@ import subprocess
 from subprocess import DEVNULL
 from typing import Callable, List, Dict, Union
 
-from keyszer.lib.logger import debug, error
-from keyszer.lib.key_context import KeyContext
-from keyszer.config_api import *
+from xwaykeys.lib.logger import debug, error
+from xwaykeys.lib.key_context import KeyContext
+from xwaykeys.config_api import *
 
 
 ###################################################################################################
