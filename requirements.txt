@@ -35,11 +35,11 @@ pywayland
 # Installing 'pywlroots' requires native package 'libxkbcommon-devel' on Fedora.
 # pywlroots
 
-# All dependencies below here are to smooth out the installation of the custom
-# development branch of `keyszer` needed to make Toshy work.
+# All dependencies below here are to smooth out the installation of the 
+# keymapper needed to make Toshy work.
 # Will leave these exposed here even if they are not technically 
 # direct dependencies of Toshy, since Toshy functionality 
-# depends entirely on `keyszer`.
+# depends entirely on `xwaykeyz` (forked from `keyszer`).
 
 inotify-simple
 evdev
@@ -47,12 +47,12 @@ appdirs
 ordered-set
 six
 
-# Migrating to using a new fork of `keyszer` called `xwaykeyz`
-# Not available via `pip` yet!
-# https://github.com/RedBearAK/xwaykeyz/
-# xwaykeyz
-
 # TODO: Check on 'python-xlib' project by early-mid 2025 for a bug fix related to:
 # [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']
 # If the bug is fixed, consider updating the version pinning.
 python-xlib==0.31
+
+# Migrating to using a new fork of `keyszer` called `xwaykeyz`
+# Not available via `pip` yet!
+# https://github.com/RedBearAK/xwaykeyz/
+git+https://github.com/username/repository.git@branch#egg=project_name
