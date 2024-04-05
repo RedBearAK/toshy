@@ -772,7 +772,7 @@ def matchProps(*,
     ### Accepted Parameters:                                        \n
     `clas` = WM_CLASS    (regex/string) [xprop WM_CLASS]            \n
     `name` = WM_NAME     (regex/string) [xprop _NET_WM_NAME]        \n
-    `devn` = Device Name (regex/string) [keyszer --list-devices]    \n
+    `devn` = Device Name (regex/string) [xwaykeyz --list-devices]   \n
     `not_clas` = `clas` but inverted, matches when "not"            \n
     `not_name` = `name` but inverted, matches when "not"            \n
     `not_devn` = `devn` but inverted, matches when "not"            \n
@@ -793,7 +793,7 @@ def matchProps(*,
     ### List of Dicts parameter: `lst`|`not_lst`
     A [list] of {dicts} with each dict containing 1 to 6 of the     \n
     named parameters above, to be processed recursively as args.    \n
-    A dict can also contain a single `lst` or `not_lst` argment.    \n
+    A dict can also contain a single `lst` or `not_lst` argument.   \n
 
     ### Debugging info parameter: `dbg`
     A string that will print as part of logging output. Use to      \n

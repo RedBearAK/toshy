@@ -17,6 +17,7 @@ fi
 
 "$HOME/.local/bin/toshy-services-stop"
 
+pkill -f "bin/xwaykeyz"
 pkill -f "bin/keyszer"
 # systemctl stop xkeysnail.service
 pkill -f "bin/xkeysnail"
@@ -36,5 +37,13 @@ if command xhost &> /dev/null; then
     fi
 fi
 
-# Start keyszer with verbose flag [-v] and anti-buffering flag [--flush]
-keyszer --flush -w -v -c "$HOME/.config/toshy/toshy_config.py"
+# Start keymapper (xwaykeyz or keyszer) with verbose flag [-v] and anti-buffering flag [--flush]
+if command -v xwaykeyz >/dev/null 2>&1; then
+    xwaykeyz --flush -w -v -c "$HOME/.config/toshy/toshy_config.py"
+elif command -v keyszer >/dev/null 2>&1; then
+    keyszer --flush -w -v -c "$HOME/.config/toshy/toshy_config.py"
+else
+    echo -e "Neither \"xwaykeyz\" nor \"keyszer\" command was found in: \n$PATH."
+    echo "Toshy config cannot be loaded until one of these is installed."
+    exit 1
+fi

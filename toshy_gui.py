@@ -690,7 +690,7 @@ def show_popup_dialog(text = None):
     
 Version: {APP_VERSION}
 
-GUI for changing Toshy preferences, a config file for the keyszer keymapper, \
+GUI for changing Toshy preferences, a keymapper config file, \
 intended to make the keyboard in Linux work like a Mac.
 """
 

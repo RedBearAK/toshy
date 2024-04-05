@@ -525,7 +525,7 @@ def matchProps(*,
     ### Accepted Parameters:                                        \n
     `clas` = WM_CLASS    (regex/string) [xprop WM_CLASS]            \n
     `name` = WM_NAME     (regex/string) [xprop _NET_WM_NAME]        \n
-    `devn` = Device Name (regex/string) [keyszer --list-devices]    \n
+    `devn` = Device Name (regex/string) [xwaykeyz --list-devices]   \n
     `not_clas` = `clas` but inverted, matches when "not"            \n
     `not_name` = `name` but inverted, matches when "not"            \n
     `not_devn` = `devn` but inverted, matches when "not"            \n
