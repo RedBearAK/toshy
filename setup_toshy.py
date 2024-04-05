@@ -197,11 +197,11 @@ class InstallerSettings:
         # self.keymapper_branch       = 'device_grab_fix'           # most recent before 'xwaykeyz'
         # self.keymapper_branch       = 'environ_api_hyprland'      # before 'device_grab_fix'
 
-        self.keymapper_branch       = 'toshy_main'
-        # self.keymapper_branch       = 'main'          # new branch when switched to 'xwaykeyz'
+        # self.keymapper_branch       = 'toshy_main'
+        self.keymapper_branch       = 'main'          # new branch when switched to 'xwaykeyz'
 
-        self.keymapper_url          = 'https://github.com/RedBearAK/keyszer.git'
-        # self.keymapper_url          = 'https://github.com/RedBearAK/xwaykeyz.git'
+        # self.keymapper_url          = 'https://github.com/RedBearAK/keyszer.git'
+        self.keymapper_url          = 'https://github.com/RedBearAK/xwaykeyz.git'
 
         self.keymapper_clone_cmd    = f'git clone -b {self.keymapper_branch} {self.keymapper_url}'
 
