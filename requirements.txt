@@ -47,7 +47,12 @@ appdirs
 ordered-set
 six
 
-# TODO: Check on 'python-xlib' project by early-mid 2024 for a bug fix related to:
+# Migrating to using a new fork of `keyszer` called `xwaykeyz`
+# Not available via `pip` yet!
+# https://github.com/RedBearAK/xwaykeyz/
+# xwaykeyz
+
+# TODO: Check on 'python-xlib' project by early-mid 2025 for a bug fix related to:
 # [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']
 # If the bug is fixed, consider updating the version pinning.
 python-xlib==0.31
