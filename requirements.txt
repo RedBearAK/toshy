@@ -28,9 +28,6 @@ tk
 sv_ttk
 watchdog
 psutil
-hyprpy
-i3ipc
-pywayland
 
 # Installing 'pywlroots' requires native package 'libxkbcommon-devel' on Fedora.
 # pywlroots
@@ -41,10 +38,13 @@ pywayland
 # direct dependencies of Toshy, since Toshy functionality 
 # depends entirely on `xwaykeyz` (forked from `keyszer`).
 
-inotify-simple
-evdev
 appdirs
+evdev
+hyprpy
+i3ipc
+inotify-simple
 ordered-set
+pywayland
 six
 
 # TODO: Check on 'python-xlib' project by early-mid 2025 for a bug fix related to:
@@ -55,4 +55,4 @@ python-xlib==0.31
 # Migrating to using a new fork of `keyszer` called `xwaykeyz`
 # Not available via `pip` yet!
 # https://github.com/RedBearAK/xwaykeyz/
-git+https://github.com/username/repository.git@branch#egg=project_name
+git+https://github.com/RedBearAK/xwaykeyz.git@main#egg=xwaykeyz
