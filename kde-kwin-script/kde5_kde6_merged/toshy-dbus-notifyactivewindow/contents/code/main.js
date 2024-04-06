@@ -31,9 +31,9 @@ function notifyActiveWindow(window){
         return;
     }
 
-    var caption         = window.hasOwnProperty('caption') ? window.caption : "UNDEF";
-    var resourceClass   = window.hasOwnProperty('resourceClass') ? window.resourceClass : "UNDEF";
-    var resourceName    = window.hasOwnProperty('resourceName') ? window.resourceName : "UNDEF";
+    var caption         = window.hasOwnProperty('caption')          ? window.caption : "UNDEF";
+    var resourceClass   = window.hasOwnProperty('resourceClass')    ? window.resourceClass : "UNDEF";
+    var resourceName    = window.hasOwnProperty('resourceName')     ? window.resourceName : "UNDEF";
 
     callDBus(
         "org.toshy.Toshy",
@@ -49,3 +49,17 @@ function notifyActiveWindow(window){
 
 // Connect the event with the handler using the abstraction
 connectWindowActivated(notifyActiveWindow);
+
+
+// Test running a loop to overcome the problem of 
+// window titles not updating in apps with tabbed UI if
+// no window event has occurred (i.e., when switching tabs)
+
+// Adding a loop to periodically execute notifyActiveWindow with the active window
+const intervalTime = 500; // intervalTime is in milliseconds
+setInterval(() => {
+    let activeWindow = workspace.activeClient;
+    if (activeWindow) {
+        notifyActiveWindow(activeWindow);
+    }
+}, intervalTime);
