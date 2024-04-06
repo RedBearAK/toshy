@@ -45,7 +45,7 @@ i3ipc
 inotify-simple
 ordered-set
 pywayland
-six
+six       # not a direct dependency? 
 
 # TODO: Check on 'python-xlib' project by early-mid 2025 for a bug fix related to:
 # [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']
