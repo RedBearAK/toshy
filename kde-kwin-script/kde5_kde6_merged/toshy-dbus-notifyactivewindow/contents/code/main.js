@@ -55,11 +55,29 @@ connectWindowActivated(notifyActiveWindow);
 // window titles not updating in apps with tabbed UI if
 // no window event has occurred (i.e., when switching tabs)
 
-// Adding a loop to periodically execute notifyActiveWindow with the active window
-const intervalTime = 500; // intervalTime is in milliseconds
-setInterval(() => {
-    let activeWindow = workspace.activeClient;
-    if (activeWindow) {
-        notifyActiveWindow(activeWindow);
-    }
-}, intervalTime);
+
+function startPolling() {
+    setTimeout(() => {
+        // Get the active window and perform the action
+        let activeWindow = workspace.activeClient;
+        if (activeWindow) {
+            notifyActiveWindow(activeWindow);
+        }
+
+        // Call startPolling again to set up the next check
+        startPolling();
+    }, 1000); // Check every 1000 milliseconds (1 second)
+}
+
+// Start the polling loop
+startPolling();
+
+
+// // Adding a loop to periodically execute notifyActiveWindow with the active window
+// const intervalTime = 500; // intervalTime is in milliseconds
+// setInterval(() => {
+//     let activeWindow = workspace.activeClient;
+//     if (activeWindow) {
+//         notifyActiveWindow(activeWindow);
+//     }
+// }, intervalTime);
