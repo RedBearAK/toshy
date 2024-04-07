@@ -6,8 +6,8 @@ from typing import List, Dict, Optional, Tuple, Union
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
 
-import keyszer.lib.logger
-from keyszer.lib.logger import debug, error
+import xwaykeyz.lib.logger
+from xwaykeyz.lib.logger import debug, error
 
 
 
@@ -112,7 +112,7 @@ class Settings:
             self.last_settings = self.current_settings
             if not self.first_run:
                 debug(f'User preferences database modified... loading new settings...')
-                if keyszer.lib.logger.VERBOSE:
+                if xwaykeyz.lib.logger.VERBOSE:
                     debug(self, ctx="CG")   # print out the changed settings when verbose logging
             else:
                 self.first_run = False

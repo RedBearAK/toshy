@@ -11,7 +11,7 @@ import subprocess
 
 from typing import Dict
 from subprocess import DEVNULL
-from keyszer.lib.logger import debug, error
+from xwaykeyz.lib.logger import debug, error
 
 # Independent module/script to deal with installing KWin script, if necessary
 # Called by the KDE D-Bus launcher script

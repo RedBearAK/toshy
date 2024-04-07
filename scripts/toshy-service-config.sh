@@ -54,16 +54,17 @@ elif [[ -z "$XDG_SESSION_TYPE" ]]; then
 fi
 
 
-if command -v keyszer >/dev/null 2>&1; then
+if command -v xwaykeyz >/dev/null 2>&1 || command -v keyszer >/dev/null 2>&1; then
     : # no-op operator
 else
-    echo -e "The \"keyszer\" command was not found in: \n$PATH."
-    echo "Toshy config cannot be loaded until \"keyszer\" is installed."
+    echo -e "Neither \"xwaykeyz\" nor \"keyszer\" command was not found in: \n$PATH."
+    echo "Toshy config cannot be loaded until \"xwaykeyz\" or \"keyszer\" is installed."
     exit 1
 fi
 
 
-# shut down any existing keyszer (or xkeysnail) process
+# shut down any existing xwaykeyz, keyszer or xkeysnail process
+pkill -f "bin/xwaykeyz"
 pkill -f "bin/keyszer"
 pkill -f "bin/xkeysnail"
 
@@ -74,4 +75,12 @@ if command xhost &> /dev/null; then
     fi
 fi
 
-keyszer -w -c "$HOME/.config/toshy/toshy_config.py"
+if command -v xwaykeyz >/dev/null 2>&1; then
+    xwaykeyz -w -c "$HOME/.config/toshy/toshy_config.py"
+elif command -v keyszer >/dev/null 2>&1; then
+    keyszer -w -c "$HOME/.config/toshy/toshy_config.py"
+else
+    echo -e "Neither \"xwaykeyz\" nor \"keyszer\" command was found in: \n$PATH."
+    echo "Toshy config cannot be loaded until one of these is installed."
+    exit 1
+fi

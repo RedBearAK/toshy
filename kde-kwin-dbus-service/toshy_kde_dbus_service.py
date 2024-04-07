@@ -16,7 +16,7 @@ from gi.repository import GLib
 from dbus.exceptions import DBusException
 from subprocess import DEVNULL
 from typing import Dict, List, Union
-from keyszer.lib.logger import debug, error
+from xwaykeyz.lib.logger import debug, error
 
 # Independent module/script to create a D-Bus window context
 # service in a KDE Plasma environment, which will be notified

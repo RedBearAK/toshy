@@ -10,16 +10,16 @@ import signal
 import platform
 import dbus.service
 import dbus.mainloop.glib
-import keyszer.lib.logger
+import xwaykeyz.lib.logger
 
 from pywayland.client import Display
 from gi.repository import GLib
 from dbus.exceptions import DBusException
 from subprocess import DEVNULL
 from typing import Dict
-from keyszer.lib.logger import debug, error
+from xwaykeyz.lib.logger import debug, error
 
-keyszer.lib.logger.VERBOSE = True
+xwaykeyz.lib.logger.VERBOSE = True
 
 
 # Independent module/script to create a D-Bus window context service in 

@@ -31,9 +31,9 @@ function notifyActiveWindow(window){
         return;
     }
 
-    var caption         = window.hasOwnProperty('caption') ? window.caption : "UNDEF";
-    var resourceClass   = window.hasOwnProperty('resourceClass') ? window.resourceClass : "UNDEF";
-    var resourceName    = window.hasOwnProperty('resourceName') ? window.resourceName : "UNDEF";
+    var caption         = window.hasOwnProperty('caption')          ? window.caption : "UNDEF";
+    var resourceClass   = window.hasOwnProperty('resourceClass')    ? window.resourceClass : "UNDEF";
+    var resourceName    = window.hasOwnProperty('resourceName')     ? window.resourceName : "UNDEF";
 
     callDBus(
         "org.toshy.Toshy",
@@ -49,3 +49,8 @@ function notifyActiveWindow(window){
 
 // Connect the event with the handler using the abstraction
 connectWindowActivated(notifyActiveWindow);
+
+
+// We need a way to run a loop that can update the window title for 
+// apps with tabbed UIs. But loop techniques don't seem to work in
+// KWin scripts. 

@@ -11,9 +11,9 @@ import subprocess
 from subprocess import DEVNULL
 from typing import Callable, List, Dict, Union
 
-from keyszer.lib.logger import debug, error
-from keyszer.lib.key_context import KeyContext
-from keyszer.config_api import *
+from xwaykeyz.lib.logger import debug, error
+from xwaykeyz.lib.key_context import KeyContext
+from xwaykeyz.config_api import *
 
 
 ###################################################################################################
@@ -525,7 +525,7 @@ def matchProps(*,
     ### Accepted Parameters:                                        \n
     `clas` = WM_CLASS    (regex/string) [xprop WM_CLASS]            \n
     `name` = WM_NAME     (regex/string) [xprop _NET_WM_NAME]        \n
-    `devn` = Device Name (regex/string) [keyszer --list-devices]    \n
+    `devn` = Device Name (regex/string) [xwaykeyz --list-devices]   \n
     `not_clas` = `clas` but inverted, matches when "not"            \n
     `not_name` = `name` but inverted, matches when "not"            \n
     `not_devn` = `devn` but inverted, matches when "not"            \n

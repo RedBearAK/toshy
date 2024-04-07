@@ -2,7 +2,7 @@ import shutil
 import subprocess
 
 from subprocess import DEVNULL
-from keyszer.lib.logger import debug
+from xwaykeyz.lib.logger import debug
 
 
 
