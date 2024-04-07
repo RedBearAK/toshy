@@ -46,9 +46,9 @@ Other possible issues:
 
 ## Make your Linux keyboard act like a 'Tosh! <br>(or, What the Heck is This?!?)
 
-Toshy is a config file for the `keyszer` Python-based keymapper for Linux (which was forked from `xkeysnail`) along with some commands and apps to more conveniently interact with and manage the keymapper. The Toshy config is not strictly a fork of Kinto, but was based in the beginning entirely on the config file for Kinto.sh by Ben Reaves (https://github.com/rbreaves/kinto or https://kinto.sh). Without Kinto, Toshy would not exist.  Using Toshy will feel basically the same as using Kinto, just with some new features and some problems solved.  
+Toshy is a config file for the `xwaykeyz` Python-based keymapper for Linux (which was forked from `keyszer`, which was in turn forked from `xkeysnail`) along with some commands and apps to more conveniently interact with and manage the keymapper. The Toshy config is not strictly a fork of Kinto, but was based in the beginning entirely on the config file for Kinto.sh by Ben Reaves (https://github.com/rbreaves/kinto or https://kinto.sh). Without Kinto, Toshy would not exist. Using Toshy should feel basically the same as using Kinto, just with some new features and some problems solved.  
 
-The purpose of Toshy is to match, as closely as possible, the behavior of keyboard shortcuts in macOS when working on similar applications in Linux. General system-wide shortcuts such as Cmd+Q/W/A/Z/X/C/V and so on are relatively easy to mimic by just moving the modifier key locations, with `modmaps` specific to each supported keyboard type. A lot of shortcuts in Linux just use `Ctrl` in the place of where macOS would use `Cmd`. But many other shortcut combos from macOS applications have to be remapped onto entirely different shortcut combos in the Linux equivalent application. This is done using application-specific `keymaps`, that only become active when you are using the specified application or window. Some of the keymaps apply to entire groups of apps, like "terminals" or "file managers".  
+The purpose of Toshy is to match, as closely as possible, the behavior of keyboard shortcuts in macOS when working on similar applications in Linux. General system-wide shortcuts such as Cmd+Q/W/R/T/A/Z/X/C/V and so on are relatively easy to mimic by just moving the modifier key locations, with `modmaps` specific to each supported keyboard type. A lot of shortcuts in Linux just use `Ctrl` in the place of where macOS would use `Cmd`. But many other shortcut combos from macOS applications have to be remapped onto entirely different shortcut combos in the Linux equivalent application. This is done using application-specific `keymaps`, that only become active when you are using the specified application or window. Some of the keymaps apply to entire groups of apps, like "terminals" or "file managers".  
 
 All of this basic functionality is inherited from Kinto. Toshy just tries to be a bit fancier in implementing it.  
 
@@ -97,11 +97,11 @@ Four different keyboard types are supported by Toshy (Windows/PC, Mac/Apple, IBM
 
 Toshy includes a complete implementation of the macOS Option-key special characters, including all the "dead key" accent keys, from two keyboard layouts. The standard US keyboard layout, and the "ABC Extended" layout (which is still a US keyboard layout otherwise). This adds up to somewhere over 600 special characters being available, between the two layouts. It works the same way it does on macOS, when you hold the Option or Shift+Option keys. For example, Option+E, then Shift+E, gets you an "E" with Acute accent: É.  
 
-The special characters may not work as expected unless you add a bit of "throttle" delay to the macro output. This is a new `keyszer` API function that inserts timing delays in the output of combos that involve modifier keys. There is a general problem with Linux keymappers using `libinput` in a lot of situations, especially in virtual machines, with the modifier key presses being misinterpreted as occuring at a slightly different time, leading to problems with macro output.  
+The special characters may not work as expected unless you add a bit of "throttle" delay to the macro output. This is an `xwaykeyz` API function that inserts timing delays in the output of combos that involve modifier keys. There is a general problem with Linux keymappers using `libinput` in a lot of situations, especially in virtual machines, with the modifier key presses being misinterpreted as occuring at a slightly different time, leading to problems with macro output.  
 
 A slight delay will usually clear this right up, but a virtual machine environment may need a few dozen milliseconds to achieve macro stability. In fact it's not just macros, but many shortcuts in general may seem very flaky or unusuble in a VM, and this will impact the Option-key special characters, since it uses Unicode macro sequences.  
 
-A dedicated Unicode processing function was added to `keyszer` that made it possible to bring the Option-key special characters to Linux, where previously I could only add it to the Windows version of Kinto using AutoHotkey.  
+A dedicated Unicode processing function was added to `keyszer` (and inherited by `xwaykeyz`) that made it possible to bring the Option-key special characters to Linux, where previously I could only add it to the Windows version of Kinto using AutoHotkey.  
 
 If you're curious about what characters are available and how to access them, the fully documented lists for each layout are available here:  
 
@@ -115,7 +115,7 @@ There's no simple way around this, since the keymapper is only designed to send 
 
 ## General improvements over Kinto
 
- 1. Moving between different desktop environments and session types (X11/Xorg or Wayland) **_on the same machine_** is MUCH easier, due to the use of an "environment" module that feeds information to the config file about what type of environment it is starting up in. This allows some dynamic remaps specific to each type of Linux desktop environment, and without re-running the installer process (at least that is the goal). It also prompts the keymapper (a special development branch of `keyszer`) to use the correct method to get the window context information for the environment. The keymapper will also prompt the user in verbose logging output if the environment is NOT compatible yet. So if you are like me and enjoy spending time experimenting with different session types and different desktop environments on the same Linux system, Toshy will work much better for that, and will improve over time.  
+ 1. Moving between different desktop environments and session types (X11/Xorg or Wayland) **_on the same machine_** is MUCH easier, due to the use of an "environment" module that feeds information to the config file about what type of environment it is starting up in. This allows some dynamic remaps specific to each type of Linux desktop environment, and without re-running the installer process (at least that is the goal). It also prompts the keymapper to use the correct method to get the window context information for the environment. The keymapper will also prompt the user in verbose logging output if the environment is NOT compatible yet. So if you are like me and enjoy spending time experimenting with different session types and different desktop environments on the same Linux system, Toshy will work much better for that, and will improve over time.  
 
  1. Multi-user support: I believe some changes I've made will facilitate proper multi-user support on the same system. Even in the case of the user invoking a "Switch User" feature in their desktop environment, where the first user's desktop is still running in the background while another user is logged into their own desktop and using the screen (and physical keyboard). This is a very convenient feature even if you aren't actually sharing your computer with another person. There are many reasons why you might want to log into a different user's desktop to test something. Currently this absolutely requires `systemd` and `loginctl`.  
 
@@ -129,7 +129,7 @@ There's no simple way around this, since the keymapper is only designed to send 
 
  1. Changing of some settings on-the-fly, without restarting the keymapper process. The tray icon menu and GUI preferences app will allow quickly enabling or disabling certain features, or changing/disabling the special characters layout. The change takes effect right away. (Adding or changing shortcuts in the config file will still require restarting the keymapper, which I've tried to make as easy as possible.)  
 
- 1. Modmaps with `keyszer` are now concurrent/cascading rather than mutually exclusive. This enables some of the interesting fixes described in the following items.  
+ 1. Modmaps with `xwaykeyz` are concurrent/cascading rather than mutually exclusive. This enables some of the interesting fixes described in the following items.  
 
  1. Fix for "media" functions on arrow keys. Some laptop keyboards don't have the usual PgUp/PgDn/Home/End navigation functions on the arrow keys, when you hold the `Fn` key. Instead, they have PlayPause/Stop/Back/Forward. A `modmap` in the Toshy config will optionally fix this, making the arrow keys work more like a standard MacBook keyboard. This feature can be enabled from the tray icon or GUI preferences app.  
 
@@ -165,9 +165,9 @@ There's no simple way around this, since the keymapper is only designed to send 
 
 - Python >=3.8 (to run the keymapper in its `venv`)
 
-- `keyszer` (keymapper for Linux, forked from `xkeysnail`)
+- `xwaykeyz` (keymapper for Linux, forked from `keyszer`)
 
-    - Automatically installed from custom branch by Toshy installer
+    - Automatically installed by Toshy setup script
 
 - X11/Xorg, or one of these Wayland environments:
 
@@ -215,7 +215,7 @@ If it's not found you may need to enable the Flathub repo on your machine. Go to
 
 When you get it installed, you can just use the "Browse" tab in this application to search for the extensions by name and quickly install them.  
 
-There is no risk of any kind of conflict when installing more than one of the compatible shell extensions. Which might be advisable, to reduce the risk of not having a working extension for a while the next time you upgrade your system in-place and wind up with a newer version of GNOME that one or two of the extensions hasn't been updated to support. I expect at least one of the (now three) extensions will always be updated quickly to support the latest GNOME. The branch of `keyszer` installed by Toshy will seamlessly jump to trying the other extensions in case one fails or is disabled/uninstalled for any reason. You just need to have at least one from the list installed and enabled, and when it responds over D-Bus to the query from `keyszer` it will be marked as the "good" one and used from then on, unless it stops responding. Lather, rinse, repeat.  
+There is no risk of any kind of conflict when installing more than one of the compatible shell extensions. Which might be advisable, to reduce the risk of not having a working extension for a while the next time you upgrade your system in-place and wind up with a newer version of GNOME that one or two of the extensions hasn't been updated to support. I expect at least one of the (now three) extensions will always be updated quickly to support the latest GNOME. The window context module of the keymapper installed by Toshy will seamlessly jump to trying the other extensions in case one fails or is disabled/uninstalled for any reason. You just need to have at least one from the list installed and enabled, and when it responds over D-Bus to the query from the keymapper it will be marked as the "good" one and used from then on, unless it stops responding. Lather, rinse, repeat.  
 
 The `Xremap` GNOME shell extension is the only one that supports older GNOME versions, so it's the only one that will show up when browsing the extensions list from an environment like Zorin OS 16.x (GNOME 3.38.x) or the distros based on Red Hat Enterprise Linux (clones or RHEL compatibles like AlmaLinux, Rocky Linux, Oracle Linux, EuroLinux, etc.) which are still using GNOME 40.x on the 9.x versions.  
 
@@ -776,7 +776,7 @@ toshy-fnmode --info             (show current status of fnmode)
 toshy-fnmode [--option] [mode]  (change fnmode non-interactively)
 ```
 
-To activate the Toshy Python virtual environment for doing things like running `keyszer` directly, it is necessary to run this command:  
+To activate the Toshy Python virtual environment for doing things like running the keymapper directly, it is necessary to run this command:  
 
 ```
 source toshy-venv
@@ -948,7 +948,7 @@ https://github.com/RedBearAK/toshy/wiki/How-to-(persistently)-change-the-Cmd-Spa
 
 **Short version**: Don't worry, it's in a backup folder, and you can easily merge your changes back into the new config.  
 
-**Long version**: Because the config file is continually evolving, and the config file itself is really a "program" written in Python that is literally executed as Python code by the keymapper (`keyszer`) at runtime, it's a bit difficult to retain the changes you've made and be sure that the new version of the config file will load without some sort of error.  
+**Long version**: Because the config file is continually evolving, and the config file itself is really a "program" written in Python that is literally executed as Python code by the keymapper (`xwaykeyz`) at runtime, it's a bit difficult to retain the changes you've made and be sure that the new version of the config file will load without some sort of error.  
 
 So the best solution I've come up with so far is to have the installer make a backup of your whole `~/.config/toshy` folder to a timestamped folder in `~/.config/toshy_config_backups`.  
 
@@ -959,11 +959,11 @@ The backup folders are typically less than 1 MB in size, as the Python virtual e
 
 Using some software like Visual Studio Code, it is possible to compare the old and new config files in a "diff" sort of view and quickly see the differences. This can make it very easy to merge your custom changes back into the new config file with a few clicks. Then all you need to do is save the new config and restart the Toshy services or config script.  
 
-If you keep your modifications within the `keyszer` API functions at the very beginning of the config file, and the "User Apps" marked section around the middle of the config file, it should be pretty easy to merge your customizations back whenever you update Toshy or install on a new machine. The "User Apps" section is designed to be a good place in the config to put some customizations like making the brightness and volume keys on a laptop function row work correctly for your specific machine.  
+If you keep your modifications within the keymapper API functions slice at the very beginning of the config file, or the "User Apps" marked section around the middle of the config file (or some other marked slice), it should be pretty easy to merge your customizations back whenever you update Toshy or install on a new machine. The "User Apps" section is designed to be a good place in the config to put some customizations like making the brightness and volume keys on a laptop function row work correctly for your specific machine.  
 
 I will be trying to work on doing a more automatic copying/merging of existing user settings into a new config file.  
 
-There is an `include()` function in `keyszer` that theoretically allows separate files to be part of the config, but due to the dynamic nature of the config file, and how it gets loaded by the keymapper, I had a lot of issues trying to use that method to solve this problem.  
+There is an `include()` function in `xwaykeyz/keyszer` that theoretically would allow separate files to be part of the config, but due to the dynamic nature of the config file, and how it gets loaded by the keymapper, I had a lot of issues trying to use that method to solve this problem.  
 
 ### My keyboard is not recognized as the correct type
 
@@ -1029,9 +1029,9 @@ Which RC file you need to `source` depends on your shell.
 
 In the case that the path was already added to the RC file, another way of getting a new environment where you can see the `toshy-*` commands is to just close your terminal window (or tab) and open a new one.  
 
-### Mod+clicking blocked by `keyszer` Suspend Timeout
+### Mod+clicking blocked by keymapper Suspend Timeout
 
-The `keyszer` (fork of `xkeysnail`) keymapper is pretty good, but there can be an issue with [modifier key] + [tap or click], depending on the type of pointing device you're using, and whether the keymapper automatically "grabs" it at startup.  
+The keymapper is pretty good, but there can be an issue with [modifier key] + [tap or click], depending on the type of pointing device you're using, and whether the keymapper automatically "grabs" it at startup.  
 
 The keymapper uses a technique that "suspends" modifier key presses briefly (default is 1 second) to try and keep certain applications from seeing the original (pre-modmapped) physical modifier key press event, and performing some unwanted action. Notable apps that have issues with doing the wrong thing just from seeing a modifier key press are `Visual Studio Code` (and its more Open Source variants `VSCodium` and `Code - OSS`) and the `Firefox` web browser. They will frequently focus or open items on the menu bar then they see the `Option/Alt` key in any way.  
 
@@ -1098,7 +1098,7 @@ The Option-key special characters in particular rely on a shortcut combo (`Shift
 
 This will also usually affect "macros" where you attempt to get the keymapper to type out multiple characters or strings or perform multiple shortcut combos when you use a shortcut. They may fail somewhere in the middle, or a shifted character will come out as a non-shifted character.  
 
-A solution (well, a "mitigation") for this has been implemented in `keyszer`, and the API function is already in the Toshy config file. Injecting a short delay before and after the "normal" key press (to make sure that the modifier press and release are seen as happening with the correct timing) will usually solve the issue.  
+A solution (well, a "mitigation") for this has been implemented in the keymapper, and the API function is already in the Toshy config file. Injecting a short delay before and after the "normal" key press (to make sure that the modifier press and release are seen as happening with the correct timing) will usually solve the issue.  
 
 Look for this code early in the Toshy config file:  
 
@@ -1139,7 +1139,7 @@ For some reason, even when I am in GNOME, the Unicode character entry shortcut o
 
 As of right now the keymapper has a key definition file (a mapping of key symbols to key codes) that is only designed for standard US/English keyboard layouts/languages. And, the keymapper has no knowledge of the current keyboard layout/language, which is remarkably difficult to obtain even on X11/Xorg, and Wayland is worse. Due to these limitations there will be shortcut combos that will act like you are using a US QWERTY keyboard layout, even though you are using, for instance, French AZERTY or something else. If you attempt to use `Cmd+A` on such a layout, the result will be `Cmd+Q` as the keymapper still thinks the `A` key is a `Q`. So instead of "Select All" you'd perform "Close Window".  
 
-There is a solution to this, which is to find and modify the `key.py` file in the `keyszer` package folder (which in the case of Toshy will now be somewhere in `~/.config/toshy/.venv/`). But that would need to be done for every possible keyboard layout that is different from a US QWERTY layout.  
+There is a solution to this, which is to find and modify the `key.py` file in the `xwaykeyz` package folder (which in the case of Toshy will now be somewhere in `~/.config/toshy/.venv/`). But that would need to be done for every possible keyboard layout that is different from a US QWERTY layout.  
 
 Some international users choose to use a US layout simply because it is a bit easier to use for coding, so they will not run into this problem.  
 
