@@ -17,9 +17,9 @@ from xwaykeyz.config_api import *
 
 
 ###################################################################################################
-###  SLICE_MARK_START: keyszer_api  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
+###  SLICE_MARK_START: keymapper_api  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 
-# Keyszer-specific config settings - REMOVE OR SET TO DEFAULTS FOR DISTRIBUTION
+# Keymapper-specific config settings - REMOVE OR SET TO DEFAULTS FOR DISTRIBUTION
 dump_diagnostics_key(Key.F15)   # default key: F15
 emergency_eject_key(Key.F16)    # default key: F16
 
@@ -34,7 +34,7 @@ throttle_delays(
     key_post_delay_ms   = 18,      # default: 0 ms, range: 0-150 ms, suggested: 1-100 ms
 )
 
-###  SLICE_MARK_END: keyszer_api  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
+###  SLICE_MARK_END: keymapper_api  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 ###################################################################################################
 
 
