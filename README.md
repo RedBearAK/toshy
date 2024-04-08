@@ -28,7 +28,7 @@ Go to this FAQ entry for more info:
 
 Other possible issues:  
 
-- May have issues installing on distros not on the "tested" list below. If you think your distro is closely related to one on the list, try the `list-distros` command with the setup script, and then the `--override-distro` option for the `install` command. See the **How to Install** section.  
+- May have issues installing on distros not on the "tested" list below. If you think your distro is closely related to one on the list, try the `list-distros` command with the setup script, and then the `--override-distro` option for the `install` command. See the [**How to Install**](#how-to-install) section.  
 
 - May seem to run at login, but not do any remapping, needing `toshy-config-verbose-start` in the terminal to troubleshoot. Or, it may just need a restart of the services from the tray icon or with `toshy-services-restart`. Check the output of `toshy-services-log` and `toshy-services-status` first to see if there is an obvious error message that explains the problem. Like not having a compatible GNOME Shell extension installed/enabled to support a Wayland+GNOME session. Other than the Wayland+GNOME situation, I don't really see this much anymore.  
 
@@ -391,7 +391,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - Many Toshy dependencies are pre-installed on Nobara
     - Nobara pre-installs the Extension Manager app. Nice!
     - Enable the AppIndicator extension (pre-installed) for tray icon
-    - Install an extension from `Requirements` if using Wayland+GNOME
+    - Install an extension from [**Requirements**](#requirements) if using Wayland+GNOME
 
 ### Red Hat Enterprise Linux (RHEL), Clones, CentOS Stream
 
@@ -462,19 +462,19 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 - openSUSE Tumbleweed (rolling release)
 
-    - GNOME desktop works (Wayland session needs extension, see Requirements)
+    - GNOME desktop works (Wayland session needs extension, see [**Requirements**](#requirements))
     - KDE desktop works (X11/Xorg or Wayland)
     - Other desktop choices should work, if session is X11/Xorg
 
 - openSUSE Leap 15.5/15.6 (SLES-based, fixed release) **_WORKING!_**
 
-    - GNOME desktop works (Wayland session needs extension, see Requirements)
+    - GNOME desktop works (Wayland session needs extension, see [**Requirements**](#requirements))
     - KDE desktop works (X11/Xorg or Wayland)
     - Other desktop choices should work, if session is X11/Xorg
 
 - openSUSE Aeon/Kalpa (OpenSUSE MicroOS-based, rolling release?)
 
-    - Aeon Wayland needs GNOME shell extension (see Requirements)
+    - Aeon Wayland needs GNOME shell extension (see [**Requirements**](#requirements))
     - Kalpa (KDE Plasma) fully supported
     - Uses `transactional-update` to install native packages
 
@@ -519,7 +519,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 - Zorin OS 17/17.1 Core/Lite (Ubuntu-based)
 
     - X11/Xorg or Wayland+GNOME (requires extension)
-    - Wayland+GNOME requires extension (see Requirements)
+    - Wayland+GNOME requires extension (see [**Requirements**](#requirements))
     - GNOME Shell is version 43.x, any extension should work now
 
 - Zorin OS 16.2/16.3 Core/Lite (Ubuntu-based)
@@ -643,7 +643,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
     - KDE Dr460nized works
     - KDE Lite also works
-    - GNOME will need shell extension (see Requirements)
+    - GNOME will need shell extension (see [**Requirements**](#requirements))
     - Xfce, Cinnamon, i3wm, Qtile should work (not tested)
     - Sway should work (not tested)
     - Hyprland should work, but not tested, because:
@@ -686,7 +686,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 - Wayland sessions
 
     - Cinnamon 6.0 or later
-    - GNOME 3.38 or later (needs shell extension, see Requirements)
+    - GNOME 3.38 or later (needs shell extension, see [**Requirements**](#requirements))
     - Hyprland
     - Plasma 5 and 6 (KDE)
     - Sway
@@ -695,7 +695,7 @@ If you are in an X11/Xorg login session, the desktop environment or window manag
 
 On the other hand, if you are in a Wayland session, it is only possible to obtain the per-application or per-window information (for the app-specific shortcut keymaps) by using solutions that are custom to a limited set of desktop environments (or window managers).  
 
-For Wayland+GNOME this requires at least one of the known compatible GNOME Shell extensions to be installed and enabled. See above in "Requirements".  
+For Wayland+GNOME this requires at least one of the known compatible GNOME Shell extensions to be installed and enabled. See above in [**Requirements**](#requirements).  
 
 There are specific remaps or overrides of default remaps for several common desktop environments (or distros which have shortcut peculiarities in their default desktop setups). They become active if the desktop environment is detected correctly by the `env.py` module used by the config file, or the information about the desktop can be placed in some `OVERRIDE` variables in the config file.  
 
