@@ -1434,7 +1434,8 @@ def extract_slices(data: str) -> Dict[str, str]:
         ('DISTRO_NAME  ', 'DISTRO_ID    '),
         ('OVERRIDE_DISTRO_NAME', 'OVERRIDE_DISTRO_ID'),
         ('DISTRO_NAME', 'DISTRO_ID'),
-        # Add more tuples as needed for other deprecated object names
+        ('Keyszer-specific config settings', 'Keymapper-specific config settings'),
+        # Add more tuples as needed for other deprecated object names or strings
     ]
 
     for slice_name, content in slices_dct.items():
