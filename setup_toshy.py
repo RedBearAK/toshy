@@ -1434,12 +1434,31 @@ def extract_slices(data: str) -> Dict[str, str]:
         ('DISTRO_NAME  ', 'DISTRO_ID    '),
         ('OVERRIDE_DISTRO_NAME', 'OVERRIDE_DISTRO_ID'),
         ('DISTRO_NAME', 'DISTRO_ID'),
+        ('Keyszer-specific config settings', 'Keymapper-specific config settings'),
+        # Add more tuples as needed for other deprecated object names or strings
     ]
 
     for slice_name, content in slices_dct.items():
         for deprecated_name, new_name in deprecated_object_names_ordered_LoT:
             content = content.replace(deprecated_name, new_name)
         slices_dct[slice_name] = content
+
+    # Logic to update deprecated slice names using a list of tuples (for exact ordering)
+    deprecated_slice_names_ordered_LoT = [
+        # Make 'keyszer_api' slice name generic; 'keyszer' was replaced with 'xwaykeyz'
+        ('keyszer_api', 'keymapper_api'),
+        # Add more tuples as needed for other deprecated slice names
+    ]
+
+    updated_slices_dct = {}
+    for slice_name, content in slices_dct.items():
+        for deprecated_name, new_name in deprecated_slice_names_ordered_LoT:
+            if slice_name == deprecated_name:
+                slice_name = new_name
+                break
+        updated_slices_dct[slice_name] = content
+
+    slices_dct = updated_slices_dct
 
     # Protect the barebones config file if a slice tagged with "barebones" found, 
     if 'barebones_user_cfg' in slices_dct or any('barebones' in key for key in slices_dct):
