@@ -21,8 +21,6 @@ source "$HOME/.config/toshy/.venv/bin/activate"
 
 echo -e "\nList of devices seen by the keymapper (xwaykeyz or keyszer): \n"
 
-keyszer --list-devices
-
 if command -v xwaykeyz >/dev/null 2>&1; then
     xwaykeyz --list-devices
 elif command -v keyszer >/dev/null 2>&1; then
