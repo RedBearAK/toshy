@@ -1222,9 +1222,11 @@ def install_udev_rules():
     if setfacl_path is not None:
         acl_rule                = f', RUN+="{setfacl_path} -m g::rw /dev/uinput"'
     new_rules_content           = (
-        'SUBSYSTEM=="input", GROUP="input"\n'
-        # f'KERNEL=="uinput", SUBSYSTEM=="misc", GROUP="input", MODE="0660"{acl_rule}\n'
+        'SUBSYSTEM=="input", GROUP="input", MODE="0660", TAG+="uaccess"\n'
         f'KERNEL=="uinput", SUBSYSTEM=="misc", GROUP="input", MODE="0660", TAG+="uaccess"{acl_rule}\n'
+        # 'ACTION=="add", KERNEL=="event*", ATTRS{name}=="XWayKeyz (virtual) Keyboard", '   # no line break!
+        # 'ENV{ID_INPUT_KEYBOARD}="1", ENV{ID_INPUT_KEY}="1", '   # no line break!
+        # 'ENV{LIBINPUT_ATTR_KEYBOARD_INTEGRATION}="internal"\n'
     )
 
     def rules_file_missing_or_content_differs():
@@ -2693,7 +2695,7 @@ def uninstall_toshy():
     if response_rm_udev_rules.lower() == 'y':
         elevate_privileges()
         # define the udev rules file path
-        udev_rules_file = '/etc/udev/rules.d/90-toshy-keymapper-input.rules'
+        udev_rules_file = '/etc/udev/rules.d/70-toshy-keymapper-input.rules'
         # remove the 'udev' rules file
         try:
             subprocess.run(['sudo', 'rm', '-f', udev_rules_file], check=True)
