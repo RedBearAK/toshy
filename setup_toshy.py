@@ -1224,9 +1224,9 @@ def install_udev_rules():
     new_rules_content           = (
         'SUBSYSTEM=="input", GROUP="input", MODE="0660", TAG+="uaccess"\n'
         f'KERNEL=="uinput", SUBSYSTEM=="misc", GROUP="input", MODE="0660", TAG+="uaccess"{acl_rule}\n'
-        'ACTION=="add", KERNEL=="event*", ATTRS{name}=="XWayKeyz (virtual) Keyboard", '   # no line break!
-        'ENV{ID_INPUT_KEYBOARD}="1", ENV{ID_INPUT_KEY}="1", '   # no line break!
-        'ENV{LIBINPUT_ATTR_KEYBOARD_INTEGRATION}="internal"\n'
+        # 'ACTION=="add", KERNEL=="event*", ATTRS{name}=="XWayKeyz (virtual) Keyboard", '   # no line break!
+        # 'ENV{ID_INPUT_KEYBOARD}="1", ENV{ID_INPUT_KEY}="1", '   # no line break!
+        # 'ENV{LIBINPUT_ATTR_KEYBOARD_INTEGRATION}="internal"\n'
     )
 
     def rules_file_missing_or_content_differs():
