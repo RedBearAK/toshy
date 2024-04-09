@@ -2693,7 +2693,7 @@ def uninstall_toshy():
     if response_rm_udev_rules.lower() == 'y':
         elevate_privileges()
         # define the udev rules file path
-        udev_rules_file = '/etc/udev/rules.d/90-toshy-keymapper-input.rules'
+        udev_rules_file = '/etc/udev/rules.d/70-toshy-keymapper-input.rules'
         # remove the 'udev' rules file
         try:
             subprocess.run(['sudo', 'rm', '-f', udev_rules_file], check=True)
