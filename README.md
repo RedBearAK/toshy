@@ -635,6 +635,10 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 ### Arch, Arch-based and related distros
 
+- Arch in general? (maybe, needs more testing)
+
+    - Installer will try to work on any distro that identifies as `arch`
+
 - ArcoLinux (Arch-based)
 
     - ArcoLinuxL ISO (full installer) tested
@@ -667,10 +671,6 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - KDE Plasma desktop variant tested
     - `plasma-wayland-session` can be installed
     - See FAQ Re: Application Menu shortcut fix
-
-- Arch in general? (maybe, needs more testing)
-
-    - Installer will try to work on any distro that identifies as `Arch`
 
 ### Independent distros
 
