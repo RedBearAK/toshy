@@ -121,7 +121,7 @@ There's no simple way around this, since the keymapper is only designed to send 
 
  1. Certain Linux distros, outside the most popular group of Ubuntu-based, Debian-based, Arch-based and Red Hat/Fedora-related distros, really did not like the way the Kinto installer messes with the `sudoers` file. The Kinto installer does this to provide the user easier access to certain commands used to control the `xkeysnail` service. Some of these Linux distros would get b0rked quite badly if you ran the Kinto installer on them. A couple I ran into that had this problem were antiX and Gentoo. Strangely, the close relative of antiX, the very popular MX Linux, did not have the same problem with Kinto that antiX had. The Toshy installer does nothing with `sudoers` and uses "user" `systemd` services, or a manual script, and sets up `udev` rules so that the user doesn't need to run anything with `sudo` to make the keymapping work. I've already tested Toshy successfully on antiX. Still looking for a user-friendly Gentoo ISO to use for testing, but I have no reason to believe it won't work just as well, once I figure out the native packages needed.  
 
- 1. A start on Wayland support. Five Wayland+[desktop environment] types are working now: Wayland+Cinnamon (installs an extension), Wayland+GNOME (needs third-party shell extension installed), Wayland+Plasma (installs a KWin script), Wayland+sway, and Wayland+Hyprland.  
+ 1. A start on Wayland support. Wayland support is probably always going to be limited, since each different compositor needs a different method to access the focused app window info (class and title/name). To see what is currently working, go to [this section](#currently-working-desktop-environments-or-window-managers) of the README.  
 
  1. The Option-key special characters, as described above. Two different layouts are available. Or it can be completely disabled.  
 
@@ -285,7 +285,7 @@ This option will force the installer to attempt the install for that distro name
 ./setup_toshy.py install --barebones-config
 ```
 
-This special option will install a "barebones" config file that does no modmapping or keymapping by default (besides a simple example keymap that gives access to a couple of currency symbols, as a demo). The option will also convert an existing Toshy config into a "barebones" config file, but will ask for explicit confirmation. This config will of course not provide any of the features that a normal Toshy config would, other than the ability to use the keymapper in any of the compatible environments (X11/Xorg, Wayland+Cinnamon, Wayland+GNOME, Wayland+Hyprland, Wayland+Plasma, or Wayland+Sway).  
+This special option will install a "barebones" config file that does no modmapping or keymapping by default (besides a simple example keymap that gives access to a couple of currency symbols, as a demo). The option will also convert an existing Toshy config into a "barebones" config file, but will ask for explicit confirmation. This config will of course not provide any of the features that a normal Toshy config would, other than the ability to use the keymapper in any of the [compatible environments](#currently-working-desktop-environments-or-window-managers).  
 
 The Toshy installer should try to retain your changes inside any of the editable "slices" of the barebones config file, and avoid replacing your barebones config with a regular Toshy config file, **_even if you don't use the same CLI option the next time you run the installer_**. Submit an issue if it doesn't respect your barebones config. Even if that happens, the previous config file should be in the timestamped backup folder that the installer always creates.  
 
@@ -699,7 +699,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - Cinnamon 6.0 or later
     - GNOME 3.38 or later (needs shell extension, see [**Requirements**](#requirements))
     - Hyprland
-    - Plasma 5 and 6 (KDE)
+    - Plasma 5 and 6 (KDE) [a KWin script gets installed]
     - Sway
 
 If you are in an X11/Xorg login session, the desktop environment or window manager doesn't really matter. The keymapper gets the window class/name/title information directly from the X server with `Xlib`.  
@@ -719,6 +719,7 @@ Toshy does its best to set itself up automatically on any Linux system that uses
 - `eopkg`
 - `pacman`
 - `rpm-ostree`
+- `transactional-update`
 - `xbps-install`
 - `zypper`
 
@@ -746,7 +747,7 @@ toshy-services-stop
 toshy-services-restart
 ```
 
-To disable/enable the Toshy services (to prevent or restore autostart at login), use the commands below. It should still be possible to start/restart the services with the commands above if they are disabled. Using the "enable" command in turn will not automatically start the services immediately if they are not running (but the services will then autostart at the next login). If the services are enabled they can be stopped at any time with the command above, but the enabled services will start automatically at the next login.  
+To disable/enable the Toshy services (to prevent or restore autostart at login), use the commands below. It should still be possible to start/restart the services with the commands above if they are disabled. Using the "enable" command in turn will not automatically start the services immediately if they are not running (but the services will then autostart at the next login). If the services are enabled they can be stopped at any time with the command above, but the enabled services will start automatically at the next login. (NEW: This can finally also be dealt with in the tray icon menu, by toggling the `Autostart Toshy Services` item near the top of the menu.)  
 
 ```
 toshy-services-disable  (services can still be started/stopped manually)
@@ -819,7 +820,7 @@ There are two levels to what the Toshy config does (just like Kinto, from which 
 
 The second level of remapping is the application group/class-specific modmaps and keymaps (such as "in terminals"), and then the true app-specific keymaps for individual applications (such as "in Firefox"). These will either be working or not working.  
 
-One of the best simple tests, if you have Firefox installed, is if using the `Cmd+comma` shortcut (which opens preferences in many macOS applications) opens a new tab in Firefox, then rapidly types the string "about:preferences", and opens the Firefox preferences. If this works, or even if it just gets through typing the "about:preferences" in the address bar, it's a clear indication that the app-specific keymaps are working. Because this is only supposed to happen when a Firefox web browser window class is detected.  
+One of the best simple tests, if you have Firefox installed, is if using the `Cmd+comma` shortcut (which opens preferences in many macOS applications) opens a new tab in Firefox, then rapidly types the string `about:preferences`, and opens the Firefox preferences. If this works, or even if it just gets through typing the "about:preferences" in the address bar, it's a clear indication that the app-specific keymaps are working. Because this is only supposed to happen when a Firefox web browser window class is detected.  
 
 > [!NOTE]
 > If you wind up with a string like `about;preferences` (note the semicolon instead of colon) and it does a google search each time instead of opening the Firefox preferences, you're having a problem with modifier timing in the output of macros from the keymapper. You'll need to look for the FAQ entry on changing the delays in the `throttle_delays` API in the beginning of the config file, and set longer delays to make that go away. Wayland environments and virtual machines will generally require longer delays to avoid this issue.  
