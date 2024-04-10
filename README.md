@@ -377,24 +377,16 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 - Fedora 38/39/40 (upstream of CentOS Stream and RHEL)
 
-    - Workstation (GNOME) works (Wayland session requires extension)
+    - Workstation (GNOME) works
+    - Wayland+GNOME requires shell extension (see [**Requirements**](#requirements))
     - KDE Plasma variant works (X11/Xorg or Wayland session)
     - Sway spin variant works
     - Hyprland works (using JaKooLit Fedora-Hyprland setup script)
     - Other spins like Cinnamon, Budgie should work fine
 
-- Silverblue/Kinoite 38 (Fedora-based immutables)
-
-    - Package layering is used currently
-    - GNOME Wayland session requires extension
-
 - Fedora Asahi Remix 39 (Fedora for Apple Silicon Macs)
 
     - Reported working by user (See Toshy issue #98)
-
-- Ultramarine Linux 38 (Fedora-based)
-
-    - Ultramarine GNOME tested (Wayland session requires extension)
 
 - Nobara 38 (Fedora-based)
 
@@ -403,6 +395,15 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - Nobara pre-installs the Extension Manager app. Nice!
     - Enable the AppIndicator extension (pre-installed) for tray icon
     - Install an extension from [**Requirements**](#requirements) if using Wayland+GNOME
+
+- Silverblue/Kinoite 38/39/40 (Fedora-based immutables)
+
+    - Package layering is used during install (can be removed later?)
+    - Wayland+GNOME session needs extension (see [**Requirements**](#requirements))
+
+- Ultramarine Linux 38/39 (Fedora-based)
+
+    - Ultramarine GNOME tested (Wayland session requires extension)
 
 ### Red Hat Enterprise Linux (RHEL), Clones, CentOS Stream
 
@@ -419,12 +420,6 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - KDE Plasma desktop tested (Wayland session supported)
     - Some non-default (but official) repos like CRB will be enabled
 
-- Eurolinux 9.2 (RHEL clone)
-
-    - Tested with "Server with GUI" installer choice
-    - Default GNOME desktop tested (Wayland session requires extension)
-    - Some non-default (but official) repos like CRB will be enabled
-
 - AlmaLinux 8.8 (RHEL clone) - Partial support:
 
     - Tested with "Workstation" installer choice, not "Server with GUI"
@@ -433,11 +428,6 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
         - GNOME is old, no compatible Shell extension available
     - Install AppIndicator extension from the Software app
     - RHEL 8.x and clones probably also work in a similar manner
-
-- Other RHEL clones should be supportable
-
-    - Red Hat Enterprise Linux itself? Probably.
-    - Try `./setup_toshy.py --override-distro=almalinux` or `=rhel`
 
 - CentOS Stream 9 (RHEL 9 upstream)
 
@@ -459,7 +449,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
     - You must first install `python3` to run `setup_toshy.py`
     - GUI preferences app will not work (Tk too old for `sv_ttk` theme)
-    - systemd "user" services are not supported in CentOS/RHEL 7
+    - `systemd` "user" services are not supported in CentOS/RHEL 7
     - Auto-start at login with systemd services not available
     - Cmd+Space (Alt+F1) shortcut must be assigned to app launcher menu
     - To manually start Toshy config from tray icon menu:
@@ -469,13 +459,18 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
         - Use `toshy-config-start` or `toshy-config-verbose-start`
         - Use `toshy-config-stop` to stop a background Toshy config
 
+- Eurolinux 9.2 (RHEL clone)
+
+    - Tested with "Server with GUI" installer choice
+    - Default GNOME desktop tested (Wayland session requires extension)
+    - Some non-default (but official) repos like CRB will be enabled
+
+- RHEL and RHEL clones not listed should be supportable
+
+    - Red Hat Enterprise Linux itself? Probably.
+    - Try `./setup_toshy.py --override-distro=almalinux` or `=rhel`
+
 ### openSUSE (RPM-based packaging system)
-
-- openSUSE Tumbleweed (rolling release)
-
-    - GNOME desktop works (Wayland session needs extension, see [**Requirements**](#requirements))
-    - KDE desktop works (X11/Xorg or Wayland)
-    - Other desktop choices should work, if session is X11/Xorg
 
 - openSUSE Leap 15.5/15.6 (SLES-based, fixed release) **_WORKING!_**
 
@@ -489,6 +484,12 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - Kalpa (KDE Plasma) fully supported
     - Uses `transactional-update` to install native packages
 
+- openSUSE Tumbleweed (rolling release)
+
+    - GNOME desktop works (Wayland session needs extension, see [**Requirements**](#requirements))
+    - KDE desktop works (X11/Xorg or Wayland)
+    - Other desktop choices should work, if session is X11/Xorg
+
 ### OpenMandriva (DNF/RPM-based, descended from Mandriva, Mandrake)
 
 - OpenMandriva ROME 2023/2024 (rolling release variant)
@@ -500,6 +501,45 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - Wayland+Plasma tested
 
 ### Ubuntu variants and Ubuntu-based distros
+
+- Bodhi Linux 7.0 (Ubuntu-based)
+
+    - Desktop is Enlightenment
+    - Install package `xapp` to remove some errors from log
+
+- Feren OS 2023.04 (Ubuntu LTS variant)
+
+    - Current base is Ubuntu 20.04 LTS
+    - Desktop is KDE Plasma 5.25.x
+
+- elementary OS 7.0/7.1 (Ubuntu-based)
+
+    - Tray icons are not supported in Pantheon desktop
+
+- KDE Neon (based on Ubuntu LTS releases)
+
+    - X11/Xorg or Wayland+Plasma session
+
+- Linux Mint 21.1/21.2/21.3 (Ubuntu-based)
+
+    - Cinnamon desktop (X11/Xorg or Wayland)
+    - Xfce desktop (X11/Xorg only)
+    - MATE desktop (X11/Xorg only)
+    - All desktops can be installed on the same Mint system:
+    - `sudo apt install mint-meta-mate mint-meta-xfce mint-meta-cinnamon`
+
+- Pop!_OS 22.04 LTS (Ubuntu-based)
+
+    - X11/Xorg or Wayland+GNOME (requires extension)
+
+- Rhino Linux (Ubuntu rolling release variant)
+
+    - Desktop is Xfce/Unicorn (X11/Xorg)
+
+- Tuxedo OS 1/2 (Ubuntu LTS variant)
+
+    - X11/Xorg
+    - KDE Plasma desktop
 
 - Ubuntu official variants tested:
 
@@ -519,14 +559,6 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
         - **_PACKAGE CONFLICT IN REPO_**
         - X11/Xorg only
 
-- Pop!_OS 22.04 LTS (Ubuntu-based)
-
-    - X11/Xorg or Wayland+GNOME (requires extension)
-
-- KDE Neon (based on Ubuntu LTS releases)
-
-    - X11/Xorg or Wayland+Plasma session
-
 - Zorin OS 17/17.1 Core/Lite (Ubuntu-based)
 
     - X11/Xorg or Wayland+GNOME (requires extension)
@@ -538,37 +570,6 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - X11/Xorg or Wayland+GNOME (requires extension)
     - NOTE: GNOME Shell on Zorin 16.x is old: 3.38
     - 'Xremap' is the only compatible shell extension
-
-- elementary OS 7.0/7.1 (Ubuntu-based)
-
-    - Tray icons are not supported in Pantheon desktop
-
-- Linux Mint 21.1/21.2/21.3 (Ubuntu-based)
-
-    - Cinnamon desktop (X11/Xorg or Wayland)
-    - Xfce desktop (X11/Xorg only)
-    - MATE desktop (X11/Xorg only)
-    - All desktops can be installed on the same Mint system:
-    - `sudo apt install mint-meta-mate mint-meta-xfce mint-meta-cinnamon`
-
-- Feren OS 2023.04 (Ubuntu LTS variant)
-
-    - Current base is Ubuntu 20.04 LTS
-    - Desktop is KDE Plasma 5.25.x
-
-- Tuxedo OS 1/2 (Ubuntu LTS variant)
-
-    - X11/Xorg
-    - KDE Plasma desktop
-
-- Rhino Linux (Ubuntu rolling release variant)
-
-    - Desktop is Xfce/Unicorn (X11/Xorg)
-
-- Bodhi Linux 7.0 (Ubuntu-based)
-
-    - Desktop is Enlightenment
-    - Install package `xapp` to remove some errors from log
 
 ### Debian and Debian-based distros
 
