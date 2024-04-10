@@ -572,41 +572,12 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 ### Debian and Debian-based distros
 
-- LMDE 5/6 (Linux Mint Debian Edition)
-
-    - Default desktop is Cinnamon
-
-- Kali Linux 2023/2024 (Debian-based)
-
-    - Tested with default desktop of Xfce
-    - GNOME & KDE Plasma available in Kali installer
-
-- PeppermintOS (Debian-based)
-
-    - New release based on Debian 12 tested
-    - Desktop is Xfce4 v4.18
-
-- Deepin 23 (Debian-based)
-
-    - NOTE: Long delay before services start (Zenity error?)
-
-- Q4OS 5.2 (Debian-based)
-
-    - Trinity desktop ISO tested.
-
 - antiX 22.x/23.x (Debian-based, related to MX Linux)
 
     - Preliminary support, no SysVinit services yet, so no auto-start.
     - Starting only the "config script" from the tray icon menu should work now.
     - Use `toshy-config-start` or `toshy-config-verbose-start` for manual start.
     - Only "rox-icewm" desktop verified/tested.
-
-- MX Linux 21.x/23.x (Debian-based, related to antiX)
-
-    - Preliminary support, no SysVinit services yet, so no auto-start.
-    - Starting only the "config script" from the tray icon menu should work now.
-    - Use `toshy-config-start` or `toshy-config-verbose-start` for manual start.
-    - Choosing advanced options and booting with `systemd` will work fine.
 
 - Debian 12 tested and can be made to work:
 
@@ -627,6 +598,35 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
         - Recommended additional extensions:
             - AppIndicator and KStatusNotifier (for tray icon)
             - Logo Menu (enable power options in settings)
+
+- Deepin 23 (Debian-based)
+
+    - NOTE: Long delay before services start (Zenity error?)
+
+- Kali Linux 2023/2024 (Debian-based)
+
+    - Tested with default desktop of Xfce
+    - GNOME & KDE Plasma available in Kali installer
+
+- LMDE 5/6 (Linux Mint Debian Edition)
+
+    - Default desktop is Cinnamon, works
+
+- MX Linux 21.x/23.x (Debian-based, related to antiX)
+
+    - Preliminary support, no SysVinit services yet, so no auto-start.
+    - Starting only the "config script" from the tray icon menu should work now.
+    - Use `toshy-config-start` or `toshy-config-verbose-start` for manual start.
+    - Choosing advanced options and booting with `systemd` will work fine.
+
+- PeppermintOS (Debian-based)
+
+    - New release based on Debian 12 tested
+    - Desktop is Xfce4 v4.18
+
+- Q4OS 5.2 (Debian-based)
+
+    - Trinity desktop ISO tested.
 
 - Window Maker Live 0.96 (Debian-based)
 
