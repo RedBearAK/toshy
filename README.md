@@ -165,7 +165,7 @@ There's no simple way around this, since the keymapper is only designed to send 
 
 - Python >=3.8 (to run the keymapper in its `venv`)
 
-- `xwaykeyz` (keymapper for Linux, forked from `keyszer`)
+- [`xwaykeyz`](https://github.com/RedBearAK/xwaykeyz/) (keymapper for Linux, forked from `keyszer`)
 
     - Automatically installed by Toshy setup script
 
@@ -953,7 +953,7 @@ https://github.com/RedBearAK/toshy/wiki/How-to-(persistently)-change-the-Cmd-Spa
 So the best solution I've come up with so far is to have the installer make a backup of your whole `~/.config/toshy` folder to a timestamped folder in `~/.config/toshy_config_backups`.  
 
 > [!NOTE] 
-> If you run the Toshy installer multiple times you may find that the most recent dated "backup" is just a backup of a fresh Toshy config folder, as it will make a new backup whenever a `toshy` folder is found in `~/.config`. In this case, the folder with your custom changes may be in an older timestamped backup folder.  
+> If you run the Toshy installer multiple times you may find that the most recent dated "backup" is just a backup of a fresh Toshy config folder, as it will make a new backup whenever a `toshy` folder is found in `~/.config`. In this case, the folder with your custom changes may be in an older timestamped backup folder. But this would only be something important if for some reason the merge of your custom changes failed.  
 
 The backup folders are typically less than 1 MB in size, as the Python virtual environment folder inside (~65 MB in size) is not copied. So they should never take up too much space even if you run the installer multiple times on the same system.  
 
