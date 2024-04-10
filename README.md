@@ -133,7 +133,7 @@ There's no simple way around this, since the keymapper is only designed to send 
 
  1. Fix for "media" functions on arrow keys. Some laptop keyboards don't have the usual PgUp/PgDn/Home/End navigation functions on the arrow keys, when you hold the `Fn` key. Instead, they have PlayPause/Stop/Back/Forward. A `modmap` in the Toshy config will optionally fix this, making the arrow keys work more like a standard MacBook keyboard. This feature can be enabled from the tray icon or GUI preferences app.  
 
- 1. This one is starting to become less relevant, with most common GTK apps already moving to GTK 4. But apps that use GTK 3 had a really annoying bug where they wouldn't recognize the "navigation" functions on the keypad keys (what the keypad keys do when NumLock is off) if you tried to use them with a modifier key (i.e., as part of a shortcut). Those keys would just get ignored. So if you didn't have the equivalent "real" navigation keys anywhere on your keyboard, there was no way to use shortcuts involving things like PgUp/PgDn/Home/End (on the numeric keypad). A `modmap` in the Toshy config will automatically fix this, if NumLock is off and the "Forced Numpad" feature (below) is disabled.  
+ 1. GTK 3 NumPad Fix: This one is starting to become less relevant, with most common GTK apps already moving to GTK 4. But apps that use GTK 3 had a really annoying bug where they wouldn't recognize the "navigation" functions on the keypad keys (what the keypad keys do when NumLock is off) if you tried to use them with a modifier key (i.e., as part of a shortcut). Those key combos would just get ignored. So if you didn't have the equivalent "real" navigation keys anywhere on your keyboard, there was no way to use shortcuts involving things like PgUp/PgDn/Home/End (on the numeric keypad). A `modmap` in the Toshy config will automatically fix this, if NumLock is off and the "Forced Numpad" feature (below) is disabled.  
 
  1. "Forced Numpad" feature: On PCs, if the keyboard has a numeric keypad, NumLock is typically off, so the keypad doesn't automatically act as a Numpad, instead providing navigation functions until you turn NumLock on. But if you've used macOS for any length of time, you might have noticed that the numeric keypad is always a numeric keypad, and the "Clear" key sends `Escape` to clear calculator apps. You have to use `Fn+Clear` to disable NumLock and get to the navigation functions. A `modmap` in the Toshy config is enabled by default and makes the numeric keypad always a numeric keypad, and turns the NumLock key into a "Clear" key. This can be disabled in the tray icon menu or GUI preferences app, or temporarily disabled with `Fn+Clear` (on Apple keyboards) or the equivalent of `Option+NumLock` on PC keyboards (usually this is physical `Win+NumLock`).  
 
@@ -159,25 +159,31 @@ There's no simple way around this, since the keymapper is only designed to send 
 
 - Linux (no Windows support planned, use Kinto for Windows)
 
-    - List of working/tested distros below
+    - See [**list of working/tested distros**](#currently-workingtested-linux-distros)
 
-- Python >=3.6 (to run installer script)
+- Python >=3.6 (to run the setup script)
 
 - Python >=3.8 (to run the keymapper in its `venv`)
 
-- [`xwaykeyz`](https://github.com/RedBearAK/xwaykeyz/) (keymapper for Linux, forked from `keyszer`)
+- [**`xwaykeyz`**](https://github.com/RedBearAK/xwaykeyz/) (keymapper for Linux, forked from `keyszer`)
 
     - Automatically installed by Toshy setup script
 
-- X11/Xorg, or one of these Wayland environments:
+- X11/Xorg, or a supported Wayland environment
 
-    - Wayland+Cinnamon
-    - Wayland+GNOME
-    - Wayland+Hyprland
-    - Wayland+Plasma (KDE)
-    - Wayland+Sway
+    - See [**list of working DEs/WMs**](#currently-working-desktop-environments-or-window-managers)
 
-- Wayland+GNOME requires one of these GNOME Shell extensions (see note‡):
+- `systemd` (but you can just manually run the config from terminal, shell script, GUI preferences app, or tray indicator menu, so the basic functionality of the Toshy config can work regardless of the init system in use)
+
+- D-Bus, and `dbus-python`
+
+### Specific requirements for certain DEs/WMs
+
+On some Wayland environments it takes extra steps to get the per-app or per-app-group (e.g., "terminals") specific keymapping to work. Special methods need to be used to grab the window context info, and sometimes that means installing something external to Toshy.  
+
+- **`Wayland+Plasma`** sessions have a small glitch where you have to change the focused window once after the Toshy KWin script is installed, to get the app-specific remapping to start working. I am trying a solution that uses a pop-up dialog to create a KWin event that "kickstarts" the KWin script. You should briefly see a dialog appear and then disappear shortly after you log in to a Wayland+Plasma session. This has been working well for some time now.  
+
+- **`Wayland+GNOME`** sessions require one of the GNOME Shell extensions listed in this section to be installed and enabled (see the [**`next section`**](#managing-shell-extensions-in-gnome) below on how to easily download and install GNOME Shell extensions):
 
     ___
     - **Name: 'Xremap' (try this on older GNOME shells)**
@@ -193,13 +199,13 @@ There's no simple way around this, since the keymapper is only designed to send 
     - URL: https://extensions.gnome.org/extension/5592/focused-window-d-bus/
     ___
 
-- Wayland+Plasma has a small glitch where you have to change the focused window once after the KWin script is installed, to get the app-specific remapping to start working. I am trying a solution that uses a pop-up dialog to create a KWin event that "kickstarts" the KWin script. You should briefly see a dialog appear and then disappear shortly after you log in to a Wayland+Plasma session.  
+### Managing shell extensions in GNOME
 
-- `systemd` (but you can just manually run the config from terminal, shell script, GUI preferences app, or tray indicator menu)
+It's very easy to search for and install GNOME Shell extensions now, if you install the "Extension Manager" Flatpak application from Flathub. No need to mess around with downloading a zip file from `extensions.gnome.org` and manually installing/enabling in the terminal, or trying to get the link between a native package and a browser extension working in a web browser. (Certain browsers and distros often make this a painful process.)  
 
-- D-Bus, and `dbus-python` (for the tray indicator and GUI app)
+Many distros with GNOME will need the `AppIndicator and KStatusNotifierItem` extension (or some other extension that enables indicator tray icons) to make the tray icon appear in the top bar, and if you want to use Wayland you'll need one of the extensions from the list above.  
 
-‡ Note: It's very easy to search for and install GNOME Shell extensions now, if you install the "Extension Manager" Flatpak application from Flathub. No need to mess around with downloading a zip file from `extensions.gnome.org` and manually installing/enabling in the terminal. Many distros with GNOME need the `AppIndicator and KStatusNotifierItem` extension to make the tray icon appear in the top bar, and if you want to use Wayland you'll need one of the extensions from the list above.  
+Here's how to install "Extension Manager":  
 
 ```sh
 flatpak install com.mattjakeman.ExtensionManager
@@ -213,9 +219,14 @@ flatpak install extensionmanager
 
 If it's not found you may need to enable the Flathub repo on your machine. Go to https://flathub.org/setup for instructions for your distro.  
 
+> [!NOTE]
+> The "Extension Manager" Flatpak app is NOT the same thing as the "Extensions" app that sometimes comes pre-installed on GNOME distros. That is a simpler app with no ability to browse the available extensions.  
+
 When you get it installed, you can just use the "Browse" tab in this application to search for the extensions by name and quickly install them.  
 
-There is no risk of any kind of conflict when installing more than one of the compatible shell extensions. Which might be advisable, to reduce the risk of not having a working extension for a while the next time you upgrade your system in-place and wind up with a newer version of GNOME that one or two of the extensions hasn't been updated to support. I expect at least one of the (now three) extensions will always be updated quickly to support the latest GNOME. The window context module of the keymapper installed by Toshy will seamlessly jump to trying the other extensions in case one fails or is disabled/uninstalled for any reason. You just need to have at least one from the list installed and enabled, and when it responds over D-Bus to the query from the keymapper it will be marked as the "good" one and used from then on, unless it stops responding. Lather, rinse, repeat.  
+There is no risk of any kind of conflict when installing more than one of the compatible shell extensions. Which might be advisable, to reduce the risk of not having a working extension for a while the next time you upgrade your system in-place and wind up with a newer version of GNOME that one or two of the extensions hasn't been updated to support. I expect at least one of the (now three) extensions will always be updated quickly to support the latest GNOME. 
+
+The window context module of the keymapper installed by Toshy will seamlessly jump to trying the other compatible extensions in case one fails or is disabled/uninstalled for any reason. You just need to have at least one from the list installed and enabled, and when it responds over D-Bus to the query from the keymapper it will be marked as the "good" one and used from then on, unless it stops responding. Lather, rinse, repeat.  
 
 The `Xremap` GNOME shell extension is the only one that supports older GNOME versions, so it's the only one that will show up when browsing the extensions list from an environment like Zorin OS 16.x (GNOME 3.38.x) or the distros based on Red Hat Enterprise Linux (clones or RHEL compatibles like AlmaLinux, Rocky Linux, Oracle Linux, EuroLinux, etc.) which are still using GNOME 40.x on the 9.x versions.  
 
