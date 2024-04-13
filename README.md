@@ -1198,7 +1198,7 @@ In the Xfce variant of Mint, they use the Whisker Menu applet, and the shortcut 
 
 ### GNOME and the Meta/Super/Win/Cmd key (`overlay-key`)
 
-By default GNOME desktops seem to want to use the Meta/Super/Win/Cmd key to open the "overview". This is not a shortcut that is exposed in the usual `Settings >> Keyboard` control panel. The Toshy installer will disable the keybinding if GNOME is detected, since it's weird/unexpected in macOS for a modifier key to perform an action by itself.  
+By default GNOME desktops seem to want to use the Meta/Super/Win/Cmd key to open the "overview". This is not a shortcut that is exposed in the usual `Settings >> Keyboard` control panel. The Toshy installer will disable the keybinding if GNOME is detected, since it's weird/unexpected in macOS for a modifier key to perform an action by itself. [UPDATE: This is no longer done on GNOME 45 or later, due to a change in native shortcuts.]  
 
 Here are the commands to disable and re-enable the `overlay-key` keybinding:  
 
