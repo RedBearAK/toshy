@@ -477,6 +477,7 @@ dialogs_CloseWin_lod = [
     {clas: "^gnome-terminal-pref.*$", name: "^Preferences.*$"},
     {clas: "^fr.handbrake.ghb$", not_name: "^HandBrake$"},
     {clas: "^pcloud$"},
+    {clas: "^systemsettings$", name: "^Download New.*System Settings$"},
     {clas: "^Totem$", not_name: "^Videos$"},
 ]
 
@@ -1301,7 +1302,7 @@ multipurpose_modmap("Caps2Esc - Chromebook kbd", {
     cnfg.Caps2Esc_Cmd is True )
 
 
-
+# THIS IS ALL SUPERCEDED BY THE NEW SOLUTION OF MONITORING THE SYNERGY LOG FILE!
 # Fix for avoiding modmapping when using Synergy keyboard/mouse sharing.
 # Synergy doesn't set a wm_class, so this may cause issues with other
 # applications that also don't set the wm_class.
