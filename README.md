@@ -569,7 +569,7 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
     - X11/Xorg or Wayland+GNOME (requires extension)
     - NOTE: GNOME Shell on Zorin 16.x is old: 3.38
-    - 'Xremap' is the only compatible shell extension
+    - `Xremap` is the only compatible shell extension
 
 ### Debian and Debian-based distros
 
@@ -582,23 +582,22 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
 
 - Debian 12 tested and can be made to work:
 
-    - If you gave a root password, your user will NOT be in the `sudo` group!
+    - If you gave root a password, your user will NOT be in the `sudo` group!
     - If necessary, add your user to `sudo` group (and reboot!)
-        - `su -`
+        - `su -` (enter root's password)
         - `usermod -aG sudo yourusername`
+        - Save a reboot step later by also doing this:
+        - `usermod -aG input yourusername`
         - Seriously, reboot now!
     - Then, for Wayland+GNOME:
         - Install `flatpak` and the Flathub repo. Instructions here:
             - https://flatpak.org/setup/Debian
         - Do `flatpak install com.mattjakeman.ExtensionManager`
-        - Reboot again! So that Flatpak folders are added to path.
-        - Install any compatible shell extension with Extension Manager:
-            - Xremap
-            - Window Calls Extended
-            - Focused Window D-Bus
+        - Reboot again! (So Flatpak folders are added to path.)
+        - Install any compatible shell extension (see [**Requirements**](#requirements))
         - Recommended additional extensions:
-            - AppIndicator and KStatusNotifier (for tray icon)
-            - Logo Menu (enable power options in settings)
+            - AppIndicator and KStatusNotifierItem (for tray icon)
+            - Logo Menu (enable power options in its settings)
 
 - Deepin 23 (Debian-based)
 
