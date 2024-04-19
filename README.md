@@ -56,7 +56,7 @@ All of this basic functionality is inherited from Kinto. Toshy just tries to be 
 
 If an app that you use frequently in Linux has some shortcut behavior that still doesn't match what you'd expect from the same application (or a similar application) in macOS, after Toshy's general remapping of the modifier keys, you can add a keymap that matches the app's "class" and/or "name/title" window attributes, to make that application behave as expected. By adding it to the default config file, every user will benefit!  
 
-> [!NOTE]  
+> [!TIP]  
 > There's an easier way now, that works in both X11/Xorg and Wayland sessions:  
 >
 > - `Shift+Opt+Cmd+I,I` (quickly double-tap the "I" key)  
@@ -234,10 +234,11 @@ There is a weird bug with searching for extensions by name sometimes, where you 
 
 ## How to Install  
 
-> [!IMPORTANT]
+> [!WARNING]
 > **_DO NOT_** attempt to manually install Python dependencies 
 > with `pip` using the `requirements.txt` file. That file only 
-> exists to let GitHub show some dependency info.
+> exists to let GitHub show some dependency info. (This may 
+> change at some point in the future, but ignore it for now.)
 
 > [!NOTE]  
 > Installer commands and options are now different from early Toshy releases.  
@@ -822,8 +823,8 @@ The second level of remapping is the application group/class-specific modmaps an
 
 One of the best simple tests, if you have Firefox installed, is if using the `Cmd+comma` shortcut (which opens preferences in many macOS applications) opens a new tab in Firefox, then rapidly types the string `about:preferences`, and opens the Firefox preferences. If this works, or even if it just gets through typing the "about:preferences" in the address bar, it's a clear indication that the app-specific keymaps are working. Because this is only supposed to happen when a Firefox web browser window class is detected.  
 
-> [!NOTE]
-> If you wind up with a string like `about;preferences` (note the semicolon instead of colon) and it does a google search each time instead of opening the Firefox preferences, you're having a problem with modifier timing in the output of macros from the keymapper. You'll need to look for the FAQ entry on changing the delays in the `throttle_delays` API in the beginning of the config file, and set longer delays to make that go away. Wayland environments and virtual machines will generally require longer delays to avoid this issue.  
+> [!TIP]
+> If you wind up with a string like `about;preferences` (note the semicolon instead of colon) and it does a google search each time instead of opening the Firefox preferences, you're having a problem with modifier timing in the output of macros from the keymapper. You'll need to look for the FAQ entry on changing the delays in the `throttle_delays` API in the beginning of the config file, and set longer delays to make that go away. Wayland environments and virtual machines will generally require longer delays to avoid this issue. I set some default delay values to try to keep this from happening, so if it still happens to you with those default values in place, submit an issue.  
 
 If you think app-specific remaps are working in general, but for some reason they aren't working in a specific app, the app's "class" may be different than expected by the config file. Try to identify it, and let us know what the "class" and "name" attributes are.  
 
@@ -1126,9 +1127,9 @@ For a bare metal install, a few milliseconds is usually sufficient to make infre
 Update for Wayland+GNOME:  
 
 > [!NOTE]
-> I've decided to have values of 12/18 in the config by default, since even on bare metal installs there are often strange problems if there isn't a small delay. This is especially true on Wayland+GNOME, where the keymapper must rely on talking to a GNOME Shell extension to get the window info. I don't think this is quite as fast as using `Xlib` in X11/Xorg sessions, so many shortcuts are quite flaky without a bit of throttle delay.  
+> I've decided to have values of 12/18 in the config by default, since even on bare metal installs there are often strange problems if there isn't a small delay. This is especially true on some Wayland environments, where the keymapper must rely on talking to a shell extension to get the window info. I don't think this is quite as fast as using `Xlib` in X11/Xorg sessions, so many shortcuts are quite flaky without a bit of throttle delay.  
 
-> [!IMPORTANT]
+> [!CAUTION]
 > A lengthy delay will of course cause macros to come out quite a bit more slowly as the delay gets longer. So really long macros will be potentially impractical inside a virtual machine, for instance. This is why the values are clamped to a maximum of 150 ms each. The keyboard will be unresponsive while a long macro is coming out. Currently there is no way to interrupt the macro in progress. Not a big deal when the delay is 1 ms per character, but a problem if the total delay between characters is 150 ms or more.  
 
 ### Macros Acting Weird/Failing/Unreliable
