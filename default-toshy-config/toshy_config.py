@@ -3453,6 +3453,8 @@ keymap("Jetbrains", {
     C("Super-Shift-b"):         C("C-Shift-b"),                 # Go to type declaration
     C("Super-Up"):              C("Alt-Up"),                    # Go to previous
     C("Super-Down"):            C("Alt-Down"),                  # Go to next method
+    C("C-Left_Brace"):          C("Alt-Shift-Left"),            # Go back
+    C("C-Right_Brace"):         C("Alt-Shift-Right"),           # Go forward
     C("Super-h"):               C("C-h"),                       # Type hierarchy
     C("Super-Alt-h"):           C("C-Alt-h"),                   # Call hierarchy
     C("C-Down"):                C("C-Enter"),                   # Edit source/View source
