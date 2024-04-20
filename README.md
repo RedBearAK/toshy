@@ -919,7 +919,7 @@ If you edit outside the "slice marks" that enable the merging process to work, y
 
 Right now, the sections marked for attempted retention through upgrades/reinstalls are:  
 
-- `keyszer_api`
+- `keymapper_api`
     - Allows customized API function settings for the keymapper: 
         - Diagnostic dump key (use any **_unused_** single key)
         - Emergency eject key (use any **_unused_** single key)
