@@ -1,8 +1,7 @@
 <!--
-Please submit pull requests on the `dev_beta` branch of the Toshy repo to facilitate
-easier testing of the changes before they get merged in with `main`.
-
 Feel free to delete portions of this form that seem unnecessary for a simple PR. 
+
+Apply your PR to the main branch for now. Ignore previous instructions to use 'dev_beta'. 
 -->
 
 **Description of the Changes:**
@@ -16,5 +15,3 @@ Feel free to delete portions of this form that seem unnecessary for a simple PR.
 
 **Testing Done:**
 <!-- Describe the testing you've done to ensure this submission meets requirements. -->
-
-- [ ] PR is set to apply to `dev_beta` branch.

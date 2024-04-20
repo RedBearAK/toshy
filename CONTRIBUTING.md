@@ -1,8 +1,6 @@
 # Contributing to Toshy
 
-## Base PRs on the `dev_beta` branch if you can
-
-I do most of my testing in the `dev_beta` branch, and then merge it with `main` if it doesn't seem to be causing any problems. So if you want to submit a pull request rather than just opening an issue, it would be most convenient for me if it were based on the `dev_beta` branch.  
+I had instructions here to use the `dev_beta` branch to apply pull requests. That didn't work like I thought it would, so just apply your PRs to the main branch. 
 
 ## Testing your modifications before submitting a PR
 
