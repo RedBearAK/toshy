@@ -3190,6 +3190,7 @@ keymap("Overrides for PCManFM - Finder Mods", {
 
 keymap("Overrides for Peony-Qt - Finder Mods", {
     C("RC-Comma"):              None,                           # Block Cmd+Comma (doesn't work in Peony)
+    C("RC-Equal"):              C("Shift-C-Equal"),             # Enlarge icons
     C("Shift-RC-Left_Brace"):   C("C-Shift-Tab"),               # Go to prior tab
     C("Shift-RC-Right_Brace"):  C("C-Tab"),                     # Go to next tab
     C("Shift-RC-Left"):         C("C-Shift-Tab"),               # Go to prior tab
