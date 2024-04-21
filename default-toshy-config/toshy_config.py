@@ -290,7 +290,7 @@ terminals_lod = [
 vscodes_lod = [
     {clas: "^code$"},
     {clas: "^vscodium$"},
-    {clas: "^code - oss$"},
+    {clas: "^code - oss$|^code-oss$"},
 ]
 
 sublimes = [
