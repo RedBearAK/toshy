@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+    # -*- coding: utf-8 -*-
 
 import re
 import os
@@ -3189,7 +3189,11 @@ keymap("Overrides for PCManFM - Finder Mods", {
 }, when = matchProps(clas="^pcmanfm$|^pcmanfm-qt$"))
 
 keymap("Overrides for Peony-Qt - Finder Mods", {
-    # Nothing here yet.
+    C("RC-Comma"):              None,                           # Block Cmd+Comma (doesn't work in Peony)
+    C("Shift-RC-Left_Brace"):   C("C-Shift-Tab"),               # Go to prior tab
+    C("Shift-RC-Right_Brace"):  C("C-Tab"),                     # Go to next tab
+    C("Shift-RC-Left"):         C("C-Shift-Tab"),               # Go to prior tab
+    C("Shift-RC-Right"):        C("C-Tab"),                     # Go to next tab
 }, when = matchProps(clas="^peony-qt$"))
 
 # Keybindings overrides for SpaceFM
