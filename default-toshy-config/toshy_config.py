@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+    # -*- coding: utf-8 -*-
 
 import re
 import os
@@ -142,7 +142,7 @@ try:
     # Pylance will complain if function undefined, without 'ignore' comment
     environ_api(session_type = SESSION_TYPE, wl_desktop_env = DESKTOP_ENV) # type: ignore
 except NameError:
-    debug(f"The API function 'environ_api' is not defined yet. Using wrong 'keyszer' branch?")
+    debug(f"The API function 'environ_api' is not defined yet. Wrong 'xwaykeyz/keyszer' branch?")
     pass
 
 
@@ -163,7 +163,7 @@ except NameError:
 # Variable to hold the keyboard type
 KBTYPE = None
 
-# Short names for the `keyszer` string and Unicode processing helper functions
+# Short names for the `xwaykeyz/keyszer` string and Unicode processing helper functions
 ST = to_US_keystrokes           # was 'to_keystrokes' originally
 UC = unicode_keystrokes
 ignore_combo = ComboHint.IGNORE
@@ -418,6 +418,7 @@ filemanagers = [
     "org.kde.krusader",
     "pcmanfm",
     "pcmanfm-qt",
+    "peony-qt",
     "spacefm",
     "thunar",
 ]
@@ -2986,7 +2987,6 @@ keymap("OptSpecialChars - US", {
 ###################################################################################################
 ###  SLICE_MARK_START: user_apps  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 
-# REMOVE THE CONTENTS OF THIS FOR GENERAL USE
 keymap("User hardware keys", {
 
 }, when = matchProps(not_lst=remotes_lod))
@@ -3188,6 +3188,14 @@ keymap("Overrides for PCManFM - Finder Mods", {
     C("RC-F"):                  C("C-F"),                       # Don't toggle Enter key state, pass Cmd+F (Ctrl+F)
 }, when = matchProps(clas="^pcmanfm$|^pcmanfm-qt$"))
 
+keymap("Overrides for Peony-Qt - Finder Mods", {
+    C("RC-Comma"):              None,                           # Block Cmd+Comma (doesn't work in Peony)
+    C("Shift-RC-Left_Brace"):   C("C-Shift-Tab"),               # Go to prior tab
+    C("Shift-RC-Right_Brace"):  C("C-Tab"),                     # Go to next tab
+    C("Shift-RC-Left"):         C("C-Shift-Tab"),               # Go to prior tab
+    C("Shift-RC-Right"):        C("C-Tab"),                     # Go to next tab
+}, when = matchProps(clas="^peony-qt$"))
+
 # Keybindings overrides for SpaceFM
 # (overrides some bindings from general file manager code block below)
 keymap("Overrides for SpaceFM Find Files dialog - Finder Mods", {
@@ -3248,6 +3256,7 @@ keymap("XDG file dialogs", {
 ##  Pantheon Files (elementary OS file manager, may be named "Files")
 ##  PCManFM (LXDE file manager)
 ##  PCManFM-Qt (LXQt file manager)
+##  Peony-Qt (UKUI file manager, found in Ubuntu Kylin)
 ##  SpaceFM (Fork of PCManFM file manager)
 ##  Thunar File Manager (Xfce file manager)
 ##  
