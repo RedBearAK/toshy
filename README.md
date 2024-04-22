@@ -556,6 +556,8 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
         - X11/Xorg only
     - Ubuntu Budgie 23.04
         - X11/Xorg only
+    - Ubuntu Kylin 24.04 - **_WORKING, BUT SEE [NOTE](#ubuntu-kylin-issues) BELOW_**
+        - X11/Xorg only
     - Ubuntu Kylin 23.10 - **_NOT WORKING!_**
         - **_PACKAGE CONFLICT IN REPO_**
         - X11/Xorg only
@@ -571,6 +573,14 @@ As noted elsewhere in the README, there is no Windows version of Toshy, unlike K
     - X11/Xorg or Wayland+GNOME (requires extension)
     - NOTE: GNOME Shell on Zorin 16.x is old: 3.38
     - `Xremap` is the only compatible shell extension
+
+#### Ubuntu Kylin issues
+
+Toshy can finally be installed on Ubuntu Kylin 24.04, unlike the earlier 23.10 release, which had a fatal package version conflict that I couldn't resolve. But the UKUI desktop environment (at least in the tested 24.04 beta release) seems to have some strange issues with task switching, and with transferring keyboard focus properly after task switching. Since keymaps for an app like Peony (the default UKUI/Kylin file manager) are specific to the app class of `peony-qt`, the correct keymap only activates after clicking on the Peony window, even if it appears to already be the focused app (watch the highlights on the window controls).  
+
+Using Cmd+Tab to switch from another app currently results in the keyboard focus (and the app class) remaining with the previous app. So if the previous app was Mate-terminal, the keyboard shortcuts will respond as if you are still in the Mate-terminal window, until you click on the Peony window. This probably affects other apps after task switching with the keyboard.  
+
+Task switching is also broken with the 24.04 beta UKUI desktop, in the sense that you can't switch beyond the last app with the keyboard. The task switcher dialog doesn't respond to holding the modifier key and hitting Tab multiple times. This has nothing to do with Toshy (it's broken even before installing Toshy or when Toshy is disabled) and is similar to a longstanding bug in task switching on the Budgie desktop enironment. If you have any idea where to report these issues to the Ubuntu Kylin developers, please do so if you care about getting them fixed.  
 
 ### Debian and Debian-based distros
 
