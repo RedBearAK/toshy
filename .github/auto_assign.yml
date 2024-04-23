@@ -1,0 +1,6 @@
+addReviewers: false
+
+addAssignees: true
+
+assignees:
+  - RedBearAK
