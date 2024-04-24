@@ -28,7 +28,7 @@ Go to this FAQ entry for more info:
 
 Other possible issues:  
 
-- May have issues installing on distros not on the "tested" list below. If you think your distro is closely related to one on the list, try the `list-distros` command with the setup script, and then the `--override-distro` option for the `install` command. See the [**How to Install**](#how-to-install) section.  
+- May have issues installing on distros not on the [list of supported distros](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros) in the Wiki. If you think your distro is closely related to one on the list, try the `list-distros` command with the setup script, and then the `--override-distro` option for the `install` command. See the [**How to Install**](#how-to-install) section.  
 
 - May seem to run at login, but not do any remapping, needing `toshy-config-verbose-start` in the terminal to troubleshoot. Or, it may just need a restart of the services from the tray icon or with `toshy-services-restart`. Check the output of `toshy-services-log` and `toshy-services-status` first to see if there is an obvious error message that explains the problem. Like not having a compatible GNOME Shell extension installed/enabled to support a Wayland+GNOME session. Other than the Wayland+GNOME situation, I don't really see this much anymore.  
 
@@ -123,7 +123,7 @@ https://github.com/RedBearAK/toshy/wiki/General-improvements-over-Kinto
 
 - Linux (no Windows support planned, use Kinto for Windows)
 
-    - See [**list of working/tested distros**](#currently-workingtested-linux-distros)
+    - See [**list of supported distros**](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros)
 
 - Python >=3.6 (to run the setup script)
 
