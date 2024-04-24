@@ -115,45 +115,9 @@ There's no simple way around this, since the keymapper is only designed to send 
 
 ## General improvements over Kinto
 
- 1. Moving between different desktop environments and session types (X11/Xorg or Wayland) **_on the same machine_** is MUCH easier, due to the use of an "environment" module that feeds information to the config file about what type of environment it is starting up in. This allows some dynamic remaps specific to each type of Linux desktop environment, and without re-running the installer process (at least that is the goal). It also prompts the keymapper to use the correct method to get the window context information for the environment. The keymapper will also prompt the user in verbose logging output if the environment is NOT compatible yet. So if you are like me and enjoy spending time experimenting with different session types and different desktop environments on the same Linux system, Toshy will work much better for that, and will improve over time.  
+This section was moved to a Wiki page to make the README shorter:  
 
- 1. Multi-user support: I believe some changes I've made will facilitate proper multi-user support on the same system. Even in the case of the user invoking a "Switch User" feature in their desktop environment, where the first user's desktop is still running in the background while another user is logged into their own desktop and using the screen (and physical keyboard). This is a very convenient feature even if you aren't actually sharing your computer with another person. There are many reasons why you might want to log into a different user's desktop to test something. Currently this absolutely requires `systemd` and `loginctl`.  
-
- 1. Certain Linux distros, outside the most popular group of Ubuntu-based, Debian-based, Arch-based and Red Hat/Fedora-related distros, really did not like the way the Kinto installer messes with the `sudoers` file. The Kinto installer does this to provide the user easier access to certain commands used to control the `xkeysnail` service. Some of these Linux distros would get b0rked quite badly if you ran the Kinto installer on them. A couple I ran into that had this problem were antiX and Gentoo. Strangely, the close relative of antiX, the very popular MX Linux, did not have the same problem with Kinto that antiX had. The Toshy installer does nothing with `sudoers` and uses "user" `systemd` services, or a manual script, and sets up `udev` rules so that the user doesn't need to run anything with `sudo` to make the keymapping work. I've already tested Toshy successfully on antiX. Still looking for a user-friendly Gentoo ISO to use for testing, but I have no reason to believe it won't work just as well, once I figure out the native packages needed.  
-
- 1. A start on Wayland support. Wayland support is probably always going to be limited, since each different compositor needs a different method to access the focused app window info (class and title/name). To see what is currently working, go to [this section](#currently-working-desktop-environments-or-window-managers) of the README.  
-
- 1. The Option-key special characters, as described above. Two different layouts are available. Or it can be completely disabled.  
-
- 1. Automatic categorizing of the keyboard type of the current keyboard device. No more switching of keyboard types from the tray icon menu, or re-running the installer, or being asked to press a certain key on the keyboard during install. Some keyboard devices will need to be added to a Python list in the config to be recognized as the correct type. This will evolve over time from user feedback.  
-
- 1. Changing of some settings on-the-fly, without restarting the keymapper process. The tray icon menu and GUI preferences app will allow quickly enabling or disabling certain features, or changing/disabling the special characters layout. The change takes effect right away. (Adding or changing shortcuts in the config file will still require restarting the keymapper, which I've tried to make as easy as possible.)  
-
- 1. Modmaps with `xwaykeyz` are concurrent/cascading rather than mutually exclusive. This enables some of the interesting fixes described in the following items.  
-
- 1. Fix for "media" functions on arrow keys. Some laptop keyboards don't have the usual PgUp/PgDn/Home/End navigation functions on the arrow keys, when you hold the `Fn` key. Instead, they have PlayPause/Stop/Back/Forward. A `modmap` in the Toshy config will optionally fix this, making the arrow keys work more like a standard MacBook keyboard. This feature can be enabled from the tray icon or GUI preferences app.  
-
- 1. GTK 3 NumPad Fix: This one is starting to become less relevant, with most common GTK apps already moving to GTK 4. But apps that use GTK 3 had a really annoying bug where they wouldn't recognize the "navigation" functions on the keypad keys (what the keypad keys do when NumLock is off) if you tried to use them with a modifier key (i.e., as part of a shortcut). Those key combos would just get ignored. So if you didn't have the equivalent "real" navigation keys anywhere on your keyboard, there was no way to use shortcuts involving things like PgUp/PgDn/Home/End (on the numeric keypad). A `modmap` in the Toshy config will automatically fix this, if NumLock is off and the "Forced Numpad" feature (below) is disabled.  
-
- 1. "Forced Numpad" feature: On PCs, if the keyboard has a numeric keypad, NumLock is typically off, so the keypad doesn't automatically act as a Numpad, instead providing navigation functions until you turn NumLock on. But if you've used macOS for any length of time, you might have noticed that the numeric keypad is always a numeric keypad, and the "Clear" key sends `Escape` to clear calculator apps. You have to use `Fn+Clear` to disable NumLock and get to the navigation functions. A `modmap` in the Toshy config is enabled by default and makes the numeric keypad always a numeric keypad, and turns the NumLock key into a "Clear" key. This can be disabled in the tray icon menu or GUI preferences app, or temporarily disabled with `Fn+Clear` (on Apple keyboards) or the equivalent of `Option+NumLock` on PC keyboards (usually this is physical `Win+NumLock`).  
-
- 1. Sections of the config file are labeled with ASCII art designed to be readable on a "minimap" or "overview" sidebar view found in many text editors and code editors, to make finding certain parts of the config file a little easier. There's also a "tag" on each section that can be located easily with a `Find` search in any text editor.  
-
- 1. Custom function to make the `Enter` key behave pretty much like it does in the Finder, in most Linux file managers. Mainly what this enables is using the `Enter` key to quickly rename files/folders, while still leaving it usable in text fields like `Find` and the location bar. Not perfect, but works OK in most cases. _[NOTE: If you've never actually used the keyboard to "open" or "run" files/applications from the Finder, you may not realize that the keyboard shortcut for this is just the same keyboard shortcut for opening (or, "drilling down") into folders. It's `Cmd+Down` arrow. The `Enter` key has never "opened" things in the Finder in the history of macOS, as far as I know, unlike the way the `Enter` key has always been used in Windows and Linux file managers.]_  
-
- 1. Evolving fix for the problem of `Cmd+W` unexpectedly failing to close a lot of Linux "child" windows and "dialog" windows (that have no binding to `Ctrl+W` and want either `Escape` or `Alt+F4/Ctrl+Q` to close). This can lead to a bad unconscious habit of hitting `Cmd+W` followed immediately by `Cmd+Q` (which becomes a problem when you're actually using macOS). The list of windows targeted by this pair of keymaps will grow over time, with input from users encountering the issue.  
-
- 1. Fix for shortcut behavior in file save/open dialogs in apps like Firefox, now that WM_NAME (window name/title) is available. This is an addition to the "Finder Mods" that I contributed to Kinto, which are intended to mimic Finder keyboard behavior in most common Linux file manager apps.  
-
- 1. A collection of tab navigation fixes for various apps with a tabbed UI that don't use the mostly standard Ctrl+PgUp/PgDn shortcuts. The goal is to allow `Shift+Cmd+Braces` (the left/right square bracket keys) to perform tab navigation in as many Linux applications (with tabbed UIs) as possible, as it does in most Mac applications with a tabbed UI (Finder, web browsers, and so on). Let me know if you use a Linux app where `Shift+Cmd+Braces` shortcuts are not working for tab navigation while Toshy is enabled. Use `xprop WM_CLASS _NET_WM_NAME` to obtain the window attributes for matching (if you use X11/Xorg).  
-
- 1. Another growing collection of enhancements to various Linux apps to enable shortcuts like `Cmd+comma` (preferences) and `Cmd+I` (get info/properties) to work in more apps.  
-
- 1. A function (`matchProps`) that enables very powerful and complex (or simple) matching on multiple properties at the same time. Application class, window name/title, device name, NumLock and CapsLock LED state can all be combined in any way, and lists can be made of specific combinations of one or more of those properties to match on.  
-
-1. Support for watching the Synergy log file to automatically disable remapping of keys when the focus is on the screen showing the remote system. Synergy still has the unfortunate problem that it presents no app class or window title, so there was previously no simple way to stop remapping keys in the same way that is done for other remote desktop types of apps. Synergy logs when the cursor and keyboard focus leaves and returns, so watching the log file seems to be a workable solution.  
-
- 1. More that I will add later when I remember...  
+https://github.com/RedBearAK/toshy/wiki/General-improvements-over-Kinto  
 
 ## Requirements
 
@@ -721,7 +685,76 @@ For Wayland+GNOME this requires at least one of the known compatible GNOME Shell
 
 There are specific remaps or overrides of default remaps for several common desktop environments (or distros which have shortcut peculiarities in their default desktop setups). They become active if the desktop environment is detected correctly by the `env.py` module used by the config file, or the information about the desktop can be placed in some `OVERRIDE` variables in the config file.  
 
-## Usage
+## Usage (changing preferences)
+
+See next section for usage of the Toshy terminal commands to manage the services and keymapper process. This section is about the preferences available via the tray icon menu, or the GUI "Toshy Preferences" app.
+
+The tray icon menu has a few more convenient features that aren't entirely mirrored in the simple GUI app window.  
+
+> [!TIP]  
+> Note that changing the items in the submenus from the tray icon menu or the GUI app will cause the behavior of the keymapper config to change **_immediately_** (or within a couple of seconds), without requiring the keymapper process/services to be restarted. You only need to restart the services after editing the config file itself. Preferences are taken care of in memory, and the current state is stored in a small sqlite3 file (which gets preserved if you re-run the Toshy installer). Once you tweak a preference it should stay that way even if you reinstall.  
+
+In the tray icon menu, you'll find a number of useful functions: 
+
+- Top items show services status (not clickable)
+- Toggle to disable/enable autostart of services
+- Items to (re)start or stop the services
+- Items to (re)start or stop just the config script
+- Preferences submenu
+- OptSpect Layout submenu
+- Keyboard Type submenu
+- Item to open the GUI app
+- Item to open the Toshy config folder
+- Item to show the services log (journal)
+- Items to disable or remove the tray icon
+
+### Why there are separate items for "services" and "script"
+
+On some distros there may be some reason the `systemd` services can't run, or you simply don't want them to be enabled. For instance, CentOS 7 supports `systemd` services in general, but had the capacity for "user" services completely disabled, and Toshy uses "user" services. Some distros also don't use `systemd` at all as the init system, so the services won't exist. For these cases, the "Script" items provide a simple way to start just the keymapper config process, if you don't feel like setting up your own auto-start item that will run the `toshy-config-start` command. The lack of `systemd` and `loginctl` will mean that Toshy won't have the multi-user support that will otherwise be present. Not a big deal on a single-user system.  
+
+### Preferences submenu
+
+Here are the preferences that are currently available:  
+
+- `Alt_Gr on Right Cmd`
+- `CapsLock is Cmd`
+- `CapsLock is Esc & Cmd`
+- `Enter is Ent & Cmd`
+- `Sublime3 in VSCode`
+- `Forced Numpad`
+- `Media Arrows Fix`
+
+And what each of these preferences do:  
+
+`Alt_Gr on Right Cmd` - International keyboard users will need to enable this to get to the additional ISO level 3 characters that they would normally reach by using the `Alt_Gr` key on the right side of the Space bar. Otherwise the Toshy config will turn that key into another Command key equivalent, like the key on the left side of the space bar. Note that this only fixes one aspect of the issues that non-US layout users may have with the keymapper.  
+
+`CapsLock is Cmd` - Turns the CapsLock key into an additional Command key equivalent.  
+
+`CapsLock is Esc & Cmd` - Turns the CapsLock key into a multi-purpose key. Escape if tapped, Command if held and combined with another key. (This can be easily modified to make the key `Esc & Ctrl` instead.)  
+
+`Enter is Ent & Cmd` - Turns the Enter key into a multi-purpose key. Enter if tapped, Command if held and combined with another key.  
+
+`Sublime3 in VSCode` - Enables Sublime 3 keyboard shortcut variations in VSCode variants, instead of native VSCode shortcuts.  
+
+`Forced Numpad` - Enabled by default, this causes a PC keyboard's numeric keypad to simulate how a full-sized Apple keyboard behaves in macOS, where the keypad always acts like a numeric keypad. If you need the navigation functions, this can be disabled from the tray icon menu or GUI app, or with Option+NumLock (Fn+Clear also works on an Apple keyboard). The "Clear" key on an Apple keyboard is actually a NumLock key.  
+
+`Media Arrows Fix` - If you have a laptop like mine where they put "media" functions (PlayPause/Stop/Rew/Fwd) on the arrow/cursor keys (when holding the `Fn` key), this preference option will "fix" them by letting the arrow keys behave like the arrow keys on a MacBook instead. They will be PgUp/PgDn/Home/End when holding the `Fn` key, and as long as the `Fn` key is included you can use them in keyboard shortcuts like `Fn+Shift+PgDn` (to select a page of text below the cursor, for example).  
+
+### OptSpec Layout submenu
+
+The `OptSpec Layout` submenu in the tray icon (or the radio buttons in the GUI app) shows which hard-coded Option-key special character layout is currently enabled in the Toshy config. Toggling one of the other items should almost immediately cause the layout to change or be disabled if desired.  
+
+### Keyboard Type submenu
+
+This submenu is a sort of temporary hack to force all attached keyboard devices to be seen as a specific type, which disables on-the-fly auto-adaptation, in case your keyboard type is being misidentified. You will receive a notification warning that this is only meant as a temporary fix while you follow the instructions to get the config file to correctly identify your keyboard type. If you restart Toshy, the setting will not be saved.  
+
+The main reason you'd need to use this is when a keyboard that is not made by Apple either was made for use with macOS, or just has the modifier keys next to the Space bar swapped like an Apple keyboard (common in small keyboards made to work with multiple devices including iOS/iPadOS devices), so you need to force it to be treated like an Apple keyboard. These types of keyboards can't be easily identified as the correct type by just looking at the device name.  
+
+After verifying that the forced keyboard type puts the modifiers in the correct place to work with muscle memory from using an Apple keyboard with macOS, you'll want to fix this permanently by opening your config file and editing the custom dictionary item to make the config see your device name as the correct type. See [here](#my-keyboard-is-not-recognized-as-the-correct-type) for more information.  
+
+## Usage (terminal commands)
+
+See above section for the GUI tools and preferences explanations. This section is only about the Toshy terminal commands. 
 
 Toshy does its best to set itself up automatically on any Linux system that uses `systemd` and that is a "known" Linux distro type that the installer knows how to deal with (i.e., has a list of the correct native packages to install, and knows how to use the package manager). Generally this means distros that use any of these package managers:  
 
@@ -734,7 +767,7 @@ Toshy does its best to set itself up automatically on any Linux system that uses
 - `xbps-install`
 - `zypper`
 
-If the install was successful, there should be a number of different terminal commands available to check the status of the Toshy `systemd` user services (the services are not system-wide, in an attempt to support multi-user setups and be ready to support Wayland more easily) and stop/start/restart the services.  
+If the install was successful, there should be a number of different terminal commands available to check the status of the Toshy `systemd` user services (the services are not system-wide, in an attempt to support multi-user setups and support Wayland environments more easily) and stop/start/restart the services.  
 
 Toshy actually consists of two separate `systemd` services meant to work together, with one monitoring the other, so the shell commands are meant to make working with the paired services much easier.  
 
