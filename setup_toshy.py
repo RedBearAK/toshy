@@ -2208,7 +2208,7 @@ def apply_tweaks_GNOME():
 
     if cnfg.DE_MAJ_VER not in pre_GNOME_45_vers:
         # It's unset, so we define the shortcut we want to set: Shift+Ctrl+Space
-        overview_binding = '<Shift><Control>space'
+        overview_binding = '"[\'<Shift><Control>space\']"'
         cmd_lst = ['gsettings', 'set', 'org.gnome.shell.keybindings',
                     'toggle-overview', overview_binding]
         try:
