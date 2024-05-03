@@ -6,6 +6,7 @@ import re
 import sys
 import pwd
 import grp
+import json
 import random
 import string
 import signal
@@ -2189,60 +2190,54 @@ def apply_tweaks_Cinnamon():
 def apply_tweaks_GNOME():
     """Utility function to add desktop tweaks to GNOME"""
 
-    # TODO: Decide if we should re-enable the toggle-overview shortcut and change default config
-    # for GNOME 45 and later. Find out if toggle-overview will be dropped(!) at some point. 
+    # TODO: Find out if toggle-overview will be dropped(!) at some point. 
 
-    # # How to check the existing toggle-overview shortcut:
-    # # gsettings get org.gnome.shell.keybindings toggle-overview
-    # # Will return something like: ['<Shift><Control>space']
-    # get_oview_shortcut_cmd = ['gsettings', 'get', 'org.gnome.shell.keybindings', 'toggle-overview']
-    # try:
-    #     # Capture the current shortcut setting
-    #     curr_oview_shortcut_str = subprocess.check_output(get_oview_shortcut_cmd, text=True).strip()
-    #     # Parse the JSON-formatted string into a Python list
-    #     curr_oview_shortcut_lst = json.loads(curr_oview_shortcut_str)
-    #     # Check if the shortcut is unset
-    #     if curr_oview_shortcut_lst == ['']:
-    #         # It's unset, so we define the shortcut we want to set
-    #         new_oview_shortcut_str = '<Alt>F1'
-    #         set_oview_shortcut_cmd = [  'gsettings', 'set', 'org.gnome.shell.keybindings',
-    #                                     'toggle-overview', json.dumps([new_oview_shortcut_str])]
-    #         # Set the desired shortcut
-    #         subprocess.run(set_oview_shortcut_cmd, check=True)
-    #         print(f"Set 'toggle-overview' shortcut to {new_oview_shortcut_str}.")
-    #     else:
-    #         print(f"'toggle-overview' shortcut is already set to {curr_oview_shortcut_str}.")
-    # except subprocess.CalledProcessError as proc_err:
-    #     error(f'Problem while checking or setting the toggle-overview shortcut.\n\t{proc_err}')
+    # Disable GNOME 'overlay-key' binding to Meta/Super/Win/Cmd.
+    # Interferes with some Meta/Super/Win/Cmd shortcuts.
+    # gsettings set org.gnome.mutter overlay-key ''
+    cmd_lst = ['gsettings', 'set', 'org.gnome.mutter', 'overlay-key', '']
+    subprocess.run(cmd_lst)
 
-    # Stop disabling overlay-key on GNOME 45 and later (toggle-overview is no longer set)
-    if cnfg.DE_MAJ_VER in ['44', '43', '42', '41', '40', '3']:
-        # Disable GNOME `overlay-key` binding to Meta/Super/Win/Cmd
-        # gsettings set org.gnome.mutter overlay-key ''
-        cmd_lst = ['gsettings', 'set', 'org.gnome.mutter', 'overlay-key', '']
-        subprocess.run(cmd_lst)
-        print(f'Disabled Super key opening the GNOME overview. (Use Cmd+Space instead.)')
-    else:
-        print(f'NOTICE: Toshy not disabling overlay-key on GNOME 45 or later.')
+    print(f'Disabled Super key opening GNOME overview. (Use Cmd+Space instead.)')
+
+    # On GNOME 45 and later 'toggle-overview' is disabled, so we need to differentiate versions.
+    # GNOME 44 and earlier will remap Cmd+Space to Super+S to match default 'toggle-overview'.
+    # GNOME 45 and later reassigned Super+S to the 'Quick Settings' panel.
+    # So we need to set a new shortcut for 'toggle-overview' on GNOME 45 and later.
+    pre_GNOME_45_vers = ['44', '43', '42', '41', '40', '3']
+
+    if cnfg.DE_MAJ_VER not in pre_GNOME_45_vers:
+        # It's unset, so we define the shortcut we want to set: Shift+Ctrl+Space
+        overview_binding = "['<Shift><Control>space']"
+        cmd_lst = ['gsettings', 'set', 'org.gnome.shell.keybindings',
+                    'toggle-overview', overview_binding]
+        try:
+            subprocess.run(cmd_lst, check=True)
+            print(f'Set "toggle-overview" shortcut to "{overview_binding}".')
+        except subprocess.CalledProcessError as proc_err:
+            error(f'Problem while setting the "toggle-overview" shortcut.\n\t{proc_err}')
 
     # Enable keyboard shortcut for GNOME Terminal preferences dialog
     # gsettings set org.gnome.Terminal.Legacy.Keybindings:/org/gnome/terminal/legacy/keybindings/ preferences '<Control>less'
     cmd_path = 'org.gnome.Terminal.Legacy.Keybindings:/org/gnome/terminal/legacy/keybindings/'
     prefs_binding = '<Control>comma'
-    subprocess.run(['gsettings', 'set', cmd_path, 'preferences', prefs_binding])
+    cmd_lst = ['gsettings', 'set', cmd_path, 'preferences', prefs_binding]
+    subprocess.run(cmd_lst)
     print(f'Set a keybinding for GNOME Terminal preferences.')
 
     # Enable "Expandable folders" in Nautilus
     # dconf write /org/gnome/nautilus/list-view/use-tree-view true
     cmd_path = '/org/gnome/nautilus/list-view/use-tree-view'
-    subprocess.run(['dconf', 'write', cmd_path, 'true'])
+    cmd_lst = ['dconf', 'write', cmd_path, 'true']
+    subprocess.run(cmd_lst)
 
     # Set default view option in Nautilus to "list-view"
     # dconf write /org/gnome/nautilus/preferences/default-folder-viewer "'list-view'"
     cmd_path = '/org/gnome/nautilus/preferences/default-folder-viewer'
-    subprocess.run(['dconf', 'write', cmd_path, "'list-view'"])
+    cmd_lst = ['dconf', 'write', cmd_path, "'list-view'"]
+    subprocess.run(cmd_lst)
 
-    print(f'Set Nautilus default to "List" view with "Expandable folders" enabled.')
+    print(f'Set Nautilus default to List view with "Expandable folders" enabled.')
 
 
 def remove_tweaks_GNOME():

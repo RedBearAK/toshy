@@ -1,4 +1,4 @@
-    # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import re
 import os
@@ -439,6 +439,7 @@ filemanagers_lod = [
     {clas: "^org.kde.krusader$"              },
     {clas: "^pcmanfm$"                       },
     {clas: "^pcmanfm-qt$"                    },
+    {clas: "^peony-qt$"                      },
     {clas: "^spacefm$"                       },
     {clas: "^thunar$"                        },
 ]
@@ -584,17 +585,28 @@ not_win_type_rgx    = re.compile("IBM|Chromebook|Apple", re.I)
 ntfy = NotificationManager(icon_file_active, title='Toshy Alert (Config)')
 
 
+# def isKBtype(kbtype: str, map=None):
+#     # guard against failure to give valid type arg
+#     if kbtype not in ['IBM', 'Chromebook', 'Windows', 'Apple']:
+#         raise ValueError(f"Invalid type given to isKBtype() function: '{kbtype}'"
+#                 f'\n\t Valid keyboard types (case sensitive): IBM | Chromebook | Windows | Apple')
+#     kbtype_cf = kbtype.casefold()
+#     KBTYPE_cf = KBTYPE.casefold() if isinstance(KBTYPE, str) else None
+
+#     def _isKBtype(ctx: KeyContext):
+#         # debug(f"KBTYPE: '{KBTYPE}' | isKBtype check from map: '{map}'")
+#         return kbtype_cf == KBTYPE_cf
+#     return _isKBtype
+
+
 def isKBtype(kbtype: str, map=None):
-    # guard against failure to give valid type arg
+    # guard against failure to give valid type arg (we don't need to casefold anything with this)
     if kbtype not in ['IBM', 'Chromebook', 'Windows', 'Apple']:
         raise ValueError(f"Invalid type given to isKBtype() function: '{kbtype}'"
                 f'\n\t Valid keyboard types (case sensitive): IBM | Chromebook | Windows | Apple')
-    kbtype_cf = kbtype.casefold()
-    KBTYPE_cf = KBTYPE.casefold() if isinstance(KBTYPE, str) else None
-
     def _isKBtype(ctx: KeyContext):
         # debug(f"KBTYPE: '{KBTYPE}' | isKBtype check from map: '{map}'")
-        return kbtype_cf == KBTYPE_cf
+        return kbtype == KBTYPE
     return _isKBtype
 
 
@@ -1176,14 +1188,14 @@ modmap("Keyboard Type Trigger Modmap", {
     # The accompanying keymap can be empty and still accomplish
     # the same purpose of triggering a re-evaluation of the
     # keyboard type when any non-modifier key is pressed.
-    Key.LEFT_META: Key.LEFT_META,
-    Key.RIGHT_META: Key.RIGHT_META,
-    Key.LEFT_ALT: Key.LEFT_ALT,
-    Key.RIGHT_ALT: Key.RIGHT_ALT,
-    Key.LEFT_CTRL: Key.LEFT_CTRL,
-    Key.RIGHT_CTRL: Key.RIGHT_CTRL,
-    Key.LEFT_SHIFT: Key.LEFT_SHIFT,
-    Key.RIGHT_SHIFT: Key.RIGHT_SHIFT,
+    Key.LEFT_META:              Key.LEFT_META,
+    Key.RIGHT_META:             Key.RIGHT_META,
+    Key.LEFT_ALT:               Key.LEFT_ALT,
+    Key.RIGHT_ALT:              Key.RIGHT_ALT,
+    Key.LEFT_CTRL:              Key.LEFT_CTRL,
+    Key.RIGHT_CTRL:             Key.RIGHT_CTRL,
+    Key.LEFT_SHIFT:             Key.LEFT_SHIFT,
+    Key.RIGHT_SHIFT:            Key.RIGHT_SHIFT,
 }, when = lambda ctx: getKBtype()(ctx) )    # THIS CONDITIONAL MUST EVALUATE TO FALSE ALWAYS!
 # Special keymap to trigger the evaluation of the keyboard type when 
 # any non-modifier key is pressed
@@ -4095,7 +4107,7 @@ keymap("GenGUI overrides: pre-GNOME 45 fix", {
         matchProps(not_lst=remotes_lod)(ctx) and is_pre_GNOME_45(DE_MAJ_VER)(ctx) )
 
 keymap("GenGUI overrides: GNOME", {
-    C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # Show GNOME overview/app launcher
+    C("RC-Space"):             [iEF2NT(),C("Shift-C-Space")],   # Show GNOME overview/app launcher
     C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,elementary)
     C("RC-Super-f"):            C("Alt-F10"),                   # Default SL - Maximize app (gnome/kde)
     C("RC-H"):                  C("Super-h"),                   # Default SL - Minimize app (gnome/budgie/popos/fedora) not-deepin
