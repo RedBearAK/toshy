@@ -780,7 +780,7 @@ class DistroQuirksHandler:
         #     else:
         #         error(  f'ERROR: Did not find any appropriate Python interpreter version.')
         #         safe_shutdown(1)
-        self.venv_quirks_handler.handle_quirks_CentOS_Stream_8(self.venv_cmd_lst)
+        self.venv_quirks_handler.handle_quirks_CentOS_Stream_8()
         try:
             # for dbus-python
             subprocess.run(['sudo', 'dnf', 'install', '-y',
