@@ -424,7 +424,8 @@ def elevate_privileges():
     """Elevate privileges early in the installer process"""
     call_attn_to_pwd_prompt_if_sudo_tkt_exp()
     try:
-        subprocess.run(['sudo', 'bash', '-c', 'echo -e "\nUsing elevated privileges..."'], check=True)
+        cmd_lst = ['sudo', 'bash', '-c', 'echo -e "\nUsing elevated privileges..."']
+        subprocess.run(cmd_lst, check=True)
     except subprocess.CalledProcessError as proc_err:
         secret_code = generate_secret_code()
         error(f'There was a problem checking "sudo" availability:\n\t{proc_err}')
