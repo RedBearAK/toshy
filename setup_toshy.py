@@ -209,14 +209,17 @@ class InstallerSettings:
         self.input_group            = 'input'
         self.user_name              = pwd.getpwuid(os.getuid()).pw_name
 
-        self.barebones_config       = None
         self.autostart_tray_icon    = True
+        self.unprivileged_user      = False
+
+        self.barebones_config       = None
         self.skip_native            = None
         self.fancy_pants            = None
+
         self.tweak_applied          = None
         self.remind_extensions      = None
-
         self.should_reboot          = None
+
         self.run_tmp_dir            = run_tmp_dir
         self.reboot_tmp_file        = f"{self.run_tmp_dir}/toshy_installer_says_reboot"
         self.reboot_ascii_art       = textwrap.dedent("""
@@ -351,6 +354,11 @@ def show_task_completed_msg():
     print(fancy_str('   >> Task completed successfully <<   ', 'green', bold=True))
 
 
+def generate_secret_code(length=4):
+    """Return a random alphanumeric code of specified length"""
+    return ''.join(random.choice(string.ascii_letters) for _ in range(length))
+
+
 def dot_Xmodmap_warning():
     """Check for '.Xmodmap' file in user's home folder, show warning about mod key remaps"""
 
@@ -367,7 +375,7 @@ def dot_Xmodmap_warning():
         print(f'{cnfg.separator}')
         print()
 
-        secret_code = ''.join(random.choice(string.ascii_letters) for _ in range(4))
+        secret_code = generate_secret_code()
 
         response = input(
             f"You must take responsibility for the issues an '.Xmodmap' file may cause."
@@ -415,7 +423,23 @@ def ask_add_home_local_bin():
 def elevate_privileges():
     """Elevate privileges early in the installer process"""
     call_attn_to_pwd_prompt_if_sudo_tkt_exp()
-    subprocess.run(['sudo', 'bash', '-c', 'echo -e "\nUsing elevated privileges..."'], check=True)
+    try:
+        subprocess.run(['sudo', 'bash', '-c', 'echo -e "\nUsing elevated privileges..."'], check=True)
+    except subprocess.CalledProcessError as proc_err:
+        secret_code = generate_secret_code()
+        error(f'There was a problem checking "sudo" availability:\n\t{proc_err}')
+        print()
+        print(f'The secret code for this run is "{secret_code}".')
+        print()
+        print(  'Assuming non-privileged user without access to "sudo".\n'
+                'This can work, but only if an admin user can run the installer first.\n'
+                'If you have already done this and rebooted, you can choose to proceed.\n')
+        print()
+        response = input('If you want to proceed, enter the secret code: ')
+        if response == secret_code:
+            # set a flag to bypass functions that do system "prep" work with `sudo`
+            cnfg.unprivileged_user = True
+            cnfg.skip_native = True
 
 
 #####################################################################################################
@@ -2841,11 +2865,19 @@ def main(cnfg: InstallerSettings):
     elevate_privileges()
 
     if not cnfg.skip_native:
+        # This will also be skipped if user proceeds with 
+        # "unprivileged_user" install sequence.
         install_distro_pkgs()
 
-    load_uinput_module()
-    install_udev_rules()
-    verify_user_groups()
+    if not cnfg.unprivileged_user:
+        # These things require 'sudo' (admin user)
+        # Allow them to be skipped to support non-admin users
+        # (An admin user would need to do the "prep" install)
+        # TODO: Add an installer option to do "--prep-only" if 
+        # admin user does not want Toshy enabled.
+        load_uinput_module()
+        install_udev_rules()
+        verify_user_groups()
 
     clone_keymapper_branch()
 
