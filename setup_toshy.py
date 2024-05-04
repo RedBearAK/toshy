@@ -1738,7 +1738,7 @@ class PythonVenvQuirksHandler():
         # if distro is openSUSE Leap type (instead of using old 3.6 Python version).
         if shutil.which(f'python{cnfg.curr_py_rel_ver_str}'):
             cnfg.py_interp_path = shutil.which(f'python{cnfg.curr_py_rel_ver_str}')
-            print(f'Using Python version {cnfg.curr_py_rel_ver_str}.')
+            # print(f'Using Python version {cnfg.curr_py_rel_ver_str}.')
         else:
             print(  f'Current stable Python release version '
                     f'({cnfg.curr_py_rel_ver_str}) not found. ')
@@ -1771,19 +1771,18 @@ def setup_python_vir_env():
     if not os.path.exists(cnfg.venv_path):
         if cnfg.DISTRO_ID in distro_groups_map['leap-based']:
             venv_quirks_handler.handle_quirks_Leap()
-        else:
-            print(f'Using Python version {cnfg.py_interp_ver_str}.')
+        elif cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '7':
+            venv_quirks_handler.handle_quirks_CentOS_7()
+        elif cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '8':
+            venv_quirks_handler.handle_quirks_CentOS_Stream_8()
+        elif cnfg.DISTRO_ID in distro_groups_map['rhel-based']:
+            venv_quirks_handler.handle_quirks_RHEL()
         try:
             venv_cmd_lst = [cnfg.py_interp_path, '-m', 'venv', cnfg.venv_path]
-            if cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '7':
-                venv_quirks_handler.handle_quirks_CentOS_7()
-            elif cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '8':
-                venv_quirks_handler.handle_quirks_CentOS_Stream_8()
-            elif cnfg.DISTRO_ID in ['openmandriva']:
-                venv_quirks_handler.handle_quirks_OpenMandriva(venv_cmd_lst)
-            elif cnfg.DISTRO_ID in distro_groups_map['rhel-based']:
-                venv_quirks_handler.handle_quirks_RHEL()
+            print(f'Using Python version {cnfg.py_interp_ver_str}.')
             subprocess.run(venv_cmd_lst, check=True)
+            if cnfg.DISTRO_ID in ['openmandriva']:
+                venv_quirks_handler.handle_quirks_OpenMandriva(venv_cmd_lst)
         except subprocess.CalledProcessError as proc_err:
             error(f'ERROR: Problem creating the Python virtual environment:\n\t{proc_err}')
             safe_shutdown(1)
