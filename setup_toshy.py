@@ -355,7 +355,7 @@ def show_task_completed_msg():
 
 
 def generate_secret_code(length=4):
-    """Return a random alphanumeric code of specified length"""
+    """Return a random ASCII letters code of specified length"""
     return ''.join(random.choice(string.ascii_letters) for _ in range(length))
 
 
@@ -718,8 +718,6 @@ class DistroQuirksHandler:
         need some extra prep work before installing the native package list"""
 
     def __init__(self) -> None:
-        # need this to avoid duplicating Python version checks
-        self.venv_quirks_handler = PythonVenvQuirksHandler()
         self.venv_cmd_lst = [cnfg.py_interp_path, '-m', 'venv', cnfg.venv_path]
 
 
@@ -766,21 +764,20 @@ class DistroQuirksHandler:
 
     def handle_quirks_CentOS_Stream_8(self):
         print('Doing prep/checks for CentOS Stream 8...')
-        # min_mnr_ver = cnfg.curr_py_rel_ver_mnr - 3           # check up to 2 vers before current
-        # max_mnr_ver = cnfg.curr_py_rel_ver_mnr + 3           # check up to 3 vers after current
-        # py_minor_ver_rng = range(max_mnr_ver, min_mnr_ver, -1)
-        # if py_interp_ver_tup < cnfg.curr_py_rel_ver_tup:
-        #     print(f"Checking for appropriate Python version on system...")
-        #     for check_py_minor_ver in py_minor_ver_rng:
-        #         if shutil.which(f'python3.{check_py_minor_ver}'):
-        #             cnfg.py_interp_path = shutil.which(f'python3.{check_py_minor_ver}')
-        #             cnfg.py_interp_ver_str = f'3.{check_py_minor_ver}'
-        #             print(f'Found Python version {cnfg.py_interp_ver_str} available.')
-        #             break
-        #     else:
-        #         error(  f'ERROR: Did not find any appropriate Python interpreter version.')
-        #         safe_shutdown(1)
-        self.venv_quirks_handler.handle_quirks_CentOS_Stream_8()
+        min_mnr_ver = cnfg.curr_py_rel_ver_mnr - 3           # check up to 2 vers before current
+        max_mnr_ver = cnfg.curr_py_rel_ver_mnr + 3           # check up to 3 vers after current
+        py_minor_ver_rng = range(max_mnr_ver, min_mnr_ver, -1)
+        if py_interp_ver_tup < cnfg.curr_py_rel_ver_tup:
+            print(f"Checking for appropriate Python version on system...")
+            for check_py_minor_ver in py_minor_ver_rng:
+                if shutil.which(f'python3.{check_py_minor_ver}'):
+                    cnfg.py_interp_path = shutil.which(f'python3.{check_py_minor_ver}')
+                    cnfg.py_interp_ver_str = f'3.{check_py_minor_ver}'
+                    print(f'Found Python version {cnfg.py_interp_ver_str} available.')
+                    break
+            else:
+                error(  f'ERROR: Did not find any appropriate Python interpreter version.')
+                safe_shutdown(1)
         try:
             # for dbus-python
             subprocess.run(['sudo', 'dnf', 'install', '-y',
