@@ -718,7 +718,10 @@ class DistroQuirksHandler:
         need some extra prep work before installing the native package list"""
 
     def __init__(self) -> None:
-        pass
+        # need this to avoid duplicating Python version checks
+        self.venv_quirks_handler = PythonVenvQuirksHandler()
+        self.venv_cmd_lst = [cnfg.py_interp_path, '-m', 'venv', cnfg.venv_path]
+
 
     def handle_quirks_CentOS_7(self):
         print('Doing prep/checks for CentOS 7...')
@@ -746,7 +749,7 @@ class DistroQuirksHandler:
                 # set new Python interpreter version and path to reflect what was installed
                 cnfg.py_interp_path     = '/opt/rh/rh-python38/root/usr/bin/python3.8'
                 cnfg.py_interp_ver_str  = '3.8'
-                # avoid using systemd packages/services for CentOS
+                # avoid using systemd packages/services for CentOS 7
                 cnfg.systemctl_present = False
             except subprocess.CalledProcessError as proc_err:
                 print()
@@ -763,20 +766,21 @@ class DistroQuirksHandler:
 
     def handle_quirks_CentOS_Stream_8(self):
         print('Doing prep/checks for CentOS Stream 8...')
-        min_mnr_ver = cnfg.curr_py_rel_ver_mnr - 3           # check up to 2 vers before current
-        max_mnr_ver = cnfg.curr_py_rel_ver_mnr + 3           # check up to 3 vers after current
-        py_minor_ver_rng = range(max_mnr_ver, min_mnr_ver, -1)
-        if py_interp_ver_tup < cnfg.curr_py_rel_ver_tup:
-            print(f"Checking for appropriate Python version on system...")
-            for check_py_minor_ver in py_minor_ver_rng:
-                if shutil.which(f'python3.{check_py_minor_ver}'):
-                    cnfg.py_interp_path = shutil.which(f'python3.{check_py_minor_ver}')
-                    cnfg.py_interp_ver_str = f'3.{check_py_minor_ver}'
-                    print(f'Found Python version {cnfg.py_interp_ver_str} available.')
-                    break
-            else:
-                error(  f'ERROR: Did not find any appropriate Python interpreter version.')
-                safe_shutdown(1)
+        # min_mnr_ver = cnfg.curr_py_rel_ver_mnr - 3           # check up to 2 vers before current
+        # max_mnr_ver = cnfg.curr_py_rel_ver_mnr + 3           # check up to 3 vers after current
+        # py_minor_ver_rng = range(max_mnr_ver, min_mnr_ver, -1)
+        # if py_interp_ver_tup < cnfg.curr_py_rel_ver_tup:
+        #     print(f"Checking for appropriate Python version on system...")
+        #     for check_py_minor_ver in py_minor_ver_rng:
+        #         if shutil.which(f'python3.{check_py_minor_ver}'):
+        #             cnfg.py_interp_path = shutil.which(f'python3.{check_py_minor_ver}')
+        #             cnfg.py_interp_ver_str = f'3.{check_py_minor_ver}'
+        #             print(f'Found Python version {cnfg.py_interp_ver_str} available.')
+        #             break
+        #     else:
+        #         error(  f'ERROR: Did not find any appropriate Python interpreter version.')
+        #         safe_shutdown(1)
+        self.venv_quirks_handler.handle_quirks_CentOS_Stream_8(self.venv_cmd_lst)
         try:
             # for dbus-python
             subprocess.run(['sudo', 'dnf', 'install', '-y',
@@ -1700,6 +1704,34 @@ class PythonVenvQuirksHandler():
     def __init__(self) -> None:
         pass
 
+    def handle_quirks_CentOS_7(self):
+        if py_interp_ver_tup >= (3, 8):
+            print(f"Good, Python version is 3.8 or later: "
+                    f"'{cnfg.py_interp_ver_str}'")
+        else:
+            error(f"Error: Python version is not 3.8 or later: "
+                    f"'{cnfg.py_interp_ver_str}'")
+            error("Failed to install Toshy from admin user first?")
+            safe_shutdown(1)
+
+    def handle_quirks_CentOS_Stream_8(self):
+        """Use a newer Python version for the venv in CentOS Stream 8."""
+        # TODO: Add higher version if ever necessary (keep minimum 3.8)
+        min_mnr_ver = cnfg.curr_py_rel_ver_mnr - 3           # check up to 2 vers before current
+        max_mnr_ver = cnfg.curr_py_rel_ver_mnr + 3           # check up to 3 vers after current
+        py_minor_ver_rng = range(max_mnr_ver, min_mnr_ver, -1)
+        if py_interp_ver_tup < cnfg.curr_py_rel_ver_tup:
+            print(f"Checking for appropriate Python version on system...")
+            for check_py_minor_ver in py_minor_ver_rng:
+                if shutil.which(f'python3.{check_py_minor_ver}'):
+                    cnfg.py_interp_path = shutil.which(f'python3.{check_py_minor_ver}')
+                    cnfg.py_interp_ver_str = f'3.{check_py_minor_ver}'
+                    print(f'Found Python version {cnfg.py_interp_ver_str} available.')
+                    break
+            else:
+                error(  f'ERROR: Did not find any appropriate Python interpreter version.')
+                safe_shutdown(1)
+
     def handle_quirks_Leap(self):
         print('Handling a Python virtual environment quirk in Leap...')
         # Change the Python interpreter path to use current release version from pkg list
@@ -1711,6 +1743,17 @@ class PythonVenvQuirksHandler():
             print(  f'Current stable Python release version '
                     f'({cnfg.curr_py_rel_ver_str}) not found. ')
             safe_shutdown(1)
+
+    def handle_quirks_RHEL(self):
+        """Use a newer Python version for the venv in RHEL"""
+        # TODO: Add higher version if ever necessary (keep minimum 3.8)
+        potential_versions = ['3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
+        for version in potential_versions:
+            # check if the version is already installed
+            if shutil.which(f'python{version}'):
+                cnfg.py_interp_path     = f'/usr/bin/python{version}'
+                cnfg.py_interp_ver_str  = version
+                break
 
     def handle_quirks_OpenMandriva(self, venv_cmd_lst):
         print('Handling a Python virtual environment quirk in OpenMandriva...')
@@ -1732,8 +1775,14 @@ def setup_python_vir_env():
             print(f'Using Python version {cnfg.py_interp_ver_str}.')
         try:
             venv_cmd_lst = [cnfg.py_interp_path, '-m', 'venv', cnfg.venv_path]
-            if cnfg.DISTRO_ID in ['openmandriva']:
+            if cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '7':
+                venv_quirks_handler.handle_quirks_CentOS_7(venv_cmd_lst)
+            elif cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '8':
+                venv_quirks_handler.handle_quirks_CentOS_Stream_8(venv_cmd_lst)
+            elif cnfg.DISTRO_ID in ['openmandriva']:
                 venv_quirks_handler.handle_quirks_OpenMandriva(venv_cmd_lst)
+            elif cnfg.DISTRO_ID in distro_groups_map['rhel-based']:
+                venv_quirks_handler.handle_quirks_RHEL(venv_cmd_lst)
             subprocess.run(venv_cmd_lst, check=True)
         except subprocess.CalledProcessError as proc_err:
             error(f'ERROR: Problem creating the Python virtual environment:\n\t{proc_err}')
