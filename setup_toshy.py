@@ -440,6 +440,11 @@ def elevate_privileges():
             # set a flag to bypass functions that do system "prep" work with `sudo`
             cnfg.unprivileged_user = True
             cnfg.skip_native = True
+        else:
+            print()
+            error('Code does not match! Try the installer again after installing Toshy \n'
+                    'first using an admin user that has access to "sudo".')
+            safe_shutdown(1)
 
 
 #####################################################################################################
