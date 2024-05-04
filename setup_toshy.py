@@ -1778,8 +1778,8 @@ def setup_python_vir_env():
         elif cnfg.DISTRO_ID in distro_groups_map['rhel-based']:
             venv_quirks_handler.handle_quirks_RHEL()
         try:
-            venv_cmd_lst = [cnfg.py_interp_path, '-m', 'venv', cnfg.venv_path]
             print(f'Using Python version {cnfg.py_interp_ver_str}.')
+            venv_cmd_lst = [cnfg.py_interp_path, '-m', 'venv', cnfg.venv_path]
             subprocess.run(venv_cmd_lst, check=True)
             if cnfg.DISTRO_ID in ['openmandriva']:
                 venv_quirks_handler.handle_quirks_OpenMandriva(venv_cmd_lst)
