@@ -725,10 +725,11 @@ class DistroQuirksHandler:
     def handle_quirks_CentOS_7(self):
         print('Doing prep/checks for CentOS 7...')
 
-        # pin 'evdev' pip package to version 1.6.1 for CentOS 7 to
-        # deal with ImportError and undefined symbol UI_GET_SYSNAME
-        global pip_pkgs
-        pip_pkgs = [pkg if pkg != "evdev" else "evdev==1.6.1" for pkg in pip_pkgs]
+        # Doing this now in the pip packages install function:
+        # # pin 'evdev' pip package to version 1.6.1 for CentOS 7 to
+        # # deal with ImportError and undefined symbol UI_GET_SYSNAME
+        # global pip_pkgs
+        # pip_pkgs = [pkg if pkg != "evdev" else "evdev==1.6.1" for pkg in pip_pkgs]
 
         native_pkg_installer.check_for_pkg_mgr_cmd('yum')
         yum_cmd_lst = ['sudo', 'yum', 'install', '-y']
@@ -1795,6 +1796,12 @@ def install_pip_packages():
     print(f'\n\n§  Installing/upgrading Python packages...\n{cnfg.separator}')
     venv_python_cmd = os.path.join(cnfg.venv_path, 'bin', 'python')
     venv_pip_cmd    = os.path.join(cnfg.venv_path, 'bin', 'pip')
+
+    if cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '7':
+        # pin 'evdev' pip package to version 1.6.1 for CentOS 7 to
+        # deal with ImportError and undefined symbol UI_GET_SYSNAME
+        global pip_pkgs
+        pip_pkgs = [pkg if pkg != "evdev" else "evdev==1.6.1" for pkg in pip_pkgs]
 
     # Filter out systemd packages if no 'systemctl' present
     filtered_pip_pkgs   = [
