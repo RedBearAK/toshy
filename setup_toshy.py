@@ -1704,11 +1704,19 @@ class PythonVenvQuirksHandler():
         pass
 
     def handle_quirks_CentOS_7(self):
+        # avoid using systemd packages/services for CentOS 7
+        cnfg.systemctl_present = False
+        # Path where Python 3.8 should be installed by this point
+        rh_python38 = '/opt/rh/rh-python38/root/usr/bin/python3.8'
+        if os.path.exists(rh_python38):
+            # set new Python interpreter version and path to reflect what was installed
+            cnfg.py_interp_path     = rh_python38
+            cnfg.py_interp_ver_str  = '3.8'
         if py_interp_ver_tup >= (3, 8):
-            print(f"Good, Python version is 3.8 or later: "
+            print("Good, Python version is 3.8 or later: "
                     f"'{cnfg.py_interp_ver_str}'")
         else:
-            error(f"Error: Python version is not 3.8 or later: "
+            error("Error: Python version is not 3.8 or later: "
                     f"'{cnfg.py_interp_ver_str}'")
             error("Failed to install Toshy from admin user first?")
             safe_shutdown(1)
