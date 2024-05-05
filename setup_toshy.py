@@ -292,6 +292,11 @@ def get_environment_info():
         # we don't care what it is, just that it is set to avoid errors in get_env_info()
         os.environ['XDG_SESSION_DESKTOP'] = 'prep-only'
 
+    if cnfg.prep_only and not os.environ.get('XDG_SESSION_TYPE'):
+        # su-ing to an admin user will show no graphical environment info
+        # we don't care what it is, just that it is set to avoid errors in get_env_info()
+        os.environ['XDG_SESSION_TYPE'] = 'prep-only'
+
     env_info_dct   = env.get_env_info()
 
     # Avoid casefold() errors by converting all to strings
