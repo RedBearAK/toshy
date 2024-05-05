@@ -436,8 +436,11 @@ def elevate_privileges():
         cmd_lst = ['sudo', 'bash', '-c', 'echo -e "\nUsing elevated privileges..."']
         subprocess.run(cmd_lst, check=True)
     except subprocess.CalledProcessError as proc_err:
+        if cnfg.prep_only:
+            error('Only an admin user with sudo access can use "prep-only".')
+            safe_shutdown(1)
         secret_code = generate_secret_code()
-        error(f'There was a problem checking "sudo" availability:\n\t{proc_err}')
+        error(f'There was a problem checking "sudo" availability.') # :\n\t{proc_err}')
         print()
         print(f'The secret code for this run is "{secret_code}".')
         print()
