@@ -2964,14 +2964,20 @@ def main(cnfg: InstallerSettings):
     if not cnfg.unprivileged_user:
         # These things require 'sudo' (admin user)
         # Allow them to be skipped to support non-admin users
-        # (An admin user would need to do the "prep" install)
-        # TODO: Add an installer option to do "--prep-only" if 
-        # admin user does not want Toshy enabled.
+        # (An admin user would need to first do the "prep-only" command to support this)
         load_uinput_module()
         install_udev_rules()
-        verify_user_groups()
+        if not cnfg.prep_only:
+            # We don't need to check the user group for admin doing prep-only command
+            verify_user_groups()
 
-    if not cnfg.prep_only:
+    if cnfg.prep_only:
+        print()
+        print('########################################################################')
+        print('FINISHED with prep-only tasks. Unprivileged users can now install Toshy.')
+        safe_shutdown(0)
+
+    elif not cnfg.prep_only:
         clone_keymapper_branch()
 
         backup_toshy_config()
