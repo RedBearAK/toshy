@@ -2944,10 +2944,10 @@ def main(cnfg: InstallerSettings):
     if not cnfg.prep_only:
         ask_add_home_local_bin()
 
-        get_environment_info()
+    get_environment_info()
 
-        if cnfg.DISTRO_ID not in get_supported_distro_ids():
-            exit_with_invalid_distro_error()
+    if cnfg.DISTRO_ID not in get_supported_distro_ids():
+        exit_with_invalid_distro_error()
 
     elevate_privileges()
 
