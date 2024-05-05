@@ -154,7 +154,7 @@ class InstallerSettings:
         sep_reps                    = 80
         self.sep_char               = '='
         self.separator              = self.sep_char * sep_reps
-        self.override_distro        = None
+
         self.DISTRO_ID            = None
         self.DISTRO_VER: str        = ""
         self.VARIANT_ID             = None
@@ -212,6 +212,10 @@ class InstallerSettings:
         self.autostart_tray_icon    = True
         self.unprivileged_user      = False
 
+        self.prep_only              = None
+
+        # option flags for the "install" command:
+        self.override_distro        = None      # will be a string if not None
         self.barebones_config       = None
         self.skip_native            = None
         self.fancy_pants            = None
@@ -282,6 +286,11 @@ def get_environment_info():
     else:
         error("ERROR: Init system (process 1) could not be determined. (See above error.)")
     print()   # blank line after init system message
+
+    if cnfg.prep_only and not os.environ.get('XDG_SESSION_DESKTOP'):
+        # su-ing to an admin user will show no graphical environment info
+        # we don't care what it is, just that it is set to avoid errors in get_env_info()
+        os.environ['XDG_SESSION_DESKTOP'] = 'prep-only'
 
     env_info_dct   = env.get_env_info()
 
@@ -2850,6 +2859,11 @@ def handle_cli_arguments():
         help='Remove desktop environment tweaks only, no install'
     )
 
+    subparser_prep_only         = subparsers.add_parser(
+        'prep-only',
+        help='Do only prep steps that require sudo/admin, no install'
+    )
+
     subparser_uninstall         = subparsers.add_parser(
         'uninstall',
         help='Uninstall Toshy'
@@ -2861,6 +2875,12 @@ def handle_cli_arguments():
     if args.command is None:
         parser.print_help()
         safe_shutdown(0)
+
+    if args.command == 'prep-only':
+        cnfg.prep_only = True
+
+        main(cnfg)
+        safe_shutdown(0)    # redundant, but that's OK
 
     if args.command == 'install':
         if args.override_distro:
@@ -2913,14 +2933,18 @@ def handle_cli_arguments():
 def main(cnfg: InstallerSettings):
     """Main installer function to call specific functions in proper sequence"""
 
-    dot_Xmodmap_warning()
+    if not cnfg.prep_only:
+        dot_Xmodmap_warning()
+
     ask_is_distro_updated()
-    ask_add_home_local_bin()
 
-    get_environment_info()
+    if not cnfg.prep_only:
+        ask_add_home_local_bin()
 
-    if cnfg.DISTRO_ID not in get_supported_distro_ids():
-        exit_with_invalid_distro_error()
+        get_environment_info()
+
+        if cnfg.DISTRO_ID not in get_supported_distro_ids():
+            exit_with_invalid_distro_error()
 
     elevate_privileges()
 
@@ -2939,90 +2963,91 @@ def main(cnfg: InstallerSettings):
         install_udev_rules()
         verify_user_groups()
 
-    clone_keymapper_branch()
+    if not cnfg.prep_only:
+        clone_keymapper_branch()
 
-    backup_toshy_config()
-    install_toshy_files()
+        backup_toshy_config()
+        install_toshy_files()
 
-    setup_python_vir_env()
-    install_pip_packages()
+        setup_python_vir_env()
+        install_pip_packages()
 
-    install_bin_commands()
-    install_desktop_apps()
+        install_bin_commands()
+        install_desktop_apps()
 
-    # Python D-Bus service script also does this, but this will refresh if script changes
-    if cnfg.DESKTOP_ENV in ['kde', 'plasma']:
-        setup_kwin2dbus_script()
+        # Python D-Bus service script also does this, but this will refresh if script changes
+        if cnfg.DESKTOP_ENV in ['kde', 'plasma']:
+            setup_kwin2dbus_script()
 
-    setup_kde_dbus_service()
+        setup_kde_dbus_service()
 
-    setup_systemd_services()
+        setup_systemd_services()
 
-    autostart_systemd_kickstarter()
+        autostart_systemd_kickstarter()
 
-    autostart_tray_icon()
-    apply_desktop_tweaks()
+        autostart_tray_icon()
+        apply_desktop_tweaks()
 
-    if cnfg.DESKTOP_ENV == 'gnome':
-        print()
-        def is_extension_enabled(extension_uuid):
-            try:
-                output = subprocess.check_output(
-                            ['gsettings', 'get', 'org.gnome.shell', 'enabled-extensions'])
-                extensions = output.decode().strip().replace("'", "").split(",")
-            except subprocess.CalledProcessError as proc_err:
-                error(f"Unable to check enabled extensions:\n\t{proc_err}")
-                return False
-            return extension_uuid in extensions
-
-        if is_extension_enabled("appindicatorsupport@rgcjonas.gmail.com"):
-            print("AppIndicator extension is enabled. Tray icon should work.")
-        else:
+        if cnfg.DESKTOP_ENV == 'gnome':
             print()
-            debug(f"RECOMMENDATION: Install 'AppIndicator' GNOME extension\n"
-                "Easiest method: 'flatpak install extensionmanager', search for 'appindicator'\n",
-                ctx="!!")
+            def is_extension_enabled(extension_uuid):
+                try:
+                    output = subprocess.check_output(
+                                ['gsettings', 'get', 'org.gnome.shell', 'enabled-extensions'])
+                    extensions = output.decode().strip().replace("'", "").split(",")
+                except subprocess.CalledProcessError as proc_err:
+                    error(f"Unable to check enabled extensions:\n\t{proc_err}")
+                    return False
+                return extension_uuid in extensions
 
-    if os.path.exists(cnfg.reboot_tmp_file):
-        cnfg.should_reboot = True
+            if is_extension_enabled("appindicatorsupport@rgcjonas.gmail.com"):
+                print("AppIndicator extension is enabled. Tray icon should work.")
+            else:
+                print()
+                debug(f"RECOMMENDATION: Install 'AppIndicator' GNOME extension\n"
+                    "Easiest method: 'flatpak install extensionmanager', search for 'appindicator'\n",
+                    ctx="!!")
 
-    if cnfg.should_reboot:
-        # create reboot reminder temp file, in case installer is run again before a reboot
-        if not os.path.exists(cnfg.reboot_tmp_file):
-            os.mknod(cnfg.reboot_tmp_file)
-        show_reboot_prompt()
-        print(f'{cnfg.sep_char * 2}  Toshy install complete. Report issues on the GitHub repo.')
-        print(f'{cnfg.sep_char * 2}  https://github.com/RedBearAK/toshy/issues/')
-        print(f'{cnfg.sep_char * 2}  >>  ALERT: Permissions changed. You MUST reboot for Toshy to work.')
-        print(cnfg.separator)
-        print(cnfg.separator)
-        print()
-    else:
+        if os.path.exists(cnfg.reboot_tmp_file):
+            cnfg.should_reboot = True
 
-        # Do not (re)start the tray icon here unless user preference allows it
-        if cnfg.autostart_tray_icon:
-            # Try to start the tray icon immediately, if reboot is not indicated
-            tray_icon_cmd = [os.path.join(home_dir, '.local', 'bin', 'toshy-tray')]
-            # Try to launch the tray icon in a separate process not linked to current shell
-            # Also, suppress output that might confuse the user
-            subprocess.Popen(tray_icon_cmd, close_fds=True, stdout=DEVNULL, stderr=DEVNULL)
+        if cnfg.should_reboot:
+            # create reboot reminder temp file, in case installer is run again before a reboot
+            if not os.path.exists(cnfg.reboot_tmp_file):
+                os.mknod(cnfg.reboot_tmp_file)
+            show_reboot_prompt()
+            print(f'{cnfg.sep_char * 2}  Toshy install complete. Report issues on the GitHub repo.')
+            print(f'{cnfg.sep_char * 2}  https://github.com/RedBearAK/toshy/issues/')
+            print(f'{cnfg.sep_char * 2}  >>  ALERT: Permissions changed. You MUST reboot for Toshy to work.')
+            print(cnfg.separator)
+            print(cnfg.separator)
+            print()
+        else:
 
-        print()
-        print()
-        print()
-        print(cnfg.separator)
-        print(cnfg.separator)
-        print(f'{cnfg.sep_char * 2}  Toshy install complete. Rebooting should not be necessary.')
-        print(f'{cnfg.sep_char * 2}  Report issues on the GitHub repo.')
-        print(f'{cnfg.sep_char * 2}  https://github.com/RedBearAK/toshy/issues/')
-        print(cnfg.separator)
-        print(cnfg.separator)
-        print()
-        if cnfg.SESSION_TYPE == 'wayland' and cnfg.DESKTOP_ENV == 'kde':
-            print(f'Switch to a different window ONCE to get KWin script to start working!')
+            # Do not (re)start the tray icon here unless user preference allows it
+            if cnfg.autostart_tray_icon:
+                # Try to start the tray icon immediately, if reboot is not indicated
+                tray_icon_cmd = [os.path.join(home_dir, '.local', 'bin', 'toshy-tray')]
+                # Try to launch the tray icon in a separate process not linked to current shell
+                # Also, suppress output that might confuse the user
+                subprocess.Popen(tray_icon_cmd, close_fds=True, stdout=DEVNULL, stderr=DEVNULL)
 
-    if cnfg.remind_extensions or (cnfg.DESKTOP_ENV == 'gnome' and cnfg.SESSION_TYPE == 'wayland'):
-        print(f'You MUST install GNOME EXTENSIONS if using Wayland+GNOME! See Toshy README.')
+            print()
+            print()
+            print()
+            print(cnfg.separator)
+            print(cnfg.separator)
+            print(f'{cnfg.sep_char * 2}  Toshy install complete. Rebooting should not be necessary.')
+            print(f'{cnfg.sep_char * 2}  Report issues on the GitHub repo.')
+            print(f'{cnfg.sep_char * 2}  https://github.com/RedBearAK/toshy/issues/')
+            print(cnfg.separator)
+            print(cnfg.separator)
+            print()
+            if cnfg.SESSION_TYPE == 'wayland' and cnfg.DESKTOP_ENV == 'kde':
+                print(f'Switch to a different window ONCE to get KWin script to start working!')
+
+        if cnfg.remind_extensions or (cnfg.DESKTOP_ENV == 'gnome' and cnfg.SESSION_TYPE == 'wayland'):
+            print(f'You MUST install GNOME EXTENSIONS if using Wayland+GNOME! See Toshy README.')
 
     safe_shutdown(0)
 
