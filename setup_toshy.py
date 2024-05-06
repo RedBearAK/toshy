@@ -368,8 +368,8 @@ def show_task_completed_msg():
     print(fancy_str('   >> Task completed successfully <<   ', 'green', bold=True))
 
 
-def generate_secret_code(length=4):
-    """Return a random ASCII letters code of specified length"""
+def generate_secret_code(length: int = 4) -> str:
+    """Return a random upper/lower case ASCII letters string of specified length"""
     return ''.join(random.choice(string.ascii_letters) for _ in range(length))
 
 
@@ -435,29 +435,65 @@ def ask_add_home_local_bin():
 
 
 def elevate_privileges():
-    """Elevate privileges early in the installer process"""
-    call_attn_to_pwd_prompt_if_sudo_tkt_exp()
-    try:
-        cmd_lst = ['sudo', 'bash', '-c', 'echo -e "\nUsing elevated privileges..."']
-        subprocess.run(cmd_lst, check=True)
-    except subprocess.CalledProcessError as proc_err:
-        if cnfg.prep_only:
-            error('Only an admin user with sudo access can use "prep-only".')
+    """Elevate privileges early in the installer process, or invoke unprivileged install"""
+
+    print()     # blank line to separate
+    max_attempts = 3
+
+    # Ask politely if user is admin to avoid causing a sudo "incident" report unnecessarily
+    for _ in range(max_attempts):
+        response = input(
+            f'Is user "{cnfg.user_name}" an admin user that can run "sudo" commands? [y/N]: ')
+        if response.casefold() in ['y', 'n']:
+            # response is valid, so break loop and proceed with appropriate actions below
+            break
+        else:
+            print()
+            error("Response invalid. Valid responses are 'y' or 'n'.")
+            print()     # blank line for separation, then continue loop
+    else:   # this "else" belongs to the "for" loop
+        print()
+        error('Response invalid. Too many attempts.')
+        safe_shutdown(1)
+
+    if response.casefold() == 'y':
+        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+        try:
+            cmd_lst = ['sudo', 'bash', '-c', 'echo -e "\nUsing elevated privileges..."']
+            subprocess.run(cmd_lst, check=True)
+        except subprocess.CalledProcessError as proc_err:
+            print()
+            if cnfg.prep_only:
+                print()
+                error('ERROR: Problem invoking "sudo" command. Is this really an admin user?')
+                error('Only an admin user with sudo access can use "prep-only" command. Exiting.')
+            error('ERROR: Problem invoking "sudo" command. Try answering "n" to admin question.')
             safe_shutdown(1)
+    elif response.casefold() == 'n':
         secret_code = generate_secret_code()
-        error(f'There was a problem checking "sudo" availability.') # :\n\t{proc_err}')
         print()
-        print(f'The secret code for this run is "{secret_code}".')
+        print(f'The secret code for this run is "{secret_code}". You will need this.')
         print()
-        print(  'Assuming non-privileged user without access to "sudo".\n'
-                'This can work, but only if an admin user can run the installer first.\n'
-                'If you have already done this and rebooted, you can choose to proceed.\n')
+        print(  'It is possible to install as an unprivileged user, but only after an\n'
+                'admin user first runs the full install or a "prep-only" sequence.\n'
+                'The admin user must install from a full desktop session, or from\n'
+                'a "su --login adminuser" shell instance. The admin user can do\n'
+                f'just the "prep" steps with "./{this_file_name} prep-only" instead of\n'
+                f'using "./{this_file_name} install", if it is not desired that Toshy\n'
+                'should also run when the admin user logs into a desktop session.\n'
+                'When using "su --login adminuser", that user will also need to\n'
+                'download an independent copy of the Toshy zip file to install from,\n'
+                'using a "wget" or "curl" command. Or use "sudo" to copy the zip\n'
+                "file from the unprivileged user's Downloads folder. See the Wiki.")
         print()
-        response = input('If you want to proceed, enter the secret code: ')
+        response = input(
+            'If you understand everything written above or already took care of prepping the\n'
+            'system and want to proceed with an unprivileged install, enter the secret code: ')
         if response == secret_code:
             # set a flag to bypass functions that do system "prep" work with `sudo`
             cnfg.unprivileged_user = True
-            cnfg.skip_native = True
+            print("Continuing with an unprivileged install of Toshy's user components.")
+            return
         else:
             print()
             error('Code does not match! Try the installer again after installing Toshy \n'
@@ -2956,7 +2992,7 @@ def main(cnfg: InstallerSettings):
 
     elevate_privileges()
 
-    if not cnfg.skip_native:
+    if not cnfg.skip_native and not cnfg.unprivileged_user:
         # This will also be skipped if user proceeds with 
         # "unprivileged_user" install sequence.
         install_distro_pkgs()
