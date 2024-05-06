@@ -322,6 +322,14 @@ Just applies the "desktop tweaks" for the environment, does not do the full inst
 
 Just removes the "desktop tweaks" the installer applied. Does not do the full uninstall.  
 
+```sh
+./setup_toshy.py prep-only
+```
+
+This will only perform the necessary steps to "prep" the system to make Toshy's user-specific components work correctly. Things like package installs and setting up the `udev` rules file. This `prep-only` command will avoid installing any of Toshy's user components (user services, tray icon, etc.) for the admin user running the command. 
+
+Invoking this command instead of doing the "install" command may require some extra manual steps to get a user's Toshy install fully working, if the user that wants to use Toshy is a non-admin (unprivileged) user with no access to `sudo`. Mainly this might be adding the unprivileged user to the correct `input` group and restarting the system. See the [dedicated Wiki page]() for more information about the use of the `prep-only` command.  
+
 ## How to Uninstall
 
 This should work now:  
