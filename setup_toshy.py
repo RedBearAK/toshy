@@ -492,7 +492,8 @@ def elevate_privileges():
         if response == secret_code:
             # set a flag to bypass functions that do system "prep" work with `sudo`
             cnfg.unprivileged_user = True
-            print("Continuing with an unprivileged install of Toshy's user components.")
+            print()
+            print("Continuing with an unprivileged install of Toshy's user components...")
             return
         else:
             print()
