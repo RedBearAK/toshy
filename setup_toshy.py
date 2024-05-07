@@ -551,6 +551,8 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "xset",
                             "zenity"],
 
+    # NOTE: Do not add 'gnome-shell-extension-appindicator' to Fedora/RHELs.
+    #       This will install extension but requires logging out of GNOME to activate.
     'rhel-based':          ["cairo-devel", "cairo-gobject-devel",
                             "dbus-daemon", "dbus-devel",
                             "gcc", "git", "gobject-introspection-devel",
@@ -560,6 +562,8 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "xset",
                             "zenity"],
 
+    # NOTE: Do not add 'gnome-shell-extension-appindicator' to Fedora/RHELs.
+    #       This will install extension but requires logging out of GNOME to activate.
     'fedora-immutables':   ["cairo-devel", "cairo-gobject-devel",
                             "dbus-daemon", "dbus-devel",
                             "evtest",
@@ -668,6 +672,7 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "systemd-devel",
                             "zenity"],
 
+    # TODO: see if this needs "dbus-daemon" added as dependency (for containers)
     'void-based':          ["cairo-devel", "curl",
                             "dbus-devel",
                             "evtest",
@@ -679,6 +684,7 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "xset",
                             "zenity"],
 
+    # TODO: see if this needs "dbus-daemon" added as dependency (for containers)
     'kaos-based':          ["cairo",
                             "dbus",
                             "evtest",
