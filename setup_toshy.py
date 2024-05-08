@@ -326,6 +326,53 @@ def get_environment_info():
         '', ctx='EV')
 
 
+def md_wrap(text: str, width: int = 80):
+    """
+    Process and wrap text as if written in Markdown style, where double newlines signify
+    paragraph breaks. Single newlines are treated as a space for better formatting, unless
+    they are part of a paragraph break. Text is wrapped to the specified width (characters).
+
+    Text blocks can be indented like the surrounding code. The indenting will be removed.
+
+    Args:
+        text (str):     The input text to wrap and print.
+        width (int):    The maximum width of the wrapped text, default is 80.
+    """
+    # Dedent the text to remove any common leading whitespace
+    text = textwrap.dedent(text)
+
+    # Detect and store any trailing spaces preceding the final newline
+    trailing_spaces = re.findall(r' +\n$', text)
+    if trailing_spaces:
+        # Extract the spaces from the list (only one element expected)
+        trailing_spaces = trailing_spaces[0][:-1]  # Remove the newline character
+    else:
+        trailing_spaces = ''
+
+    # Replace explicit double newlines with a placeholder to preserve them
+    text = text.replace('\n\n', '\uffff')
+    # Replace single newlines (which are for code readability) with a space
+    text = text.replace('\n', ' ')
+    # Convert the placeholders back to double newlines
+    text = text.replace('\uffff', '\n\n')
+
+    # Wrap each paragraph separately to maintain intended formatting
+    paragraphs = text.split('\n\n')
+
+    # Join the string back together, applying wrap width.
+    wrapped_text = '\n\n'.join(textwrap.fill(paragraph, width=width) for paragraph in paragraphs)
+    # Clean up space inserted inappropriately beginning of joined string.
+    wrapped_text = re.sub(r'^[ ]+', '', wrapped_text)
+    # Clean up doubled spaces from a space being left at the end of a line.
+    wrapped_text = re.sub(' +', ' ', wrapped_text)
+
+    # Append any trailing spaces that were initially present
+    wrapped_text += trailing_spaces
+
+    # Return the wrapped_text string.
+    return wrapped_text
+
+
 def fancy_str(text, color_name, *, bold=False):
     """
     Return text wrapped in the specified color code.
@@ -443,7 +490,7 @@ def elevate_privileges():
     # Ask politely if user is admin to avoid causing a sudo "incident" report unnecessarily
     for _ in range(max_attempts):
         response = input(
-            f'Is user "{cnfg.user_name}" an admin user that can run "sudo" commands? [y/N]: ')
+            f'Is user "{cnfg.user_name}" an admin user that can run "sudo" commands? [y/n]: ')
         if response.casefold() in ['y', 'n']:
             # response is valid, so break loop and proceed with appropriate actions below
             break
@@ -471,34 +518,52 @@ def elevate_privileges():
             safe_shutdown(1)
     elif response.casefold() == 'n':
         secret_code = generate_secret_code()
+        print('\n\n')
+        print(fancy_str(
+            'ALERT!  ALERT!  ALERT!  ALERT!  ALERT!  ALERT!  ALERT!  ALERT!  ALERT!  ALERT!\n',
+            color_name='red', bold=True))
+        md_wrapped_str = md_wrap(f"""
+        The secret code for this run is "{secret_code}". You will need this.
+
+        It is possible to install as an unprivileged user, but only after an
+        admin user first runs the full install or a "prep-only" sequence.
+        The admin user must install from a full desktop session, or from
+        a "su --login adminuser" shell instance. The admin user can do
+        just the "prep" steps with:
+        
+        ./{this_file_name} prep-only
+        
+        ... instead of using:
+        
+        ./{this_file_name} install
+        
+        Use the "prep-only" command if it is not desired that Toshy
+        should also run when the admin user logs into a desktop session.
+        When using "su --login adminuser", that user will also need to
+        download an independent copy of the Toshy zip file to install from,
+        using a "wget" or "curl" command. Or use "sudo" to copy the zip
+        file from the unprivileged user's Downloads folder. See the Wiki
+        for a better example of the full "prep-only" sequence with a 
+        separate admin user.
+        """)
+        print(md_wrapped_str)
         print()
-        print(f'The secret code for this run is "{secret_code}". You will need this.')
-        print()
-        print(  'It is possible to install as an unprivileged user, but only after an\n'
-                'admin user first runs the full install or a "prep-only" sequence.\n'
-                'The admin user must install from a full desktop session, or from\n'
-                'a "su --login adminuser" shell instance. The admin user can do\n'
-                f'just the "prep" steps with "./{this_file_name} prep-only" instead of\n'
-                f'using "./{this_file_name} install", if it is not desired that Toshy\n'
-                'should also run when the admin user logs into a desktop session.\n'
-                'When using "su --login adminuser", that user will also need to\n'
-                'download an independent copy of the Toshy zip file to install from,\n'
-                'using a "wget" or "curl" command. Or use "sudo" to copy the zip\n'
-                "file from the unprivileged user's Downloads folder. See the Wiki.")
-        print()
-        response = input(
-            'If you understand everything written above or already took care of prepping the\n'
-            'system and want to proceed with an unprivileged install, enter the secret code: ')
+        md_wrapped_str = md_wrap(width=55, text="""
+        If you understand everything written above or already took care 
+        of prepping the system and want to proceed with an unprivileged 
+        install, enter the secret code: 
+        """)
+        response = input(md_wrapped_str)
         if response == secret_code:
             # set a flag to bypass functions that do system "prep" work with `sudo`
             cnfg.unprivileged_user = True
             print()
-            print("Continuing with an unprivileged install of Toshy's user components...")
+            print("Good code. Continuing with an unprivileged install of Toshy user components...")
             return
         else:
             print()
             error('Code does not match! Try the installer again after installing Toshy \n'
-                    'first using an admin user that has access to "sudo".')
+                    '     first using an admin user that has access to "sudo".')
             safe_shutdown(1)
 
 
