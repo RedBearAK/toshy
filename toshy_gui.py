@@ -4,7 +4,7 @@
 # Preferences app for Toshy, using tkinter GUI and "Sun Valley" theme
 TOSHY_PART      = 'gui'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Preferences app'  # pretty name to print out
-APP_VERSION     = '2024.0202'
+APP_VERSION     = '2024.0508'
 
 # -------- COMMON COMPONENTS --------------------------------------------------
 
@@ -12,7 +12,10 @@ import os
 import re
 import sys
 import time
-import dbus
+try:
+    import dbus
+except ModuleNotFoundError:
+    dbus = None
 import fcntl
 import psutil
 import shutil
@@ -259,6 +262,10 @@ svc_status_glyph_unknown    = 'Unknown '              # ❔  #
 
 
 def fn_monitor_toshy_services():
+    if dbus is None:
+        error('The "dbus" module is not available. Cannot monitor services.')
+        return
+
     # debug('')
     # debug(f'Entering GUI monitoring function...')
     global svc_status_config, svc_status_sessmon

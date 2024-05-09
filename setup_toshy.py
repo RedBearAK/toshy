@@ -219,6 +219,7 @@ class InstallerSettings:
         self.barebones_config       = None
         self.skip_native            = None
         self.fancy_pants            = None
+        self.no_dbus_python         = None
 
         self.tweak_applied          = None
         self.remind_extensions      = None
@@ -1930,6 +1931,40 @@ def install_pip_packages():
         global pip_pkgs
         pip_pkgs = [pkg if pkg != "evdev" else "evdev==1.6.1" for pkg in pip_pkgs]
 
+    # Bypass the install of 'dbus-python' pip package if option passed to 'install' command.
+    # Diminishes peripheral app functionality and disables some Wayland methods, but 
+    # allows installing Toshy even when 'dbus-python' build throws errors during install.
+    if cnfg.no_dbus_python:
+        pip_pkgs = [pkg for pkg in pip_pkgs if pkg != "dbus-python"]
+
+        # We also need to remove the 'dbus-python' dependency line from the keymapper's
+        # 'pyproject.toml' file before proceeding with pip_pkgs install sequence.
+        # File will be at: ./keymapper-temp/pyproject.toml
+        # Make backup with a filename that will be ignored and edit original in place.
+        toml_file_path = os.path.join(this_file_dir, cnfg.keymapper_tmp_path, 'pyproject.toml')
+        backup_path = toml_file_path + ".bak"
+
+        try:
+            shutil.copyfile(toml_file_path, backup_path)
+
+            # Read the original file and filter out the specified dependency
+            with open(toml_file_path, "r") as file:
+                lines = file.readlines()
+
+            # Write the changes back to the original file
+            with open(toml_file_path, "w") as file:
+                for line in lines:
+                    if 'dbus-python' not in line:
+                        file.write(line)
+        except FileNotFoundError:
+            print('\n\n')
+            print(f"Error: The file '{toml_file_path}' does not exist.")
+            print('\n\n')
+        except IOError as e:
+            print('\n\n')
+            print(f"IO error occurred:\n\t{str(e)}")
+            print('\n\n')
+
     # Filter out systemd packages if no 'systemctl' present
     filtered_pip_pkgs   = [
         pkg for pkg in pip_pkgs 
@@ -2950,6 +2985,11 @@ def handle_cli_arguments():
         help='Skip the install of native packages (for debugging installer).'
     )
     subparser_install.add_argument(
+        '--no-dbus-python',
+        action='store_true',
+        help='Avoid installing "dbus-python" pip package (breaks some stuff).'
+    )
+    subparser_install.add_argument(
         '--fancy-pants',
         action='store_true',
         help='See README for more info on this option.'
@@ -3007,6 +3047,9 @@ def handle_cli_arguments():
 
         if args.skip_native:
             cnfg.skip_native = True
+
+        if args.no_dbus_python:
+            cnfg.no_dbus_python = True
 
         if args.fancy_pants:
             cnfg.fancy_pants = True

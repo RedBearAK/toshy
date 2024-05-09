@@ -4,14 +4,17 @@
 # Indicator tray icon menu app for Toshy, using pygobject/gi
 TOSHY_PART      = 'tray'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Tray Icon app'
-APP_VERSION     = '2024.0330'
+APP_VERSION     = '2024.0508'
 
 # -------- COMMON COMPONENTS --------------------------------------------------
 
 import os
 import re
 import sys
-import dbus
+try:
+    import dbus
+except ModuleNotFoundError:
+    dbus = None
 import time
 import fcntl
 import psutil
@@ -274,6 +277,10 @@ tray_indicator.set_title("Toshy Status Indicator") # try to set what might show 
 
 
 def fn_monitor_toshy_services():
+    if dbus is None:
+        error('The "dbus" module is not available. Cannot monitor services.')
+        return
+
     global svc_status_config, svc_status_sessmon
     toshy_svc_config_unit_state = None
     toshy_svc_sessmon_unit_state = None
