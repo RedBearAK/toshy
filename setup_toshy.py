@@ -3070,10 +3070,11 @@ def handle_cli_arguments():
         get_environment_info()
         apply_desktop_tweaks()
         if cnfg.should_reboot:
+            lb = cnfg.sep_char * 2      # shorter variable name for left border chars
             show_reboot_prompt()
-            print(f'{cnfg.sep_char * 2}  Tweaks application complete. Report issues on the GitHub repo.')
-            print(f'{cnfg.sep_char * 2}  https://github.com/RedBearAK/toshy/issues/')
-            print(f'{cnfg.sep_char * 2}  >>  ALERT: Something odd happened. You should probably reboot.')
+            print(f'{lb}  Tweaks application complete. Report issues on the GitHub repo.')
+            print(f'{lb}  https://github.com/RedBearAK/toshy/issues/')
+            print(f'{lb}  >>  ALERT: Something odd happened. You should probably reboot.')
             print(cnfg.separator)
             print(cnfg.separator)
             print()
@@ -3180,10 +3181,11 @@ def main(cnfg: InstallerSettings):
             # create reboot reminder temp file, in case installer is run again before a reboot
             if not os.path.exists(cnfg.reboot_tmp_file):
                 os.mknod(cnfg.reboot_tmp_file)
+            lb = cnfg.sep_char * 2      # shorter variable name for left border chars
             show_reboot_prompt()
-            print(f'{cnfg.sep_char * 2}  Toshy install complete. Report issues on the GitHub repo.')
-            print(f'{cnfg.sep_char * 2}  https://github.com/RedBearAK/toshy/issues/')
-            print(f'{cnfg.sep_char * 2}  >>  ALERT: Permissions changed. You MUST reboot for Toshy to work.')
+            print(f'{lb}  Toshy install complete. Report issues on the GitHub repo.')
+            print(f'{lb}  https://github.com/RedBearAK/toshy/issues/')
+            print(f'{lb}  >>  ALERT: Permissions changed. You MUST reboot for Toshy to work.')
             print(cnfg.separator)
             print(cnfg.separator)
             print()
@@ -3197,14 +3199,16 @@ def main(cnfg: InstallerSettings):
                 # Also, suppress output that might confuse the user
                 subprocess.Popen(tray_icon_cmd, close_fds=True, stdout=DEVNULL, stderr=DEVNULL)
 
+            lb = cnfg.sep_char * 2      # shorter variable name for left border chars
+
             print()
             print()
             print()
             print(cnfg.separator)
             print(cnfg.separator)
-            print(f'{cnfg.sep_char * 2}  Toshy install complete. Rebooting should not be necessary.')
-            print(f'{cnfg.sep_char * 2}  Report issues on the GitHub repo.')
-            print(f'{cnfg.sep_char * 2}  https://github.com/RedBearAK/toshy/issues/')
+            print(f'{lb}  Toshy install complete. Rebooting should not be necessary.')
+            print(f'{lb}  Report issues on the GitHub repo.')
+            print(f'{lb}  https://github.com/RedBearAK/toshy/issues/')
             print(cnfg.separator)
             print(cnfg.separator)
             print()
