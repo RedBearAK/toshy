@@ -154,7 +154,7 @@ class InstallerSettings:
         sep_reps                    = 80
         self.sep_char               = '='
         self.separator              = self.sep_char * sep_reps
-        self.override_distro        = None
+
         self.DISTRO_ID            = None
         self.DISTRO_VER: str        = ""
         self.VARIANT_ID             = None
@@ -209,14 +209,22 @@ class InstallerSettings:
         self.input_group            = 'input'
         self.user_name              = pwd.getpwuid(os.getuid()).pw_name
 
-        self.barebones_config       = None
         self.autostart_tray_icon    = True
+        self.unprivileged_user      = False
+
+        self.prep_only              = None
+
+        # option flags for the "install" command:
+        self.override_distro        = None      # will be a string if not None
+        self.barebones_config       = None
         self.skip_native            = None
         self.fancy_pants            = None
+        self.no_dbus_python         = None
+
         self.tweak_applied          = None
         self.remind_extensions      = None
-
         self.should_reboot          = None
+
         self.run_tmp_dir            = run_tmp_dir
         self.reboot_tmp_file        = f"{self.run_tmp_dir}/toshy_installer_says_reboot"
         self.reboot_ascii_art       = textwrap.dedent("""
@@ -280,6 +288,16 @@ def get_environment_info():
         error("ERROR: Init system (process 1) could not be determined. (See above error.)")
     print()   # blank line after init system message
 
+    if cnfg.prep_only and not os.environ.get('XDG_SESSION_DESKTOP'):
+        # su-ing to an admin user will show no graphical environment info
+        # we don't care what it is, just that it is set to avoid errors in get_env_info()
+        os.environ['XDG_SESSION_DESKTOP'] = 'gnome'
+
+    if cnfg.prep_only and not os.environ.get('XDG_SESSION_TYPE'):
+        # su-ing to an admin user will show no graphical environment info
+        # we don't care what it is, just that it is set to avoid errors in get_env_info()
+        os.environ['XDG_SESSION_TYPE'] = 'x11'
+
     env_info_dct   = env.get_env_info()
 
     # Avoid casefold() errors by converting all to strings
@@ -307,6 +325,53 @@ def get_environment_info():
         f"\n\t DE_MAJ_VER       = '{cnfg.DE_MAJ_VER}'"
         # '\n', ctx='EV')
         '', ctx='EV')
+
+
+def md_wrap(text: str, width: int = 80):
+    """
+    Process and wrap text as if written in Markdown style, where double newlines signify
+    paragraph breaks. Single newlines are treated as a space for better formatting, unless
+    they are part of a paragraph break. Text is wrapped to the specified width (characters).
+
+    Text blocks can be indented like the surrounding code. The indenting will be removed.
+
+    Args:
+        text (str):     The input text to wrap and print.
+        width (int):    The maximum width of the wrapped text, default is 80.
+    """
+    # Dedent the text to remove any common leading whitespace
+    text = textwrap.dedent(text)
+
+    # Detect and store any trailing spaces preceding the final newline
+    trailing_spaces = re.findall(r' +\n$', text)
+    if trailing_spaces:
+        # Extract the spaces from the list (only one element expected)
+        trailing_spaces = trailing_spaces[0][:-1]  # Remove the newline character
+    else:
+        trailing_spaces = ''
+
+    # Replace explicit double newlines with a placeholder to preserve them
+    text = text.replace('\n\n', '\uffff')
+    # Replace single newlines (which are for code readability) with a space
+    text = text.replace('\n', ' ')
+    # Convert the placeholders back to double newlines
+    text = text.replace('\uffff', '\n\n')
+
+    # Wrap each paragraph separately to maintain intended formatting
+    paragraphs = text.split('\n\n')
+
+    # Join the string back together, applying wrap width.
+    wrapped_text = '\n\n'.join(textwrap.fill(paragraph, width=width) for paragraph in paragraphs)
+    # Clean up space inserted inappropriately beginning of joined string.
+    wrapped_text = re.sub(r'^[ ]+', '', wrapped_text)
+    # Clean up doubled spaces from a space being left at the end of a line.
+    wrapped_text = re.sub(' +', ' ', wrapped_text)
+
+    # Append any trailing spaces that were initially present
+    wrapped_text += trailing_spaces
+
+    # Return the wrapped_text string.
+    return wrapped_text
 
 
 def fancy_str(text, color_name, *, bold=False):
@@ -351,6 +416,11 @@ def show_task_completed_msg():
     print(fancy_str('   >> Task completed successfully <<   ', 'green', bold=True))
 
 
+def generate_secret_code(length: int = 4) -> str:
+    """Return a random upper/lower case ASCII letters string of specified length"""
+    return ''.join(random.choice(string.ascii_letters) for _ in range(length))
+
+
 def dot_Xmodmap_warning():
     """Check for '.Xmodmap' file in user's home folder, show warning about mod key remaps"""
 
@@ -367,7 +437,7 @@ def dot_Xmodmap_warning():
         print(f'{cnfg.separator}')
         print()
 
-        secret_code = ''.join(random.choice(string.ascii_letters) for _ in range(4))
+        secret_code = generate_secret_code()
 
         response = input(
             f"You must take responsibility for the issues an '.Xmodmap' file may cause."
@@ -413,9 +483,89 @@ def ask_add_home_local_bin():
 
 
 def elevate_privileges():
-    """Elevate privileges early in the installer process"""
-    call_attn_to_pwd_prompt_if_sudo_tkt_exp()
-    subprocess.run(['sudo', 'bash', '-c', 'echo -e "\nUsing elevated privileges..."'], check=True)
+    """Elevate privileges early in the installer process, or invoke unprivileged install"""
+
+    print()     # blank line to separate
+    max_attempts = 3
+
+    # Ask politely if user is admin to avoid causing a sudo "incident" report unnecessarily
+    for _ in range(max_attempts):
+        response = input(
+            f'Is user "{cnfg.user_name}" an admin user that can run "sudo" commands? [y/n]: ')
+        if response.casefold() in ['y', 'n']:
+            # response is valid, so break loop and proceed with appropriate actions below
+            break
+        else:
+            print()
+            error("Response invalid. Valid responses are 'y' or 'n'.")
+            print()     # blank line for separation, then continue loop
+    else:   # this "else" belongs to the "for" loop
+        print()
+        error('Response invalid. Too many attempts.')
+        safe_shutdown(1)
+
+    if response.casefold() == 'y':
+        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+        try:
+            cmd_lst = ['sudo', 'bash', '-c', 'echo -e "\nUsing elevated privileges..."']
+            subprocess.run(cmd_lst, check=True)
+        except subprocess.CalledProcessError as proc_err:
+            print()
+            if cnfg.prep_only:
+                print()
+                error('ERROR: Problem invoking "sudo" command. Is this really an admin user?')
+                error('Only an admin user with sudo access can use "prep-only" command. Exiting.')
+            error('ERROR: Problem invoking "sudo" command. Try answering "n" to admin question.')
+            safe_shutdown(1)
+    elif response.casefold() == 'n':
+        secret_code = generate_secret_code()
+        print('\n\n')
+        print(fancy_str(
+            'ALERT!  ALERT!  ALERT!  ALERT!  ALERT!  ALERT!  ALERT!  ALERT!  ALERT!  ALERT!\n',
+            color_name='red', bold=True))
+        md_wrapped_str = md_wrap(f"""
+        The secret code for this run is "{secret_code}". You will need this.
+
+        It is possible to install as an unprivileged user, but only after an
+        admin user first runs the full install or a "prep-only" sequence.
+        The admin user must install from a full desktop session, or from
+        a "su --login adminuser" shell instance. The admin user can do
+        just the "prep" steps with:
+        
+        ./{this_file_name} prep-only
+        
+        ... instead of using:
+        
+        ./{this_file_name} install
+        
+        Use the "prep-only" command if it is not desired that Toshy
+        should also run when the admin user logs into a desktop session.
+        When using "su --login adminuser", that user will also need to
+        download an independent copy of the Toshy zip file to install from,
+        using a "wget" or "curl" command. Or use "sudo" to copy the zip
+        file from the unprivileged user's Downloads folder. See the Wiki
+        for a better example of the full "prep-only" sequence with a 
+        separate admin user.
+        """)
+        print(md_wrapped_str)
+        print()
+        md_wrapped_str = md_wrap(width=55, text="""
+        If you understand everything written above or already took care 
+        of prepping the system and want to proceed with an unprivileged 
+        install, enter the secret code: 
+        """)
+        response = input(md_wrapped_str)
+        if response == secret_code:
+            # set a flag to bypass functions that do system "prep" work with `sudo`
+            cnfg.unprivileged_user = True
+            print()
+            print("Good code. Continuing with an unprivileged install of Toshy user components...")
+            return
+        else:
+            print()
+            error('Code does not match! Try the installer again after installing Toshy \n'
+                    '     first using an admin user that has access to "sudo".')
+            safe_shutdown(1)
 
 
 #####################################################################################################
@@ -467,6 +617,8 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "xset",
                             "zenity"],
 
+    # NOTE: Do not add 'gnome-shell-extension-appindicator' to Fedora/RHELs.
+    #       This will install extension but requires logging out of GNOME to activate.
     'rhel-based':          ["cairo-devel", "cairo-gobject-devel",
                             "dbus-daemon", "dbus-devel",
                             "gcc", "git", "gobject-introspection-devel",
@@ -476,6 +628,8 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "xset",
                             "zenity"],
 
+    # NOTE: Do not add 'gnome-shell-extension-appindicator' to Fedora/RHELs.
+    #       This will install extension but requires logging out of GNOME to activate.
     'fedora-immutables':   ["cairo-devel", "cairo-gobject-devel",
                             "dbus-daemon", "dbus-devel",
                             "evtest",
@@ -584,6 +738,7 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "systemd-devel",
                             "zenity"],
 
+    # TODO: see if this needs "dbus-daemon" added as dependency (for containers)
     'void-based':          ["cairo-devel", "curl",
                             "dbus-devel",
                             "evtest",
@@ -595,6 +750,7 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "xset",
                             "zenity"],
 
+    # TODO: see if this needs "dbus-daemon" added as dependency (for containers)
     'kaos-based':          ["cairo",
                             "dbus",
                             "evtest",
@@ -689,15 +845,17 @@ class DistroQuirksHandler:
         need some extra prep work before installing the native package list"""
 
     def __init__(self) -> None:
-        pass
+        self.venv_cmd_lst = [cnfg.py_interp_path, '-m', 'venv', cnfg.venv_path]
+
 
     def handle_quirks_CentOS_7(self):
         print('Doing prep/checks for CentOS 7...')
 
-        # pin 'evdev' pip package to version 1.6.1 for CentOS 7 to
-        # deal with ImportError and undefined symbol UI_GET_SYSNAME
-        global pip_pkgs
-        pip_pkgs = [pkg if pkg != "evdev" else "evdev==1.6.1" for pkg in pip_pkgs]
+        # Doing this now in the pip packages install function:
+        # # pin 'evdev' pip package to version 1.6.1 for CentOS 7 to
+        # # deal with ImportError and undefined symbol UI_GET_SYSNAME
+        # global pip_pkgs
+        # pip_pkgs = [pkg if pkg != "evdev" else "evdev==1.6.1" for pkg in pip_pkgs]
 
         native_pkg_installer.check_for_pkg_mgr_cmd('yum')
         yum_cmd_lst = ['sudo', 'yum', 'install', '-y']
@@ -717,7 +875,7 @@ class DistroQuirksHandler:
                 # set new Python interpreter version and path to reflect what was installed
                 cnfg.py_interp_path     = '/opt/rh/rh-python38/root/usr/bin/python3.8'
                 cnfg.py_interp_ver_str  = '3.8'
-                # avoid using systemd packages/services for CentOS
+                # avoid using systemd packages/services for CentOS 7
                 cnfg.systemctl_present = False
             except subprocess.CalledProcessError as proc_err:
                 print()
@@ -1671,13 +1829,43 @@ class PythonVenvQuirksHandler():
     def __init__(self) -> None:
         pass
 
+    def handle_quirks_CentOS_7(self):
+        # avoid using systemd packages/services for CentOS 7
+        cnfg.systemctl_present = False
+        # Path where Python 3.8 should have been installed by this point
+        rh_python38 = '/opt/rh/rh-python38/root/usr/bin/python3.8'
+        if os.path.isfile(rh_python38) and os.access(rh_python38, os.X_OK):
+            print("Good, Python version 3.8 is installed.")
+        else:
+            error("Error: Python version 3.8 is not installed. ")
+            error("Failed to install Toshy from admin user first?")
+            safe_shutdown(1)
+
+    def handle_quirks_CentOS_Stream_8(self):
+        """Use a newer Python version for the venv in CentOS Stream 8."""
+        # TODO: Add higher version if ever necessary (keep minimum 3.8)
+        min_mnr_ver = cnfg.curr_py_rel_ver_mnr - 3           # check up to 2 vers before current
+        max_mnr_ver = cnfg.curr_py_rel_ver_mnr + 3           # check up to 3 vers after current
+        py_minor_ver_rng = range(max_mnr_ver, min_mnr_ver, -1)
+        if py_interp_ver_tup < cnfg.curr_py_rel_ver_tup:
+            print(f"Checking for appropriate Python version on system...")
+            for check_py_minor_ver in py_minor_ver_rng:
+                if shutil.which(f'python3.{check_py_minor_ver}'):
+                    cnfg.py_interp_path = shutil.which(f'python3.{check_py_minor_ver}')
+                    cnfg.py_interp_ver_str = f'3.{check_py_minor_ver}'
+                    print(f'Found Python version {cnfg.py_interp_ver_str} available.')
+                    break
+            else:
+                error(  f'ERROR: Did not find any appropriate Python interpreter version.')
+                safe_shutdown(1)
+
     def handle_quirks_Leap(self):
         print('Handling a Python virtual environment quirk in Leap...')
         # Change the Python interpreter path to use current release version from pkg list
         # if distro is openSUSE Leap type (instead of using old 3.6 Python version).
         if shutil.which(f'python{cnfg.curr_py_rel_ver_str}'):
             cnfg.py_interp_path = shutil.which(f'python{cnfg.curr_py_rel_ver_str}')
-            print(f'Using Python version {cnfg.curr_py_rel_ver_str}.')
+            # print(f'Using Python version {cnfg.curr_py_rel_ver_str}.')
         else:
             print(  f'Current stable Python release version '
                     f'({cnfg.curr_py_rel_ver_str}) not found. ')
@@ -1690,6 +1878,17 @@ class PythonVenvQuirksHandler():
         # command that follows it in setup_python_vir_env(). 
         subprocess.run(venv_cmd_lst, check=True)
 
+    def handle_quirks_RHEL(self):
+        """Use a newer Python version for the venv in RHEL"""
+        # TODO: Add higher version if ever necessary (keep minimum 3.8)
+        potential_versions = ['3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
+        for version in potential_versions:
+            # check if the version is already installed
+            if shutil.which(f'python{version}'):
+                cnfg.py_interp_path     = f'/usr/bin/python{version}'
+                cnfg.py_interp_ver_str  = version
+                break
+
 
 def setup_python_vir_env():
     """Setup a virtual environment to install Python packages"""
@@ -1699,13 +1898,18 @@ def setup_python_vir_env():
     if not os.path.exists(cnfg.venv_path):
         if cnfg.DISTRO_ID in distro_groups_map['leap-based']:
             venv_quirks_handler.handle_quirks_Leap()
-        else:
-            print(f'Using Python version {cnfg.py_interp_ver_str}.')
+        elif cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '7':
+            venv_quirks_handler.handle_quirks_CentOS_7()
+        elif cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '8':
+            venv_quirks_handler.handle_quirks_CentOS_Stream_8()
+        elif cnfg.DISTRO_ID in distro_groups_map['rhel-based']:
+            venv_quirks_handler.handle_quirks_RHEL()
         try:
+            print(f'Using Python version {cnfg.py_interp_ver_str}.')
             venv_cmd_lst = [cnfg.py_interp_path, '-m', 'venv', cnfg.venv_path]
+            subprocess.run(venv_cmd_lst, check=True)
             if cnfg.DISTRO_ID in ['openmandriva']:
                 venv_quirks_handler.handle_quirks_OpenMandriva(venv_cmd_lst)
-            subprocess.run(venv_cmd_lst, check=True)
         except subprocess.CalledProcessError as proc_err:
             error(f'ERROR: Problem creating the Python virtual environment:\n\t{proc_err}')
             safe_shutdown(1)
@@ -1720,6 +1924,46 @@ def install_pip_packages():
     print(f'\n\n§  Installing/upgrading Python packages...\n{cnfg.separator}')
     venv_python_cmd = os.path.join(cnfg.venv_path, 'bin', 'python')
     venv_pip_cmd    = os.path.join(cnfg.venv_path, 'bin', 'pip')
+
+    if cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '7':
+        # pin 'evdev' pip package to version 1.6.1 for CentOS 7 to
+        # deal with ImportError and undefined symbol UI_GET_SYSNAME
+        global pip_pkgs
+        pip_pkgs = [pkg if pkg != "evdev" else "evdev==1.6.1" for pkg in pip_pkgs]
+
+    # Bypass the install of 'dbus-python' pip package if option passed to 'install' command.
+    # Diminishes peripheral app functionality and disables some Wayland methods, but 
+    # allows installing Toshy even when 'dbus-python' build throws errors during install.
+    if cnfg.no_dbus_python:
+        pip_pkgs = [pkg for pkg in pip_pkgs if pkg != "dbus-python"]
+
+        # We also need to remove the 'dbus-python' dependency line from the keymapper's
+        # 'pyproject.toml' file before proceeding with pip_pkgs install sequence.
+        # File will be at: ./keymapper-temp/pyproject.toml
+        # Make backup with a filename that will be ignored and edit original in place.
+        toml_file_path = os.path.join(this_file_dir, cnfg.keymapper_tmp_path, 'pyproject.toml')
+        backup_path = toml_file_path + ".bak"
+
+        try:
+            shutil.copyfile(toml_file_path, backup_path)
+
+            # Read the original file and filter out the specified dependency
+            with open(toml_file_path, "r") as file:
+                lines = file.readlines()
+
+            # Write the changes back to the original file
+            with open(toml_file_path, "w") as file:
+                for line in lines:
+                    if 'dbus-python' not in line:
+                        file.write(line)
+        except FileNotFoundError:
+            print('\n\n')
+            print(f"Error: The file '{toml_file_path}' does not exist.")
+            print('\n\n')
+        except IOError as e:
+            print('\n\n')
+            print(f"IO error occurred:\n\t{str(e)}")
+            print('\n\n')
 
     # Filter out systemd packages if no 'systemctl' present
     filtered_pip_pkgs   = [
@@ -2741,6 +2985,11 @@ def handle_cli_arguments():
         help='Skip the install of native packages (for debugging installer).'
     )
     subparser_install.add_argument(
+        '--no-dbus-python',
+        action='store_true',
+        help='Avoid installing "dbus-python" pip package (breaks some stuff).'
+    )
+    subparser_install.add_argument(
         '--fancy-pants',
         action='store_true',
         help='See README for more info on this option.'
@@ -2766,6 +3015,11 @@ def handle_cli_arguments():
         help='Remove desktop environment tweaks only, no install'
     )
 
+    subparser_prep_only         = subparsers.add_parser(
+        'prep-only',
+        help='Do only prep steps that require sudo/admin, no install'
+    )
+
     subparser_uninstall         = subparsers.add_parser(
         'uninstall',
         help='Uninstall Toshy'
@@ -2778,6 +3032,12 @@ def handle_cli_arguments():
         parser.print_help()
         safe_shutdown(0)
 
+    if args.command == 'prep-only':
+        cnfg.prep_only = True
+
+        main(cnfg)
+        safe_shutdown(0)    # redundant, but that's OK
+
     if args.command == 'install':
         if args.override_distro:
             cnfg.override_distro = args.override_distro
@@ -2787,6 +3047,9 @@ def handle_cli_arguments():
 
         if args.skip_native:
             cnfg.skip_native = True
+
+        if args.no_dbus_python:
+            cnfg.no_dbus_python = True
 
         if args.fancy_pants:
             cnfg.fancy_pants = True
@@ -2807,10 +3070,11 @@ def handle_cli_arguments():
         get_environment_info()
         apply_desktop_tweaks()
         if cnfg.should_reboot:
+            lb = cnfg.sep_char * 2      # shorter variable name for left border chars
             show_reboot_prompt()
-            print(f'{cnfg.sep_char * 2}  Tweaks application complete. Report issues on the GitHub repo.')
-            print(f'{cnfg.sep_char * 2}  https://github.com/RedBearAK/toshy/issues/')
-            print(f'{cnfg.sep_char * 2}  >>  ALERT: Something odd happened. You should probably reboot.')
+            print(f'{lb}  Tweaks application complete. Report issues on the GitHub repo.')
+            print(f'{lb}  https://github.com/RedBearAK/toshy/issues/')
+            print(f'{lb}  >>  ALERT: Something odd happened. You should probably reboot.')
             print(cnfg.separator)
             print(cnfg.separator)
             print()
@@ -2829,9 +3093,13 @@ def handle_cli_arguments():
 def main(cnfg: InstallerSettings):
     """Main installer function to call specific functions in proper sequence"""
 
-    dot_Xmodmap_warning()
+    if not cnfg.prep_only:
+        dot_Xmodmap_warning()
+
     ask_is_distro_updated()
-    ask_add_home_local_bin()
+
+    if not cnfg.prep_only:
+        ask_add_home_local_bin()
 
     get_environment_info()
 
@@ -2840,97 +3108,115 @@ def main(cnfg: InstallerSettings):
 
     elevate_privileges()
 
-    if not cnfg.skip_native:
+    if not cnfg.skip_native and not cnfg.unprivileged_user:
+        # This will also be skipped if user proceeds with 
+        # "unprivileged_user" install sequence.
         install_distro_pkgs()
 
-    load_uinput_module()
-    install_udev_rules()
-    verify_user_groups()
+    if not cnfg.unprivileged_user:
+        # These things require 'sudo' (admin user)
+        # Allow them to be skipped to support non-admin users
+        # (An admin user would need to first do the "prep-only" command to support this)
+        load_uinput_module()
+        install_udev_rules()
+        if not cnfg.prep_only:
+            # We don't need to check the user group for admin doing prep-only command
+            verify_user_groups()
 
-    clone_keymapper_branch()
-
-    backup_toshy_config()
-    install_toshy_files()
-
-    setup_python_vir_env()
-    install_pip_packages()
-
-    install_bin_commands()
-    install_desktop_apps()
-
-    # Python D-Bus service script also does this, but this will refresh if script changes
-    if cnfg.DESKTOP_ENV in ['kde', 'plasma']:
-        setup_kwin2dbus_script()
-
-    setup_kde_dbus_service()
-
-    setup_systemd_services()
-
-    autostart_systemd_kickstarter()
-
-    autostart_tray_icon()
-    apply_desktop_tweaks()
-
-    if cnfg.DESKTOP_ENV == 'gnome':
+    if cnfg.prep_only:
         print()
-        def is_extension_enabled(extension_uuid):
-            try:
-                output = subprocess.check_output(
-                            ['gsettings', 'get', 'org.gnome.shell', 'enabled-extensions'])
-                extensions = output.decode().strip().replace("'", "").split(",")
-            except subprocess.CalledProcessError as proc_err:
-                error(f"Unable to check enabled extensions:\n\t{proc_err}")
-                return False
-            return extension_uuid in extensions
+        print('########################################################################')
+        print('FINISHED with prep-only tasks. Unprivileged users can now install Toshy.')
+        safe_shutdown(0)
 
-        if is_extension_enabled("appindicatorsupport@rgcjonas.gmail.com"):
-            print("AppIndicator extension is enabled. Tray icon should work.")
-        else:
+    elif not cnfg.prep_only:
+        clone_keymapper_branch()
+
+        backup_toshy_config()
+        install_toshy_files()
+
+        setup_python_vir_env()
+        install_pip_packages()
+
+        install_bin_commands()
+        install_desktop_apps()
+
+        # Python D-Bus service script also does this, but this will refresh if script changes
+        if cnfg.DESKTOP_ENV in ['kde', 'plasma']:
+            setup_kwin2dbus_script()
+
+        setup_kde_dbus_service()
+
+        setup_systemd_services()
+
+        autostart_systemd_kickstarter()
+
+        autostart_tray_icon()
+        apply_desktop_tweaks()
+
+        if cnfg.DESKTOP_ENV == 'gnome':
             print()
-            debug(f"RECOMMENDATION: Install 'AppIndicator' GNOME extension\n"
-                "Easiest method: 'flatpak install extensionmanager', search for 'appindicator'\n",
-                ctx="!!")
+            def is_extension_enabled(extension_uuid):
+                try:
+                    output = subprocess.check_output(
+                                ['gsettings', 'get', 'org.gnome.shell', 'enabled-extensions'])
+                    extensions = output.decode().strip().replace("'", "").split(",")
+                except subprocess.CalledProcessError as proc_err:
+                    error(f"Unable to check enabled extensions:\n\t{proc_err}")
+                    return False
+                return extension_uuid in extensions
 
-    if os.path.exists(cnfg.reboot_tmp_file):
-        cnfg.should_reboot = True
+            if is_extension_enabled("appindicatorsupport@rgcjonas.gmail.com"):
+                print("AppIndicator extension is enabled. Tray icon should work.")
+            else:
+                print()
+                debug(f"RECOMMENDATION: Install 'AppIndicator' GNOME extension\n"
+                    "Easiest method: 'flatpak install extensionmanager', search for 'appindicator'\n",
+                    ctx="!!")
 
-    if cnfg.should_reboot:
-        # create reboot reminder temp file, in case installer is run again before a reboot
-        if not os.path.exists(cnfg.reboot_tmp_file):
-            os.mknod(cnfg.reboot_tmp_file)
-        show_reboot_prompt()
-        print(f'{cnfg.sep_char * 2}  Toshy install complete. Report issues on the GitHub repo.')
-        print(f'{cnfg.sep_char * 2}  https://github.com/RedBearAK/toshy/issues/')
-        print(f'{cnfg.sep_char * 2}  >>  ALERT: Permissions changed. You MUST reboot for Toshy to work.')
-        print(cnfg.separator)
-        print(cnfg.separator)
-        print()
-    else:
+        if os.path.exists(cnfg.reboot_tmp_file):
+            cnfg.should_reboot = True
 
-        # Do not (re)start the tray icon here unless user preference allows it
-        if cnfg.autostart_tray_icon:
-            # Try to start the tray icon immediately, if reboot is not indicated
-            tray_icon_cmd = [os.path.join(home_dir, '.local', 'bin', 'toshy-tray')]
-            # Try to launch the tray icon in a separate process not linked to current shell
-            # Also, suppress output that might confuse the user
-            subprocess.Popen(tray_icon_cmd, close_fds=True, stdout=DEVNULL, stderr=DEVNULL)
+        if cnfg.should_reboot:
+            # create reboot reminder temp file, in case installer is run again before a reboot
+            if not os.path.exists(cnfg.reboot_tmp_file):
+                os.mknod(cnfg.reboot_tmp_file)
+            lb = cnfg.sep_char * 2      # shorter variable name for left border chars
+            show_reboot_prompt()
+            print(f'{lb}  Toshy install complete. Report issues on the GitHub repo.')
+            print(f'{lb}  https://github.com/RedBearAK/toshy/issues/')
+            print(f'{lb}  >>  ALERT: Permissions changed. You MUST reboot for Toshy to work.')
+            print(cnfg.separator)
+            print(cnfg.separator)
+            print()
+        else:
 
-        print()
-        print()
-        print()
-        print(cnfg.separator)
-        print(cnfg.separator)
-        print(f'{cnfg.sep_char * 2}  Toshy install complete. Rebooting should not be necessary.')
-        print(f'{cnfg.sep_char * 2}  Report issues on the GitHub repo.')
-        print(f'{cnfg.sep_char * 2}  https://github.com/RedBearAK/toshy/issues/')
-        print(cnfg.separator)
-        print(cnfg.separator)
-        print()
-        if cnfg.SESSION_TYPE == 'wayland' and cnfg.DESKTOP_ENV == 'kde':
-            print(f'Switch to a different window ONCE to get KWin script to start working!')
+            # Do not (re)start the tray icon here unless user preference allows it
+            if cnfg.autostart_tray_icon:
+                # Try to start the tray icon immediately, if reboot is not indicated
+                tray_icon_cmd = [os.path.join(home_dir, '.local', 'bin', 'toshy-tray')]
+                # Try to launch the tray icon in a separate process not linked to current shell
+                # Also, suppress output that might confuse the user
+                subprocess.Popen(tray_icon_cmd, close_fds=True, stdout=DEVNULL, stderr=DEVNULL)
 
-    if cnfg.remind_extensions or (cnfg.DESKTOP_ENV == 'gnome' and cnfg.SESSION_TYPE == 'wayland'):
-        print(f'You MUST install GNOME EXTENSIONS if using Wayland+GNOME! See Toshy README.')
+            lb = cnfg.sep_char * 2      # shorter variable name for left border chars
+
+            print()
+            print()
+            print()
+            print(cnfg.separator)
+            print(cnfg.separator)
+            print(f'{lb}  Toshy install complete. Rebooting should not be necessary.')
+            print(f'{lb}  Report issues on the GitHub repo.')
+            print(f'{lb}  https://github.com/RedBearAK/toshy/issues/')
+            print(cnfg.separator)
+            print(cnfg.separator)
+            print()
+            if cnfg.SESSION_TYPE == 'wayland' and cnfg.DESKTOP_ENV == 'kde':
+                print(f'Switch to a different window ONCE to get KWin script to start working!')
+
+        if cnfg.remind_extensions or (cnfg.DESKTOP_ENV == 'gnome' and cnfg.SESSION_TYPE == 'wayland'):
+            print(f'You MUST install GNOME EXTENSIONS if using Wayland+GNOME! See Toshy README.')
 
     safe_shutdown(0)
 
