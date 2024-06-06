@@ -1,44 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import re
-import os
-import sys
-import time
-import shutil
-import inspect
-import subprocess
-
-from subprocess import DEVNULL
-from typing import Callable, List, Dict, Union
-
-from xwaykeyz.lib.logger import debug, error
-from xwaykeyz.lib.key_context import KeyContext
-from xwaykeyz.config_api import *
-
-
-###################################################################################################
-###  SLICE_MARK_START: keymapper_api  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
-
-# Keymapper-specific config settings - REMOVE OR SET TO DEFAULTS FOR DISTRIBUTION
-dump_diagnostics_key(Key.F15)   # default key: F15
-emergency_eject_key(Key.F16)    # default key: F16
-
-timeouts(
-    multipurpose        = 1,        # default: 1 sec
-    suspend             = 1,        # default: 1 sec, try 0.1 sec for touchpads
-)
-
-# Delays often needed for Wayland (at least in GNOME using shell extensions)
-throttle_delays(
-    key_pre_delay_ms    = 12,      # default: 0 ms, range: 0-150 ms, suggested: 1-50 ms
-    key_post_delay_ms   = 18,      # default: 0 ms, range: 0-150 ms, suggested: 1-100 ms
-)
-
-###  SLICE_MARK_END: keymapper_api  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
-###################################################################################################
-
-
-
 ###############################################################################
 ############################   Welcome to Toshy!   ############################
 ###  
@@ -55,6 +16,118 @@ throttle_delays(
 ###  
 ###############################################################################
 
+import re
+import os
+import sys
+import time
+import shutil
+import inspect
+import subprocess
+
+from typing import Callable, List, Dict, Union
+from subprocess import DEVNULL
+
+from xwaykeyz.config_api import *
+from xwaykeyz.lib.key_context import KeyContext
+from xwaykeyz.lib.logger import debug, error
+from xwaykeyz.models.modifier import Modifier
+
+
+###################################################################################################
+###  SLICE_MARK_START: keymapper_api  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
+
+# Keymapper-specific config settings - REMOVE OR SET TO DEFAULTS FOR DISTRIBUTION
+dump_diagnostics_key(Key.F15)   # default key: F15
+emergency_eject_key(Key.F16)    # default key: F16
+
+timeouts(
+    multipurpose        = 1,        # default: 1 sec
+    suspend             = 1,        # default: 1 sec, try 0.1 sec for touchpads/trackpads
+)
+
+# Delays often needed for Wayland (at least in GNOME using shell extensions)
+throttle_delays(
+    key_pre_delay_ms    = 12,      # default: 0 ms, range: 0-150 ms, suggested: 1-50 ms
+    key_post_delay_ms   = 18,      # default: 0 ms, range: 0-150 ms, suggested: 1-100 ms
+)
+
+
+###  SLICE_MARK_END: keymapper_api  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
+###################################################################################################
+
+
+
+###################################################################################################
+# How to add an alias to an existing modifier definition (VERY EXPERIMENTAL!!!)
+# Some of these are disabled because I'm not sure they would apply correctly
+# to all of the different keyboard types. But virtualized Command and Left Ctrl,
+# Left Option aliases should make sense for all keyboard types. 
+# WARNING: It is not advisable to start using these in actual input 
+# combos in keymaps. These aliases may be removed in the future.
+try:
+    ###########################################################################
+    # # Virtualized (left) Control key (in Terminals)
+
+    LC_aliases: List[str]           = Modifier.L_CONTROL.aliases
+    LC_keys: List[Key]              = Modifier.L_CONTROL.keys
+    # use slice assignment instead of insert()
+    LC_aliases[:0]                  = ['VLCtrl', 'VirtLCtrl']
+    # debug(f"{LC_aliases             = }")
+    # debug(f"{LC_keys                = }")
+
+    ###########################################################################
+    # # Virtualized (left/right) Control keys (in GUI apps)
+
+    # L_META_aliases: List[str]       = Modifier.L_META.aliases
+    # L_META_keys: List[Key]          = Modifier.L_META.keys
+    # # use slice assignment instead of insert()
+    # L_META_aliases[:0]              = ['VLCtrl', 'Virt_LCtrl']
+    # debug(f"{L_META_aliases         = }")
+    # debug(f"{L_META_keys            = }")
+
+    # R_META_aliases: List[str]       = Modifier.R_META.aliases
+    # R_META_keys: List[Key]          = Modifier.R_META.keys
+    # # use slice assignment instead of insert()
+    # R_META_aliases[:0]              = ['VRCtrl', 'Virt_RCtrl']
+    # debug(f"{R_META_aliases         = }")
+    # debug(f"{R_META_keys            = }")
+
+    ###########################################################################
+    # Virtualized Option/Alt keys (left/right)
+
+    LA_aliases: List[str]           = Modifier.L_ALT.aliases
+    LA_keys: List[Key]              = Modifier.L_ALT.keys
+    # use slice assignment instead of insert()
+    LA_aliases[:0]                  = ['VLOpt', 'VirtLOpt']
+    # debug(f"{LA_aliases             = }")
+    # debug(f"{LA_keys                = }")
+
+    # RA_aliases: List[str]       = Modifier.R_ALT.aliases
+    # RA_keys: List[Key]          = Modifier.R_ALT.keys
+    # # use slice assignment instead of insert()
+    # RA_aliases[:0]              = ['VROpt', 'VirtROpt']
+    # debug(f"{RA_aliases         = }")
+    # debug(f"{RA_keys            = }")
+
+    ###########################################################################
+    # Virtualized Command key (all keyboard types)
+
+    R_CONTROL_aliases: List[str]    = Modifier.R_CONTROL.aliases
+    R_CONTROL_keys: List[Key]       = Modifier.R_CONTROL.keys
+    # use slice assignment instead of insert()
+    R_CONTROL_aliases[:0]           = ['VCmd', 'VirtCmd']
+    # debug(f"{R_CONTROL_aliases      = }")
+    # debug(f"{R_CONTROL_keys         = }")
+
+except AttributeError as e:
+    error(f"Problem adding alias to modifier:\n\t{e}")
+###################################################################################################
+
+
+
+###################################################################################################
+# Some important setup work necessary to make custom preferences, 
+# notifications and Synergy log monitoring work.
 home_dir = os.path.expanduser('~')
 icons_dir = os.path.join(home_dir, '.local', 'share', 'icons')
 
@@ -75,7 +148,7 @@ icon_file_inverse   = os.path.join(assets_path, "toshy_app_icon_rainbow_inverse.
 # Toshy config file
 TOSHY_PART      = 'config'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Config file'
-APP_VERSION     = '2024.0322'
+APP_VERSION     = '2024.0606'
 
 # Settings object used to tweak preferences "live" between gui, tray and config.
 cnfg = Settings(current_folder_path)
@@ -103,23 +176,23 @@ debug(cnfg, ctx="CG")
 ###  SLICE_MARK_START: env_overrides  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 
 # MANUALLY set any environment information if the auto-identification isn't working:
-OVERRIDE_DISTRO_ID          = None
-OVERRIDE_DISTRO_VER         = None
-OVERRIDE_VARIANT_ID         = None
-OVERRIDE_SESSION_TYPE       = None
-OVERRIDE_DESKTOP_ENV        = None
-OVERRIDE_DE_MAJ_VER         = None
+OVERRIDE_DISTRO_ID              = None
+OVERRIDE_DISTRO_VER             = None
+OVERRIDE_VARIANT_ID             = None
+OVERRIDE_SESSION_TYPE           = None
+OVERRIDE_DESKTOP_ENV            = None
+OVERRIDE_DE_MAJ_VER             = None
 
 ###  SLICE_MARK_END: env_overrides  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 ###################################################################################################
 
 # leave all of this alone!
-DISTRO_ID       = None
-DISTRO_VER      = None
-VARIANT_ID      = None
-SESSION_TYPE    = None
-DESKTOP_ENV     = None
-DE_MAJ_VER      = None
+DISTRO_ID                       = None
+DISTRO_VER                      = None
+VARIANT_ID                      = None
+SESSION_TYPE                    = None
+DESKTOP_ENV                     = None
+DE_MAJ_VER                      = None
 
 env_info: Dict[str, str] = lib.env.get_env_info()   # Returns a dict
 
@@ -142,7 +215,7 @@ try:
     # Pylance will complain if function undefined, without 'ignore' comment
     environ_api(session_type = SESSION_TYPE, wl_desktop_env = DESKTOP_ENV) # type: ignore
 except NameError:
-    debug(f"The API function 'environ_api' is not defined yet. Wrong 'xwaykeyz/keyszer' branch?")
+    debug(f"The API function 'environ_api' is not defined yet. Wrong keymapper branch?")
     pass
 
 
@@ -578,7 +651,6 @@ not_win_type_rgx    = re.compile("IBM|Chromebook|Apple", re.I)
 ###                                                                                     ###
 ###                                                                                     ###
 ###########################################################################################
-
 
 
 # Instantiate a useful notification object class instance, to make notifications easier
