@@ -2743,9 +2743,15 @@ def apply_desktop_tweaks():
 
         print(f'Installing font: ', end='', flush=True)
 
-        # install Fantasque Sans Mono NoLig (no ligatures) from GitHub fork
-        font_file   = 'FantasqueSansMono-LargeLineHeight-NoLoopK-NameSuffix.zip'
-        font_url    = 'https://github.com/spinda/fantasque-sans-ligatures/releases/download/v1.8.1'
+        # # install Fantasque Sans Mono NoLig (no ligatures) from spinda's GitHub fork
+        # font_file   = 'FantasqueSansMono-LargeLineHeight-NoLoopK-NameSuffix.zip'
+        # font_url    = 'https://github.com/spinda/fantasque-sans-ligatures/releases/download/v1.8.1'
+        # font_link   = f'{font_url}/{font_file}'
+
+        # Install Fantasque Sans Mono Nerd Font (with no ligatures, large line height, no loop K).
+        # Created from spinda fork by processing with Nerd Font script.
+        font_file   = 'FantasqueSansMNoLig_Nerd_Font.zip'
+        font_url    = 'https://github.com/RedBearAK/FantasqueSansMNoLigNerdFont/raw/main'
         font_link   = f'{font_url}/{font_file}'
 
         print(f'Downloading… ', end='', flush=True)
@@ -2763,7 +2769,12 @@ def apply_desktop_tweaks():
 
         if os.path.isfile(zip_path):
             folder_name = font_file.rsplit('.', 1)[0]
-            extract_dir = f'{cnfg.run_tmp_dir}/'
+
+            local_fonts_dir = os.path.join(home_dir, '.local', 'share', 'fonts')
+            os.makedirs(local_fonts_dir, exist_ok=True)
+
+            # extract_dir = f'{cnfg.run_tmp_dir}/'
+            extract_dir = f'{local_fonts_dir}/'
 
             print(f'Unzipping… ', end='', flush=True)
 
@@ -2779,19 +2790,17 @@ def apply_desktop_tweaks():
                 
                 zip_ref.extractall(extract_dir)
 
-            # use TTF instead of OTF to try and minimize "stem darkening" effect in KDE
-            font_dir        = f'{extract_dir}/TTF/'
-            local_fonts_dir = os.path.join(home_dir, '.local', 'share', 'fonts')
+            # # # use TTF instead of OTF to try and minimize "stem darkening" effect in KDE
+            # # font_dir        = f'{extract_dir}/TTF/'       # older font zip file has TTF/OTF
+            # font_dir        = f'{extract_dir}'      # new font zip file has no TTF/OTF subfolders
 
-            os.makedirs(local_fonts_dir, exist_ok=True)
+            # print(f'Moving… ', end='', flush=True)
 
-            print(f'Moving… ', end='', flush=True)
-
-            for file in os.listdir(font_dir):
-                if file.endswith('.ttf'):
-                    src_path = os.path.join(font_dir, file)
-                    dest_path = os.path.join(local_fonts_dir, file)
-                    shutil.move(src_path, dest_path)
+            # for file in os.listdir(font_dir):
+            #     if file.endswith('.ttf'):
+            #         src_path = os.path.join(font_dir, file)
+            #         dest_path = os.path.join(local_fonts_dir, file)
+            #         shutil.move(src_path, dest_path)
 
             print(f'Refreshing font cache… ', end='', flush=True)
 
