@@ -2785,8 +2785,10 @@ def apply_desktop_tweaks():
                 
                 zip_ref.extractall(extract_dir)
 
-            # use TTF instead of OTF to try and minimize "stem darkening" effect in KDE
-            font_dir        = f'{extract_dir}/TTF/'
+            # # use TTF instead of OTF to try and minimize "stem darkening" effect in KDE
+            # font_dir        = f'{extract_dir}/TTF/'       # older font zip file has TTF/OTF
+            font_dir        = f'{extract_dir}'      # new font zip file has no TTF/OTF subfolders
+
             local_fonts_dir = os.path.join(home_dir, '.local', 'share', 'fonts')
 
             os.makedirs(local_fonts_dir, exist_ok=True)
