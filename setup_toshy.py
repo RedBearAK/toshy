@@ -2699,6 +2699,70 @@ def remove_tweaks_KDE():
     print(f'Disabled "Only one window per application" task switcher option.')
 
 
+def install_coding_font():
+    """Utility function to take care of installing the terminal/coding font"""
+
+    print(f'Installing terminal/coding "Fantasque Sans Mono Nerd Font": ', flush=True)
+
+    cannot_install_font = False
+
+    # Install Fantasque Sans Mono Nerd Font
+    # (variant with no ligatures, large line height, no "loop K").
+    # Created from spinda no-ligatures fork by processing with Nerd Font script.
+    # Original repo: https://github.com/spinda/fantasque-sans-ligatures
+    font_file   = 'FantasqueSansMNoLig_Nerd_Font.zip'
+    font_url    = 'https://github.com/RedBearAK/FantasqueSansMNoLigNerdFont/raw/main'
+    font_link   = f'{font_url}/{font_file}'
+
+    print(f'  Downloading… ', end='', flush=True)
+
+    zip_path    = f'{cnfg.run_tmp_dir}/{font_file}'
+    
+    if shutil.which('curl'):
+        subprocess.run(['curl', '-Lo', zip_path, font_link], 
+                    stdout=DEVNULL, stderr=DEVNULL)
+    elif shutil.which('wget'):
+        subprocess.run(['wget', '-O', zip_path, font_link],
+                    stdout=DEVNULL, stderr=DEVNULL)
+    else:
+        error("\nERROR: Neither 'curl' nor 'wget' is available. Can't install font.")
+        cannot_install_font = True
+
+    if not cannot_install_font and os.path.isfile(zip_path):
+        folder_name = font_file.rsplit('.', 1)[0]
+
+        local_fonts_dir = os.path.join(home_dir, '.local', 'share', 'fonts')
+        os.makedirs(local_fonts_dir, exist_ok=True)
+
+        # extract_dir = f'{cnfg.run_tmp_dir}/'
+        extract_dir = f'{local_fonts_dir}/'         # extract directly to local fonts folder
+
+        print(f'Unzipping… ', end='', flush=True)
+
+        # Open the zip file and check if it has a top-level directory
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+
+            # Get the first part of each path in the zip file
+            top_dirs = {name.split('/')[0] for name in zip_ref.namelist()}
+            
+            # If the zip doesn't have a consistent top-level directory, 
+            # create one and adjust extract_dir
+            if len(top_dirs) > 1:
+                extract_dir = os.path.join(extract_dir, folder_name)
+                os.makedirs(extract_dir, exist_ok=True)
+            
+            zip_ref.extractall(extract_dir)
+
+        print(f'Refreshing font cache… ', end='', flush=True)
+
+        # Update the font cache after putting new font files in place
+        cmd_lst = ['fc-cache', '-f', '-v']
+        subprocess.run(cmd_lst, stdout=DEVNULL, stderr=DEVNULL)
+        print(f'Done.', flush=True)
+
+        print(f"Installed font into folder: \n\t'{extract_dir}'")
+
+
 ###################################################################################################
 ##  TWEAKS UTILITY FUNCTIONS - END
 ###################################################################################################
@@ -2740,80 +2804,17 @@ def apply_desktop_tweaks():
 
     # General (not DE specific) "fancy pants" additions:
     if cnfg.fancy_pants:
+        print(f'Initiating DE-agnostic Fancy-Pants option(s)...')
 
-        print(f'Installing font: ', end='', flush=True)
-
-        # # install Fantasque Sans Mono NoLig (no ligatures) from spinda's GitHub fork
-        # font_file   = 'FantasqueSansMono-LargeLineHeight-NoLoopK-NameSuffix.zip'
-        # font_url    = 'https://github.com/spinda/fantasque-sans-ligatures/releases/download/v1.8.1'
-        # font_link   = f'{font_url}/{font_file}'
-
-        # Install Fantasque Sans Mono Nerd Font (with no ligatures, large line height, no loop K).
-        # Created from spinda fork by processing with Nerd Font script.
-        font_file   = 'FantasqueSansMNoLig_Nerd_Font.zip'
-        font_url    = 'https://github.com/RedBearAK/FantasqueSansMNoLigNerdFont/raw/main'
-        font_link   = f'{font_url}/{font_file}'
-
-        print(f'Downloading… ', end='', flush=True)
-
-        zip_path    = f'{cnfg.run_tmp_dir}/{font_file}'
-        
-        if shutil.which('curl'):
-            subprocess.run(['curl', '-Lo', zip_path, font_link], 
-                        stdout=DEVNULL, stderr=DEVNULL)
-        elif shutil.which('wget'):
-            subprocess.run(['wget', '-O', zip_path, font_link],
-                        stdout=DEVNULL, stderr=DEVNULL)
-        else:
-            print("\nERROR: Neither 'curl' nor 'wget' is available. Can't install font.")
-
-        if os.path.isfile(zip_path):
-            folder_name = font_file.rsplit('.', 1)[0]
-
-            local_fonts_dir = os.path.join(home_dir, '.local', 'share', 'fonts')
-            os.makedirs(local_fonts_dir, exist_ok=True)
-
-            # extract_dir = f'{cnfg.run_tmp_dir}/'
-            extract_dir = f'{local_fonts_dir}/'
-
-            print(f'Unzipping… ', end='', flush=True)
-
-            # Open the zip file and check if it has a top-level directory
-            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                # Get the first part of each path in the zip file
-                top_dirs = {name.split('/')[0] for name in zip_ref.namelist()}
-                
-                # If the zip doesn't have a consistent top-level directory, create one and adjust extract_dir
-                if len(top_dirs) > 1:
-                    extract_dir = os.path.join(extract_dir, folder_name)
-                    os.makedirs(extract_dir, exist_ok=True)
-                
-                zip_ref.extractall(extract_dir)
-
-            # # # use TTF instead of OTF to try and minimize "stem darkening" effect in KDE
-            # # font_dir        = f'{extract_dir}/TTF/'       # older font zip file has TTF/OTF
-            # font_dir        = f'{extract_dir}'      # new font zip file has no TTF/OTF subfolders
-
-            # print(f'Moving… ', end='', flush=True)
-
-            # for file in os.listdir(font_dir):
-            #     if file.endswith('.ttf'):
-            #         src_path = os.path.join(font_dir, file)
-            #         dest_path = os.path.join(local_fonts_dir, file)
-            #         shutil.move(src_path, dest_path)
-
-            print(f'Refreshing font cache… ', end='', flush=True)
-
-            # Update the font cache
-            subprocess.run(['fc-cache', '-f', '-v'],
-                            stdout=DEVNULL, stderr=DEVNULL)
-            print(f'Done.', flush=True)
-
-            print(f"Installed font: '{folder_name}'")
+        try:
+            install_coding_font()
             cnfg.tweak_applied = True
+        except Exception as e:
+            error(f'Some problem occurred attempting to install the font: \n\t{e}')
 
     if not cnfg.tweak_applied:
         print(f'If nothing printed, no tweaks available for "{cnfg.DESKTOP_ENV}" yet.')
+
     show_task_completed_msg()
 
 
