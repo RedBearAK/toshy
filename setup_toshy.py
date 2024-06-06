@@ -2751,7 +2751,7 @@ def apply_desktop_tweaks():
         # Install Fantasque Sans Mono Nerd Font (with no ligatures, large line height, no loop K).
         # Created from spinda fork by processing with Nerd Font script.
         font_file   = 'FantasqueSansMNoLig_Nerd_Font.zip'
-        font_url    = 'https://github.com/RedBearAK/FantasqueSansMNoLigNerdFont/blob/main'
+        font_url    = 'https://github.com/RedBearAK/FantasqueSansMNoLigNerdFont/raw/main'
         font_link   = f'{font_url}/{font_file}'
 
         print(f'Downloading… ', end='', flush=True)
