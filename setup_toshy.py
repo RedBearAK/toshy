@@ -396,11 +396,18 @@ def call_attn_to_pwd_prompt_if_sudo_tkt_exp():
     try:
         subprocess.run( ['sudo', '-n', 'true'], stdout=DEVNULL, stderr=DEVNULL, check=True)
     except subprocess.CalledProcessError:
+        main_clr = 'blue'
+        alt_clr = 'magenta'
         # sudo ticket not valid, requires a password, so get user attention
         print()
-        print(fancy_str('  ----------------------------------------  ', 'blue', bold=True))
-        print(fancy_str('  -- SUDO PASSWORD REQUIRED TO CONTINUE --  ', 'blue', bold=True))
-        print(fancy_str('  ----------------------------------------  ', 'blue', bold=True))
+        print(fancy_str('  ----------------------------------------  ', main_clr, bold=True))
+        # print(fancy_str('  -- SUDO PASSWORD REQUIRED TO CONTINUE --  ', 'blue', bold=True))
+        print(
+            fancy_str('  -- ', main_clr, bold=True) +
+            fancy_str('SUDO PASSWORD REQUIRED TO CONTINUE', alt_clr, bold=True) +
+            fancy_str(' --  ', main_clr, bold=True)
+        )
+        print(fancy_str('  ----------------------------------------  ', main_clr, bold=True))
         print()
 
 
