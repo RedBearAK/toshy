@@ -402,7 +402,7 @@ def call_attn_to_pwd_prompt_if_sudo_tkt_exp():
         # print(fancy_str('  -- SUDO PASSWORD REQUIRED TO CONTINUE --  ', 'blue', bold=True))
         print(
             fancy_str('  -- ', 'blue', bold=True) +
-            fancy_str('SUDO PASSWORD REQUIRED TO CONTINUE', 'red', bold=True) +
+            fancy_str('SUDO PASSWORD REQUIRED TO CONTINUE', 'magenta', bold=True) +
             fancy_str(' --  ', 'blue', bold=True)
         )
         print(fancy_str('  ----------------------------------------  ', 'blue', bold=True))
