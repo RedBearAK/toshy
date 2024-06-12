@@ -931,8 +931,10 @@ class DistroQuirksHandler:
         # for libappindicator-gtk3: sudo dnf install -y epel-release
         try:
             native_pkg_installer.check_for_pkg_mgr_cmd('dnf')
-            subprocess.run(['sudo', 'dnf', 'install', '-y', 'epel-release'], check=True)
-            subprocess.run(['sudo', 'dnf', 'makecache'], check=True)
+            cmd_lst = ['sudo', 'dnf', 'install', '-y', 'epel-release']
+            subprocess.run(cmd_lst, check=True)
+            cmd_lst = ['sudo', 'dnf', 'makecache']
+            subprocess.run(cmd_lst, check=True)
         except subprocess.CalledProcessError as proc_err:
             print()
             error(f'ERROR: Problem while adding "epel-release" repo.\n\t{proc_err}')
@@ -940,6 +942,7 @@ class DistroQuirksHandler:
 
         # Need to do this AFTER the 'epel-release' install
         if cnfg.DISTRO_ID != 'centos' and cnfg.distro_mjr_ver in ['8']:
+
             # enable CRB repo on RHEL 8.x distros, but not CentOS Stream 8:
             cmd_lst = ['sudo', '/usr/bin/crb', 'enable']
             try:
@@ -948,10 +951,10 @@ class DistroQuirksHandler:
                 print()
                 error(f'ERROR: Problem while enabling CRB repo.\n\t{proc_err}')
                 safe_shutdown(1)
-            #
+
             # TODO: Add higher version if ever necessary (keep minimum 3.8)
-            potential_versions = ['3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
-            #
+            potential_versions = ['3.15', '3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
+
             for version in potential_versions:
                 # check if the version is already installed
                 if shutil.which(f'python{version}'):
@@ -960,7 +963,12 @@ class DistroQuirksHandler:
                     break
                 # try to install the corresponding packages
                 cmd_lst = ['sudo', 'dnf', 'install', '-y']
-                pkg_lst = [f'python{version}', f'python{version}-devel', f'python{version}-tkinter']
+                pkg_lst = [
+                    f'python{version}',
+                    f'python{version}-devel',
+                    f'python{version}-pip',
+                    f'python{version}-tkinter'
+                ]
                 try:
                     subprocess.run(cmd_lst + pkg_lst, check=True)
                     # if the installation succeeds, set the interpreter path and version
@@ -977,10 +985,18 @@ class DistroQuirksHandler:
                 error('ERROR: Did not find any appropriate Python interpreter version.')
                 safe_shutdown(1)
 
+            # Deal with a RHEL 8.x problem reported by a user:
+            # Remove generically versioned pkgs "python3-devel", "python3-pip", "python3-tkinter",
+            # but "python3-dbus" is the only "dbus" package available, so leave it.
+            # Should prevent the installer from installing a older "python36-devel" package
+            # alongside the newer python{version}-devel and related packages.
+            pkgs_to_remove = ["python3-devel", "python3-pip", "python3-tkinter"]
+            cnfg.pkgs_for_distro = [pkg for pkg in cnfg.pkgs_for_distro if pkg not in pkgs_to_remove]
+
         if cnfg.distro_mjr_ver in ['9']:
             #
             # enable "CodeReady Builder" repo for 'gobject-introspection-devel' only on 
-            # RHEL 9.x and CentOS Stream 9 (TODO: Add v10 if it uses the same command):
+            # RHEL 9.x and CentOS Stream 9 (TODO: Add v10 if it uses the same command?):
             # sudo dnf config-manager --set-enabled crb
             cmd_lst = ['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb']
             try:
