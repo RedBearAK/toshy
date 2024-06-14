@@ -586,7 +586,7 @@ def matchProps(*,
 
     def _isScreenFocusActive():
         # If screen focus is lost, return False immediately
-        return False if cnfg.screen_focus is False else True
+        return False if cnfg.screen_has_focus is False else True
 
     # process lists of conditions
     if _lst is not None:
