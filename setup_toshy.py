@@ -941,6 +941,7 @@ class DistroQuirksHandler:
             safe_shutdown(1)
 
         def get_newest_python_version():
+            """Utility function to find the latest Python available on RHEL distro types"""
             # TODO: Add higher version if ever necessary (keep minimum 3.8)
             potential_versions = ['3.15', '3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
 
@@ -996,47 +997,6 @@ class DistroQuirksHandler:
 
             # Get a much newer Python version than the default 3.6 currently on RHEL 8 and clones
             get_newest_python_version()
-
-            # # TODO: Add higher version if ever necessary (keep minimum 3.8)
-            # potential_versions = ['3.15', '3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
-
-            # for version in potential_versions:
-            #     # check if the version is already installed
-            #     if shutil.which(f'python{version}'):
-            #         cnfg.py_interp_path     = f'/usr/bin/python{version}'
-            #         cnfg.py_interp_ver_str  = version
-            #         break
-            #     # try to install the corresponding packages
-            #     cmd_lst = ['sudo', 'dnf', 'install', '-y']
-            #     pkg_lst = [
-            #         f'python{version}',
-            #         f'python{version}-devel',
-            #         f'python{version}-pip',
-            #         f'python{version}-tkinter'
-            #     ]
-            #     try:
-            #         subprocess.run(cmd_lst + pkg_lst, check=True)
-            #         # if the installation succeeds, set the interpreter path and version
-            #         cnfg.py_interp_path     = f'/usr/bin/python{version}'
-            #         cnfg.py_interp_ver_str  = version
-            #         break
-            #     # if the installation fails, continue with the next version
-            #     except subprocess.CalledProcessError:
-            #         print(f'No match for potential Python version {version}.')
-            #         continue
-            # # this 'else' is part of the 'for' loop above, not an 'if' condition
-            # else:
-            #     # if no suitable version was found, print an error message and exit
-            #     error('ERROR: Did not find any appropriate Python interpreter version.')
-            #     safe_shutdown(1)
-
-            # # Deal with a RHEL 8.x problem reported by a user:
-            # # Remove generically versioned pkgs "python3-devel", "python3-pip", "python3-tkinter",
-            # # but "python3-dbus" is the only "dbus" package available, so leave it.
-            # # Should prevent the installer from installing a older "python36-devel" package
-            # # alongside the newer python{version}-devel and related packages.
-            # pkgs_to_remove = ["python3-devel", "python3-pip", "python3-tkinter"]
-            # cnfg.pkgs_for_distro = [pkg for pkg in cnfg.pkgs_for_distro if pkg not in pkgs_to_remove]
 
         if cnfg.distro_mjr_ver in ['9']:
             #
