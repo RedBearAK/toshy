@@ -1096,7 +1096,7 @@ def install_distro_pkgs():
                 if pkg in cnfg.pkgs_for_distro:
                     cnfg.pkgs_for_distro.remove(pkg)
 
-    # Filter out systemd packages if if systemctl is not present
+    # Filter out systemd packages if systemctl is not present
     cnfg.pkgs_for_distro = [
         pkg for pkg in cnfg.pkgs_for_distro 
         if cnfg.systemctl_present or 'systemd' not in pkg
