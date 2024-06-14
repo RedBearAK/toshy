@@ -965,21 +965,24 @@ class DistroQuirksHandler:
                     cnfg.py_interp_path     = f'/usr/bin/python{version}'
                     cnfg.py_interp_ver_str  = version
                     break
-                # if the installation fails, continue with the next version
                 except subprocess.CalledProcessError:
                     print(f'No match for potential Python version {version}.')
+                    # if the installation fails, continue loop and check for next version in list
                     continue
-            # this 'else' is part of the 'for' loop above, not an 'if' condition
+            # NB: This 'else' is part of the 'for' loop above, not an 'if' condition! Don't indent!
             else:
                 # if no suitable version was found, print an error message and exit
                 error('ERROR: Did not find any appropriate Python interpreter version.')
                 safe_shutdown(1)
 
-            # Deal with a RHEL 8.x problem reported by a user:
+            # Mitigate a RHEL 8.x problem reported by a user in these Toshy issue threads:
+            # https://github.com/RedBearAK/toshy/issues/278 (Unprivileged user install on RHEL 8)
+            # https://github.com/RedBearAK/toshy/issues/289 (Unable to install on RHEL 8)
             # Remove generically versioned pkgs "python3-devel", "python3-pip", "python3-tkinter",
             # but "python3-dbus" is the only "dbus" package available, so leave it.
-            # Should prevent the installer from installing a older "python36-devel" package
+            # Should prevent the installer from installing an older "python36-devel" package
             # alongside the newer python{version}-devel and related packages.
+            # This function also used in RHEL 9, but this mitigation should be harmless.
             pkgs_to_remove = ["python3-devel", "python3-pip", "python3-tkinter"]
             cnfg.pkgs_for_distro = [pkg for pkg in cnfg.pkgs_for_distro if pkg not in pkgs_to_remove]
 
