@@ -1,24 +1,10 @@
 # Current status: Stable Beta (Please Read)
 
-Did your system just update itself from KDE Plasma 5 to Plasma 6, and Toshy stopped working? And you installed Toshy before January 2024? Just grab a new zip file from the big green **`  <> Code  ▼  `** button and reinstall. Your config customizations and preference choices should be preserved (if you made your config changes within the "slice marks").
-
-WARNING: There is a very annoying "bug" (more of an implementation issue) going around where there is a problem with services like `xdg-desktop-portal` and `xdg-desktop-portal-gnome` (or `xdg-desktop-portal-gtk`) causing very long delays with launching certain applications (particularly GTK apps like Firefox, but also reportedly Qt apps sometimes) in a Wayland session. Some distros seem to have a fix for this, others have not fixed it yet. I think this occurs mainly on systems that have both KDE Plasma and some GTK-based desktop environment installed at the same time, leading to multiple desktop "portal" services trying to run at the same time.  
-
-Symptoms for Toshy are that the systemd services can't start up properly until anywhere from 30 seconds to a minute or more after logging in. They will eventually start, and restarting the services later (after the glitchy desktop portal service times out) works without issue, which made this really difficult to diagnose. I've been observing this mostly on KDE in multiple Linux distros. One "fix" is to mask the offending `xdg-desktop-portal-gnome` (or `xdg-desktop-portal-gtk`) service to keep it from clogging things up:  
-
-```sh
-systemctl --user mask xdg-desktop-portal-gnome
-```
-
-Or:
-
-```sh
-systemctl --user mask xdg-desktop-portal-gtk
-```
-
-But you may need to unmask the service if you log into a GNOME desktop, in a Wayland session. Just replace `mask` with `unmask`.  
+2024-06-15 UPDATE: Some major performance updates to a core property matching function have significantly reduced the CPU usage of Toshy while typing, especially while typing very fast. This should reduce the incidence of seeing a "delay" in characters appearing while typing, which can happen sometimes when a system is experiencing high CPU usage in general. (You can do something like `sudo renice -n -10 $(pgrep xwaykeyz)` if you still have an issue with that, and want the keymapper process to have a higher priority when the system is under heavy load.) There was also a sort of fix inside the keymapper recently to keep repeating keys from using up CPU for no particular benefit. Any new install of Toshy, even from an older zip file, will get that when it clones the keymapper from its GitHub repo. Mostly this will be meaningful in gaming situations where one needs to hold down non-modifier keys, which used to cause the keymapper to use an entire core (or thread) for as long as the key was held down.  
 
 ## Main issues you might run into
+
+- KDE USERS: Did your system update itself from KDE Plasma 5 to Plasma 6, and Toshy stopped working? And you installed Toshy before January 2024? Just grab a new zip file from the big green **`  <> Code  ▼  `** button and reinstall. Your config customizations and preference choices should be preserved (if you made your config changes within the "slice marks"). Support for Plasma 6 was added around late December 2023.  
 
 - KEYBOARD TYPE: The Toshy config file tries to automatically identify the "type" of your keyboard based on some pre-existing lists of keyboard device names, which do not have many entries, and there are thousands of keyboard name variants. So your keyboard may be misidentified, leading to modifier keys in the "wrong" place. BE PREPARED to identify the name of your keyboard device (try `toshy-devices` in a terminal) and enter it into the custom list (actually a Python "dictionary") in the config file to fix this problem. The custom entry is designed to be retained even if you reinstall later. There is a sub-menu in the tray icon menu intended to allow temporarily bypassing this problem while you find the device name and enter it in your config file.  
 
@@ -28,11 +14,13 @@ Go to this FAQ entry for more info:
 
 Other possible issues:  
 
-- May have issues installing on distros not on the [list of supported distros](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros) in the Wiki. If you think your distro is closely related to one on the list, try the `list-distros` command with the setup script, and then the `--override-distro` option for the `install` command. See the [**How to Install**](#how-to-install) section.  
+- INTERNATIONAL KEYBOARD USERS: The keymapper is evdev-based and has **_no idea_** what keyboard layout you are using, and only sees "key codes", not the symbols on the keys. So if it encounters a combo of key codes you've asked it to remap to something else, it will remap it. This is a problem if for instance you're on an AZERTY keyboard where `A` and `Q` are swapped, and you think you're pressing `Cmd+A` but the keymapper things you want to remap `Cmd+Q` to `Alt+F4`. I'm looking into a way to get the keymapper to use the proper layout, but in the meantime depending on how different your layout is from the standard US layout, this keymapper may be unusable or may just need some tweaks to the key definition file to fix a few key positions. Open an issue if you have this kind of problem.  
 
-- May seem to run at login, but not do any remapping, needing `toshy-config-verbose-start` in the terminal to troubleshoot. Or, it may just need a restart of the services from the tray icon or with `toshy-services-restart`. Check the output of `toshy-services-log` and `toshy-services-status` first to see if there is an obvious error message that explains the problem. Like not having a compatible GNOME Shell extension installed/enabled to support a Wayland+GNOME session. Other than the Wayland+GNOME situation, I don't really see this much anymore.  
+- Toshy will have issues installing on distros not on the [list of supported distros](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros) in the Wiki. If you think your distro is closely related to one on the supported list, try the `./setup_toshy.py list-distros` command, and then use one of the distro names with the `--override-distro` option added to the `./setup_toshy.py install` command. See the [**How to Install**](#how-to-install) section.  
 
-- On a dual-init distro like MX Linux, if you install Toshy while using SysVinit (default on MX) the installer will avoid installing the `systemd` packages and service unit files. If you then switch to using `systemd` as init at the boot screen (from the "Advanced" menu) you'll need to re-run the Toshy installer (only once) while using `systemd` to make Toshy work automatically like it does on other distros where the default is `systemd`. Or, you can just keep running the config manually, like is currently necessary under SysVinit and any other init system besides `systemd`.  
+- Toshy may seem to run at login, but not do any remapping, needing the use of the debugging command `toshy-config-verbose-start` in the terminal to troubleshoot. Or, it may just need a restart of the services from the tray icon or with `toshy-services-restart`. Check the output of `toshy-services-log` and `toshy-services-status` first to see if there is an obvious error message that explains the problem. Like not having a compatible GNOME Shell extension installed/enabled to support a Wayland+GNOME session. Other than the Wayland+GNOME situation, I don't really see this much anymore.  
+
+- On a dual-init distro like MX Linux, if you install Toshy while using SysVinit (default on MX) the installer will avoid installing the `systemd` packages and service unit files. If you then switch to using `systemd` as init at the boot screen (you can do this from the "Advanced" menu) you'll need to re-run the Toshy installer (only once) while using `systemd` to make Toshy work automatically like it does on other distros where the default init is `systemd`. Or, you can just keep running the config manually, like is currently necessary under SysVinit and any other init system besides `systemd`.  
 
 # Toshy README
 
