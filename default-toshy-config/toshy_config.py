@@ -233,6 +233,9 @@ except NameError:
 ##################################################
 # Establish important global variables here
 
+
+startup_timestamp = time.time()     # only gets evaluated once for each run of keymapper
+
 # Variable to hold the keyboard type
 KBTYPE = None
 
@@ -895,23 +898,44 @@ def matchProps(*,
         # regular-expression-to-match-a-line-that-doesnt-contain-a-word
 
     logging_enabled = False
+
+    current_timestamp = time.time()
+    time_elapsed = current_timestamp - startup_timestamp
+
+    # Bypass all guard clauses if more than 10 seconds have passed since keymapper 
+    # started and loaded the config file. Inputs never change until keymapper 
+    # restarts and reloads the config file, so we don't need to keep checking.
+    bypass_guard_clauses = time_elapsed > 6
+
     allowed_params  = (clas, name, devn, not_clas, not_name, not_devn, 
                         numlk, capslk, cse, lst, not_lst, dbg)
     lst_dct_params  = (clas, name, devn, not_clas, not_name, not_devn, 
                         numlk, capslk, cse)
     string_params   = (clas, name, devn, not_clas, not_name, not_devn, dbg)
-    dct_param_strs  = list(inspect.signature(matchProps).parameters.keys())
 
-    if all([x is None for x in allowed_params]): 
-        raise ValueError(f"\n\n(EE) matchProps(): Received no valid argument\n")
-    if any([x not in (True, False, None) for x in (numlk, capslk, cse)]): 
-        raise TypeError(f"\n\n(EE) matchProps(): Params 'numlk|capslk|cse' are bools\n")
-    if any([x is not None and not isinstance(x, str) for x in string_params]):
-        raise TypeError(    f"\n\n(EE) matchProps(): These parameters must be strings:"
-                            f"\n\t'clas|name|devn|not_clas|not_name|not_devn|dbg'\n")
-    if clas and not_clas or name and not_name or devn and not_devn or lst and not_lst:
-        raise ValueError(   f"\n\n(EE) matchProps(): Do not mix positive and "
-                            f"negative match params for same property\n")
+    # This was using up a lot of CPU time, actually. Bad idea. 
+    # dct_param_strs  = list(inspect.signature(matchProps).parameters.keys())
+
+    # Static list of parameter names. Using this instead of `inspect` cuts CPU 
+    # usage considerably, for reasons I don't yet understand. Apparently the
+    # keymapper is actually running the entire function again on each key 
+    # press and release, rather than just re-evaluating the inner closure.
+    dct_param_strs = [
+        'clas', 'name', 'devn', 'not_clas', 'not_name', 'not_devn',
+        'numlk', 'capslk', 'cse', 'lst', 'not_lst', 'dbg'
+    ]
+
+    if not bypass_guard_clauses:
+        if all([x is None for x in allowed_params]): 
+            raise ValueError(f"\n\n(EE) matchProps(): Received no valid argument\n")
+        if any([x not in (True, False, None) for x in (numlk, capslk, cse)]): 
+            raise TypeError(f"\n\n(EE) matchProps(): Params 'numlk|capslk|cse' are bools\n")
+        if any([x is not None and not isinstance(x, str) for x in string_params]):
+            raise TypeError(    f"\n\n(EE) matchProps(): These parameters must be strings:"
+                                f"\n\t'clas|name|devn|not_clas|not_name|not_devn|dbg'\n")
+        if clas and not_clas or name and not_name or devn and not_devn or lst and not_lst:
+            raise ValueError(   f"\n\n(EE) matchProps(): Do not mix positive and "
+                                f"negative match params for same property\n")
 
     # consolidate positive and negative matching params into new vars
     # only one should be in use at a time (checked above)
@@ -926,23 +950,25 @@ def matchProps(*,
 
     # process lists of conditions
     if _lst is not None:
-        if any([x is not None for x in lst_dct_params]): 
-            raise TypeError(f"\n\n(EE) matchProps(): Param 'lst|not_lst' must be used alone\n")
-        if not isinstance(_lst, list) or not all(isinstance(item, dict) for item in _lst): 
-            raise TypeError(
-                f"\n\n(EE) matchProps(): Param 'lst|not_lst' wants a [list] of {{dicts}}\n")
-        # verify that every {dict} in [list of dicts] only contains valid parameter names
-        for dct in _lst:
-            for param in list(dct.keys()):
-                if param not in dct_param_strs:
-                    error(f"matchProps(): Invalid parameter: '{param}'")
-                    error(f"Invalid parameter is in this dict: \n\t{dct}")
-                    error(f"Dict is in this list:")
-                    for item in _lst:
-                        print(f"\t{item}")
-                    raise ValueError(
-                        f"\n(EE) matchProps(): Invalid parameter found in dict in list. "
-                        f"See log output before traceback.\n")
+
+        if not bypass_guard_clauses:
+            if any([x is not None for x in lst_dct_params]): 
+                raise TypeError(f"\n\n(EE) matchProps(): Param 'lst|not_lst' must be used alone\n")
+            if not isinstance(_lst, list) or not all(isinstance(item, dict) for item in _lst): 
+                raise TypeError(
+                    f"\n\n(EE) matchProps(): Param 'lst|not_lst' wants a [list] of {{dicts}}\n")
+            # verify that every {dict} in [list of dicts] only contains valid parameter names
+            for dct in _lst:
+                for param in list(dct.keys()):
+                    if param not in dct_param_strs:
+                        error(f"matchProps(): Invalid parameter: '{param}'")
+                        error(f"Invalid parameter is in this dict: \n\t{dct}")
+                        error(f"Dict is in this list:")
+                        for item in _lst:
+                            print(f"\t{item}")
+                        raise ValueError(
+                            f"\n(EE) matchProps(): Invalid parameter found in dict in list. "
+                            f"See log output before traceback.\n")
 
         def _matchProps_Lst(ctx: KeyContext):
             if not _isScreenFocusActive():
@@ -957,9 +983,9 @@ def matchProps(*,
         return _matchProps_Lst      # outer function returning inner function
 
     # compile case insensitive regex object for given params, unless cse=True
-    if _clas is not None: clas_rgx = re.compile(_clas) if cse else re.compile(_clas, re.I)
-    if _name is not None: name_rgx = re.compile(_name) if cse else re.compile(_name, re.I)
-    if _devn is not None: devn_rgx = re.compile(_devn) if cse else re.compile(_devn, re.I)
+    if _clas is not None: clas_rgx = re.compile(_clas, 0 if cse else re.I)
+    if _name is not None: name_rgx = re.compile(_name, 0 if cse else re.I)
+    if _devn is not None: devn_rgx = re.compile(_devn, 0 if cse else re.I)
 
     def _matchProps(ctx: KeyContext):
         if not _isScreenFocusActive():
