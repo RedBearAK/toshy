@@ -528,6 +528,7 @@ dialogs_Escape_lod = [
     {clas: "^com.github.rafostar.Clapper$", name: "^Preferences$"},
     {clas: "^epiphany$|^org.gnome.Epiphany$", name: "^Preferences$"},
     {clas: "^gnome-text-editor$|^org.gnome.TextEditor$", name: "^Preferences$"},
+    {clas: "^io.github.celluloid_player.Celluloid$", name: "^Preferences$"},
     {clas: "^konsole$|^org.kde.konsole$", name: "^Configure.*Konsole$|^Edit Profile.*Konsole$"},
     {clas: "^krusader$|^org.kde.krusader$", name: "^Properties.*Krusader$"},
     {clas: "^.*nautilus$", name: "^.*Properties$|^Preferences$|^Create Archive$|^Rename.*Files$"},
@@ -921,7 +922,7 @@ def matchProps(*,
 
     def _isScreenFocusActive():
         # If screen focus is lost, return False immediately
-        return False if cnfg.screen_focus is False else True
+        return False if cnfg.screen_has_focus is False else True
 
     # process lists of conditions
     if _lst is not None:

@@ -10,7 +10,6 @@ import xwaykeyz.lib.logger
 from xwaykeyz.lib.logger import debug, error
 
 
-
 class Settings:
     def __init__(self, config_dir_path: str = '..') -> None:
         self.config_dir_path        = config_dir_path
@@ -29,6 +28,7 @@ class Settings:
         self.gui_dark_theme         = True              # Default: True
         self.override_kbtype        = 'Auto-Adapt'      # Default: 'Auto-Adapt'
         self.optspec_layout         = 'US'              # Default: 'US'
+        self.mru_layout             = ('us', 'default') # Default: ('us', 'default')
         self.forced_numpad          = True              # Default: True
         self.media_arrows_fix       = False             # Default: False
         self.multi_lang             = False             # Default: False
@@ -37,12 +37,76 @@ class Settings:
         self.Enter2Ent_Cmd          = False             # Default: False
         self.ST3_in_VSCode          = False             # Default: False
         # Synergy
-        self.screen_focus           = True  # True if focus is on the screen, False otherwise
+        self.screen_has_focus       = True  # True if focus is on the screen, False otherwise
         self.synergy_log_path       = os.path.expanduser("~/.local/state/Synergy/synergy.log")
         self.synergy_log_last_pos   = 0  # Keep track of the last read position in the log file
         self.initial_log_read_done  = False
+        # Make sure the database and tables are actually existing before trying to load settings
+        self.ensure_database_setup()
         # Load user's custom settings from database (defaults will be saved if no DB)
         self.load_settings()
+
+    def ensure_database_setup(self):
+        # This will create the database file if it doesn't exist yet
+        with sqlite3.connect(self.prefs_db_file_path) as db_connection:
+            db_cursor = db_connection.cursor()
+
+            # Function to check if a table exists
+            def table_exists(table_name):
+                """Utility function to check if a database table exists"""
+                query = '''
+                    SELECT name FROM sqlite_master WHERE type='table' AND name=?
+                '''
+                db_cursor.execute(query, (table_name,))
+                return db_cursor.fetchone() is not None
+
+            def table_is_empty(table_name):
+                """Check if a database table is empty."""
+                db_cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+                return db_cursor.fetchone()[0] == 0
+
+            # Create the table for user preferences if it does not exist
+            if not table_exists("config_preferences"):
+                db_cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS config_preferences
+                    (
+                        name TEXT PRIMARY KEY, 
+                        value TEXT
+                    )
+                    ''')
+
+            if table_is_empty("config_preferences"):
+                # Save the default values, only if the table is empty
+                self.save_config_preferences(db_cursor)
+
+            # Create the table for Most Recently Used Layouts if it does not exist
+            if not table_exists("mru_layouts"):
+                db_cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS mru_layouts
+                    (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        layout_code TEXT,
+                        variant_code TEXT,
+                        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+                    )
+                    ''')
+                # Create a trigger to keep only the 12 most recent records
+                db_cursor.execute('''
+                    CREATE TRIGGER IF NOT EXISTS trg_afterInsert_trim_MRU_Rows 
+                        AFTER INSERT ON mru_layouts
+                    BEGIN
+                        DELETE FROM mru_layouts 
+                        WHERE id IN (
+                            SELECT id FROM mru_layouts 
+                            ORDER BY timestamp DESC
+                            LIMIT -1 OFFSET 12  -- Keeps the newest 12 rows
+                        );
+                    END;
+                ''')
+
+            if table_is_empty("mru_layouts"):
+                # Save the default values, only if the table is empty
+                self.save_mru_layouts(db_cursor)
 
     def watch_database(self):
         # initialize observer to watch for database changes
@@ -57,53 +121,74 @@ class Settings:
             self.load_settings()
 
     def save_settings(self):
-        db_connection = sqlite3.connect(self.prefs_db_file_path)
-        db_cursor = db_connection.cursor()
-        db_cursor.execute('''CREATE TABLE IF NOT EXISTS config_preferences
-                            (name TEXT PRIMARY KEY, value TEXT)''')
-        # Define the SQL query as a string variable (it's always the same)
+        with sqlite3.connect(self.prefs_db_file_path) as db_connection:
+            db_cursor = db_connection.cursor()
+            self.save_config_preferences(db_cursor)
+            self.save_mru_layouts(db_cursor)
+
+    def save_config_preferences(self, db_cursor: sqlite3.Cursor):
         sql_query = "INSERT OR REPLACE INTO config_preferences (name, value) VALUES (?, ?)"
-        # Execute the SQL query with different parameters
-        db_cursor.execute(sql_query, ('autostart_tray_icon',    str(self.autostart_tray_icon)   ))
-        db_cursor.execute(sql_query, ('gui_dark_theme',         str(self.gui_dark_theme)        ))
-        db_cursor.execute(sql_query, ('override_kbtype',        str(self.override_kbtype)       ))
-        db_cursor.execute(sql_query, ('optspec_layout',         str(self.optspec_layout)        ))
-        db_cursor.execute(sql_query, ('forced_numpad',          str(self.forced_numpad)         ))
-        db_cursor.execute(sql_query, ('media_arrows_fix',       str(self.media_arrows_fix)      ))
-        db_cursor.execute(sql_query, ('multi_lang',             str(self.multi_lang)            ))
-        db_cursor.execute(sql_query, ('Caps2Cmd',               str(self.Caps2Cmd)              ))
-        db_cursor.execute(sql_query, ('Caps2Esc_Cmd',           str(self.Caps2Esc_Cmd)          ))
-        db_cursor.execute(sql_query, ('Enter2Ent_Cmd',          str(self.Enter2Ent_Cmd)         ))
-        db_cursor.execute(sql_query, ('ST3_in_VSCode',          str(self.ST3_in_VSCode)         ))
-        # Commit changes to the database
-        db_connection.commit()
-        db_connection.close()
+        settings = [
+            ('autostart_tray_icon',     str(self.autostart_tray_icon)),
+            ('gui_dark_theme',          str(self.gui_dark_theme)),
+            ('override_kbtype',         str(self.override_kbtype)),
+            ('optspec_layout',          str(self.optspec_layout)),
+            ('forced_numpad',           str(self.forced_numpad)),
+            ('media_arrows_fix',        str(self.media_arrows_fix)),
+            ('multi_lang',              str(self.multi_lang)),
+            ('Caps2Cmd',                str(self.Caps2Cmd)),
+            ('Caps2Esc_Cmd',            str(self.Caps2Esc_Cmd)),
+            ('Enter2Ent_Cmd',           str(self.Enter2Ent_Cmd)),
+            ('ST3_in_VSCode',           str(self.ST3_in_VSCode))
+        ]
+
+        for setting_name, setting_value in settings:
+            db_cursor.execute(sql_query, (setting_name, setting_value))
+
+    def save_mru_layouts(self, db_cursor: sqlite3.Cursor):
+        sql_query = '''
+            INSERT INTO mru_layouts
+            (layout_code, variant_code)
+            VALUES (?, ?)
+        '''
+        # self.mru_layout is a tuple, taking care of both fields being inserted
+        db_cursor.execute(sql_query, self.mru_layout)
 
     def load_settings(self):
-        # create the database file and save default settings if necessary
-        if not os.path.isfile(self.prefs_db_file_path):
-            self.save_settings()
         
-        db_connection = sqlite3.connect(self.prefs_db_file_path)
-        db_cursor = db_connection.cursor()
-        db_cursor.execute("SELECT * FROM config_preferences")
-        rows: List[Tuple[str, str]] = db_cursor.fetchall()
-        for row in rows:
-            # Convert the string value to a Python boolean correctly
-            setting_value = row[1].lower() == 'true'
-            if True is False: pass  # dummy first `if` line so other rows line up
-            elif row[0] == 'autostart_tray_icon'    : self.autostart_tray_icon      = setting_value
-            elif row[0] == 'gui_dark_theme'         : self.gui_dark_theme           = setting_value
-            elif row[0] == 'override_kbtype'        : self.override_kbtype          = row[1]
-            elif row[0] == 'optspec_layout'         : self.optspec_layout           = row[1]
-            elif row[0] == 'forced_numpad'          : self.forced_numpad            = setting_value
-            elif row[0] == 'media_arrows_fix'       : self.media_arrows_fix         = setting_value
-            elif row[0] == 'multi_lang'             : self.multi_lang               = setting_value
-            elif row[0] == 'Caps2Cmd'               : self.Caps2Cmd                 = setting_value
-            elif row[0] == 'Caps2Esc_Cmd'           : self.Caps2Esc_Cmd             = setting_value
-            elif row[0] == 'Enter2Ent_Cmd'          : self.Enter2Ent_Cmd            = setting_value
-            elif row[0] == 'ST3_in_VSCode'          : self.ST3_in_VSCode            = setting_value
-        db_connection.close()
+        with sqlite3.connect(self.prefs_db_file_path) as db_connection:
+            db_cursor = db_connection.cursor()
+
+            db_cursor.execute("SELECT * FROM config_preferences")
+            rows_prefs: List[Tuple[str, str]] = db_cursor.fetchall()
+            for row in rows_prefs:
+                # Convert the string value to a Python boolean correctly
+                setting_value       = row[1].lower() == 'true'
+                if True is False: pass  # dummy first `if` line so other rows line up (readability)
+                elif row[0] == 'autostart_tray_icon' : self.autostart_tray_icon = setting_value
+                elif row[0] == 'gui_dark_theme'      : self.gui_dark_theme      = setting_value
+                elif row[0] == 'override_kbtype'     : self.override_kbtype     = row[1]
+                elif row[0] == 'optspec_layout'      : self.optspec_layout      = row[1]
+                elif row[0] == 'forced_numpad'       : self.forced_numpad       = setting_value
+                elif row[0] == 'media_arrows_fix'    : self.media_arrows_fix    = setting_value
+                elif row[0] == 'multi_lang'          : self.multi_lang          = setting_value
+                elif row[0] == 'Caps2Cmd'            : self.Caps2Cmd            = setting_value
+                elif row[0] == 'Caps2Esc_Cmd'        : self.Caps2Esc_Cmd        = setting_value
+                elif row[0] == 'Enter2Ent_Cmd'       : self.Enter2Ent_Cmd       = setting_value
+                elif row[0] == 'ST3_in_VSCode'       : self.ST3_in_VSCode       = setting_value
+
+            db_cursor.execute('''
+                SELECT layout_code, variant_code from mru_layouts 
+                ORDER BY timestamp DESC 
+                LIMIT 1;
+                ''')
+
+            row_mru_layout = db_cursor.fetchone()     # redundant limit since query limited to one row
+            if row_mru_layout:
+                # Convert MRU Layouts record columns back to a Python tuple
+                self.mru_layout     = (row_mru_layout[0], row_mru_layout[1])
+            else:
+                self.mru_layout     = ('us', 'default')
 
         # Compare the current settings with the last settings, and 
         # update last_settings if they are different
@@ -122,11 +207,11 @@ class Settings:
         all_attributes = [attr for attr in dir(self) 
                             if not callable(getattr(self, attr)) and 
                             not attr.startswith("__")]
-        
+
         # filter out attributes that are not strings or booleans
         filtered_attributes = [attr for attr in all_attributes 
                                 if isinstance(getattr(self, attr), (str, bool, int))]
-        
+
         # create a list of tuples with attribute name and value pairs
         settings_list = [(attr, getattr(self, attr)) for attr in filtered_attributes]
         return settings_list
@@ -180,8 +265,8 @@ class Settings:
                     most_recent_state = True
 
             if most_recent_state is not None:
-                self.screen_focus = most_recent_state
-                if self.screen_focus:
+                self.screen_has_focus = most_recent_state
+                if self.screen_has_focus:
                     debug("Synergy log watcher detected return of screen focus.")
                 else:
                     debug("Synergy log watcher detected loss of screen focus.")
@@ -198,6 +283,7 @@ class Settings:
         override_kbtype         = '{self.override_kbtype}'
         -------------------------------------------
         optspec_layout          = '{self.optspec_layout}'
+        mru_layout              = {self.mru_layout}
         -------------------------------------------
         forced_numpad           = {self.forced_numpad}
         media_arrows_fix        = {self.media_arrows_fix}

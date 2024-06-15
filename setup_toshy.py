@@ -931,27 +931,20 @@ class DistroQuirksHandler:
         # for libappindicator-gtk3: sudo dnf install -y epel-release
         try:
             native_pkg_installer.check_for_pkg_mgr_cmd('dnf')
-            subprocess.run(['sudo', 'dnf', 'install', '-y', 'epel-release'], check=True)
-            subprocess.run(['sudo', 'dnf', 'makecache'], check=True)
+            cmd_lst = ['sudo', 'dnf', 'install', '-y', 'epel-release']
+            subprocess.run(cmd_lst, check=True)
+            cmd_lst = ['sudo', 'dnf', 'makecache']
+            subprocess.run(cmd_lst, check=True)
         except subprocess.CalledProcessError as proc_err:
             print()
             error(f'ERROR: Problem while adding "epel-release" repo.\n\t{proc_err}')
             safe_shutdown(1)
 
-        # Need to do this AFTER the 'epel-release' install
-        if cnfg.DISTRO_ID != 'centos' and cnfg.distro_mjr_ver in ['8']:
-            # enable CRB repo on RHEL 8.x distros, but not CentOS Stream 8:
-            cmd_lst = ['sudo', '/usr/bin/crb', 'enable']
-            try:
-                subprocess.run(cmd_lst, check=True)
-            except subprocess.CalledProcessError as proc_err:
-                print()
-                error(f'ERROR: Problem while enabling CRB repo.\n\t{proc_err}')
-                safe_shutdown(1)
-            #
+        def get_newest_python_version():
+            """Utility function to find the latest Python available on RHEL distro types"""
             # TODO: Add higher version if ever necessary (keep minimum 3.8)
-            potential_versions = ['3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
-            #
+            potential_versions = ['3.15', '3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
+
             for version in potential_versions:
                 # check if the version is already installed
                 if shutil.which(f'python{version}'):
@@ -960,27 +953,58 @@ class DistroQuirksHandler:
                     break
                 # try to install the corresponding packages
                 cmd_lst = ['sudo', 'dnf', 'install', '-y']
-                pkg_lst = [f'python{version}', f'python{version}-devel', f'python{version}-tkinter']
+                pkg_lst = [
+                    f'python{version}',
+                    f'python{version}-devel',
+                    f'python{version}-pip',
+                    f'python{version}-tkinter'
+                ]
                 try:
                     subprocess.run(cmd_lst + pkg_lst, check=True)
                     # if the installation succeeds, set the interpreter path and version
                     cnfg.py_interp_path     = f'/usr/bin/python{version}'
                     cnfg.py_interp_ver_str  = version
                     break
-                # if the installation fails, continue with the next version
                 except subprocess.CalledProcessError:
                     print(f'No match for potential Python version {version}.')
+                    # if the installation fails, continue loop and check for next version in list
                     continue
-            # this 'else' is part of the 'for' loop above, not an 'if' condition
+            # NB: This 'else' is part of the 'for' loop above, not an 'if' condition! Don't indent!
             else:
                 # if no suitable version was found, print an error message and exit
                 error('ERROR: Did not find any appropriate Python interpreter version.')
                 safe_shutdown(1)
 
+            # Mitigate a RHEL 8.x problem reported by a user in these Toshy issue threads:
+            # https://github.com/RedBearAK/toshy/issues/278 (Unprivileged user install on RHEL 8)
+            # https://github.com/RedBearAK/toshy/issues/289 (Unable to install on RHEL 8)
+            # Remove generically versioned pkgs "python3-devel", "python3-pip", "python3-tkinter",
+            # but "python3-dbus" is the only "dbus" package available, so leave it.
+            # Should prevent the installer from installing an older "python36-devel" package
+            # alongside the newer python{version}-devel and related packages.
+            # This function also used in RHEL 9, but this mitigation should be harmless.
+            pkgs_to_remove = ["python3-devel", "python3-pip", "python3-tkinter"]
+            cnfg.pkgs_for_distro = [pkg for pkg in cnfg.pkgs_for_distro if pkg not in pkgs_to_remove]
+
+        # Need to do this AFTER the 'epel-release' install
+        if cnfg.DISTRO_ID != 'centos' and cnfg.distro_mjr_ver in ['8']:
+
+            # enable CRB repo on RHEL 8.x distros, but not CentOS Stream 8:
+            cmd_lst = ['sudo', '/usr/bin/crb', 'enable']
+            try:
+                subprocess.run(cmd_lst, check=True)
+            except subprocess.CalledProcessError as proc_err:
+                print()
+                error(f'ERROR: Problem while enabling CRB repo.\n\t{proc_err}')
+                safe_shutdown(1)
+
+            # Get a much newer Python version than the default 3.6 currently on RHEL 8 and clones
+            get_newest_python_version()
+
         if cnfg.distro_mjr_ver in ['9']:
             #
             # enable "CodeReady Builder" repo for 'gobject-introspection-devel' only on 
-            # RHEL 9.x and CentOS Stream 9 (TODO: Add v10 if it uses the same command):
+            # RHEL 9.x and CentOS Stream 9 (TODO: Add v10 if it uses the same command?):
             # sudo dnf config-manager --set-enabled crb
             cmd_lst = ['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb']
             try:
@@ -989,6 +1013,10 @@ class DistroQuirksHandler:
                 print()
                 error(f'ERROR: Problem while enabling CRB repo:\n\t{proc_err}')
                 safe_shutdown(1)
+
+            # Get a much newer Python version than the default 3.9 currently on 
+            # CentOS Stream 9, RHEL 9 and clones
+            get_newest_python_version()
 
 
 class NativePackageInstaller:
@@ -1068,7 +1096,7 @@ def install_distro_pkgs():
                 if pkg in cnfg.pkgs_for_distro:
                     cnfg.pkgs_for_distro.remove(pkg)
 
-    # Filter out systemd packages if if systemctl is not present
+    # Filter out systemd packages if systemctl is not present
     cnfg.pkgs_for_distro = [
         pkg for pkg in cnfg.pkgs_for_distro 
         if cnfg.systemctl_present or 'systemd' not in pkg
