@@ -902,7 +902,7 @@ def matchProps(*,
     current_timestamp = time.time()
     time_elapsed = current_timestamp - startup_timestamp
 
-    # Bypass all guard clauses if more than 10 seconds have passed since keymapper 
+    # Bypass all guard clauses if more than a few seconds have passed since keymapper 
     # started and loaded the config file. Inputs never change until keymapper 
     # restarts and reloads the config file, so we don't need to keep checking.
     bypass_guard_clauses = time_elapsed > 6
@@ -1020,27 +1020,6 @@ def matchProps(*,
 _enter_is_F2 = True     # DON'T CHANGE THIS! Must be set to True here. 
 
 
-# def is_Enter_F2(combo_if_true, latch_or_combo_if_false):
-#     """
-#     Send a different combo for Enter key depending on state of _enter_is_F2 variable,\n 
-#     or latch the variable to True or False to control the Enter key state on next use.
-    
-#     This enables a simulation of the Finder "Enter to rename" capability.
-#     """
-#     def _is_Enter_F2():
-#         global _enter_is_F2
-#         combo_list = [combo_if_true]
-#         if latch_or_combo_if_false in (True, False):    # Latch variable to given bool value
-#             _enter_is_F2 = latch_or_combo_if_false
-#         elif _enter_is_F2:                              # If Enter is F2 now, set to be Enter next
-#             _enter_is_F2 = False
-#         else:                                           # If Enter is Enter now, set to be F2 next
-#             combo_list = [latch_or_combo_if_false]
-#             _enter_is_F2 = True
-#         return combo_list
-#     return _is_Enter_F2
-
-
 def iEF2(combo_if_true, latch_or_combo_if_false, 
                 keep_value_if_true=False, keep_value_if_false=False):
     """
@@ -1081,11 +1060,6 @@ def iEF2(combo_if_true, latch_or_combo_if_false,
         debug(f"_is_Enter_F2:  {_enter_is_F2    = }")
         return combo_list
     return _is_Enter_F2
-
-
-# def iEF2(*args, **kwargs):
-#     """wrapper to shorten name of `is_Enter_F2` function"""
-#     return is_Enter_F2(*args, **kwargs)
 
 
 def iEF2NT():
