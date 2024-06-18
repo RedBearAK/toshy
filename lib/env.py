@@ -6,7 +6,7 @@ import time
 import shutil
 import subprocess
 
-# ENV module version: 2023-10-13
+# ENV module version: 2024-06-18
 
 VERBOSE = True
 FLUSH = True
