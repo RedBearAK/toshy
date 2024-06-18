@@ -241,6 +241,8 @@ def get_env_info():
         'Enlightenment':            'enlightenment',
         'GNOME':                    'gnome',
         'Hyprland':                 'hyprland',
+        'i3':                       'i3',
+        'i3wm':                     'i3',
         'IceWM':                    'icewm',
         'KDE':                      'kde',
         'LXDE':                     'lxde',
@@ -270,7 +272,7 @@ def get_env_info():
 
     # say DE should be added to list only if it it isn't None
     if not DESKTOP_ENV and _desktop_env is not None:
-        error(f'Desktop Environment not in de_names list! Should fix this.\n\t{_desktop_env}')
+        error(f'DE or window manager not in desktop_env_names list! Should fix this.\n\t{_desktop_env}')
         DESKTOP_ENV = _desktop_env
 
     # do this only if DESKTOP_ENV is still None after the above step
