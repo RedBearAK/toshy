@@ -4,7 +4,7 @@
 # Preferences app for Toshy, using tkinter GUI and "Sun Valley" theme
 TOSHY_PART      = 'gui'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Preferences app'  # pretty name to print out
-APP_VERSION     = '2024.0508'
+APP_VERSION     = '2024.0620'
 
 # -------- COMMON COMPONENTS --------------------------------------------------
 
@@ -82,39 +82,18 @@ def signal_handler(sig, frame):
 
 signal.signal(signal.SIGINT,    signal_handler)
 signal.signal(signal.SIGQUIT,   signal_handler)
-signal.signal(signal.SIGHUP,    signal_handler)
-signal.signal(signal.SIGUSR1,   signal_handler)
-signal.signal(signal.SIGUSR2,   signal_handler)
 #########################################################################
 # Let signal handler be defined and called before other things ^^^^^^^
 
 
 USER_ID         = f'{os.getuid()}'
 # support multiple simultaneous users via per-user temp folder
-TOSHY_USER_TMP_DIR   = f'/tmp/toshy_uid{USER_ID}'
+RUN_TMP_DIR                     = os.environ.get('XDG_RUNTIME_DIR', f'/tmp/toshy_uid{USER_ID}')
+TOSHY_RUN_TMP_DIR               = os.path.join(RUN_TMP_DIR, 'toshy_runtime_cache')
 
-PIPE_FILE_DIR   = f'{TOSHY_USER_TMP_DIR}/pipe'
-PIPE_FILE_NAME  = f'toshy_{TOSHY_PART}.pipe'
-PIPE_FILE       = os.path.join(PIPE_FILE_DIR, PIPE_FILE_NAME)
-
-if not os.path.exists(PIPE_FILE_DIR):
-    try:
-        os.makedirs(PIPE_FILE_DIR, mode=0o700, exist_ok=True)
-    except Exception as e:
-        error(f'Problem creating pipe file directory: {PIPE_FILE_DIR}')
-        error(e)
-
-PREF_FILE_DIR   = f'{current_folder_path}'
-PREF_FILE_NAME  = f'toshy_user_preferences.json'
-PREF_FILE       = os.path.join(PREF_FILE_DIR, PREF_FILE_NAME)
-
-DB_FILE_DIR     = f'{current_folder_path}'
-DB_FILE_NAME    = f'toshy_user_preferences.sqlite'
-DB_FILE         = os.path.join(DB_FILE_DIR, DB_FILE_NAME)
-
-LOCK_FILE_DIR   = f'{TOSHY_USER_TMP_DIR}/lock'
-LOCK_FILE_NAME  = f'toshy_{TOSHY_PART}.lock'
-LOCK_FILE       = os.path.join(LOCK_FILE_DIR, LOCK_FILE_NAME)
+LOCK_FILE_DIR                   = f'{TOSHY_RUN_TMP_DIR}/lock'
+LOCK_FILE_NAME                  = f'toshy_{TOSHY_PART}.lock'
+LOCK_FILE                       = os.path.join(LOCK_FILE_DIR, LOCK_FILE_NAME)
 
 if not os.path.exists(LOCK_FILE_DIR):
     try:
@@ -126,7 +105,7 @@ if not os.path.exists(LOCK_FILE_DIR):
 # recursively set user's Toshy temp folder as only read/write by owner
 try:
     chmod_cmd = shutil.which('chmod')
-    os.system(f'{chmod_cmd} 0700 {TOSHY_USER_TMP_DIR}')
+    os.system(f'{chmod_cmd} 0700 {TOSHY_RUN_TMP_DIR}')
 except Exception as e:
     error(f'NON-FATAL: Problem when setting permissions on temp folder.')
     error(e)

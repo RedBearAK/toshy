@@ -4,7 +4,7 @@
 # Indicator tray icon menu app for Toshy, using pygobject/gi
 TOSHY_PART      = 'tray'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Tray Icon app'
-APP_VERSION     = '2024.0508'
+APP_VERSION     = '2024.0620'
 
 # -------- COMMON COMPONENTS --------------------------------------------------
 
@@ -93,30 +93,27 @@ signal.signal(signal.SIGQUIT,   signal_handler)
 
 USER_ID         = f'{os.getuid()}'
 # support multiple simultaneous users via per-user temp folder
-TOSHY_USER_TMP_DIR   = f'/tmp/toshy_uid{USER_ID}'
+RUN_TMP_DIR                     = os.environ.get('XDG_RUNTIME_DIR', f'/tmp/toshy_uid{USER_ID}')
+TOSHY_RUN_TMP_DIR               = os.path.join(RUN_TMP_DIR, 'toshy_runtime_cache')
 
-PREF_FILE_DIR   = f'{current_folder_path}'
-PREF_FILE_NAME  = f'toshy_user_preferences.json'
-PREF_FILE       = os.path.join(PREF_FILE_DIR, PREF_FILE_NAME)
-
-LOCK_FILE_DIR   = f'{TOSHY_USER_TMP_DIR}/lock'
-LOCK_FILE_NAME  = f'toshy_{TOSHY_PART}.lock'
-LOCK_FILE       = os.path.join(LOCK_FILE_DIR, LOCK_FILE_NAME)
+LOCK_FILE_DIR                   = f'{TOSHY_RUN_TMP_DIR}/lock'
+LOCK_FILE_NAME                  = f'toshy_{TOSHY_PART}.lock'
+LOCK_FILE                       = os.path.join(LOCK_FILE_DIR, LOCK_FILE_NAME)
 
 if not os.path.exists(LOCK_FILE_DIR):
     try:
         os.makedirs(LOCK_FILE_DIR, mode=0o700, exist_ok=True)
     except Exception as e:
-        debug(f'NON-FATAL ERROR: Problem creating lockfile directory: {LOCK_FILE_DIR}')
-        debug(e)
+        error(f'NON-FATAL: Problem creating lockfile directory: {LOCK_FILE_DIR}')
+        error(e)
 
 # recursively set user's Toshy temp folder as only read/write by owner
 try:
     chmod_cmd = shutil.which('chmod')
-    os.system(f'{chmod_cmd} 0700 {TOSHY_USER_TMP_DIR}')
+    os.system(f'{chmod_cmd} 0700 {TOSHY_RUN_TMP_DIR}')
 except Exception as e:
-    debug(f'NON-FATAL ERROR: Problem when setting permissions on temp folder.')
-    debug(e)
+    error(f'NON-FATAL: Problem when setting permissions on temp folder.')
+    error(e)
 
 ###############################################################################
 # START of functions dealing with the lockfile
