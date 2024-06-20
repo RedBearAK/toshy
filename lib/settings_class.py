@@ -2,6 +2,7 @@ import os
 import inspect
 import sqlite3
 
+from pprint import pprint
 from typing import List, Dict, Optional, Tuple, Union
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
@@ -77,7 +78,7 @@ class Settings:
 
             if table_is_empty("config_preferences"):
                 # Save the default values, only if the table is empty
-                self.save_config_preferences(db_cursor)
+                self._save_config_preferences(db_cursor)
 
             # Create the table for Most Recently Used Layouts if it does not exist
             if not table_exists("mru_layouts"):
@@ -106,7 +107,7 @@ class Settings:
 
             if table_is_empty("mru_layouts"):
                 # Save the default values, only if the table is empty
-                self.save_mru_layouts(db_cursor)
+                self._save_mru_layouts(db_cursor)
 
     def watch_database(self):
         # initialize observer to watch for database changes
@@ -120,13 +121,7 @@ class Settings:
         if event.src_path == self.prefs_db_file_path:
             self.load_settings()
 
-    def save_settings(self):
-        with sqlite3.connect(self.prefs_db_file_path) as db_connection:
-            db_cursor = db_connection.cursor()
-            self.save_config_preferences(db_cursor)
-            self.save_mru_layouts(db_cursor)
-
-    def save_config_preferences(self, db_cursor: sqlite3.Cursor):
+    def _save_config_preferences(self, db_cursor: sqlite3.Cursor):
         sql_query = "INSERT OR REPLACE INTO config_preferences (name, value) VALUES (?, ?)"
         settings = [
             ('autostart_tray_icon',     str(self.autostart_tray_icon)),
@@ -145,7 +140,7 @@ class Settings:
         for setting_name, setting_value in settings:
             db_cursor.execute(sql_query, (setting_name, setting_value))
 
-    def save_mru_layouts(self, db_cursor: sqlite3.Cursor):
+    def _save_mru_layouts(self, db_cursor: sqlite3.Cursor):
         sql_query = '''
             INSERT INTO mru_layouts
             (layout_code, variant_code)
@@ -154,12 +149,20 @@ class Settings:
         # self.mru_layout is a tuple, taking care of both fields being inserted
         db_cursor.execute(sql_query, self.mru_layout)
 
+    def save_settings(self):
+        with sqlite3.connect(self.prefs_db_file_path) as db_connection:
+            db_cursor = db_connection.cursor()
+            self._save_config_preferences(db_cursor)
+            self._save_mru_layouts(db_cursor)
+            debug("Settings saved in database using Settings class method.")
+
     def load_settings(self):
         
         with sqlite3.connect(self.prefs_db_file_path) as db_connection:
             db_cursor = db_connection.cursor()
 
             db_cursor.execute("SELECT * FROM config_preferences")
+
             rows_prefs: List[Tuple[str, str]] = db_cursor.fetchall()
             for row in rows_prefs:
                 # Convert the string value to a Python boolean correctly
@@ -208,9 +211,9 @@ class Settings:
                             if not callable(getattr(self, attr)) and 
                             not attr.startswith("__")]
 
-        # filter out attributes that are not strings or booleans
-        filtered_attributes = [attr for attr in all_attributes 
-                                if isinstance(getattr(self, attr), (str, bool, int))]
+        # Filter attributes further only if a specific attribute should be ignored.
+        # Removed earlier list comprehension that limited data types too much.
+        filtered_attributes = all_attributes
 
         # create a list of tuples with attribute name and value pairs
         settings_list = [(attr, getattr(self, attr)) for attr in filtered_attributes]
@@ -273,18 +276,18 @@ class Settings:
 
     def __str__(self):
         return f"""Current settings:
-        -------------------------------------------
+        ------------------------------------------------------------------------------
         calling_module          = '{self.calling_module}'
         prefs_db_file_path      = '{self.prefs_db_file_path}'
-        -------------------------------------------
+        ------------------------------------------------------------------------------
         autostart_tray_icon     = {self.autostart_tray_icon}
         gui_dark_theme          = {self.gui_dark_theme}
-        -------------------------------------------
+        ------------------------------------------------------------------------------
         override_kbtype         = '{self.override_kbtype}'
-        -------------------------------------------
+        ------------------------------------------------------------------------------
         optspec_layout          = '{self.optspec_layout}'
         mru_layout              = {self.mru_layout}
-        -------------------------------------------
+        ------------------------------------------------------------------------------
         forced_numpad           = {self.forced_numpad}
         media_arrows_fix        = {self.media_arrows_fix}
         multi_lang              = {self.multi_lang}
@@ -292,4 +295,5 @@ class Settings:
         Caps2Esc_Cmd            = {self.Caps2Esc_Cmd}
         Enter2Ent_Cmd           = {self.Enter2Ent_Cmd}
         ST3_in_VSCode           = {self.ST3_in_VSCode}
-        -------------------------------------------"""
+        ------------------------------------------------------------------------------
+        """
