@@ -734,7 +734,7 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "dbus",
                             "evtest",
                             "gcc", "git", "gobject-introspection",
-                            "libappindicator-gtk3", "libnotify",
+                            "libappindicator-gtk3", "libnotify", "libxkbcommon",
                             "pkg-config", "python", "python-dbus", "python-pip",
                             "systemd",
                             "tk",
