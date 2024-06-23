@@ -1868,7 +1868,7 @@ class PythonVenvQuirksHandler():
     def __init__(self) -> None:
         pass
 
-    def handle_quirks_CentOS_7(self):
+    def handle_venv_quirks_CentOS_7(self):
         # avoid using systemd packages/services for CentOS 7
         cnfg.systemctl_present = False
         # Path where Python 3.8 should have been installed by this point
@@ -1880,7 +1880,7 @@ class PythonVenvQuirksHandler():
             error("Failed to install Toshy from admin user first?")
             safe_shutdown(1)
 
-    def handle_quirks_CentOS_Stream_8(self):
+    def handle_venv_quirks_CentOS_Stream_8(self):
         """Use a newer Python version for the venv in CentOS Stream 8."""
         # TODO: Add higher version if ever necessary (keep minimum 3.8)
         min_mnr_ver = cnfg.curr_py_rel_ver_mnr - 3           # check up to 2 vers before current
@@ -1898,7 +1898,7 @@ class PythonVenvQuirksHandler():
                 error(  f'ERROR: Did not find any appropriate Python interpreter version.')
                 safe_shutdown(1)
 
-    def handle_quirks_Leap(self):
+    def handle_venv_quirks_Leap(self):
         print('Handling a Python virtual environment quirk in Leap...')
         # Change the Python interpreter path to use current release version from pkg list
         # if distro is openSUSE Leap type (instead of using old 3.6 Python version).
@@ -1924,14 +1924,14 @@ class PythonVenvQuirksHandler():
                     f'({cnfg.curr_py_rel_ver_str}) not found. ')
             safe_shutdown(1)
 
-    def handle_quirks_OpenMandriva(self, venv_cmd_lst):
+    def handle_venv_quirks_OpenMandriva(self, venv_cmd_lst):
         print('Handling a Python virtual environment quirk in OpenMandriva...')
         # We need to run the exact same command twice on OpenMandriva, for unknown reasons.
         # So this instance of the command is just "prep" for the seemingly duplicate
         # command that follows it in setup_python_vir_env(). 
         subprocess.run(venv_cmd_lst, check=True)
 
-    def handle_quirks_RHEL(self):
+    def handle_venv_quirks_RHEL(self):
         """Use a newer Python version for the venv in RHEL"""
         # TODO: Add higher version if ever necessary (keep minimum 3.8)
         potential_versions = ['3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
@@ -1942,6 +1942,22 @@ class PythonVenvQuirksHandler():
                 cnfg.py_interp_ver_str  = version
                 break
 
+    def handle_venv_quirks_Tumbleweed(self):
+        print('Handling a Python virtual environment quirk in Tumbleweed...')
+
+        # Needed to make a symlink to get `xkbcommon` to install in the venv:
+        # sudo ln -s /usr/include/libxkbcommon/xkbcommon /usr/include/
+
+        # As an alternative without `sudo`, update C_INCLUDE_PATH so that the
+        # `xkbcommon.h` include file can be found during build process.
+        include_path = "/usr/include/libxkbcommon"
+        if 'C_INCLUDE_PATH' in os.environ:
+            os.environ['C_INCLUDE_PATH'] = f"{include_path}:{os.environ['C_INCLUDE_PATH']}"
+        else:
+            os.environ['C_INCLUDE_PATH'] = include_path
+        
+        print(f"C_INCLUDE_PATH updated: {os.environ['C_INCLUDE_PATH']}")
+
 
 def setup_python_vir_env():
     """Setup a virtual environment to install Python packages"""
@@ -1950,19 +1966,21 @@ def setup_python_vir_env():
     # Create the virtual environment if it doesn't exist
     if not os.path.exists(cnfg.venv_path):
         if cnfg.DISTRO_ID in distro_groups_map['leap-based']:
-            venv_quirks_handler.handle_quirks_Leap()
+            venv_quirks_handler.handle_venv_quirks_Leap()
+        elif cnfg.DISTRO_ID in distro_groups_map['tumbleweed-based']:
+            venv_quirks_handler.handle_venv_quirks_Tumbleweed()
         elif cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '7':
-            venv_quirks_handler.handle_quirks_CentOS_7()
+            venv_quirks_handler.handle_venv_quirks_CentOS_7()
         elif cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '8':
-            venv_quirks_handler.handle_quirks_CentOS_Stream_8()
+            venv_quirks_handler.handle_venv_quirks_CentOS_Stream_8()
         elif cnfg.DISTRO_ID in distro_groups_map['rhel-based']:
-            venv_quirks_handler.handle_quirks_RHEL()
+            venv_quirks_handler.handle_venv_quirks_RHEL()
         try:
             print(f'Using Python version {cnfg.py_interp_ver_str}.')
             venv_cmd_lst = [cnfg.py_interp_path, '-m', 'venv', cnfg.venv_path]
             subprocess.run(venv_cmd_lst, check=True)
             if cnfg.DISTRO_ID in ['openmandriva']:
-                venv_quirks_handler.handle_quirks_OpenMandriva(venv_cmd_lst)
+                venv_quirks_handler.handle_venv_quirks_OpenMandriva(venv_cmd_lst)
         except subprocess.CalledProcessError as proc_err:
             error(f'ERROR: Problem creating the Python virtual environment:\n\t{proc_err}')
             safe_shutdown(1)
