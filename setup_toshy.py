@@ -1903,6 +1903,7 @@ class PythonVenvQuirksHandler():
         # if distro is openSUSE Leap type (instead of using old 3.6 Python version).
         if shutil.which(f'python{cnfg.curr_py_rel_ver_str}'):
             cnfg.py_interp_path = shutil.which(f'python{cnfg.curr_py_rel_ver_str}')
+            cnfg.py_interp_ver_str = cnfg.curr_py_rel_ver_str
             # print(f'Using Python version {cnfg.curr_py_rel_ver_str}.')
         else:
             print(  f'Current stable Python release version '
