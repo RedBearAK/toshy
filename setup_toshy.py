@@ -655,7 +655,7 @@ pkg_groups_map: Dict[str, List[str]] = {
     'tumbleweed-based':    ["cairo-devel",
                             "dbus-1-daemon", "dbus-1-devel",
                             "gcc", "git", "gobject-introspection-devel",
-                            "libappindicator3-devel", "libnotify-tools",
+                            "libappindicator3-devel", "libnotify-tools", "libxkbcommon-devel",
                             # f"python{py_pkg_ver_str}-dbus-python-devel",
                             "python3-dbus-python-devel",
                             # f"python{py_pkg_ver_str}-devel",
