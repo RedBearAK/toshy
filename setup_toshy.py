@@ -1904,7 +1904,19 @@ class PythonVenvQuirksHandler():
         if shutil.which(f'python{cnfg.curr_py_rel_ver_str}'):
             cnfg.py_interp_path = shutil.which(f'python{cnfg.curr_py_rel_ver_str}')
             cnfg.py_interp_ver_str = cnfg.curr_py_rel_ver_str
-            # print(f'Using Python version {cnfg.curr_py_rel_ver_str}.')
+
+            # Need to make a symlink to get `xkbcommon` to install in the venv:
+            # sudo ln -s /usr/include/libxkbcommon/xkbcommon /usr/include/
+
+            # Update C_INCLUDE_PATH for the build process
+            include_path = "/usr/include/libxkbcommon"  # Adjust the path to where xkbcommon.h is located
+            if 'C_INCLUDE_PATH' in os.environ:
+                os.environ['C_INCLUDE_PATH'] = f"{include_path}:{os.environ['C_INCLUDE_PATH']}"
+            else:
+                os.environ['C_INCLUDE_PATH'] = include_path
+            
+            print(f"C_INCLUDE_PATH updated: {os.environ['C_INCLUDE_PATH']}")
+
         else:
             print(  f'Current stable Python release version '
                     f'({cnfg.curr_py_rel_ver_str}) not found. ')
