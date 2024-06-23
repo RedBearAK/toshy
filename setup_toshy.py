@@ -695,6 +695,7 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "tk", "typelib-1_0-AyatanaAppIndicator3-0_1",
                             "zenity"],
 
+    # TODO: Add correct `libxkbcommon-devel` package. Maybe `lib64xkbcommon-devel`? 
     'mandriva-based':      ["cairo-devel",
                             "dbus-daemon", "dbus-devel",
                             "git", "gobject-introspection-devel",
@@ -712,6 +713,7 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "input-utils",
                             "libcairo2-dev", "libdbus-1-dev", "libgirepository1.0-dev",
                                 "libjpeg-dev", "libnotify-bin", "libsystemd-dev", "libwayland-dev",
+                                "libxkbcommon-dev",
                             "python3-dbus", "python3-dev", "python3-pip", "python3-tk",
                                 "python3-venv",
                             "zenity"],
@@ -722,6 +724,7 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "input-utils",
                             "libcairo2-dev", "libdbus-1-dev", "libgirepository1.0-dev",
                                 "libjpeg-dev", "libnotify-bin", "libsystemd-dev", "libwayland-dev",
+                                "libxkbcommon-dev",
                             "python3-dbus", "python3-dev", "python3-pip", "python3-tk",
                                 "python3-venv",
                             "zenity"],
