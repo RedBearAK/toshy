@@ -788,7 +788,7 @@ remove_pkgs_map = {
 pip_pkgs   = [
     # pinning pygobject to 3.44.1 (or earlier) to get through install on RHEL 8.x and clones
     "lockfile", "dbus-python", "systemd-python", "pygobject<=3.44.1", "tk",
-    "sv_ttk", "watchdog", "psutil", 
+    "sv_ttk", "watchdog", "psutil", "xkbcommon",
 
     # TODO: Check on 'python-xlib' project by early-mid 2024 to see if this bug is fixed:
     #   [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']
@@ -796,7 +796,8 @@ pip_pkgs   = [
 
     # everything below here is just to make keymapper install smoother
     # keymapper may be 'xwaykeyz', 'keyszer' or a derivative/fork with same requirements
-    "hyprpy", "i3ipc", "pywayland", # "pywlroots",
+    "hyprpy", "i3ipc", "pywayland",
+    # "pywlroots",
     # installing 'pywlroots' will require native pkg 'libxkbcommon-devel' (Fedora)
     "inotify-simple", "evdev", "appdirs", "ordered-set", "python-xlib==0.31", "six"
 ]
