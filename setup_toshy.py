@@ -671,12 +671,10 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "dbus-1-devel",
                             "gcc", "git", "gobject-introspection-devel",
                             "libappindicator3-devel", "libnotify-tools", "libxkbcommon-devel",
-                            # "python3-dbus-python-devel",  # switch to versioned package
-                            "python3-xkbcommon",
-                                "python311",
-                                "python311-dbus-python-devel",
-                                "python311-devel",
-                                "python311-tk",
+                            "python311",
+                            "python311-dbus-python-devel",
+                            "python311-devel",
+                            "python311-tk",
                             "systemd-devel",
                             "tk", "typelib-1_0-AyatanaAppIndicator3-0_1",
                             "zenity"],
@@ -1905,11 +1903,12 @@ class PythonVenvQuirksHandler():
             cnfg.py_interp_path = shutil.which(f'python{cnfg.curr_py_rel_ver_str}')
             cnfg.py_interp_ver_str = cnfg.curr_py_rel_ver_str
 
-            # Need to make a symlink to get `xkbcommon` to install in the venv:
+            # Needed to make a symlink to get `xkbcommon` to install in the venv:
             # sudo ln -s /usr/include/libxkbcommon/xkbcommon /usr/include/
 
-            # Update C_INCLUDE_PATH for the build process
-            include_path = "/usr/include/libxkbcommon"  # Adjust the path to where xkbcommon.h is located
+            # As an alternative without `sudo`, update C_INCLUDE_PATH so that the
+            # `xkbcommon.h` include file can be found during build process.
+            include_path = "/usr/include/libxkbcommon"
             if 'C_INCLUDE_PATH' in os.environ:
                 os.environ['C_INCLUDE_PATH'] = f"{include_path}:{os.environ['C_INCLUDE_PATH']}"
             else:
