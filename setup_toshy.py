@@ -707,7 +707,6 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "xset",
                             "zenity"],
 
-    # TODO: see if this needs "dbus-daemon" added as dependency (for containers)
     'ubuntu-based':        ["curl",
                             "git", "gir1.2-ayatanaappindicator3-0.1",
                             "input-utils",
@@ -718,7 +717,6 @@ pkg_groups_map: Dict[str, List[str]] = {
                                 "python3-venv",
                             "zenity"],
 
-    # TODO: see if this needs "dbus-daemon" added as dependency (for containers)
     'debian-based':        ["curl",
                             "git", "gir1.2-ayatanaappindicator3-0.1",
                             "input-utils",
@@ -729,7 +727,6 @@ pkg_groups_map: Dict[str, List[str]] = {
                                 "python3-venv",
                             "zenity"],
 
-    # TODO: see if this needs "dbus-daemon" added as dependency (for containers)
     'arch-based':          ["cairo",
                             "dbus",
                             "evtest",
@@ -740,7 +737,7 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "tk",
                             "zenity"],
 
-    # TODO: see if this needs "dbus-daemon" added as dependency (for containers)
+    # TODO: Add correct package to support installing `xkbcommon` pip package.
     'solus-based':         ["gcc", "git",
                             "libayatana-appindicator", "libcairo-devel", "libnotify",
                             "pip", "python3-dbus", "python3-devel", "python3-tkinter",
@@ -748,7 +745,7 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "systemd-devel",
                             "zenity"],
 
-    # TODO: see if this needs "dbus-daemon" added as dependency (for containers)
+    # TODO: Add correct package to support installing `xkbcommon` pip package.
     'void-based':          ["cairo-devel", "curl",
                             "dbus-devel",
                             "evtest",
@@ -760,7 +757,8 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "xset",
                             "zenity"],
 
-    # TODO: see if this needs "dbus-daemon" added as dependency (for containers)
+    # NOTE: KaOS is not actually supported at this time!
+    # TODO: Add correct package to support installing `xkbcommon` pip package.
     'kaos-based':          ["cairo",
                             "dbus",
                             "evtest",
