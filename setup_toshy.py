@@ -701,7 +701,7 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "git", "gobject-introspection-devel",
                             "lib64ayatana-appindicator3_1", "lib64ayatana-appindicator3-gir0.1",
                                 "lib64cairo-gobject2", "lib64python-devel", "lib64systemd-devel",
-                                "libnotify",
+                                "libnotify", "lib64xkbcommon-devel",
                             "python-dbus", "python-dbus-devel", "python-ensurepip", "python3-pip",
                             "task-devel", "tkinter",
                             "xset",
