@@ -1267,11 +1267,13 @@ def install_distro_pkgs():
             result = subprocess.run(['pacman', '-Q', package], stdout=DEVNULL, stderr=DEVNULL)
             return result.returncode == 0
 
-        pkgs_to_install = [
-            pkg
-            for pkg in cnfg.pkgs_for_distro
-            if not is_pkg_installed_pacman(pkg)
-        ]
+        pkgs_to_install = []
+        for pkg in cnfg.pkgs_for_distro:
+            if not is_pkg_installed_pacman(pkg):
+                pkgs_to_install.append(pkg)
+            else:
+                print(fancy_str(f"Package '{pkg}' is already installed. Skipping.", "green"))
+
         if pkgs_to_install:
             cmd_lst = ['sudo', 'pacman', '-S', '--noconfirm']
             native_pkg_installer.install_pkg_list(cmd_lst, pkgs_to_install)
