@@ -795,7 +795,7 @@ remove_pkgs_map = {
 pip_pkgs   = [
     # pinning pygobject to 3.44.1 (or earlier) to get through install on RHEL 8.x and clones
     "lockfile", "dbus-python", "systemd-python", "pygobject<=3.44.1", "tk",
-    "sv_ttk", "watchdog", "psutil", "xkbcommon",
+    "sv_ttk", "watchdog", "psutil", "xkbcommon", "xkbregistry",
 
     # TODO: Check on 'python-xlib' project by early-mid 2024 to see if this bug is fixed:
     #   [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']
