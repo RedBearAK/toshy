@@ -743,9 +743,10 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "tk",
                             "zenity"],
 
-    # TODO: Add correct package to support installing `xkbcommon` and `xkbregistry` pip packages.
     'solus-based':         ["gcc", "git",
                             "libayatana-appindicator", "libcairo-devel", "libnotify",
+                                "libxkbcommon-devel",
+                                # "libxkbregistry-devel" not available or needed on Solus
                             "pip", "python3-dbus", "python3-devel", "python3-tkinter",
                                 "python-dbus-devel", "python-gobject-devel",
                             "systemd-devel",
