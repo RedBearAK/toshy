@@ -445,10 +445,12 @@ browsers_chrome = [
     "Chromium-browser",
     "Falkon",
     "Google-chrome",
+    "Io.github.ungoogled_software.ungoogled_chromium",
     "microsoft-edge",
     "microsoft-edge-dev",
     "org.deepin.browser",
     "org.kde.falkon",
+    ".*ungoogled_chromium",
     "Vivaldi.*",
 ]
 browsers_chrome         = [x.casefold() for x in browsers_chrome]
