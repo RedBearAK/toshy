@@ -804,9 +804,12 @@ pip_pkgs   = [
 
     # everything below here is just to make keymapper install smoother
     # keymapper may be 'xwaykeyz', 'keyszer' or a derivative/fork with same requirements
+
     "hyprpy", "i3ipc", "pywayland",
+
     # "pywlroots",
     # installing 'pywlroots' will require native pkg 'libxkbcommon-devel' (Fedora)
+
     "inotify-simple", "evdev", "appdirs", "ordered-set", "python-xlib==0.31", "six"
 ]
 
