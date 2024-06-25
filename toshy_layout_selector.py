@@ -2,15 +2,15 @@
 
 import os
 import sys
-import time
 import signal
 import sqlite3
 import tkinter as tk
-import xml.etree.ElementTree as ET
+
+from xkbregistry import rxkb
 
 from tkinter import font
 from tkinter import messagebox as MBX
-from lib.settings_class import Settings, debug, error
+from lib.settings_class import Settings, debug
 
 
 #########################################################################
@@ -36,6 +36,14 @@ print(f"Current mru_layout setting: {cnfg.mru_layout}")
 
 
 
+def print_all_records_from_database(cur: sqlite3.Cursor):
+    cur.execute("SELECT * FROM LayoutInfo ORDER BY layout_name, variant_name")
+    rows = cur.fetchall()
+    print("Total Records: ", len(rows))
+    for row in rows:
+        print(row)
+
+
 def setup_layout_database():
     run_tmp_dir = os.environ.get('XDG_RUNTIME_DIR', '/tmp')
     db_file_path = os.path.join(run_tmp_dir, 'toshy_layout_info.sqlite')
@@ -43,17 +51,19 @@ def setup_layout_database():
     if os.path.exists(db_file_path):
         os.remove(db_file_path)     # FOR DEBUGGING, probably can remove this later
 
-    cnxn = sqlite3.connect(db_file_path)
+    # cnxn = sqlite3.connect(db_file_path)
+    cnxn = sqlite3.connect(':memory:')
     cur = cnxn.cursor()
 
     # Create a table
     cur.execute('''
     CREATE TABLE IF NOT EXISTS LayoutInfo (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        layout_code TEXT,
+        layout_fullname TEXT,
+        layout_name TEXT,
+        variant_name TEXT,
         layout_description TEXT,
-        variant_code TEXT,
-        variant_description TEXT
+        layout_brief TEXT
     )
     ''')
     cnxn.commit()
@@ -61,44 +71,39 @@ def setup_layout_database():
 
 
 def parse_xkb_layouts_and_variants(cnxn: sqlite3.Connection, cur: sqlite3.Cursor):
-    xkb_config_path = '/usr/share/X11/xkb/rules/evdev.xml'
-    tree = ET.parse(xkb_config_path)
-    root = tree.getroot()
+    ctx = rxkb.Context()
 
-    for layout in root.findall(".//layout"):
-        layout_code = layout.find('configItem/name').text
-        layout_description = layout.find('configItem/description').text
+    # Iterate through all layouts available in the context
+    for layout_fullname, layout in ctx.layouts.items():
+        xkb_layout: rxkb.Layout = layout     # type hint to help out VSCode syntax highlighting
+        layout_name = xkb_layout.name
+        layout_description = xkb_layout.description
+        variant_name = xkb_layout.variant if xkb_layout.variant else None
+        layout_brief = xkb_layout.brief
 
-        # Insert the layout itself as a variant (if it should be selectable without a specific variant)
-        sql_insert_layout = (
+        # SQL to insert layout/variant information
+        sql_insert_layout_variant = (
             'INSERT INTO LayoutInfo ('
-            'layout_code, layout_description, '
-            'variant_code, variant_description'
-            ') VALUES (?, ?, ?, ?)'
+            'layout_fullname, '
+            'layout_name, variant_name, '
+            'layout_description, '
+            'layout_brief'
+            ') VALUES (?, ?, ?, ?, ?)'
         )
         try:
-            cur.execute(sql_insert_layout,
-                        (layout_code, layout_description, 'default', "Default"))
+            cur.execute(sql_insert_layout_variant, (layout_fullname,
+                                                    layout_name, variant_name,
+                                                    layout_description,
+                                                    layout_brief))
         except sqlite3.Error as e:
-            print(f"An error occurred while inserting default variant: \n{e}")
-
-        # Insert all variants
-        for variant in layout.findall('.//variant'):
-            variant_code = variant.find('configItem/name').text
-            variant_description = variant.find('configItem/description').text
-            sql_insert_variant = (
-                'INSERT INTO LayoutInfo ('
-                'layout_code, layout_description, '
-                'variant_code, variant_description'
-                ') VALUES (?, ?, ?, ?)'
-            )
-            cur.execute(sql_insert_variant,
-                        (layout_code, layout_description, variant_code, variant_description))
+            print(f"An error occurred while inserting layout: \n{e}")
 
     cnxn.commit()
     # Check the count of inserted records for verification
     cur.execute("SELECT COUNT(*) FROM LayoutInfo")
     print("Total records in LayoutInfo:", cur.fetchone()[0])
+
+    print_all_records_from_database(cur)
 
 
 class LayoutSelector(tk.Tk):
@@ -131,7 +136,7 @@ class LayoutSelector(tk.Tk):
         self.layout_label.pack(side=tk.TOP, fill=tk.X)
         self.variant_label.pack(side=tk.TOP, fill=tk.X)
 
-        listbox_font = font.Font(family="Helvetica", size=11) # , weight="bold")
+        listbox_font = font.Font(family="Helvetica", size=11 , weight="bold")
         self.layout_listbox = tk.Listbox(self.layout_frame, font=listbox_font, exportselection=False)
         self.variant_listbox = tk.Listbox(self.variant_frame, font=listbox_font, exportselection=False)
         self.layout_listbox.pack(side=tk.TOP, fill=tk.BOTH, expand=True, padx=5, pady=5)
@@ -149,7 +154,7 @@ class LayoutSelector(tk.Tk):
                                         command=self.submit_selection)
         self.submit_button.pack(side=tk.RIGHT, padx=10, pady=10)
 
-        self.layout_listbox.bind('<<ListboxSelect>>', self.on_layout_select)
+        # self.layout_listbox.bind('<<ListboxSelect>>', self.on_layout_select)
 
     def load_layouts(self):
         query = "SELECT DISTINCT layout_description FROM LayoutInfo ORDER BY layout_description"
@@ -165,7 +170,7 @@ class LayoutSelector(tk.Tk):
         if self.layout_listbox.curselection():
             selected_description = self.layout_listbox.get(self.layout_listbox.curselection()[0])
             self.variant_listbox.delete(0, tk.END)
-            query = "SELECT variant_description FROM LayoutInfo WHERE layout_description = ?"
+            query = "SELECT layout_description FROM LayoutInfo WHERE layout_description = ?"
             self.cursor.execute(query, (selected_description,))
             variants = self.cursor.fetchall()
 
@@ -179,27 +184,44 @@ class LayoutSelector(tk.Tk):
 
     def submit_selection(self):
 
-        if self.layout_listbox.curselection() and self.variant_listbox.curselection():
+        if self.layout_listbox.curselection(): # and self.variant_listbox.curselection():
 
             layout_description = self.layout_listbox.get(self.layout_listbox.curselection()[0])
-            variant_description = self.variant_listbox.get(self.variant_listbox.curselection()[0])
+            # variant_description = self.variant_listbox.get(self.variant_listbox.curselection()[0])
 
-            self.cursor.execute("SELECT layout_code FROM LayoutInfo WHERE layout_description = ?", (layout_description,))
-            layout_code = self.cursor.fetchone()[0]
-            self.cursor.execute("SELECT variant_code FROM LayoutInfo WHERE variant_description = ?", (variant_description,))
-            variant_code = self.cursor.fetchone()[0]
+            query = (   'SELECT '
+                        'layout_fullname, '
+                        'layout_name, '
+                        'variant_name, '
+                        'layout_brief '
+                        'FROM LayoutInfo '
+                        'WHERE layout_description = ?'  )
+            self.cursor.execute(query, (layout_description,))
+            layout_fullname, layout_name, variant_name, layout_brief = self.cursor.fetchone()
 
-            output_str = (f"Selected Layout: '{layout_code}', Selected Variant: '{variant_code}' \n"
-                            f"Layout Desc: '{layout_description}', Variant Desc: '{variant_description}'")
+            # self.cursor.execute("SELECT layout_name FROM LayoutInfo WHERE layout_description = ?", (layout_description,))
+            # layout_name = self.cursor.fetchone()[0]
+
+            # self.cursor.execute("SELECT variant_name FROM LayoutInfo WHERE layout_description = ?", (layout_description,))
+            # variant_name = self.cursor.fetchone()[0]
+
+            print()
+            output_str = (  f"Layout Description:   '{layout_description}'\n"
+                            f"Layout Fullname:      '{layout_fullname}'\n"
+                            f"Layout Name:          '{layout_name}'\n"
+                            f"Variant Name:         '{variant_name}'\n"
+                            f"Layout Brief:         '{layout_brief}'")
             print(output_str)
 
-            new_layout_tup = (layout_code, variant_code)
+            new_layout_tup = (layout_name, variant_name)
 
             cnfg.mru_layout = new_layout_tup
             cnfg.save_settings()
 
+            print()
             print(f"New mru_layout setting: {cnfg.mru_layout}")
             # MBX.showinfo("Selection", output_str)
+            print()
             sys.exit(0)
 
         else:
@@ -208,6 +230,7 @@ class LayoutSelector(tk.Tk):
     def on_close(self):
         self.destroy()
         self.cnxn.close()  # Close the database connection on exit
+
 
 if __name__ == '__main__':
     cnxn, cur = setup_layout_database()
