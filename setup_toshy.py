@@ -757,7 +757,8 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "evtest",
                             "gcc", "git",
                             "libayatana-appindicator-devel", "libgirepository-devel", "libnotify",
-                                "libxkbcommon-devel", "libxkbregistry-devel",
+                                "libxkbcommon-devel",
+                                # "libxkbregistry-devel" not available or needed on Void
                             "pkg-config", "python3-dbus", "python3-devel", "python3-pip",
                                 "python3-pkgconfig", "python3-tkinter",
                             "wayland-devel", "wget",
