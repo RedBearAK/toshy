@@ -946,10 +946,6 @@ def matchProps(*,
     _name = not_name if name is None else name
     _devn = not_devn if devn is None else devn
 
-    def _isScreenFocusActive():
-        # If screen focus is lost, return False immediately
-        return False if cnfg.screen_has_focus is False else True
-
     # process lists of conditions
     if _lst is not None:
 
@@ -973,7 +969,7 @@ def matchProps(*,
                             f"See log output before traceback.\n")
 
         def _matchProps_Lst(ctx: KeyContext):
-            if not _isScreenFocusActive():
+            if not cnfg.screen_has_focus:
                 return False
             if not_lst is not None:
                 if logging_enabled: print(f"## _matchProps_Lst()[not_lst] ## {dbg=}")
@@ -990,7 +986,7 @@ def matchProps(*,
     if _devn is not None: devn_rgx = re.compile(_devn, 0 if cse else re.I)
 
     def _matchProps(ctx: KeyContext):
-        if not _isScreenFocusActive():
+        if not cnfg.screen_has_focus:
             return False
         cond_list       = []
         nt_err          = 'ERR: matchProps: NoneType in ctx.'
@@ -1208,6 +1204,7 @@ def notify_context():
         kdialog_cmd_lst = [kdialog_cmd, '--msgbox', message, '--title', 'Toshy Context Info']
         # Add icon if needed: kdialog_cmd_lst += ['--icon', '/path/to/icon']
         # TODO: Figure out why icon argument doesn't work. Need a proper icon theme folder?
+        # Figured out: Kdialog does not support custom icons!
         kdialog_cmd_lst += ['--icon', 'toshy_app_icon_rainbow']
 
         if dialog_cmd == kdialog_cmd:
@@ -3416,7 +3413,9 @@ keymap("General File Managers - Finder Mods", {
 
 # Open preferences in Firefox browsers
 keymap("Firefox Browsers Overrides", {
-    C("C-comma"):              [C("C-t"),sleep(0.1),ST("about:preferences"),sleep(0.1),C("Enter")],
+    C("C-comma"):              [C("C-t"), sleep(0.1),
+                                ST("about:preferences"),
+                                sleep(0.1), C("Enter")],            # Open preferences
     C("Shift-RC-N"):            C("Shift-C-P"),                     # Open private window with Cmd+Shift+N like other browsers
     C("RC-Backspace"):         [C("Shift-Home"), C("Backspace")],   # Delete Entire Line Left of Cursor
     C("RC-Delete"):            [C("Shift-End"), C("Delete")],       # Delete Entire Line Right of Cursor
@@ -3434,7 +3433,9 @@ keymap("Overrides for Falkon browser", {
 
 keymap("Chrome Browsers Overrides", {
     # C("C-comma"):              [C("Alt-e"), C("s"),C("Enter")], # Open preferences
-    C("C-comma"):              [C("C-t"), sleep(0.1), ST("chrome://settings"), sleep(0.1), C("Enter")], # Open preferences
+    C("C-comma"):              [C("C-t"), sleep(0.1),
+                                ST("chrome://settings"),
+                                sleep(0.1), C("Enter")],        # Open preferences
     C("RC-q"):                  C("Alt-F4"),                    # Quit Chrome(s) browsers with Cmd+Q
     # C("RC-Left"):               C("Alt-Left"),                  # Page nav: Back to prior page in history (conflict with wordwise)
     # C("RC-Right"):              C("Alt-Right"),                 # Page nav: Forward to next page in history (conflict with wordwise)
