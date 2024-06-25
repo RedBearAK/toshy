@@ -28,6 +28,8 @@ tk
 sv_ttk
 watchdog
 psutil
+xkbcommon
+xkbregistry
 
 # Installing 'pywlroots' requires native package 'libxkbcommon-devel' on Fedora.
 # pywlroots
