@@ -618,7 +618,6 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "evtest",
                             "gcc", "git", "gobject-introspection-devel",
                             "libappindicator-gtk3", "libnotify", "libxkbcommon-devel",
-                                "libxkbregistry-devel",
                             "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
                             "systemd-devel",
                             "wayland-devel",
@@ -631,7 +630,6 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "dbus-daemon", "dbus-devel",
                             "gcc", "git", "gobject-introspection-devel",
                             "libappindicator-gtk3", "libnotify", "libxkbcommon-devel",
-                                "libxkbregistry-devel",
                             "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
                             "systemd-devel",
                             "xset",
@@ -644,7 +642,6 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "evtest",
                             "gcc", "git", "gobject-introspection-devel",
                             "libappindicator-gtk3", "libnotify", "libxkbcommon-devel",
-                                "libxkbregistry-devel",
                             "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
                             "systemd-devel",
                             "xset",
@@ -659,7 +656,6 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "dbus-1-daemon", "dbus-1-devel",
                             "gcc", "git", "gobject-introspection-devel",
                             "libappindicator3-devel", "libnotify-tools", "libxkbcommon-devel",
-                                "libxkbregistry-devel",
                             # f"python{py_pkg_ver_str}-dbus-python-devel",
                             "python3-dbus-python-devel",
                             # f"python{py_pkg_ver_str}-devel",
@@ -675,7 +671,6 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "dbus-1-devel",
                             "gcc", "git", "gobject-introspection-devel",
                             "libappindicator3-devel", "libnotify-tools", "libxkbcommon-devel",
-                                "libxkbregistry-devel",
                             "python311",
                             "python311-dbus-python-devel",
                             "python311-devel",
@@ -690,7 +685,6 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "dbus-1-daemon", "dbus-1-devel",
                             "gcc", "git", "gobject-introspection-devel",
                             "libappindicator3-devel", "libnotify-tools", "libxkbcommon-devel",
-                                "libxkbregistry-devel",
                             f"python{py_pkg_ver_str}-dbus-python-devel",
                             # "python3-dbus-python-devel",
                             f"python{py_pkg_ver_str}-devel",
@@ -706,7 +700,7 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "git", "gobject-introspection-devel",
                             "lib64ayatana-appindicator3_1", "lib64ayatana-appindicator3-gir0.1",
                                 "lib64cairo-gobject2", "lib64python-devel", "lib64systemd-devel",
-                                "libnotify", "lib64xkbcommon-devel", "lib64xkbregistry-devel",
+                                "libnotify", "lib64xkbcommon-devel",
                             "python-dbus", "python-dbus-devel", "python-ensurepip", "python3-pip",
                             "task-devel", "tkinter",
                             "xset",
@@ -716,8 +710,8 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "git", "gir1.2-ayatanaappindicator3-0.1",
                             "input-utils",
                             "libcairo2-dev", "libdbus-1-dev", "libgirepository1.0-dev",
-                                "libjpeg-dev", "libnotify-bin", "libsystemd-dev", "libwayland-dev",
-                                "libxkbcommon-dev", "libxkbregistry-dev",
+                                "libjpeg-dev", "libnotify-bin", "libsystemd-dev",
+                                "libwayland-dev", "libxkbcommon-dev",
                             "python3-dbus", "python3-dev", "python3-pip", "python3-tk",
                                 "python3-venv",
                             "zenity"],
@@ -726,8 +720,8 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "git", "gir1.2-ayatanaappindicator3-0.1",
                             "input-utils",
                             "libcairo2-dev", "libdbus-1-dev", "libgirepository1.0-dev",
-                                "libjpeg-dev", "libnotify-bin", "libsystemd-dev", "libwayland-dev",
-                                "libxkbcommon-dev", "libxkbregistry-dev",
+                                "libjpeg-dev", "libnotify-bin", "libsystemd-dev",
+                                "libwayland-dev", "libxkbcommon-dev",
                             "python3-dbus", "python3-dev", "python3-pip", "python3-tk",
                                 "python3-venv",
                             "zenity"],
@@ -737,7 +731,6 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "evtest",
                             "gcc", "git", "gobject-introspection",
                             "libappindicator-gtk3", "libnotify", "libxkbcommon",
-                                "libxkbregistry",
                             "pkg-config", "python", "python-dbus", "python-pip",
                             "systemd",
                             "tk",
@@ -746,7 +739,6 @@ pkg_groups_map: Dict[str, List[str]] = {
     'solus-based':         ["gcc", "git",
                             "libayatana-appindicator", "libcairo-devel", "libnotify",
                                 "libxkbcommon-devel",
-                                # "libxkbregistry-devel" not available or needed on Solus
                             "pip", "python3-dbus", "python3-devel", "python3-tkinter",
                                 "python-dbus-devel", "python-gobject-devel",
                             "systemd-devel",
@@ -758,15 +750,14 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "gcc", "git",
                             "libayatana-appindicator-devel", "libgirepository-devel", "libnotify",
                                 "libxkbcommon-devel",
-                                # "libxkbregistry-devel" not available or needed on Void
                             "pkg-config", "python3-dbus", "python3-devel", "python3-pip",
                                 "python3-pkgconfig", "python3-tkinter",
                             "wayland-devel", "wget",
                             "xset",
                             "zenity"],
 
-    # NOTE: KaOS is not actually supported at this time!
-    # TODO: Add correct package to support installing `xkbcommon` and `xkbregistry` pip packages.
+    # NOTE: KaOS is not actually supported at this time! These are preliminary package names!
+    # TODO: Add correct package to support installing `xkbcommon` pip package.
     'kaos-based':          ["cairo",
                             "dbus",
                             "evtest",
@@ -795,21 +786,27 @@ remove_pkgs_map = {
 
 
 pip_pkgs   = [
-    # pinning pygobject to 3.44.1 (or earlier) to get through install on RHEL 8.x and clones
+
+    # Pinned pygobject to 3.44.1 (or earlier) to get through install on RHEL 8.x and clones
     "lockfile", "dbus-python", "systemd-python", "pygobject<=3.44.1", "tk",
-    "sv_ttk", "watchdog", "psutil", "xkbcommon", "xkbregistry",
+    "sv_ttk", "watchdog", "psutil", "xkbcommon",
 
-    # TODO: Check on 'python-xlib' project by early-mid 2024 to see if this bug is fixed:
-    #   [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']
-    # If the bug is fixed, remove pinning to v0.31 here:
+    # NOTE: WE CANNOT USE `xkbregistry` DUE TO CONFUSION AMONG SUPPORTING NATIVE PACKAGES
+    # "xkbregistry",
 
-    # everything below here is just to make keymapper install smoother
-    # keymapper may be 'xwaykeyz', 'keyszer' or a derivative/fork with same requirements
+    # Everything below here is just to make keymapper install smoother.
+    # Keymapper may be 'xwaykeyz', 'keyszer' or a derivative/fork with same requirements.
 
     "hyprpy", "i3ipc", "pywayland",
 
+    # NOTE: Installing 'pywlroots' will require native pkg 'libxkbcommon-devel' (Fedora).
+    # We are installing 'libxkbcommon-devel' now to support 'xkbcommon' module. 
     # "pywlroots",
-    # installing 'pywlroots' will require native pkg 'libxkbcommon-devel' (Fedora)
+
+    # TODO: Check on 'python-xlib' project by mid-2025 to see if this bug is fixed:
+    #   [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']
+    # If the bug is fixed, remove pinning to v0.31 here. But it does not appear
+    # that the bug is ever likely to be fixed.
 
     "inotify-simple", "evdev", "appdirs", "ordered-set", "python-xlib==0.31", "six"
 ]
