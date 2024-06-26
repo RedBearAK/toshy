@@ -589,7 +589,7 @@ distro_groups_map: Dict[str, List[str]] = {
     # separate references for Fedora immutables using rpm-ostree
     'fedora-immutables':        ["silverblue-experimental", "kinoite-experimental"],
 
-    # separate references for Tumbleweed types versus Leap types
+    # separate references for Tumbleweed types, Leap types, MicroOS types
     'tumbleweed-based':         ["opensuse-tumbleweed"],
     'leap-based':               ["opensuse-leap"],
     'microos-based':            ["opensuse-microos", "opensuse-aeon", "opensuse-kalpa"],
