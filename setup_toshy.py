@@ -2684,7 +2684,7 @@ def apply_tweaks_KDE():
         print(f'Set task switcher main style to: "Big Icons"')
         LayoutNameAlternative_cmd          = [ kwriteconfig_cmd,
                                     '--file', 'kwinrc',
-                                    '--group', 'TabBox',
+                                    '--group', 'TabBoxAlternative',
                                     '--key', 'LayoutName', 'thumbnail_grid']
         subprocess.run(LayoutNameAlternative_cmd, check=True)
         print(f'Set task switcher alternative style to: "Thumbnail Grid"')
