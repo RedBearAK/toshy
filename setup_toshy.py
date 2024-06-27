@@ -2681,7 +2681,13 @@ def apply_tweaks_KDE():
                                     '--group', 'TabBox',
                                     '--key', 'LayoutName', 'big_icons']
         subprocess.run(LayoutName_cmd, check=True)
-        print(f'Set task switcher style to: "Large Icons"')
+        print(f'Set task switcher main style to: "Big Icons"')
+        LayoutNameAlternative_cmd          = [ kwriteconfig_cmd,
+                                    '--file', 'kwinrc',
+                                    '--group', 'TabBox',
+                                    '--key', 'LayoutName', 'thumbnail_grid']
+        subprocess.run(LayoutNameAlternative_cmd, check=True)
+        print(f'Set task switcher alternative style to: "Thumbnail Grid"')
 
         # Set the HighlightWindows value to false (disables "Show selected window" option)
         HighlightWindows_cmd    = [ kwriteconfig_cmd,
@@ -2689,6 +2695,12 @@ def apply_tweaks_KDE():
                                     '--group', 'TabBox',
                                     '--key', 'HighlightWindows', 'false']
         subprocess.run(HighlightWindows_cmd, check=True)
+        # Also apply this to the "Alternative" task switcher settings
+        HighlightWindowsAlternative_cmd    = [ kwriteconfig_cmd,
+                                    '--file', 'kwinrc',
+                                    '--group', 'TabBoxAlternative',
+                                    '--key', 'HighlightWindows', 'false']
+        subprocess.run(HighlightWindowsAlternative_cmd, check=True)
         print(f'Disabled task switcher option: "Show selected window"')
 
         # Set the ApplicationsMode value to 1 (enables "Only one window per application" option)
