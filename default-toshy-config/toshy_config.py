@@ -1219,10 +1219,11 @@ def notify_context():
 
 def is_pre_GNOME_45(de_ver):
     """Utility function to check if GNOME version is older than GNOME 45"""
+    if DESKTOP_ENV != 'gnome':
+        # No need to go further if we aren't even in GNOME
+        return False
     pre_G45_ver_lst = [44, 43, 42, 41, 40, 3]
-    def _is_pre_GNOME_45(ctx: KeyContext):
-        return  DESKTOP_ENV == 'gnome' and str(de_ver).isdigit() and int(de_ver) in pre_G45_ver_lst
-    return _is_pre_GNOME_45
+    return str(de_ver).isdigit() and int(de_ver) in pre_G45_ver_lst
 
 
 # Suggested location for adding custom functions for personal use.
