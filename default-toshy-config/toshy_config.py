@@ -4546,7 +4546,7 @@ if DESKTOP_ENV == 'kde':
 
 if is_pre_GNOME_45(DE_MAJ_VER):
     keymap("GenGUI overrides: pre-GNOME 45 fix", {
-        C("RC-Space"):             [iEF2NT(),C("Super-s")],         # Override GNOME 45+ Key.LEFT_META remap
+        C("RC-Space"):             [iEF2NT(),C("Super-s")],         # Override GNOME 45+ Shift+Ctrl+Space remap
     # }, when = lambda ctx: 
     #         matchProps(not_lst=remotes_lod)(ctx) and is_pre_GNOME_45(DE_MAJ_VER)(ctx) )
     }, when = lambda ctx:
