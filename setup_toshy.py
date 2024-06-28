@@ -6,7 +6,6 @@ import re
 import sys
 import pwd
 import grp
-import json
 import random
 import string
 import signal
@@ -35,11 +34,12 @@ original_print = builtins.print
 
 # Override the print function
 def print(*args, **kwargs):
-    kwargs['flush'] = True  # Set flush to True
-#    original_print("Using custom print:", *args, **kwargs)  # Call the original print
+    # Set flush to True, to force logging to be in correct order.
+    # Some terminals do weird buffering, cause out-of-order logs.
+    kwargs['flush'] = True
     original_print(*args, **kwargs)  # Call the original print
 
-# Replace the built-in print with our custom print
+# Replace the built-in print with our custom print (where flush is always True)
 builtins.print = print
 
 if os.name == 'posix' and os.geteuid() == 0:
@@ -589,7 +589,7 @@ distro_groups_map: Dict[str, List[str]] = {
     # separate references for Fedora immutables using rpm-ostree
     'fedora-immutables':        ["silverblue-experimental", "kinoite-experimental"],
 
-    # separate references for Tumbleweed types versus Leap types
+    # separate references for Tumbleweed types, Leap types, MicroOS types
     'tumbleweed-based':         ["opensuse-tumbleweed"],
     'leap-based':               ["opensuse-leap"],
     'microos-based':            ["opensuse-microos", "opensuse-aeon", "opensuse-kalpa"],
@@ -617,7 +617,7 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "dbus-daemon", "dbus-devel",
                             "evtest",
                             "gcc", "git", "gobject-introspection-devel",
-                            "libappindicator-gtk3", "libnotify",
+                            "libappindicator-gtk3", "libnotify", "libxkbcommon-devel",
                             "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
                             "systemd-devel",
                             "wayland-devel",
@@ -629,7 +629,7 @@ pkg_groups_map: Dict[str, List[str]] = {
     'rhel-based':          ["cairo-devel", "cairo-gobject-devel",
                             "dbus-daemon", "dbus-devel",
                             "gcc", "git", "gobject-introspection-devel",
-                            "libappindicator-gtk3", "libnotify",
+                            "libappindicator-gtk3", "libnotify", "libxkbcommon-devel",
                             "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
                             "systemd-devel",
                             "xset",
@@ -641,7 +641,7 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "dbus-daemon", "dbus-devel",
                             "evtest",
                             "gcc", "git", "gobject-introspection-devel",
-                            "libappindicator-gtk3", "libnotify",
+                            "libappindicator-gtk3", "libnotify", "libxkbcommon-devel",
                             "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
                             "systemd-devel",
                             "xset",
@@ -655,7 +655,7 @@ pkg_groups_map: Dict[str, List[str]] = {
     'tumbleweed-based':    ["cairo-devel",
                             "dbus-1-daemon", "dbus-1-devel",
                             "gcc", "git", "gobject-introspection-devel",
-                            "libappindicator3-devel", "libnotify-tools",
+                            "libappindicator3-devel", "libnotify-tools", "libxkbcommon-devel",
                             # f"python{py_pkg_ver_str}-dbus-python-devel",
                             "python3-dbus-python-devel",
                             # f"python{py_pkg_ver_str}-devel",
@@ -670,11 +670,11 @@ pkg_groups_map: Dict[str, List[str]] = {
     'leap-based':          ["cairo-devel",
                             "dbus-1-devel",
                             "gcc", "git", "gobject-introspection-devel",
-                            "libappindicator3-devel", "libnotify-tools",
-                            "python3-dbus-python-devel",
-                                "python311",
-                                "python311-devel",
-                                "python311-tk",
+                            "libappindicator3-devel", "libnotify-tools", "libxkbcommon-devel",
+                            "python311",
+                            "python311-dbus-python-devel",
+                            "python311-devel",
+                            "python311-tk",
                             "systemd-devel",
                             "tk", "typelib-1_0-AyatanaAppIndicator3-0_1",
                             "zenity"],
@@ -684,7 +684,7 @@ pkg_groups_map: Dict[str, List[str]] = {
     'microos-based':       ["cairo-devel",
                             "dbus-1-daemon", "dbus-1-devel",
                             "gcc", "git", "gobject-introspection-devel",
-                            "libappindicator3-devel", "libnotify-tools",
+                            "libappindicator3-devel", "libnotify-tools", "libxkbcommon-devel",
                             f"python{py_pkg_ver_str}-dbus-python-devel",
                             # "python3-dbus-python-devel",
                             f"python{py_pkg_ver_str}-devel",
@@ -700,64 +700,64 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "git", "gobject-introspection-devel",
                             "lib64ayatana-appindicator3_1", "lib64ayatana-appindicator3-gir0.1",
                                 "lib64cairo-gobject2", "lib64python-devel", "lib64systemd-devel",
-                                "libnotify",
+                                "libnotify", "lib64xkbcommon-devel",
                             "python-dbus", "python-dbus-devel", "python-ensurepip", "python3-pip",
                             "task-devel", "tkinter",
                             "xset",
                             "zenity"],
 
-    # TODO: see if this needs "dbus-daemon" added as dependency (for containers)
     'ubuntu-based':        ["curl",
                             "git", "gir1.2-ayatanaappindicator3-0.1",
                             "input-utils",
                             "libcairo2-dev", "libdbus-1-dev", "libgirepository1.0-dev",
-                                "libjpeg-dev", "libnotify-bin", "libsystemd-dev", "libwayland-dev",
+                                "libjpeg-dev", "libnotify-bin", "libsystemd-dev",
+                                "libwayland-dev", "libxkbcommon-dev",
                             "python3-dbus", "python3-dev", "python3-pip", "python3-tk",
                                 "python3-venv",
                             "zenity"],
 
-    # TODO: see if this needs "dbus-daemon" added as dependency (for containers)
     'debian-based':        ["curl",
                             "git", "gir1.2-ayatanaappindicator3-0.1",
                             "input-utils",
                             "libcairo2-dev", "libdbus-1-dev", "libgirepository1.0-dev",
-                                "libjpeg-dev", "libnotify-bin", "libsystemd-dev", "libwayland-dev",
+                                "libjpeg-dev", "libnotify-bin", "libsystemd-dev",
+                                "libwayland-dev", "libxkbcommon-dev",
                             "python3-dbus", "python3-dev", "python3-pip", "python3-tk",
                                 "python3-venv",
                             "zenity"],
 
-    # TODO: see if this needs "dbus-daemon" added as dependency (for containers)
     'arch-based':          ["cairo",
                             "dbus",
                             "evtest",
                             "gcc", "git", "gobject-introspection",
-                            "libappindicator-gtk3", "libnotify",
+                            "libappindicator-gtk3", "libnotify", "libxkbcommon",
                             "pkg-config", "python", "python-dbus", "python-pip",
                             "systemd",
                             "tk",
                             "zenity"],
 
-    # TODO: see if this needs "dbus-daemon" added as dependency (for containers)
     'solus-based':         ["gcc", "git",
                             "libayatana-appindicator", "libcairo-devel", "libnotify",
+                                "libxkbcommon-devel",
                             "pip", "python3-dbus", "python3-devel", "python3-tkinter",
                                 "python-dbus-devel", "python-gobject-devel",
                             "systemd-devel",
                             "zenity"],
 
-    # TODO: see if this needs "dbus-daemon" added as dependency (for containers)
     'void-based':          ["cairo-devel", "curl",
                             "dbus-devel",
                             "evtest",
                             "gcc", "git",
                             "libayatana-appindicator-devel", "libgirepository-devel", "libnotify",
+                                "libxkbcommon-devel",
                             "pkg-config", "python3-dbus", "python3-devel", "python3-pip",
                                 "python3-pkgconfig", "python3-tkinter",
                             "wayland-devel", "wget",
                             "xset",
                             "zenity"],
 
-    # TODO: see if this needs "dbus-daemon" added as dependency (for containers)
+    # NOTE: KaOS is not actually supported at this time! These are preliminary package names!
+    # TODO: Add correct package to support installing `xkbcommon` pip package.
     'kaos-based':          ["cairo",
                             "dbus",
                             "evtest",
@@ -786,18 +786,28 @@ remove_pkgs_map = {
 
 
 pip_pkgs   = [
-    # pinning pygobject to 3.44.1 (or earlier) to get through install on RHEL 8.x and clones
+
+    # Pinned pygobject to 3.44.1 (or earlier) to get through install on RHEL 8.x and clones
     "lockfile", "dbus-python", "systemd-python", "pygobject<=3.44.1", "tk",
-    "sv_ttk", "watchdog", "psutil", 
+    "sv_ttk", "watchdog", "psutil", "xkbcommon",
 
-    # TODO: Check on 'python-xlib' project by early-mid 2024 to see if this bug is fixed:
+    # NOTE: WE CANNOT USE `xkbregistry` DUE TO CONFUSION AMONG SUPPORTING NATIVE PACKAGES
+    # "xkbregistry",
+
+    # Everything below here is just to make keymapper install smoother.
+    # Keymapper may be 'xwaykeyz', 'keyszer' or a derivative/fork with same requirements.
+
+    "hyprpy", "i3ipc", "pywayland",
+
+    # NOTE: Installing 'pywlroots' will require native pkg 'libxkbcommon-devel' (Fedora).
+    # We are installing 'libxkbcommon-devel' now to support 'xkbcommon' module. 
+    # "pywlroots",
+
+    # TODO: Check on 'python-xlib' project by mid-2025 to see if this bug is fixed:
     #   [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']
-    # If the bug is fixed, remove pinning to v0.31 here:
+    # If the bug is fixed, remove pinning to v0.31 here. But it does not appear
+    # that the bug is ever likely to be fixed.
 
-    # everything below here is just to make keymapper install smoother
-    # keymapper may be 'xwaykeyz', 'keyszer' or a derivative/fork with same requirements
-    "hyprpy", "i3ipc", "pywayland", # "pywlroots",
-    # installing 'pywlroots' will require native pkg 'libxkbcommon-devel' (Fedora)
     "inotify-simple", "evdev", "appdirs", "ordered-set", "python-xlib==0.31", "six"
 ]
 
@@ -1265,11 +1275,13 @@ def install_distro_pkgs():
             result = subprocess.run(['pacman', '-Q', package], stdout=DEVNULL, stderr=DEVNULL)
             return result.returncode == 0
 
-        pkgs_to_install = [
-            pkg
-            for pkg in cnfg.pkgs_for_distro
-            if not is_pkg_installed_pacman(pkg)
-        ]
+        pkgs_to_install = []
+        for pkg in cnfg.pkgs_for_distro:
+            if not is_pkg_installed_pacman(pkg):
+                pkgs_to_install.append(pkg)
+            else:
+                print(fancy_str(f"Package '{pkg}' is already installed. Skipping.", "green"))
+
         if pkgs_to_install:
             cmd_lst = ['sudo', 'pacman', '-S', '--noconfirm']
             native_pkg_installer.install_pkg_list(cmd_lst, pkgs_to_install)
@@ -1864,7 +1876,7 @@ class PythonVenvQuirksHandler():
     def __init__(self) -> None:
         pass
 
-    def handle_quirks_CentOS_7(self):
+    def handle_venv_quirks_CentOS_7(self):
         # avoid using systemd packages/services for CentOS 7
         cnfg.systemctl_present = False
         # Path where Python 3.8 should have been installed by this point
@@ -1876,7 +1888,7 @@ class PythonVenvQuirksHandler():
             error("Failed to install Toshy from admin user first?")
             safe_shutdown(1)
 
-    def handle_quirks_CentOS_Stream_8(self):
+    def handle_venv_quirks_CentOS_Stream_8(self):
         """Use a newer Python version for the venv in CentOS Stream 8."""
         # TODO: Add higher version if ever necessary (keep minimum 3.8)
         min_mnr_ver = cnfg.curr_py_rel_ver_mnr - 3           # check up to 2 vers before current
@@ -1894,26 +1906,40 @@ class PythonVenvQuirksHandler():
                 error(  f'ERROR: Did not find any appropriate Python interpreter version.')
                 safe_shutdown(1)
 
-    def handle_quirks_Leap(self):
+    def handle_venv_quirks_Leap(self):
         print('Handling a Python virtual environment quirk in Leap...')
         # Change the Python interpreter path to use current release version from pkg list
         # if distro is openSUSE Leap type (instead of using old 3.6 Python version).
         if shutil.which(f'python{cnfg.curr_py_rel_ver_str}'):
             cnfg.py_interp_path = shutil.which(f'python{cnfg.curr_py_rel_ver_str}')
-            # print(f'Using Python version {cnfg.curr_py_rel_ver_str}.')
+            cnfg.py_interp_ver_str = cnfg.curr_py_rel_ver_str
+
+            # Needed to make a symlink to get `xkbcommon` to install in the venv:
+            # sudo ln -s /usr/include/libxkbcommon/xkbcommon /usr/include/
+
+            # As an alternative without `sudo`, update C_INCLUDE_PATH so that the
+            # `xkbcommon.h` include file can be found during build process.
+            include_path = "/usr/include/libxkbcommon"
+            if 'C_INCLUDE_PATH' in os.environ:
+                os.environ['C_INCLUDE_PATH'] = f"{include_path}:{os.environ['C_INCLUDE_PATH']}"
+            else:
+                os.environ['C_INCLUDE_PATH'] = include_path
+            
+            print(f"C_INCLUDE_PATH updated: {os.environ['C_INCLUDE_PATH']}")
+
         else:
             print(  f'Current stable Python release version '
                     f'({cnfg.curr_py_rel_ver_str}) not found. ')
             safe_shutdown(1)
 
-    def handle_quirks_OpenMandriva(self, venv_cmd_lst):
+    def handle_venv_quirks_OpenMandriva(self, venv_cmd_lst):
         print('Handling a Python virtual environment quirk in OpenMandriva...')
         # We need to run the exact same command twice on OpenMandriva, for unknown reasons.
         # So this instance of the command is just "prep" for the seemingly duplicate
         # command that follows it in setup_python_vir_env(). 
         subprocess.run(venv_cmd_lst, check=True)
 
-    def handle_quirks_RHEL(self):
+    def handle_venv_quirks_RHEL(self):
         """Use a newer Python version for the venv in RHEL"""
         # TODO: Add higher version if ever necessary (keep minimum 3.8)
         potential_versions = ['3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
@@ -1924,6 +1950,22 @@ class PythonVenvQuirksHandler():
                 cnfg.py_interp_ver_str  = version
                 break
 
+    def handle_venv_quirks_Tumbleweed(self):
+        print('Handling a Python virtual environment quirk in Tumbleweed...')
+
+        # Needed to make a symlink to get `xkbcommon` to install in the venv:
+        # sudo ln -s /usr/include/libxkbcommon/xkbcommon /usr/include/
+
+        # As an alternative without `sudo`, update C_INCLUDE_PATH so that the
+        # `xkbcommon.h` include file can be found during build process.
+        include_path = "/usr/include/libxkbcommon"
+        if 'C_INCLUDE_PATH' in os.environ:
+            os.environ['C_INCLUDE_PATH'] = f"{include_path}:{os.environ['C_INCLUDE_PATH']}"
+        else:
+            os.environ['C_INCLUDE_PATH'] = include_path
+        
+        print(f"C_INCLUDE_PATH updated: {os.environ['C_INCLUDE_PATH']}")
+
 
 def setup_python_vir_env():
     """Setup a virtual environment to install Python packages"""
@@ -1932,19 +1974,21 @@ def setup_python_vir_env():
     # Create the virtual environment if it doesn't exist
     if not os.path.exists(cnfg.venv_path):
         if cnfg.DISTRO_ID in distro_groups_map['leap-based']:
-            venv_quirks_handler.handle_quirks_Leap()
+            venv_quirks_handler.handle_venv_quirks_Leap()
+        elif cnfg.DISTRO_ID in distro_groups_map['tumbleweed-based']:
+            venv_quirks_handler.handle_venv_quirks_Tumbleweed()
         elif cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '7':
-            venv_quirks_handler.handle_quirks_CentOS_7()
+            venv_quirks_handler.handle_venv_quirks_CentOS_7()
         elif cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '8':
-            venv_quirks_handler.handle_quirks_CentOS_Stream_8()
+            venv_quirks_handler.handle_venv_quirks_CentOS_Stream_8()
         elif cnfg.DISTRO_ID in distro_groups_map['rhel-based']:
-            venv_quirks_handler.handle_quirks_RHEL()
+            venv_quirks_handler.handle_venv_quirks_RHEL()
         try:
             print(f'Using Python version {cnfg.py_interp_ver_str}.')
             venv_cmd_lst = [cnfg.py_interp_path, '-m', 'venv', cnfg.venv_path]
             subprocess.run(venv_cmd_lst, check=True)
             if cnfg.DISTRO_ID in ['openmandriva']:
-                venv_quirks_handler.handle_quirks_OpenMandriva(venv_cmd_lst)
+                venv_quirks_handler.handle_venv_quirks_OpenMandriva(venv_cmd_lst)
         except subprocess.CalledProcessError as proc_err:
             error(f'ERROR: Problem creating the Python virtual environment:\n\t{proc_err}')
             safe_shutdown(1)
@@ -2637,7 +2681,13 @@ def apply_tweaks_KDE():
                                     '--group', 'TabBox',
                                     '--key', 'LayoutName', 'big_icons']
         subprocess.run(LayoutName_cmd, check=True)
-        print(f'Set task switcher style to: "Large Icons"')
+        print(f'Set task switcher main style to: "Big Icons"')
+        LayoutNameAlternative_cmd          = [ kwriteconfig_cmd,
+                                    '--file', 'kwinrc',
+                                    '--group', 'TabBoxAlternative',
+                                    '--key', 'LayoutName', 'thumbnail_grid']
+        subprocess.run(LayoutNameAlternative_cmd, check=True)
+        print(f'Set task switcher alternative style to: "Thumbnail Grid"')
 
         # Set the HighlightWindows value to false (disables "Show selected window" option)
         HighlightWindows_cmd    = [ kwriteconfig_cmd,
@@ -2645,6 +2695,12 @@ def apply_tweaks_KDE():
                                     '--group', 'TabBox',
                                     '--key', 'HighlightWindows', 'false']
         subprocess.run(HighlightWindows_cmd, check=True)
+        # Also apply this to the "Alternative" task switcher settings
+        HighlightWindowsAlternative_cmd    = [ kwriteconfig_cmd,
+                                    '--file', 'kwinrc',
+                                    '--group', 'TabBoxAlternative',
+                                    '--key', 'HighlightWindows', 'false']
+        subprocess.run(HighlightWindowsAlternative_cmd, check=True)
         print(f'Disabled task switcher option: "Show selected window"')
 
         # Set the ApplicationsMode value to 1 (enables "Only one window per application" option)
