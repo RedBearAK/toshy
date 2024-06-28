@@ -553,10 +553,11 @@ dialogs_Escape_lod = [
 dialogs_CloseWin_lod = [
     {clas: "^Angry.*IP.*Scanner$", name: "^Fetchers.*$|^Edit.*favorites.*$"},
     {clas: "^com.mattjakeman.ExtensionManager$|^extension-manager$", not_name: "^Extension Manager$"},
+    {clas: "^fr.handbrake.ghb$", not_name: "^HandBrake$"},
     {clas: "^Gnome-control-center$", not_name: "^Settings$"},
     {clas: "^gnome-terminal.*$", name: "^Preferences.*$"},
     {clas: "^gnome-terminal-pref.*$", name: "^Preferences.*$"},
-    {clas: "^fr.handbrake.ghb$", not_name: "^HandBrake$"},
+    {clas: "^org.kde.kate$", name: "^Configure.*Kate$"},
     {clas: "^pcloud$"},
     {clas: "^systemsettings$", name: "^Download New.*System Settings$"},
     {clas: "^Totem$", not_name: "^Videos$"},
@@ -3943,6 +3944,10 @@ keymap("Sublime Text", {
     # C(""):                    ignore_combo,                   # cancel
     # C(""):                    C(""),                          #
 }, when = matchProps(clas=sublimeStr))
+
+keymap("Kate Advanced Text Editor", {
+    C("RC-Comma"):              C("Shift-C-Comma"),             # Open settings/preferences
+}, when = matchProps(clas="^org.kde.kate$") )
 
 keymap("Linux Mint xed text editor", {
     C("RC-T"):                  C("C-N"),                       # Open new tab (new file)
