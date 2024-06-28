@@ -34,11 +34,12 @@ original_print = builtins.print
 
 # Override the print function
 def print(*args, **kwargs):
-    kwargs['flush'] = True  # Set flush to True
-#    original_print("Using custom print:", *args, **kwargs)  # Call the original print
+    # Set flush to True, to force logging to be in correct order.
+    # Some terminals do weird buffering, cause out-of-order logs.
+    kwargs['flush'] = True
     original_print(*args, **kwargs)  # Call the original print
 
-# Replace the built-in print with our custom print
+# Replace the built-in print with our custom print (where flush is always True)
 builtins.print = print
 
 if os.name == 'posix' and os.geteuid() == 0:
