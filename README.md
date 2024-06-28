@@ -1,5 +1,9 @@
 # Current status: Stable Beta (Please Read)
 
+2024-06-28 UPDATE: Additional performance (reduction in CPU usage) was gained by rearranging the order of evaluation of multi-condition modmap and keymap conditional expressions in the config file. Conditions that were "lighter" like a simple boolean variable check were placed before conditions that are computationally "heavier", like asking the matching function to evaluate a list of context conditions. This optimization procedure had a surprisingly large effect on how much CPU is used during rapid typing (tested by mashing keys as fast as possible). To get these optimizations of the config file, you will need to grab a new zip file and reinstall Toshy.  
+
+The improvements from this optimization of the config file conditionals are in addition to the performance improvements described in the earlier update below.  
+
 2024-06-15 UPDATE: Some major performance updates to a core property matching function have significantly reduced the CPU usage of Toshy while typing, especially while typing very fast. This should reduce the incidence of seeing a "delay" in characters appearing while typing, which can happen sometimes when a system is experiencing high CPU usage in general. (You can do something like `sudo renice -n -10 $(pgrep xwaykeyz)` if you still have an issue with that, and want the keymapper process to have a higher priority when the system is under heavy load.) There was also a sort of fix inside the keymapper recently to keep repeating keys from using up CPU for no particular benefit. Any new install of Toshy, even from an older zip file, will get that when it clones the keymapper from its GitHub repo. Mostly this will be meaningful in gaming situations where one needs to hold down non-modifier keys, which used to cause the keymapper to use an entire core (or thread) for as long as the key was held down.  
 
 ## Main issues you might run into
