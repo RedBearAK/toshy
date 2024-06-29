@@ -21,6 +21,12 @@ else
 fi
 
 
+if ! command -v "$kwriteconfig_cmd" > /dev/null 2>&1; then
+    echo "The necessary '$kwriteconfig_cmd' is missing. Cannot fix Plasma task switcher."
+    exit 1
+fi
+
+
 "$kwriteconfig_cmd" --file kwinrc --group TabBox --key ApplicationsMode '1'
 "$kwriteconfig_cmd" --file kwinrc --group TabBox --key HighlightWindows 'false'
 "$kwriteconfig_cmd" --file kwinrc --group TabBox --key LayoutName 'big_icons'
@@ -46,7 +52,7 @@ fi
 
 
 # Give a little time to make sure files are actually written and 
-# available for KWin reconfigure step.
+# available for KWin reconfigure and restarting kglobalaccel.
 sleep 0.5
 
 
@@ -70,7 +76,7 @@ reconfigure_w_dbus_send() {
 }
 
 
-# Unquoted 'true' and 'false' are commands in bash, returning 0 or 1 exit status
+# Unquoted 'true' and 'false' are built-in commands in bash, returning 0 or 1 exit status
 # so they can sort of be treated like Python's 'True' or 'False' in 'if' conditions.
 dbus_cmd_found=false
 
@@ -97,5 +103,25 @@ if ! $dbus_cmd_found; then
     echo "No suitable DBus utility found. KWin configuration may need manual reloading."
 fi
 
+
+kglobalaccel_cmd="kglobalaccel${KDE_ver}"
+kstart_cmd="kstart${KDE_ver}"
+
+
+if command -v "$kglobalaccel_cmd" >/dev/null 2>&1 && command -v "$kstart_cmd" >/dev/null 2>&1; then
+
+    if killall "$kglobalaccel_cmd" > /dev/null 2>&1; then
+        echo "Successfully killed ${kglobalaccel_cmd}."
+        sleep 2
+        "$kstart_cmd" "$kglobalaccel_cmd"
+        echo "Restarted ${kglobalaccel_cmd}. If global shortcuts do not work, log out."
+    else
+        echo "Failed to kill ${kglobalaccel_cmd}. You may need to log out."
+    fi
+
+else
+    echo "ERROR: Unable to safely restart KDE global shortcut process."
+    echo "       You must log out to activate modified shortcuts."
+fi
 
 echo "Finished fixing Plasma task switcher to act more like macOS/GNOME."
