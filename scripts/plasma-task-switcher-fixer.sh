@@ -129,7 +129,7 @@ if command -v "$kglobalaccel_cmd" >/dev/null 2>&1; then
     fi
 
 else
-    echo "ERROR: The ${kglobalaccel_cmd} is not available. Wayland?"
+    echo "ERROR: The ${kglobalaccel_cmd} is not available."
     echo "       You must log out to activate modified shortcuts."
 fi
 
