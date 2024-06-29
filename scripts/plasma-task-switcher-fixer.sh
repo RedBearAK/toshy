@@ -30,11 +30,11 @@ fi
 	
 "$kwriteconfig_cmd" --file kglobalshortcutsrc --group kwin --key \
 'Walk Through Windows of Current Application' \
-'none,,Walk Through Windows of Current Application'
+',Alt+`,Walk Through Windows of Current Application'
 
 "$kwriteconfig_cmd" --file kglobalshortcutsrc --group kwin --key \
 'Walk Through Windows of Current Application (Reverse)' \
-'none,,Walk Through Windows of Current Application (Reverse)'
+',Alt+~,Walk Through Windows of Current Application (Reverse)'
 
 "$kwriteconfig_cmd" --file kglobalshortcutsrc --group kwin --key \
 'Walk Through Windows of Current Application Alternative' \
