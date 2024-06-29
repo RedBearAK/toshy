@@ -40,7 +40,7 @@ fi
 
 "$kwriteconfig_cmd" --file kglobalshortcutsrc --group kwin --key \
 'Walk Through Windows of Current Application (Reverse)' \
-',none,Walk Through Windows of Current Application (Reverse)'
+'none,none,Walk Through Windows of Current Application (Reverse)'
 
 "$kwriteconfig_cmd" --file kglobalshortcutsrc --group kwin --key \
 'Walk Through Windows of Current Application Alternative' \
@@ -108,9 +108,18 @@ kglobalaccel_cmd="kglobalaccel${KDE_ver}"
 kstart_cmd="kstart${KDE_ver}"
 
 
-if command -v "$kglobalaccel_cmd" >/dev/null 2>&1 && command -v "$kstart_cmd" >/dev/null 2>&1; then
+if command -v "$kglobalaccel_cmd" >/dev/null 2>&1; then
 
-    if killall "$kglobalaccel_cmd" > /dev/null 2>&1; then
+    if ! command -v "$kstart_cmd" >/dev/null 2>&1; then
+        if ! command -v "kstart" > /dev/null 2>&1; then
+            kstart_cmd_not_found=true
+        else
+            kstart_cmd_not_found=false
+            kstart_cmd="kstart"
+        fi
+    fi
+
+    if ! $kstart_cmd_not_found && killall "$kglobalaccel_cmd" > /dev/null 2>&1; then
         echo "Successfully killed ${kglobalaccel_cmd}."
         sleep 2
         "$kstart_cmd" "$kglobalaccel_cmd"
@@ -120,7 +129,7 @@ if command -v "$kglobalaccel_cmd" >/dev/null 2>&1 && command -v "$kstart_cmd" >/
     fi
 
 else
-    echo "ERROR: Unable to safely restart KDE global shortcut process."
+    echo "ERROR: The ${kglobalaccel_cmd} is not available. Wayland?"
     echo "       You must log out to activate modified shortcuts."
 fi
 
