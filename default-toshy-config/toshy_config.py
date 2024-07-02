@@ -381,6 +381,10 @@ JDownloader_lod = [
     {clas: "^java-lang-Thread$", name: "^JDownloader.*$"}   # Happens after auto-update of app
 ]
 
+# Transmission app can have several different app class strings
+transmissionStr = '^Transmission-gtk$|^Transmission-qt$|^com.transmissionbt.Transmission.*$'
+
+
 # DEPRECATED BY 'remotes_lod' "list of dicts" below
 # Add remote desktop clients & VM software here
 # Ideally we'd only exclude the client window,
@@ -544,7 +548,7 @@ dialogs_Escape_lod = [
     {clas: "^org.kde.kdialog$"},
     {clas: "^org.kde.KWrite$", name: "^Configure.*KWrite$"},
     {clas: "^org.gnome.Software$", not_name: "^Software$"},
-    {clas: "^Transmission-gtk$|^com.transmissionbt.Transmission.*$", not_name: "^Transmission$"},
+    {clas: transmissionStr, not_name: "^Transmission$"},
     {clas: "^xfce4-terminal$", name: "^Terminal Preferences$"},
     {clas: "^zenity$|^qarma$"}
 ]
@@ -3239,7 +3243,7 @@ keymap("Angry IP Scanner", {
 keymap("Transmission bittorrent client", {
     C("RC-i"):                  C("Alt-Enter"),                 # Open properties (Get Info) dialog
     C("RC-comma"):             [C("Alt-e"),C("p")],             # Open preferences (settings) dialog
-}, when = matchProps(clas="^transmission-gtk$|^com.transmissionbt.Transmission.*$") )
+}, when = matchProps(clas=transmissionStr) )
 
 keymap("JDownloader", {
     # Fixes for tab navigation in the "Tab Nav" section
@@ -4226,6 +4230,10 @@ if DESKTOP_ENV == 'kde':
         C("LC-Space"):              [bind,C("Super-Alt-L")],        # keyboard input source (layout) switching (Last-Used) (kde)
         C("Shift-LC-Space"):        [bind,C("Super-Alt-K")],        # keyboard input source (layout) switching (Next) (kde)
         C("RC-H"):                  C("Super-Page_Down"),           # Hide Window/Minimize app (KDE Plasma)
+        # C("LC-RC-f"):               C("Alt-F10"),                   # Toggle window maximized state (pre-Plasma 6)
+        # F10 key was designated an accessibility key for opening the window/app menu in KDE.
+        # The shortcut for toggling window maximization state is now Meta+PgUp (so, Super-Page_Up).
+        C("LC-RC-f"):               C("Super-Page_Up"),             # Toggle window maximized state
     # }, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DESKTOP_ENV == 'kde'
     # )
     }, when = lambda ctx:
@@ -4270,7 +4278,7 @@ keymap("General Terminals", {
     C("Shift-RC-Left"):         C("C-Page_Up"),                 # Tab nav: Go to prior tab (Left)
     C("Shift-RC-Right"):        C("C-Page_Down"),               # Tab nav: Go to next tab (Right)
 
-    C("LC-RC-f"):               C("Alt-F10"),                   # Toggle window maximized state
+    C("LC-RC-f"):               C("Alt-F10"),                   # Toggle window maximized state (gnome?)
 
     # Ctrl Tab - In App Tab Switching
     C("LC-Tab") :               C("C-PAGE_DOWN"),
@@ -4535,31 +4543,28 @@ if DESKTOP_ENV == 'deepin':
         matchProps(not_lst=remotes_lod)(ctx)
     )
 
-if DESKTOP_ENV == 'kde':
-    keymap("GenGUI overrides: KDE", {
-        ### Keyboard input source (language/layout) switching in KDE Plasma
-        C("Super-Space"):          [bind,C("Super-Alt-L")],         # keyboard input source (layout) switching (Last-Used) (kde)
-        C("Shift-Super-Space"):    [bind,C("Super-Alt-K")],         # keyboard input source (layout) switching (Next) (kde)
-        C("RC-H"):                  C("Super-Page_Down"),           # Minimize app (KDE Plasma)
-    # }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'kde' )
-    }, when = lambda ctx:
-        cnfg.screen_has_focus and
-        matchProps(not_lst=remotes_lod)(ctx)
-    )
-
-
-
-if is_pre_GNOME_45(DE_MAJ_VER):
-    keymap("GenGUI overrides: pre-GNOME 45 fix", {
-        C("RC-Space"):             [iEF2NT(),C("Super-s")],         # Override GNOME 45+ Shift+Ctrl+Space remap
-    # }, when = lambda ctx: 
-    #         matchProps(not_lst=remotes_lod)(ctx) and is_pre_GNOME_45(DE_MAJ_VER)(ctx) )
+if DESKTOP_ENV == 'enlightenment':
+    keymap("GenGUI overrides: Enlightenment", {
+        C("RC-q"):                  C("C-Alt-x"),                   # Close window (Cmd+Q)
+        # C("RC-Space"):             [iEF2NT(),C("C-Alt-m")],         # enlightenment main menu (override in "User Apps" slice if necessary)
+        C("RC-Space"):             [iEF2NT(),C("C-Alt-Space")],     # enlightenment main menu (override in "User Apps" slice if necessary)
+    # }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'enlightenment' )
     }, when = lambda ctx:
         cnfg.screen_has_focus and
         matchProps(not_lst=remotes_lod)(ctx)
     )
 
 if DESKTOP_ENV == 'gnome':
+    if is_pre_GNOME_45(DE_MAJ_VER):
+        # This keymap, if invoked, must come before the other GNOME overrides in the next keymap, not after.
+        keymap("GenGUI overrides: pre-GNOME 45 fix", {
+            C("RC-Space"):             [iEF2NT(),C("Super-s")],         # Override GNOME 45+ Shift+Ctrl+Space remap
+        # }, when = lambda ctx: 
+        #         matchProps(not_lst=remotes_lod)(ctx) and is_pre_GNOME_45(DE_MAJ_VER)(ctx) )
+        }, when = lambda ctx:
+            cnfg.screen_has_focus and
+            matchProps(not_lst=remotes_lod)(ctx)
+        )
     keymap("GenGUI overrides: GNOME", {
         C("RC-Space"):             [iEF2NT(),C("Shift-C-Space")],   # Show GNOME overview/app launcher
         C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,elementary)
@@ -4570,17 +4575,6 @@ if DESKTOP_ENV == 'gnome':
         C("RC-Shift-Key_4"):        C("Alt-Print"),                 # Take a screenshot of a window (gnome)
         C("RC-Shift-Key_5"):        C("Print"),                     # Take a screenshot interactively (gnome)
     # }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'gnome' )
-    }, when = lambda ctx:
-        cnfg.screen_has_focus and
-        matchProps(not_lst=remotes_lod)(ctx)
-    )
-
-if DESKTOP_ENV == 'enlightenment':
-    keymap("GenGUI overrides: Enlightenment", {
-        C("RC-q"):                  C("C-Alt-x"),                   # Close window (Cmd+Q)
-        # C("RC-Space"):             [iEF2NT(),C("C-Alt-m")],         # enlightenment main menu (override in "User Apps" slice if necessary)
-        C("RC-Space"):             [iEF2NT(),C("C-Alt-Space")],     # enlightenment main menu (override in "User Apps" slice if necessary)
-    # }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'enlightenment' )
     }, when = lambda ctx:
         cnfg.screen_has_focus and
         matchProps(not_lst=remotes_lod)(ctx)
@@ -4606,13 +4600,25 @@ if DESKTOP_ENV == 'icewm':
 
 if DESKTOP_ENV == 'kde':
     keymap("GenGUI overrides: KDE", {
+
         C("RC-Space"):             [iEF2NT(),C("Alt-F1")],          # Default SL - Launch Application Menu (gnome/kde)
         C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,elementary)
-        C("RC-Super-f"):            C("Alt-F10"),                   # Default SL - Maximize app (gnome/kde)
+        C("RC-H"):                  C("Super-Page_Down"),           # Minimize app (KDE Plasma)
+
+        # C("Super-RC-f"):               C("Alt-F10"),                   # Toggle window maximized state (pre-Plasma 6)
+        # F10 key was designated an accessibility key for opening the window/app menu in KDE.
+        # The shortcut for toggling window maximization state is now Meta+PgUp (so, Super-Page_Up).
+        C("Super-RC-f"):            C("Super-Page_Up"),             # Toggle window maximized state
+
         # Screenshot shortcuts for KDE Plasma desktops (Spectacle app)
         C("RC-Shift-Key_3"):        C("Shift-Print"),               # Take a screenshot immediately (kde)
         C("RC-Shift-Key_4"):        C("Alt-Print"),                 # Take a screenshot of a window (kde)
         C("RC-Shift-Key_5"):        C("Print"),                     # Take a screenshot interactively (kde)
+
+        ### Keyboard input source (language/layout) switching in KDE Plasma
+        C("Super-Space"):          [bind,C("Super-Alt-L")],         # keyboard input source (layout) switching (Last-Used) (kde)
+        C("Shift-Super-Space"):    [bind,C("Super-Alt-K")],         # keyboard input source (layout) switching (Next) (kde)
+
     # }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'kde' )
     }, when = lambda ctx:
         cnfg.screen_has_focus and
