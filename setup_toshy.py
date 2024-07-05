@@ -2675,6 +2675,8 @@ def apply_tweaks_KDE():
 
         do_kwin_reconfigure()
 
+        # THIS COMMENTED CODE BLOCK WAS REPLACED BY AN EXTERNAL SHELL SCRIPT CALL
+
         # # Set the LayoutName value to big_icons (shows task switcher with large icons, no previews)
         # LayoutName_cmd          = [ kwriteconfig_cmd,
         #                             '--file', 'kwinrc',
