@@ -223,7 +223,7 @@ if [ "$KDE_ver" = "5" ] || [ "$KDE_ver" = "6" ]; then
             fi
 
         else
-            echo "The ${kglobalaccel_cmd} is not available."
+            echo "The ${kglobalaccel_cmd}  command is not available."
             echo "You must log out to activate modified shortcuts."
         fi
 
