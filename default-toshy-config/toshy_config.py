@@ -311,75 +311,169 @@ def negRgx(rgx_str):
     return neg_rgx_str
 
 
-terminals_lod = [
-    {clas: "^alacritty$"                 },
-    {clas: "^com.raggesilver.BlackBox$"  },
-    {clas: "^contour$"                   },
-    {clas: "^cutefish-terminal$"         },
-    {clas: "^deepin-terminal$"           },
-    {clas: "^dev.warp.Warp$"             },
-    {clas: "^eterm$"                     },
-    {clas: "^gnome-terminal$"            },
-    {clas: "^gnome-terminal-server$"     },
-    {clas: "^guake$"                     },
-    {clas: "^hyper$"                     },
-    {clas: "^io.elementary.terminal$"    },
-    {clas: "^kinto-gui.py$"              },
-    {clas: "^kitty$"                     },
-    {clas: "^Kgx$"                       },
-    {clas: "^konsole$"                   },
-    {clas: "^lxterminal$"                },
-    {clas: "^mate-terminal$"             },
-    {clas: "^MateTerminal$"              },
-    {clas: "^org.gnome.Console$"         },
-    {clas: "^org.gnome.Ptyxis.*$"        },
-    {clas: "^org.kde.konsole$"           },
-    {clas: "^org.kde.yakuake$"           },
-    {clas: "^org.wezfurlong.wezterm$"    },
-    {clas: "^roxterm$"                   },
-    {clas: "^qterminal$"                 },
-    {clas: "^st$"                        },
-    {clas: "^sakura$"                    },
-    {clas: "^station$"                   },
-    {clas: "^tabby$"                     },
-    {clas: "^terminator$"                },
-    {clas: "^terminology$"               },
-    {clas: "^termite$"                   },
-    {clas: "^Termius$"                   },
-    {clas: "^tilda$"                     },
-    {clas: "^tilix$"                     },
-    {clas: "^urxvt$"                     },
-    {clas: "^xfce4-terminal$"            },
-    {clas: "^xterm$"                     },
-    {clas: "^yakuake$"                   },
-]
+def create_list_of_dicts(lst: List[str]):
+    """
+    Convert a simple list of class names into a list of dictionaries,
+    each dictionary containing a single key 'clas' with the regex pattern
+    for exact match. Strips any leading '^' or trailing '$' from each item
+    in the list to ensure clean, standardized entries.
+    """
+    cleaned_list = [name.strip('^$') for name in lst]  # Remove any leading '^' or trailing '$'
+    return [{'clas': f"^{item}$"} for item in cleaned_list]
 
-# DEPRECATED by `vscodes_lod` "list of dicts" below
-# vscodes = [
-#     "code",
-#     "vscodium",
-#     "code - oss",
+
+# TODO: Maintain both the simple list and the "list of dicts" for terminals at the same time.
+# 
+# Simple lists of app classes converted to regex pattern strings allow
+# for a much faster conditional check than using the recursive 
+# "lists of dicts" that are needed for more complex conditionals. 
+# But 'terminals_lod' gets merged with 'remotes_lod' which has
+# the more complex conditionals involved, so we can't get rid of it.
+terminals = [
+    "alacritty",
+    "com.raggesilver.BlackBox",
+    "contour",
+    "cutefish-terminal",
+    "deepin-terminal",
+    "dev.warp.Warp",
+    "eterm",
+    "gnome-terminal",
+    "gnome-terminal-server",
+    "guake",
+    "hyper",
+    "io.elementary.terminal",
+    "kinto-gui.py",
+    "kitty",
+    "Kgx",
+    "konsole",
+    "lxterminal",
+    "mate-terminal",
+    "MateTerminal",
+    "org.gnome.Console",
+    "org.gnome.Ptyxis.*",
+    "org.kde.konsole",
+    "org.kde.yakuake",
+    "org.wezfurlong.wezterm",
+    "roxterm",
+    "qterminal",
+    "st",
+    "sakura",
+    "station",
+    "tabby",
+    "terminator",
+    "terminology",
+    "termite",
+    "Termius",
+    "tilda",
+    "tilix",
+    "urxvt",
+    "xfce4-terminal",
+    "xterm",
+    "yakuake"
+]
+terminals                       = [x.casefold() for x in terminals]
+termStr                         = toRgxStr(terminals)
+
+# This is only for use with 'remotes_lod', otherwise regext pattern string is used.
+terminals_lod = create_list_of_dicts(terminals)
+
+# # DEPRECATED IN FAVOR OF MAINTAINING THE SIMPLE LIST AND 
+# # CONVERTING TO A "LIST OF DICTS" FOR USE WITH THE
+# # 'remotes_lod' "LIST OF DICTS". 
+# terminals_lod = [
+#     {clas: "^alacritty$"                 },
+#     {clas: "^com.raggesilver.BlackBox$"  },
+#     {clas: "^contour$"                   },
+#     {clas: "^cutefish-terminal$"         },
+#     {clas: "^deepin-terminal$"           },
+#     {clas: "^dev.warp.Warp$"             },
+#     {clas: "^eterm$"                     },
+#     {clas: "^gnome-terminal$"            },
+#     {clas: "^gnome-terminal-server$"     },
+#     {clas: "^guake$"                     },
+#     {clas: "^hyper$"                     },
+#     {clas: "^io.elementary.terminal$"    },
+#     {clas: "^kinto-gui.py$"              },
+#     {clas: "^kitty$"                     },
+#     {clas: "^Kgx$"                       },
+#     {clas: "^konsole$"                   },
+#     {clas: "^lxterminal$"                },
+#     {clas: "^mate-terminal$"             },
+#     {clas: "^MateTerminal$"              },
+#     {clas: "^org.gnome.Console$"         },
+#     {clas: "^org.gnome.Ptyxis.*$"        },
+#     {clas: "^org.kde.konsole$"           },
+#     {clas: "^org.kde.yakuake$"           },
+#     {clas: "^org.wezfurlong.wezterm$"    },
+#     {clas: "^roxterm$"                   },
+#     {clas: "^qterminal$"                 },
+#     {clas: "^st$"                        },
+#     {clas: "^sakura$"                    },
+#     {clas: "^station$"                   },
+#     {clas: "^tabby$"                     },
+#     {clas: "^terminator$"                },
+#     {clas: "^terminology$"               },
+#     {clas: "^termite$"                   },
+#     {clas: "^Termius$"                   },
+#     {clas: "^tilda$"                     },
+#     {clas: "^tilix$"                     },
+#     {clas: "^urxvt$"                     },
+#     {clas: "^xfce4-terminal$"            },
+#     {clas: "^xterm$"                     },
+#     {clas: "^yakuake$"                   },
 # ]
-# vscodes = [x.casefold() for x in vscodes]
-# vscodeStr = toRgxStr(vscodes)
 
-vscodes_lod = [
-    {clas: "^code$"},
-    {clas: "^vscodium$"},
-    {clas: "^code - oss$|^code-oss$"},
+
+# TODO: Maintain both the simple list and the "list of dicts" for terminals at the same time.
+# 
+# Simple lists of app classes converted to regex pattern strings allow
+# for a much faster conditional check than using the recursive 
+# "lists of dicts" that are needed for more complex conditionals. 
+# But 'terminals_lod' gets merged with 'remotes_lod' which has
+# the more complex conditionals involved, so we can't get rid of it.
+vscodes = [
+    "code",
+    "vscodium",
+    "code - oss",
+    "code-oss",
 ]
+vscodes                         = [x.casefold() for x in vscodes]
+vscodeStr                       = toRgxStr(vscodes)
+
+# This is only for use with 'vscodes_and_remotes_lod', otherwise regex pattern string is used.
+vscodes_lod = create_list_of_dicts(vscodes)
+
+# # DEPRECATED IN FAVOR OF MAINTAINING THE SIMPLE LIST AND 
+# # CONVERTING TO A "LIST OF DICTS" FOR USE WITH THE
+# # 'vscodes_and_remotes_lod' "LIST OF DICTS". 
+# vscodes_lod = [
+#     {clas: "^code$"},
+#     {clas: "^code - oss$"},
+#     {clas: "^code-oss$"},
+#     {clas: "^vscodium$"},
+# ]
 
 sublimes = [
     "sublime_text",
     "subl",
 ]
-sublimes = [x.casefold() for x in sublimes]
-sublimeStr = toRgxStr(sublimes)
+sublimes                        = [x.casefold() for x in sublimes]
+sublimeStr                      = toRgxStr(sublimes)
 
 JDownloader_lod = [
     {clas: "^.*jdownloader.*$"},
     {clas: "^java-lang-Thread$", name: "^JDownloader.*$"}   # Happens after auto-update of app
 ]
+
+# Transmission app can have several different app class strings
+transmissions = [
+    'Transmission-gtk',
+    'Transmission-qt',
+    'com.transmissionbt.Transmission.*',    # Flatpak has a stupid random app class suffix
+]
+transmissions                   = [x.casefold() for x in transmissions]
+transmissionStr                 = toRgxStr(transmissions)
+
 
 # DEPRECATED BY 'remotes_lod' "list of dicts" below
 # Add remote desktop clients & VM software here
@@ -483,6 +577,9 @@ browsers_all = [
 browsers_all            = [x.casefold() for x in browsers_all]
 browsers_allStr         = "|".join('^'+x+'$' for x in browsers_all)
 
+
+# NOTE: Do not be tempted to convert simple app class lists into a "list of dicts"
+# If the list contains only app classes, the regex pattern string is much faster.
 filemanagers = [
     "caja",
     "dde-file-manager",
@@ -503,24 +600,6 @@ filemanagers = [
 filemanagers = [x.casefold() for x in filemanagers]
 filemanagerStr = "|".join('^'+x+'$' for x in filemanagers)
 
-# TODO: put this in conditionals instead of 'filemanagerStr'?
-filemanagers_lod = [
-    {clas: "^caja$"                          },
-    {clas: "^dde-file-manager$"              },
-    {clas: "^dolphin$"                       },
-    {clas: "^io.elementary.files$"           },
-    {clas: "^krusader$"                      },
-    {clas: "^nautilus$"                      },
-    {clas: "^nemo$"                          },
-    {clas: "^org.gnome.nautilus$"            },
-    {clas: "^org.kde.dolphin$"               },
-    {clas: "^org.kde.krusader$"              },
-    {clas: "^pcmanfm$"                       },
-    {clas: "^pcmanfm-qt$"                    },
-    {clas: "^peony-qt$"                      },
-    {clas: "^spacefm$"                       },
-    {clas: "^thunar$"                        },
-]
 
 ### dialogs_Escape_lod = send these windows the Escape key for Cmd+W
 dialogs_Escape_lod = [
@@ -544,7 +623,7 @@ dialogs_Escape_lod = [
     {clas: "^org.kde.kdialog$"},
     {clas: "^org.kde.KWrite$", name: "^Configure.*KWrite$"},
     {clas: "^org.gnome.Software$", not_name: "^Software$"},
-    {clas: "^Transmission-gtk$|^com.transmissionbt.Transmission.*$", not_name: "^Transmission$"},
+    {clas: transmissionStr, not_name: "^Transmission$"},
     {clas: "^xfce4-terminal$", name: "^Terminal Preferences$"},
     {clas: "^zenity$|^qarma$"}
 ]
@@ -1152,11 +1231,13 @@ def notify_context():
         ctx_devn        = ctx.device_name
 
         # ------ following are all True/False
-        ctx_rmte        = matchProps(lst=remotes_lod)(ctx)
-        ctx_term        = matchProps(lst=terminals_lod)(ctx)
-        ctx_fmgr        = matchProps(clas=filemanagerStr)(ctx)
-        ctx_brws        = matchProps(clas=browsers_allStr)(ctx)
-        ctx_vscd        = matchProps(lst=vscodes_lod)(ctx)
+        # ctx_term        = matchProps(lst=terminals_lod)(ctx)
+        # ctx_vscd        = matchProps(lst=vscodes_lod        )(ctx)
+        ctx_term        = matchProps(clas=termStr           )(ctx)
+        ctx_rmte        = matchProps(lst=remotes_lod        )(ctx)
+        ctx_fmgr        = matchProps(clas=filemanagerStr    )(ctx)
+        ctx_brws        = matchProps(clas=browsers_allStr   )(ctx)
+        ctx_vscd        = matchProps(clas=vscodeStr         )(ctx)
 
         if matchProps(lst=dialogs_CloseWin_lod)(ctx) or matchProps(lst=dialogs_Escape_lod)(ctx):
             ctx_dlgs        = True
@@ -1575,7 +1656,8 @@ modmap("Cond modmap - Terms - IBM kbd - multi_lang OFF", {
 }, when = lambda ctx:
     not cnfg.multi_lang and
     isKBtype('IBM', map='mmap terms IBM ML-OFF')(ctx) and
-    matchProps(lst=terminals_lod)(ctx)
+    # matchProps(lst=terminals_lod)(ctx)
+    matchProps(clas=termStr)(ctx)
 )
 modmap("Cond modmap - Terms - IBM kbd", {
     # - IBM
@@ -1590,7 +1672,8 @@ modmap("Cond modmap - Terms - IBM kbd", {
 # )
 }, when = lambda ctx:
     isKBtype('IBM', map='mmap terms IBM')(ctx) and
-    matchProps(lst=terminals_lod)(ctx)
+    # matchProps(lst=terminals_lod)(ctx)
+    matchProps(clas=termStr)(ctx)
 )
 modmap("Cond modmap - Terms - Cbk kbd - multi_lang OFF", {
     # - Chromebook
@@ -1603,7 +1686,8 @@ modmap("Cond modmap - Terms - Cbk kbd - multi_lang OFF", {
 }, when = lambda ctx:
     not cnfg.multi_lang and
     isKBtype('Chromebook', map='mmap terms Cbk ML-OFF')(ctx) and
-    matchProps(lst=terminals_lod)(ctx)
+    # matchProps(lst=terminals_lod)(ctx)
+    matchProps(clas=termStr)(ctx)
 )
 modmap("Cond modmap - Terms - Cbk kbd", {
     # - Chromebook
@@ -1618,7 +1702,8 @@ modmap("Cond modmap - Terms - Cbk kbd", {
 # )
 }, when = lambda ctx:
     isKBtype('Chromebook', map='mmap terms Cbk')(ctx) and
-    matchProps(lst=terminals_lod)(ctx)
+    # matchProps(lst=terminals_lod)(ctx)
+    matchProps(clas=termStr)(ctx)
 )
 modmap("Cond modmap - Terms - Win kbd - multi_lang OFF", {
     # - Default Mac/Win
@@ -1634,7 +1719,8 @@ modmap("Cond modmap - Terms - Win kbd - multi_lang OFF", {
 }, when = lambda ctx:
     not cnfg.multi_lang and
     isKBtype('Windows', map='mmap terms Win ML-OFF')(ctx) and
-    matchProps(lst=terminals_lod)(ctx)
+    # matchProps(lst=terminals_lod)(ctx)
+    matchProps(clas=termStr)(ctx)
 )
 modmap("Cond modmap - Terms - Win kbd", {
     # - Default Mac/Win
@@ -1648,7 +1734,8 @@ modmap("Cond modmap - Terms - Win kbd", {
 # )
 }, when = lambda ctx:
     isKBtype('Windows', map='mmap terms Win')(ctx) and
-    matchProps(lst=terminals_lod)(ctx)
+    # matchProps(lst=terminals_lod)(ctx)
+    matchProps(clas=termStr)(ctx)
 )
 modmap("Cond modmap - Terms - Mac kbd - multi_lang OFF", {
     # - Mac Only
@@ -1663,7 +1750,8 @@ modmap("Cond modmap - Terms - Mac kbd - multi_lang OFF", {
 }, when = lambda ctx:
     not cnfg.multi_lang and
     isKBtype('Apple', map='mmap terms Apple ML-OFF')(ctx) and
-    matchProps(lst=terminals_lod)(ctx)
+    # matchProps(lst=terminals_lod)(ctx)
+    matchProps(clas=termStr)(ctx)
 )
 modmap("Cond modmap - Terms - Mac kbd", {
     # - Mac Only
@@ -1678,7 +1766,8 @@ modmap("Cond modmap - Terms - Mac kbd", {
 # )
 }, when = lambda ctx:
     isKBtype('Apple', map='mmap terms Apple')(ctx) and
-    matchProps(lst=terminals_lod)(ctx)
+    # matchProps(lst=terminals_lod)(ctx)
+    matchProps(clas=termStr)(ctx)
 )
 
 
@@ -3182,9 +3271,16 @@ keymap("OptSpecialChars - US", {
 ###################################################################################################
 ###  SLICE_MARK_START: user_apps  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 
-keymap("User hardware keys", {
 
-}, when = matchProps(not_lst=remotes_lod))
+keymap("User hardware keys", {
+    # PUT UNIVERSAL REMAPS FOR HARDWARE KEYS HERE
+    # KEYMAP WILL BE ACTIVE IN ALL DESKTOP ENVIRONMENTS/DISTROS
+
+
+}, when = lambda ctx:
+    cnfg.screen_has_focus and
+    matchProps(not_lst=remotes_lod)(ctx)
+)
 
 ###  SLICE_MARK_END: user_apps  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 ###################################################################################################
@@ -3198,14 +3294,21 @@ keymap("User hardware keys", {
 # keymap("User overrides terminals", {
 #     C("LC-Space"):              [iEF2NT(),C("THE-REAL-COMBO-FOR-SOME-LAUNCHER")],    # Spotlight equivalent
 #     C("Shift-LC-Space"):        None,    # block the default general terminals shortcut for input switching
-# }, when = matchProps(lst=terminals_lod))
+# }, when = lambda ctx:
+#       cnfg.screen_has_focus and
+#       # matchProps(lst=terminals_lod)(ctx)
+#       matchProps(clas=termStr)(ctx)
+# )
 # keymap("User overrides general", {
 #     C("Super-Space"):           [iEF2NT(),C("THE-REAL-COMBO-FOR-SOME-LAUNCHER")],    # Spotlight equivalent
 #     C("Shift-Super-Space"):     None,    # block the default general GUI shortcut for reverse input switching
 #     ### Keyboard input source (language/layout) switching
 #     C("RC-Space"):              [bind,C("THE-REAL-COMBO-FOR-INPUT-SWITCHING")],    # input switch forward
 #     C("Shift-RC-Space"):        [bind,C("THE-REAL-COMBO-FOR-REVERSE-INPUT-SWITCHING")],    # input switch reverse (OPTIONAL)
-# }, when = matchProps(not_lst=remotes_lod))
+# }, when = lambda ctx:
+#       cnfg.screen_has_focus and
+#       matchProps(lst=remotes_lod)(ctx)
+# )
 
 
 
@@ -3239,7 +3342,7 @@ keymap("Angry IP Scanner", {
 keymap("Transmission bittorrent client", {
     C("RC-i"):                  C("Alt-Enter"),                 # Open properties (Get Info) dialog
     C("RC-comma"):             [C("Alt-e"),C("p")],             # Open preferences (settings) dialog
-}, when = matchProps(clas="^transmission-gtk$|^com.transmissionbt.Transmission.*$") )
+}, when = matchProps(clas=transmissionStr) )
 
 keymap("JDownloader", {
     # Fixes for tab navigation in the "Tab Nav" section
@@ -3741,7 +3844,8 @@ keymap("VSCodes overrides for Chromebook/IBM - Sublime", {
     cnfg.ST3_in_VSCode and
     (   isKBtype('Chromebook', map="vscodes ovr cbook - sublime")(ctx) or
         isKBtype('IBM', map="vscodes ovr ibm - sublime")(ctx) ) and
-    matchProps(lst=vscodes_lod)(ctx)
+    # matchProps(lst=vscodes_lod)(ctx)
+    matchProps(clas=vscodeStr)(ctx)
 )
 keymap("VSCodes overrides for not Chromebook/IBM - Sublime", {
     C("Super-C-g"):             C("C-f2"),                      # Default - Sublime - find_all_under
@@ -3754,7 +3858,8 @@ keymap("VSCodes overrides for not Chromebook/IBM - Sublime", {
     cnfg.ST3_in_VSCode and
     not ( isKBtype('Chromebook', map="vscodes ovr not cbook - sublime")(ctx) or 
     isKBtype('IBM', map="vscodes ovr not ibm - sublime")(ctx) ) and 
-    matchProps(lst=vscodes_lod)(ctx)
+    # matchProps(lst=vscodes_lod)(ctx)
+    matchProps(clas=vscodeStr)(ctx)
 )
 keymap("VSCodes overrides for Chromebook/IBM", {
     C("Alt-c"):                 C("C-c"),                       #  Chromebook/IBM - Terminal - Sigint
@@ -3767,7 +3872,8 @@ keymap("VSCodes overrides for Chromebook/IBM", {
 }, when = lambda ctx:
     (   isKBtype('Chromebook', map="vscodes ovr cbook")(ctx) or 
         isKBtype('IBM', map="vscodes ovr ibm")(ctx) ) and
-    matchProps(lst=vscodes_lod)(ctx)
+    # matchProps(lst=vscodes_lod)(ctx)
+    matchProps(clas=vscodeStr)(ctx)
 )
 keymap("VSCodes overrides for not Chromebook/IBM", {
     C("Super-c"):               C("C-c"),                       # Default - Terminal - Sigint
@@ -3780,7 +3886,8 @@ keymap("VSCodes overrides for not Chromebook/IBM", {
 }, when = lambda ctx:
     not (   isKBtype('Chromebook', map="vscodes ovr not cbook")(ctx) or
             isKBtype('IBM', map="vscodes ovr not ibm")(ctx) ) and
-    matchProps(lst=vscodes_lod)(ctx)
+    # matchProps(lst=vscodes_lod)(ctx)
+    matchProps(clas=vscodeStr)(ctx)
 )
 keymap("VSCodes", {
     # C("Super-Space"):           C("C-Space"),                  # Basic code completion (conflicts with input switching)
@@ -3842,7 +3949,8 @@ keymap("VSCodes", {
 # }, when = matchProps(lst=vscodes_lod))
 }, when = lambda ctx:
     cnfg.screen_has_focus and
-    matchProps(lst=vscodes_lod)(ctx)
+    # matchProps(lst=vscodes_lod)(ctx)
+    matchProps(clas=vscodeStr)(ctx)
 )
 
 # Keybindings for Sublime Text
@@ -4158,7 +4266,8 @@ if DISTRO_ID == 'elementary':
     # )
     }, when = lambda ctx:
         cnfg.screen_has_focus and
-        matchProps(lst=terminals_lod)(ctx)
+        # matchProps(lst=terminals_lod)(ctx)
+        matchProps(clas=termStr)(ctx)
     )
 
 if DISTRO_ID in ['fedora', 'almalinux'] and DESKTOP_ENV == 'gnome':
@@ -4168,7 +4277,8 @@ if DISTRO_ID in ['fedora', 'almalinux'] and DESKTOP_ENV == 'gnome':
     # )
     }, when = lambda ctx:
         cnfg.screen_has_focus and
-        matchProps(lst=terminals_lod)(ctx)
+        # matchProps(lst=terminals_lod)(ctx)
+        matchProps(clas=termStr)(ctx)
     )
 
 if DISTRO_ID == 'pop':
@@ -4179,7 +4289,8 @@ if DISTRO_ID == 'pop':
     # )
     }, when = lambda ctx:
         cnfg.screen_has_focus and
-        matchProps(lst=terminals_lod)(ctx)
+        # matchProps(lst=terminals_lod)(ctx)
+        matchProps(clas=termStr)(ctx)
     )
 
 if DISTRO_ID in ['ubuntu', 'fedora']:
@@ -4191,7 +4302,8 @@ if DISTRO_ID in ['ubuntu', 'fedora']:
     # )
     }, when = lambda ctx:
         cnfg.screen_has_focus and
-        matchProps(lst=terminals_lod)(ctx)
+        # matchProps(lst=terminals_lod)(ctx)
+        matchProps(clas=termStr)(ctx)
     )
 
 
@@ -4205,7 +4317,8 @@ if DESKTOP_ENV == 'budgie':
     # )
     }, when = lambda ctx:
         cnfg.screen_has_focus and
-        matchProps(lst=terminals_lod)(ctx)
+        # matchProps(lst=terminals_lod)(ctx)
+        matchProps(clas=termStr)(ctx)
     )
 
 if DESKTOP_ENV == 'gnome':
@@ -4217,7 +4330,8 @@ if DESKTOP_ENV == 'gnome':
     # )
     }, when = lambda ctx:
         cnfg.screen_has_focus and
-        matchProps(lst=terminals_lod)(ctx)
+        # matchProps(lst=terminals_lod)(ctx)
+        matchProps(clas=termStr)(ctx)
     )
 
 if DESKTOP_ENV == 'kde':
@@ -4226,11 +4340,16 @@ if DESKTOP_ENV == 'kde':
         C("LC-Space"):              [bind,C("Super-Alt-L")],        # keyboard input source (layout) switching (Last-Used) (kde)
         C("Shift-LC-Space"):        [bind,C("Super-Alt-K")],        # keyboard input source (layout) switching (Next) (kde)
         C("RC-H"):                  C("Super-Page_Down"),           # Hide Window/Minimize app (KDE Plasma)
+        # C("LC-RC-f"):               C("Alt-F10"),                   # Toggle window maximized state (pre-Plasma 6)
+        # F10 key was designated an accessibility key for opening the window/app menu in KDE.
+        # The shortcut for toggling window maximization state is now Meta+PgUp (so, Super-Page_Up).
+        C("LC-RC-f"):               C("Super-Page_Up"),             # Toggle window maximized state
     # }, when = lambda ctx: matchProps(lst=terminals_lod)(ctx) and DESKTOP_ENV == 'kde'
     # )
     }, when = lambda ctx:
         cnfg.screen_has_focus and
-        matchProps(lst=terminals_lod)(ctx)
+        # matchProps(lst=terminals_lod)(ctx)
+        matchProps(clas=termStr)(ctx)
     )
 
 if DESKTOP_ENV == 'sway':
@@ -4240,7 +4359,8 @@ if DESKTOP_ENV == 'sway':
     # )
     }, when = lambda ctx:
         cnfg.screen_has_focus and
-        matchProps(lst=terminals_lod)(ctx)
+        # matchProps(lst=terminals_lod)(ctx)
+        matchProps(clas=termStr)(ctx)
     )
 
 if DESKTOP_ENV == 'xfce':
@@ -4253,7 +4373,8 @@ if DESKTOP_ENV == 'xfce':
     # )
     }, when = lambda ctx:
         cnfg.screen_has_focus and
-        matchProps(lst=terminals_lod)(ctx)
+        # matchProps(lst=terminals_lod)(ctx)
+        matchProps(clas=termStr)(ctx)
     )
 
 
@@ -4270,7 +4391,7 @@ keymap("General Terminals", {
     C("Shift-RC-Left"):         C("C-Page_Up"),                 # Tab nav: Go to prior tab (Left)
     C("Shift-RC-Right"):        C("C-Page_Down"),               # Tab nav: Go to next tab (Right)
 
-    C("LC-RC-f"):               C("Alt-F10"),                   # Toggle window maximized state
+    C("LC-RC-f"):               C("Alt-F10"),                   # Toggle window maximized state (gnome?)
 
     # Ctrl Tab - In App Tab Switching
     C("LC-Tab") :               C("C-PAGE_DOWN"),
@@ -4324,7 +4445,8 @@ keymap("General Terminals", {
 # )
 }, when = lambda ctx:
     cnfg.screen_has_focus and
-    matchProps(lst=terminals_lod)(ctx)
+    # matchProps(lst=terminals_lod)(ctx)
+    matchProps(clas=termStr)(ctx)
 )
 
 
@@ -4535,31 +4657,28 @@ if DESKTOP_ENV == 'deepin':
         matchProps(not_lst=remotes_lod)(ctx)
     )
 
-if DESKTOP_ENV == 'kde':
-    keymap("GenGUI overrides: KDE", {
-        ### Keyboard input source (language/layout) switching in KDE Plasma
-        C("Super-Space"):          [bind,C("Super-Alt-L")],         # keyboard input source (layout) switching (Last-Used) (kde)
-        C("Shift-Super-Space"):    [bind,C("Super-Alt-K")],         # keyboard input source (layout) switching (Next) (kde)
-        C("RC-H"):                  C("Super-Page_Down"),           # Minimize app (KDE Plasma)
-    # }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'kde' )
-    }, when = lambda ctx:
-        cnfg.screen_has_focus and
-        matchProps(not_lst=remotes_lod)(ctx)
-    )
-
-
-
-if is_pre_GNOME_45(DE_MAJ_VER):
-    keymap("GenGUI overrides: pre-GNOME 45 fix", {
-        C("RC-Space"):             [iEF2NT(),C("Super-s")],         # Override GNOME 45+ Shift+Ctrl+Space remap
-    # }, when = lambda ctx: 
-    #         matchProps(not_lst=remotes_lod)(ctx) and is_pre_GNOME_45(DE_MAJ_VER)(ctx) )
+if DESKTOP_ENV == 'enlightenment':
+    keymap("GenGUI overrides: Enlightenment", {
+        C("RC-q"):                  C("C-Alt-x"),                   # Close window (Cmd+Q)
+        # C("RC-Space"):             [iEF2NT(),C("C-Alt-m")],         # enlightenment main menu (override in "User Apps" slice if necessary)
+        C("RC-Space"):             [iEF2NT(),C("C-Alt-Space")],     # enlightenment main menu (override in "User Apps" slice if necessary)
+    # }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'enlightenment' )
     }, when = lambda ctx:
         cnfg.screen_has_focus and
         matchProps(not_lst=remotes_lod)(ctx)
     )
 
 if DESKTOP_ENV == 'gnome':
+    if is_pre_GNOME_45(DE_MAJ_VER):
+        # This keymap, if invoked, must come before the other GNOME overrides in the next keymap, not after.
+        keymap("GenGUI overrides: pre-GNOME 45 fix", {
+            C("RC-Space"):             [iEF2NT(),C("Super-s")],         # Override GNOME 45+ Shift+Ctrl+Space remap
+        # }, when = lambda ctx: 
+        #         matchProps(not_lst=remotes_lod)(ctx) and is_pre_GNOME_45(DE_MAJ_VER)(ctx) )
+        }, when = lambda ctx:
+            cnfg.screen_has_focus and
+            matchProps(not_lst=remotes_lod)(ctx)
+        )
     keymap("GenGUI overrides: GNOME", {
         C("RC-Space"):             [iEF2NT(),C("Shift-C-Space")],   # Show GNOME overview/app launcher
         C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,elementary)
@@ -4570,17 +4689,6 @@ if DESKTOP_ENV == 'gnome':
         C("RC-Shift-Key_4"):        C("Alt-Print"),                 # Take a screenshot of a window (gnome)
         C("RC-Shift-Key_5"):        C("Print"),                     # Take a screenshot interactively (gnome)
     # }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'gnome' )
-    }, when = lambda ctx:
-        cnfg.screen_has_focus and
-        matchProps(not_lst=remotes_lod)(ctx)
-    )
-
-if DESKTOP_ENV == 'enlightenment':
-    keymap("GenGUI overrides: Enlightenment", {
-        C("RC-q"):                  C("C-Alt-x"),                   # Close window (Cmd+Q)
-        # C("RC-Space"):             [iEF2NT(),C("C-Alt-m")],         # enlightenment main menu (override in "User Apps" slice if necessary)
-        C("RC-Space"):             [iEF2NT(),C("C-Alt-Space")],     # enlightenment main menu (override in "User Apps" slice if necessary)
-    # }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'enlightenment' )
     }, when = lambda ctx:
         cnfg.screen_has_focus and
         matchProps(not_lst=remotes_lod)(ctx)
@@ -4606,13 +4714,25 @@ if DESKTOP_ENV == 'icewm':
 
 if DESKTOP_ENV == 'kde':
     keymap("GenGUI overrides: KDE", {
+
         C("RC-Space"):             [iEF2NT(),C("Alt-F1")],          # Default SL - Launch Application Menu (gnome/kde)
         C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,elementary)
-        C("RC-Super-f"):            C("Alt-F10"),                   # Default SL - Maximize app (gnome/kde)
+        C("RC-H"):                  C("Super-Page_Down"),           # Minimize app (KDE Plasma)
+
+        # C("Super-RC-f"):               C("Alt-F10"),                   # Toggle window maximized state (pre-Plasma 6)
+        # F10 key was designated an accessibility key for opening the window/app menu in KDE.
+        # The shortcut for toggling window maximization state is now Meta+PgUp (so, Super-Page_Up).
+        C("Super-RC-f"):            C("Super-Page_Up"),             # Toggle window maximized state
+
         # Screenshot shortcuts for KDE Plasma desktops (Spectacle app)
         C("RC-Shift-Key_3"):        C("Shift-Print"),               # Take a screenshot immediately (kde)
         C("RC-Shift-Key_4"):        C("Alt-Print"),                 # Take a screenshot of a window (kde)
         C("RC-Shift-Key_5"):        C("Print"),                     # Take a screenshot interactively (kde)
+
+        ### Keyboard input source (language/layout) switching in KDE Plasma
+        C("Super-Space"):          [bind,C("Super-Alt-L")],         # keyboard input source (layout) switching (Last-Used) (kde)
+        C("Shift-Super-Space"):    [bind,C("Super-Alt-K")],         # keyboard input source (layout) switching (Next) (kde)
+
     # }, when = lambda ctx: matchProps(not_lst=remotes_lod)(ctx) and DESKTOP_ENV == 'kde' )
     }, when = lambda ctx:
         cnfg.screen_has_focus and
