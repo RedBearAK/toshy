@@ -243,7 +243,7 @@ class InstallerSettings:
         for command in commands:
             if shutil.which(command):
                 return command
-        error(f"Could not find any 'qdbus' command variant! Will try to continue.")
+
         # Fallback to 'qdbus' if none of the preferred options are found
         return 'qdbus'
 
