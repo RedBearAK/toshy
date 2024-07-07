@@ -6,6 +6,7 @@ import re
 import sys
 import pwd
 import grp
+import glob
 import random
 import string
 import signal
@@ -888,9 +889,48 @@ class DistroQuirksHandler:
     def __init__(self) -> None:
         self.venv_cmd_lst = [cnfg.py_interp_path, '-m', 'venv', cnfg.venv_path]
 
+    def update_centos_repos_to_vault(self):
+        """
+        CentOS 7 was end of life on June 30, 2024
+        Centos Stream 8 was end of builds on May 31, 2024
+        
+        https://mirrorlist.centos.org suddenly ceased to exist, making it impossible
+        to install Toshy with the current setup. 
+        We need to fix the repos to continue being able to 
+        install on CentOS 7 and CentOS Stream 8 
+        
+        Online advice for fixing this issue manually:
+        sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo
+        sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo
+        sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo
+        """
+
+        print('Updating CentOS repos to use the CentOS Vault...')
+        repo_files = glob.glob('/etc/yum.repos.d/*.repo')
+        
+        for file_path in repo_files:
+            with open(file_path, 'r') as file:
+                content = file.readlines()
+
+            new_content = []
+            for line in content:
+                if 'mirror.centos.org' in line:
+                    line = line.replace('mirror.centos.org', 'vault.centos.org')
+                if line.strip().startswith('#baseurl=http'):
+                    line = line.lstrip('#')
+                if line.strip().startswith('mirrorlist=http'):
+                    line = '#' + line
+
+                new_content.append(line)
+
+            with open(file_path, 'w') as file:
+                file.writelines(new_content)
+            print(f"Updated {file_path}")
 
     def handle_quirks_CentOS_7(self):
         print('Doing prep/checks for CentOS 7...')
+
+        self.update_centos_repos_to_vault()
 
         # Doing this now in the pip packages install function:
         # # pin 'evdev' pip package to version 1.6.1 for CentOS 7 to
@@ -933,6 +973,9 @@ class DistroQuirksHandler:
 
     def handle_quirks_CentOS_Stream_8(self):
         print('Doing prep/checks for CentOS Stream 8...')
+
+        self.update_centos_repos_to_vault()
+
         min_mnr_ver = cnfg.curr_py_rel_ver_mnr - 3           # check up to 2 vers before current
         max_mnr_ver = cnfg.curr_py_rel_ver_mnr + 3           # check up to 3 vers after current
         py_minor_ver_rng = range(max_mnr_ver, min_mnr_ver, -1)
