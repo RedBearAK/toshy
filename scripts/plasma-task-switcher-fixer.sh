@@ -14,6 +14,9 @@
 
 KDE_ver="$KDE_SESSION_VERSION"
 
+# Define an array of potential dbus command utilities
+dbus_commands=("gdbus" "qdbus" "qdbus-qt6" "qdbus6" "qdbus-qt5" "dbus-send")
+
 
 # Check if we're actually in KDE
 if [ -z "$KDE_ver" ]; then
@@ -85,7 +88,7 @@ if [ "$KDE_ver" = "5" ] || [ "$KDE_ver" = "6" ]; then
     dest="org.kde.kglobalaccel"
     obj_path="/kglobalaccel"
 
-    # mthd_setSC="org.kde.KGlobalAccel.setShortcut"
+    # mthd_setSC="org.kde.KGlobalAccel.setShortcut"     # setShortcut is DEPRECATED AS OF KF 5.90!
     # ai_keys_null="[0]"                                          # To clear the keys of a shortcut
     # ai_keys_alt_grave="[134217824]"                             # Alt+``
     # ai_keys_alt_tilde="[134217854]"                             # Alt+~
@@ -240,13 +243,7 @@ fi
 sleep 0.5
 
 
-# We need to gracefully cascade through common D-Bus utils to 
-# find one that is available to use for the KWin reconfigure 
-# command. Sometimes 'qdbus' is not available. Start with 'gdbus'.
-
-dbus_commands=("gdbus" "qdbus6" "qdbus-qt6" "qdbus-qt5" "qdbus" "dbus-send")
-
-# Functions to handle reconfiguration with different dbus utilities
+# Functions to handle KWin reconfiguration with different dbus utilities
 reconfigure_kwin() {
     case "$1" in
         gdbus)

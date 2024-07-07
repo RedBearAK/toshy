@@ -6,6 +6,7 @@ import re
 import sys
 import pwd
 import grp
+import glob
 import random
 import string
 import signal
@@ -150,6 +151,7 @@ py_pkg_ver_str          = f'{py_ver_mjr}{py_ver_mnr}'
 
 class InstallerSettings:
     """Set up variables for necessary information to be used by all functions"""
+
     def __init__(self) -> None:
         sep_reps                    = 80
         self.sep_char               = '='
@@ -172,7 +174,7 @@ class InstallerSettings:
 
         self.pkgs_for_distro        = None
 
-        self.qdbus                  = 'qdbus-qt5' if shutil.which('qdbus-qt5') else 'qdbus'
+        self.qdbus                  = self.find_qdbus_command()
 
         # current stable Python release version (TODO: update when needed):
         # 3.11 Release Date: Oct. 24, 2022
@@ -228,12 +230,22 @@ class InstallerSettings:
         self.run_tmp_dir            = run_tmp_dir
         self.reboot_tmp_file        = f"{self.run_tmp_dir}/toshy_installer_says_reboot"
         self.reboot_ascii_art       = textwrap.dedent("""
-                ██████      ███████     ██████       ██████       ██████      ████████     ██ 
-                ██   ██     ██          ██   ██     ██    ██     ██    ██        ██        ██ 
-                ██████      █████       ██████      ██    ██     ██    ██        ██        ██ 
-                ██   ██     ██          ██   ██     ██    ██     ██    ██        ██           
-                ██   ██     ███████     ██████       ██████       ██████         ██        ██ 
-                """)
+            ██████      ███████     ██████       ██████       ██████      ████████     ██ 
+            ██   ██     ██          ██   ██     ██    ██     ██    ██        ██        ██ 
+            ██████      █████       ██████      ██    ██     ██    ██        ██        ██ 
+            ██   ██     ██          ██   ██     ██    ██     ██    ██        ██           
+            ██   ██     ███████     ██████       ██████       ██████         ██        ██ 
+            """)
+
+    def find_qdbus_command(self):
+        # List of qdbus command names by preference
+        commands = ['qdbus6', 'qdbus-qt6', 'qdbus-qt5', 'qdbus']
+        for command in commands:
+            if shutil.which(command):
+                return command
+
+        # Fallback to 'qdbus' if none of the preferred options are found
+        return 'qdbus'
 
 
 def safe_shutdown(exit_code: int):
@@ -609,6 +621,19 @@ distro_groups_map: Dict[str, List[str]] = {
     # Add more as needed...
 }
 
+
+# Checklist of distros with '/usr/bin/gdbus' pre-installed in clean VM
+# 
+# - AlmaLinux 8.x
+# - AlmaLinux 9.x                               [Provided by 'glib2']
+# - CentOS 7
+# - KDE Neon User Edition (Ubuntu LTS-based)    [Provided by 'libglib2.0-bin']
+# - Manjaro KDE (Arch-based)                    [Provided by 'glib2']
+# - OpenMandriva Lx 5.0 (Plasma Slim)           [Provided by 'glib2.0-common']
+# - openSUSE Leap 15.6                          [Provided by 'glib2-tools']
+# 
+
+
 pkg_groups_map: Dict[str, List[str]] = {
 
     # NOTE: Do not add 'gnome-shell-extension-appindicator' to Fedora/RHELs.
@@ -789,7 +814,14 @@ pip_pkgs   = [
 
     # Pinned pygobject to 3.44.1 (or earlier) to get through install on RHEL 8.x and clones
     "lockfile", "dbus-python", "systemd-python", "pygobject<=3.44.1", "tk",
-    "sv_ttk", "watchdog", "psutil", "xkbcommon",
+    "sv_ttk", "watchdog", "psutil", 
+    
+    # NOTE: Version 1.5 of 'xkbcommon' introduced breaking API changes:
+    # XKB_CONTEXT_NO_SECURE_GETENV
+    # https://github.com/sde1000/python-xkbcommon/issues/23
+    # Need to pin version to less than v1.1 to avoid errors installing 'xkbcommon'.
+    # TODO: Revisit this pinning in... 2028.
+    "xkbcommon<1.1",
 
     # NOTE: WE CANNOT USE `xkbregistry` DUE TO CONFUSION AMONG SUPPORTING NATIVE PACKAGES
     # "xkbregistry",
@@ -864,9 +896,73 @@ class DistroQuirksHandler:
     def __init__(self) -> None:
         self.venv_cmd_lst = [cnfg.py_interp_path, '-m', 'venv', cnfg.venv_path]
 
+    def update_centos_repos_to_vault(self):
+        """
+        CentOS 7 was end of life on June 30, 2024
+        Centos Stream 8 was end of builds on May 31, 2024
+        
+        https://mirrorlist.centos.org suddenly ceased to exist, making it impossible
+        to install Toshy with the current setup. 
+        We need to fix the repos to continue being able to 
+        install on CentOS 7 and CentOS Stream 8 
+        
+        Online advice for fixing this issue manually:
+        sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo
+        sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo
+        sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo
+        """
+
+        print('Updating CentOS repos to use the CentOS Vault...')
+        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+        repo_files              = glob.glob('/etc/yum.repos.d/*.repo')
+        commands                = []
+
+        commands += [
+            f"sudo sed -i 's/mirror.centos.org/vault.centos.org/g' {file_path}"
+            for file_path in repo_files ]
+        commands += [
+            f"sudo sed -i 's/^#.*baseurl=http/baseurl=http/g' {file_path}"
+            for file_path in repo_files ]
+        commands += [
+            f"sudo sed -i 's/^\\(mirrorlist=http\\)/#\\1/' {file_path}"
+            for file_path in repo_files ]
+        
+        for command in commands:
+            try:
+                subprocess.run(command, shell=True, check=True)
+                print(f"Executed: {command}")
+            except subprocess.CalledProcessError as e:
+                print(f"Failed to execute: {command}\nError: {e}")
+                safe_shutdown(1)  # Ensure safe_shutdown is adequately defined
+
+        print("All repository files updated successfully.")
+
+        # Now that repo URLs have been changed, we need to clear and refresh the cache
+        # Seems unlikely that 'yum' would be removed, but 'dnf' is not pre-installed on CentOS 7.
+        # We'll check for both before attempting to refresh caches, just to be safe. 
+
+        if shutil.which('yum'):
+            try:
+                subprocess.run(['sudo', 'yum', 'clean', 'all'], check=True)
+                subprocess.run(['sudo', 'yum', 'makecache'], check=True)
+                print("Yum cache has been refreshed.")
+            except subprocess.CalledProcessError as e:
+                error(f"Failed to refresh yum cache: \n\t{e}")
+                safe_shutdown(1)
+
+        if shutil.which('dnf'):
+            try:
+                subprocess.run(['sudo', 'dnf', 'clean', 'all'], check=True)
+                subprocess.run(['sudo', 'dnf', 'makecache'], check=True)
+                print("DNF cache has been refreshed.")
+            except subprocess.CalledProcessError as e:
+                error(f"Failed to refresh dnf cache: {e}")
+                safe_shutdown(1)
 
     def handle_quirks_CentOS_7(self):
         print('Doing prep/checks for CentOS 7...')
+
+        self.update_centos_repos_to_vault()
 
         # Doing this now in the pip packages install function:
         # # pin 'evdev' pip package to version 1.6.1 for CentOS 7 to
@@ -909,6 +1005,9 @@ class DistroQuirksHandler:
 
     def handle_quirks_CentOS_Stream_8(self):
         print('Doing prep/checks for CentOS Stream 8...')
+
+        self.update_centos_repos_to_vault()
+
         min_mnr_ver = cnfg.curr_py_rel_ver_mnr - 3           # check up to 2 vers before current
         max_mnr_ver = cnfg.curr_py_rel_ver_mnr + 3           # check up to 3 vers after current
         py_minor_ver_rng = range(max_mnr_ver, min_mnr_ver, -1)
@@ -1877,8 +1976,10 @@ class PythonVenvQuirksHandler():
         pass
 
     def handle_venv_quirks_CentOS_7(self):
-        # avoid using systemd packages/services for CentOS 7
+        print('Handling Python virtual environment quirks in CentOS 7...')
+        # Avoid using systemd packages/services for CentOS 7
         cnfg.systemctl_present = False
+
         # Path where Python 3.8 should have been installed by this point
         rh_python38 = '/opt/rh/rh-python38/root/usr/bin/python3.8'
         if os.path.isfile(rh_python38) and os.access(rh_python38, os.X_OK):
@@ -1888,11 +1989,19 @@ class PythonVenvQuirksHandler():
             error("Failed to install Toshy from admin user first?")
             safe_shutdown(1)
 
+        # Pin 'evdev' pip package to version 1.6.1 for CentOS 7 to
+        # deal with ImportError and undefined symbol UI_GET_SYSNAME
+        global pip_pkgs
+        pip_pkgs = [pkg if pkg != "evdev" else "evdev==1.6.1" for pkg in pip_pkgs]
+
+
     def handle_venv_quirks_CentOS_Stream_8(self):
-        """Use a newer Python version for the venv in CentOS Stream 8."""
+        print('Handling Python virtual environment quirks in CentOS Stream 8...')
+
         # TODO: Add higher version if ever necessary (keep minimum 3.8)
         min_mnr_ver = cnfg.curr_py_rel_ver_mnr - 3           # check up to 2 vers before current
         max_mnr_ver = cnfg.curr_py_rel_ver_mnr + 3           # check up to 3 vers after current
+
         py_minor_ver_rng = range(max_mnr_ver, min_mnr_ver, -1)
         if py_interp_ver_tup < cnfg.curr_py_rel_ver_tup:
             print(f"Checking for appropriate Python version on system...")
@@ -1907,7 +2016,7 @@ class PythonVenvQuirksHandler():
                 safe_shutdown(1)
 
     def handle_venv_quirks_Leap(self):
-        print('Handling a Python virtual environment quirk in Leap...')
+        print('Handling Python virtual environment quirks in Leap...')
         # Change the Python interpreter path to use current release version from pkg list
         # if distro is openSUSE Leap type (instead of using old 3.6 Python version).
         if shutil.which(f'python{cnfg.curr_py_rel_ver_str}'):
@@ -1933,14 +2042,14 @@ class PythonVenvQuirksHandler():
             safe_shutdown(1)
 
     def handle_venv_quirks_OpenMandriva(self, venv_cmd_lst):
-        print('Handling a Python virtual environment quirk in OpenMandriva...')
+        print('Handling Python virtual environment quirks in OpenMandriva...')
         # We need to run the exact same command twice on OpenMandriva, for unknown reasons.
         # So this instance of the command is just "prep" for the seemingly duplicate
         # command that follows it in setup_python_vir_env(). 
         subprocess.run(venv_cmd_lst, check=True)
 
     def handle_venv_quirks_RHEL(self):
-        """Use a newer Python version for the venv in RHEL"""
+        print('Handling Python virtual environment quirks in RHEL-type distros...')
         # TODO: Add higher version if ever necessary (keep minimum 3.8)
         potential_versions = ['3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
         for version in potential_versions:
@@ -1951,7 +2060,7 @@ class PythonVenvQuirksHandler():
                 break
 
     def handle_venv_quirks_Tumbleweed(self):
-        print('Handling a Python virtual environment quirk in Tumbleweed...')
+        print('Handling Python virtual environment quirks in Tumbleweed...')
 
         # Needed to make a symlink to get `xkbcommon` to install in the venv:
         # sudo ln -s /usr/include/libxkbcommon/xkbcommon /usr/include/
@@ -1999,16 +2108,13 @@ def setup_python_vir_env():
 
 
 def install_pip_packages():
-    """Install `pip` packages for Python"""
+    """Install `pip` packages in the prepped Python virtual environment"""
     print(f'\n\n§  Installing/upgrading Python packages...\n{cnfg.separator}')
+
+    global pip_pkgs
+
     venv_python_cmd = os.path.join(cnfg.venv_path, 'bin', 'python')
     venv_pip_cmd    = os.path.join(cnfg.venv_path, 'bin', 'pip')
-
-    if cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '7':
-        # pin 'evdev' pip package to version 1.6.1 for CentOS 7 to
-        # deal with ImportError and undefined symbol UI_GET_SYSNAME
-        global pip_pkgs
-        pip_pkgs = [pkg if pkg != "evdev" else "evdev==1.6.1" for pkg in pip_pkgs]
 
     # Bypass the install of 'dbus-python' pip package if option passed to 'install' command.
     # Diminishes peripheral app functionality and disables some Wayland methods, but 
@@ -2060,15 +2166,15 @@ def install_pip_packages():
     for command in commands:
         result = subprocess.run(command)
         if result.returncode != 0:
-            print(f'Error installing/upgrading Python packages. Installer exiting.')
+            error(f'Problem installing/upgrading Python packages. Installer exiting.')
             safe_shutdown(1)
     if os.path.exists(cnfg.keymapper_tmp_path):
         result = subprocess.run([venv_pip_cmd, 'install', '--upgrade', cnfg.keymapper_tmp_path])
         if result.returncode != 0:
-            print(f'Error installing/upgrading keymapper utility.')
+            error(f'Problem installing/upgrading keymapper utility.')
             safe_shutdown(1)
     else:
-        print(f'Temporary keymapper clone folder missing. Unable to install keymapper.')
+        error(f'Temporary keymapper clone folder missing. Unable to install keymapper.')
         safe_shutdown(1)
     show_task_completed_msg()
 

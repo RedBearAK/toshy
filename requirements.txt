@@ -4,6 +4,7 @@
 # 
 # The main purpose of making this file is for GitHub to be able to show dependencies.
 # Native package installs are used to provide additional Python modules not named here, 
+# (for supporting the Python-based keymapper that Toshy installs/works with),
 # and prep build/compile dependencies for some of these pip packages. 
 # The 'setup_toshy.py' script handles native package installs and all these pip 
 # package installs automatically. 
@@ -28,7 +29,10 @@ tk
 sv_ttk
 watchdog
 psutil
-xkbcommon
+# Version 1.5 of xkbcommon introduced breaking API changes.
+# Pinning to less than v1.1 on advice of repo maintainer/owner.
+# See https://github.com/sde1000/python-xkbcommon/issues/23
+xkbcommon<1.1
 
 # Installing 'pywlroots' requires native package 'libxkbcommon-devel' on Fedora.
 # pywlroots
