@@ -150,6 +150,7 @@ py_pkg_ver_str          = f'{py_ver_mjr}{py_ver_mnr}'
 
 class InstallerSettings:
     """Set up variables for necessary information to be used by all functions"""
+
     def __init__(self) -> None:
         sep_reps                    = 80
         self.sep_char               = '='
@@ -172,7 +173,7 @@ class InstallerSettings:
 
         self.pkgs_for_distro        = None
 
-        self.qdbus                  = 'qdbus-qt5' if shutil.which('qdbus-qt5') else 'qdbus'
+        self.qdbus                  = self.find_qdbus_command()
 
         # current stable Python release version (TODO: update when needed):
         # 3.11 Release Date: Oct. 24, 2022
@@ -228,12 +229,22 @@ class InstallerSettings:
         self.run_tmp_dir            = run_tmp_dir
         self.reboot_tmp_file        = f"{self.run_tmp_dir}/toshy_installer_says_reboot"
         self.reboot_ascii_art       = textwrap.dedent("""
-                ██████      ███████     ██████       ██████       ██████      ████████     ██ 
-                ██   ██     ██          ██   ██     ██    ██     ██    ██        ██        ██ 
-                ██████      █████       ██████      ██    ██     ██    ██        ██        ██ 
-                ██   ██     ██          ██   ██     ██    ██     ██    ██        ██           
-                ██   ██     ███████     ██████       ██████       ██████         ██        ██ 
-                """)
+            ██████      ███████     ██████       ██████       ██████      ████████     ██ 
+            ██   ██     ██          ██   ██     ██    ██     ██    ██        ██        ██ 
+            ██████      █████       ██████      ██    ██     ██    ██        ██        ██ 
+            ██   ██     ██          ██   ██     ██    ██     ██    ██        ██           
+            ██   ██     ███████     ██████       ██████       ██████         ██        ██ 
+            """)
+
+    def find_qdbus_command(self):
+        # List of qdbus command names by preference
+        commands = ['qdbus6', 'qdbus-qt6', 'qdbus-qt5', 'qdbus']
+        for command in commands:
+            if shutil.which(command):
+                return command
+        error(f"Could not find any 'qdbus' command variant! Will try to continue.")
+        # Fallback to 'qdbus' if none of the preferred options are found
+        return 'qdbus'
 
 
 def safe_shutdown(exit_code: int):
@@ -608,6 +619,19 @@ distro_groups_map: Dict[str, List[str]] = {
     # 'kaos-based':               ["kaos"],
     # Add more as needed...
 }
+
+
+# Checklist of distros with '/usr/bin/gdbus' pre-installed in clean VM
+# 
+# - AlmaLinux 8.x
+# - AlmaLinux 9.x                               [Provided by 'glib2']
+# - CentOS 7
+# - KDE Neon User Edition (Ubuntu LTS-based)    [Provided by 'libglib2.0-bin']
+# - Manjaro KDE (Arch-based)                    [Provided by 'glib2']
+# - OpenMandriva Lx 5.0 (Plasma Slim)           [Provided by 'glib2.0-common']
+# - openSUSE Leap 15.6                          [Provided by 'glib2-tools']
+# 
+
 
 pkg_groups_map: Dict[str, List[str]] = {
 
@@ -1877,8 +1901,9 @@ class PythonVenvQuirksHandler():
         pass
 
     def handle_venv_quirks_CentOS_7(self):
-        # avoid using systemd packages/services for CentOS 7
+        # Avoid using systemd packages/services for CentOS 7
         cnfg.systemctl_present = False
+
         # Path where Python 3.8 should have been installed by this point
         rh_python38 = '/opt/rh/rh-python38/root/usr/bin/python3.8'
         if os.path.isfile(rh_python38) and os.access(rh_python38, os.X_OK):
@@ -1888,11 +1913,19 @@ class PythonVenvQuirksHandler():
             error("Failed to install Toshy from admin user first?")
             safe_shutdown(1)
 
+        # Pin 'evdev' pip package to version 1.6.1 for CentOS 7 to
+        # deal with ImportError and undefined symbol UI_GET_SYSNAME
+        global pip_pkgs
+        pip_pkgs = [pkg if pkg != "evdev" else "evdev==1.6.1" for pkg in pip_pkgs]
+
+
     def handle_venv_quirks_CentOS_Stream_8(self):
         """Use a newer Python version for the venv in CentOS Stream 8."""
+
         # TODO: Add higher version if ever necessary (keep minimum 3.8)
         min_mnr_ver = cnfg.curr_py_rel_ver_mnr - 3           # check up to 2 vers before current
         max_mnr_ver = cnfg.curr_py_rel_ver_mnr + 3           # check up to 3 vers after current
+
         py_minor_ver_rng = range(max_mnr_ver, min_mnr_ver, -1)
         if py_interp_ver_tup < cnfg.curr_py_rel_ver_tup:
             print(f"Checking for appropriate Python version on system...")
@@ -1966,6 +1999,13 @@ class PythonVenvQuirksHandler():
         
         print(f"C_INCLUDE_PATH updated: {os.environ['C_INCLUDE_PATH']}")
 
+    def handle_venv_quirks_Ubuntu_20(self):
+        """Handle quirks when installing pip packages in Ubuntu 20.x"""
+        # We already checked the distro major version before invoking this handler.
+        # Need to pin 'xkbcommon' to latest version before 1.5 to complete venv process. 
+        global pip_pkgs
+        pip_pkgs = [pkg if pkg != "xkbcommon" else "xkbcommon<1.5" for pkg in pip_pkgs]
+
 
 def setup_python_vir_env():
     """Setup a virtual environment to install Python packages"""
@@ -1983,6 +2023,8 @@ def setup_python_vir_env():
             venv_quirks_handler.handle_venv_quirks_CentOS_Stream_8()
         elif cnfg.DISTRO_ID in distro_groups_map['rhel-based']:
             venv_quirks_handler.handle_venv_quirks_RHEL()
+        elif cnfg.DISTRO_ID == 'ubuntu' and cnfg.distro_mjr_ver == '20':
+            venv_quirks_handler.handle_venv_quirks_Ubuntu_20()
         try:
             print(f'Using Python version {cnfg.py_interp_ver_str}.')
             venv_cmd_lst = [cnfg.py_interp_path, '-m', 'venv', cnfg.venv_path]
@@ -2003,12 +2045,6 @@ def install_pip_packages():
     print(f'\n\n§  Installing/upgrading Python packages...\n{cnfg.separator}')
     venv_python_cmd = os.path.join(cnfg.venv_path, 'bin', 'python')
     venv_pip_cmd    = os.path.join(cnfg.venv_path, 'bin', 'pip')
-
-    if cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '7':
-        # pin 'evdev' pip package to version 1.6.1 for CentOS 7 to
-        # deal with ImportError and undefined symbol UI_GET_SYSNAME
-        global pip_pkgs
-        pip_pkgs = [pkg if pkg != "evdev" else "evdev==1.6.1" for pkg in pip_pkgs]
 
     # Bypass the install of 'dbus-python' pip package if option passed to 'install' command.
     # Diminishes peripheral app functionality and disables some Wayland methods, but 
@@ -2060,15 +2096,15 @@ def install_pip_packages():
     for command in commands:
         result = subprocess.run(command)
         if result.returncode != 0:
-            print(f'Error installing/upgrading Python packages. Installer exiting.')
+            error(f'Problem installing/upgrading Python packages. Installer exiting.')
             safe_shutdown(1)
     if os.path.exists(cnfg.keymapper_tmp_path):
         result = subprocess.run([venv_pip_cmd, 'install', '--upgrade', cnfg.keymapper_tmp_path])
         if result.returncode != 0:
-            print(f'Error installing/upgrading keymapper utility.')
+            error(f'Problem installing/upgrading keymapper utility.')
             safe_shutdown(1)
     else:
-        print(f'Temporary keymapper clone folder missing. Unable to install keymapper.')
+        error(f'Temporary keymapper clone folder missing. Unable to install keymapper.')
         safe_shutdown(1)
     show_task_completed_msg()
 
