@@ -936,6 +936,28 @@ class DistroQuirksHandler:
 
         print("All repository files updated successfully.")
 
+        # Now that repo URLs have been changed, we need to clear and refresh the cache
+        # Seems unlikely that 'yum' would be removed, but 'dnf' is not pre-installed on CentOS 7.
+        # We'll check for both before attempting to refresh caches, just to be safe. 
+
+        if shutil.which('yum'):
+            try:
+                subprocess.run(['sudo', 'yum', 'clean', 'all'], check=True)
+                subprocess.run(['sudo', 'yum', 'makecache'], check=True)
+                print("Yum cache has been refreshed.")
+            except subprocess.CalledProcessError as e:
+                error(f"Failed to refresh yum cache: \n\t{e}")
+                safe_shutdown(1)
+
+        if shutil.which('dnf'):
+            try:
+                subprocess.run(['sudo', 'dnf', 'clean', 'all'], check=True)
+                subprocess.run(['sudo', 'dnf', 'makecache'], check=True)
+                print("DNF cache has been refreshed.")
+            except subprocess.CalledProcessError as e:
+                error(f"Failed to refresh dnf cache: {e}")
+                safe_shutdown(1)
+
     def handle_quirks_CentOS_7(self):
         print('Doing prep/checks for CentOS 7...')
 
