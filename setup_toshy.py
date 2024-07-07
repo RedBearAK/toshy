@@ -1901,6 +1901,7 @@ class PythonVenvQuirksHandler():
         pass
 
     def handle_venv_quirks_CentOS_7(self):
+        print('Handling Python virtual environment quirks in CentOS 7...')
         # Avoid using systemd packages/services for CentOS 7
         cnfg.systemctl_present = False
 
@@ -1920,7 +1921,7 @@ class PythonVenvQuirksHandler():
 
 
     def handle_venv_quirks_CentOS_Stream_8(self):
-        """Use a newer Python version for the venv in CentOS Stream 8."""
+        print('Handling Python virtual environment quirks in CentOS Stream 8...')
 
         # TODO: Add higher version if ever necessary (keep minimum 3.8)
         min_mnr_ver = cnfg.curr_py_rel_ver_mnr - 3           # check up to 2 vers before current
@@ -1940,7 +1941,7 @@ class PythonVenvQuirksHandler():
                 safe_shutdown(1)
 
     def handle_venv_quirks_Leap(self):
-        print('Handling a Python virtual environment quirk in Leap...')
+        print('Handling Python virtual environment quirks in Leap...')
         # Change the Python interpreter path to use current release version from pkg list
         # if distro is openSUSE Leap type (instead of using old 3.6 Python version).
         if shutil.which(f'python{cnfg.curr_py_rel_ver_str}'):
@@ -1966,14 +1967,14 @@ class PythonVenvQuirksHandler():
             safe_shutdown(1)
 
     def handle_venv_quirks_OpenMandriva(self, venv_cmd_lst):
-        print('Handling a Python virtual environment quirk in OpenMandriva...')
+        print('Handling Python virtual environment quirks in OpenMandriva...')
         # We need to run the exact same command twice on OpenMandriva, for unknown reasons.
         # So this instance of the command is just "prep" for the seemingly duplicate
         # command that follows it in setup_python_vir_env(). 
         subprocess.run(venv_cmd_lst, check=True)
 
     def handle_venv_quirks_RHEL(self):
-        """Use a newer Python version for the venv in RHEL"""
+        print('Handling Python virtual environment quirks in RHEL-type distros...')
         # TODO: Add higher version if ever necessary (keep minimum 3.8)
         potential_versions = ['3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
         for version in potential_versions:
@@ -1984,7 +1985,7 @@ class PythonVenvQuirksHandler():
                 break
 
     def handle_venv_quirks_Tumbleweed(self):
-        print('Handling a Python virtual environment quirk in Tumbleweed...')
+        print('Handling Python virtual environment quirks in Tumbleweed...')
 
         # Needed to make a symlink to get `xkbcommon` to install in the venv:
         # sudo ln -s /usr/include/libxkbcommon/xkbcommon /usr/include/
@@ -2000,7 +2001,7 @@ class PythonVenvQuirksHandler():
         print(f"C_INCLUDE_PATH updated: {os.environ['C_INCLUDE_PATH']}")
 
     def handle_venv_quirks_Ubuntu_20(self):
-        """Handle quirks when installing pip packages in Ubuntu 20.x"""
+        print('Handling Python virtual environment quirks in Ubuntu 20.x...')
         # We already checked the distro major version before invoking this handler.
         # Need to pin 'xkbcommon' to latest version before 1.5 to complete venv process. 
         global pip_pkgs
