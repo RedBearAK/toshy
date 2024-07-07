@@ -906,6 +906,9 @@ class DistroQuirksHandler:
         """
 
         print('Updating CentOS repos to use the CentOS Vault...')
+
+        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+
         repo_files = glob.glob('/etc/yum.repos.d/*.repo')
         
         for file_path in repo_files:
