@@ -917,7 +917,7 @@ class DistroQuirksHandler:
             f"sudo sed -i 's/^#.*baseurl=http/baseurl=http/g' {file_path}"
             for file_path in repo_files ]
         commands += [
-            f"sudo sed -i 's/^mirrorlist=http/#mirrorlist=http/g' {file_path}"
+            f"sudo sed -i '/^mirrorlist=http/!s/^mirrorlist=http/#mirrorlist=http/' {file_path}"
             for file_path in repo_files ]
         
         for command in commands:
@@ -1986,6 +1986,10 @@ class PythonVenvQuirksHandler():
                 error(  f'ERROR: Did not find any appropriate Python interpreter version.')
                 safe_shutdown(1)
 
+        # Need to pin 'xkbcommon' to latest version before 1.5 to complete venv process. 
+        global pip_pkgs
+        pip_pkgs = [pkg if pkg != "xkbcommon" else "xkbcommon<1.5" for pkg in pip_pkgs]
+
     def handle_venv_quirks_Leap(self):
         print('Handling Python virtual environment quirks in Leap...')
         # Change the Python interpreter path to use current release version from pkg list
@@ -2048,7 +2052,7 @@ class PythonVenvQuirksHandler():
 
     def handle_venv_quirks_Ubuntu_20(self):
         print('Handling Python virtual environment quirks in Ubuntu 20.x...')
-        # We already checked the distro major version before invoking this handler.
+
         # Need to pin 'xkbcommon' to latest version before 1.5 to complete venv process. 
         global pip_pkgs
         pip_pkgs = [pkg if pkg != "xkbcommon" else "xkbcommon<1.5" for pkg in pip_pkgs]
