@@ -906,29 +906,29 @@ class DistroQuirksHandler:
         """
 
         print('Updating CentOS repos to use the CentOS Vault...')
-
         call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+        repo_files              = glob.glob('/etc/yum.repos.d/*.repo')
+        commands                = []
 
-        repo_files = glob.glob('/etc/yum.repos.d/*.repo')
+        commands += [
+            f"sudo sed -i 's/mirror.centos.org/vault.centos.org/g' {file_path}"
+            for file_path in repo_files ]
+        commands += [
+            f"sudo sed -i 's/^#.*baseurl=http/baseurl=http/g' {file_path}"
+            for file_path in repo_files ]
+        commands += [
+            f"sudo sed -i 's/^mirrorlist=http/#mirrorlist=http/g' {file_path}"
+            for file_path in repo_files ]
         
-        for file_path in repo_files:
-            with open(file_path, 'r') as file:
-                content = file.readlines()
+        for command in commands:
+            try:
+                subprocess.run(command, shell=True, check=True)
+                print(f"Executed: {command}")
+            except subprocess.CalledProcessError as e:
+                print(f"Failed to execute: {command}\nError: {e}")
+                safe_shutdown(1)  # Ensure safe_shutdown is adequately defined
 
-            new_content = []
-            for line in content:
-                if 'mirror.centos.org' in line:
-                    line = line.replace('mirror.centos.org', 'vault.centos.org')
-                if line.strip().startswith('#baseurl=http'):
-                    line = line.lstrip('#')
-                if line.strip().startswith('mirrorlist=http'):
-                    line = '#' + line
-
-                new_content.append(line)
-
-            with open(file_path, 'w') as file:
-                file.writelines(new_content)
-            print(f"Updated {file_path}")
+        print("All repository files updated successfully.")
 
     def handle_quirks_CentOS_7(self):
         print('Doing prep/checks for CentOS 7...')
