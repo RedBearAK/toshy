@@ -28,7 +28,10 @@ tk
 sv_ttk
 watchdog
 psutil
-xkbcommon
+# Version 1.5 of xkbcommon introduced breaking API changes.
+# Pinning to less than v1.1 on advice of repo maintainer/owner.
+# See https://github.com/sde1000/python-xkbcommon/issues/23
+xkbcommon<1.1
 
 # Installing 'pywlroots' requires native package 'libxkbcommon-devel' on Fedora.
 # pywlroots
