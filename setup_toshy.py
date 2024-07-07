@@ -924,8 +924,7 @@ class DistroQuirksHandler:
             f"sudo sed -i 's/^#.*baseurl=http/baseurl=http/g' {file_path}"
             for file_path in repo_files ]
         commands += [
-            # f"sudo sed -i '/^mirrorlist=http/!s/^mirrorlist=http/#mirrorlist=http/' {file_path}"
-            f"sudo sed -i 's/^\(mirrorlist=http\)/#\1/' {file_path}"
+            f"sudo sed -i 's/^\\(mirrorlist=http\\)/#\\1/' {file_path}"
             for file_path in repo_files ]
         
         for command in commands:
