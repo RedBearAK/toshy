@@ -816,11 +816,12 @@ pip_pkgs   = [
     "lockfile", "dbus-python", "systemd-python", "pygobject<=3.44.1", "tk",
     "sv_ttk", "watchdog", "psutil", 
     
-    # TODO: Check on this issue to see if there is a resolution:
-    # XKB_CONTEXT_NO_SECURE_GETENV error
+    # NOTE: Version 1.5 of 'xkbcommon' introduced breaking API changes:
+    # XKB_CONTEXT_NO_SECURE_GETENV
     # https://github.com/sde1000/python-xkbcommon/issues/23
-    # Meanwhile, need to pin to v1.0.1 or earlier to avoid error installing 'xkbcommon'.
-    "xkbcommon<=1.0.1",
+    # Need to pin version to less than v1.1 to avoid errors installing 'xkbcommon'.
+    # TODO: Revisit this pinning in... 2028.
+    "xkbcommon<1.1",
 
     # NOTE: WE CANNOT USE `xkbregistry` DUE TO CONFUSION AMONG SUPPORTING NATIVE PACKAGES
     # "xkbregistry",
