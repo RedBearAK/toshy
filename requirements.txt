@@ -4,6 +4,7 @@
 # 
 # The main purpose of making this file is for GitHub to be able to show dependencies.
 # Native package installs are used to provide additional Python modules not named here, 
+# (for supporting the Python-based keymapper that Toshy installs/works with),
 # and prep build/compile dependencies for some of these pip packages. 
 # The 'setup_toshy.py' script handles native package installs and all these pip 
 # package installs automatically. 
