@@ -2042,8 +2042,11 @@ def setup_python_vir_env():
 
 
 def install_pip_packages():
-    """Install `pip` packages for Python"""
+    """Install `pip` packages in the prepped Python virtual environment"""
     print(f'\n\n§  Installing/upgrading Python packages...\n{cnfg.separator}')
+
+    global pip_pkgs
+
     venv_python_cmd = os.path.join(cnfg.venv_path, 'bin', 'python')
     venv_pip_cmd    = os.path.join(cnfg.venv_path, 'bin', 'pip')
 
