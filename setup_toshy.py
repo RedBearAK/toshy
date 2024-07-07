@@ -814,7 +814,13 @@ pip_pkgs   = [
 
     # Pinned pygobject to 3.44.1 (or earlier) to get through install on RHEL 8.x and clones
     "lockfile", "dbus-python", "systemd-python", "pygobject<=3.44.1", "tk",
-    "sv_ttk", "watchdog", "psutil", "xkbcommon",
+    "sv_ttk", "watchdog", "psutil", 
+    
+    # TODO: Check on this issue to see if there is a resolution:
+    # XKB_CONTEXT_NO_SECURE_GETENV error
+    # https://github.com/sde1000/python-xkbcommon/issues/23
+    # Meanwhile, need to pin to v1.0.1 or earlier to avoid error installing 'xkbcommon'.
+    "xkbcommon<=1.0.1",
 
     # NOTE: WE CANNOT USE `xkbregistry` DUE TO CONFUSION AMONG SUPPORTING NATIVE PACKAGES
     # "xkbregistry",
@@ -1986,10 +1992,6 @@ class PythonVenvQuirksHandler():
                 error(  f'ERROR: Did not find any appropriate Python interpreter version.')
                 safe_shutdown(1)
 
-        # Need to pin 'xkbcommon' to latest version before 1.5 to complete venv process. 
-        global pip_pkgs
-        pip_pkgs = [pkg if pkg != "xkbcommon" else "xkbcommon<1.5" for pkg in pip_pkgs]
-
     def handle_venv_quirks_Leap(self):
         print('Handling Python virtual environment quirks in Leap...')
         # Change the Python interpreter path to use current release version from pkg list
@@ -2050,13 +2052,6 @@ class PythonVenvQuirksHandler():
         
         print(f"C_INCLUDE_PATH updated: {os.environ['C_INCLUDE_PATH']}")
 
-    def handle_venv_quirks_Ubuntu_20(self):
-        print('Handling Python virtual environment quirks in Ubuntu 20.x...')
-
-        # Need to pin 'xkbcommon' to latest version before 1.5 to complete venv process. 
-        global pip_pkgs
-        pip_pkgs = [pkg if pkg != "xkbcommon" else "xkbcommon<1.5" for pkg in pip_pkgs]
-
 
 def setup_python_vir_env():
     """Setup a virtual environment to install Python packages"""
@@ -2074,8 +2069,6 @@ def setup_python_vir_env():
             venv_quirks_handler.handle_venv_quirks_CentOS_Stream_8()
         elif cnfg.DISTRO_ID in distro_groups_map['rhel-based']:
             venv_quirks_handler.handle_venv_quirks_RHEL()
-        elif cnfg.DISTRO_ID == 'ubuntu' and cnfg.distro_mjr_ver == '20':
-            venv_quirks_handler.handle_venv_quirks_Ubuntu_20()
         try:
             print(f'Using Python version {cnfg.py_interp_ver_str}.')
             venv_cmd_lst = [cnfg.py_interp_path, '-m', 'venv', cnfg.venv_path]
