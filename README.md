@@ -330,31 +330,54 @@ Please file an issue if you have some sort of trouble with the `uninstall` comma
 
 ## Currently working/tested Linux distros:
 
-Info on supported Linux distros has been moved into a Wiki page to make the README shorter:  
+Detailed info on supported Linux distros has been moved into a Wiki article to make the README shorter. Check for notes on your specific distro or distro type if you haven't installed Toshy before. If you aren't using a distro type found on the list, it's extremely unlikely that the Toshy installer will work, even with the `--override_distro` option. The components in Toshy's Python virtual environment are supported by a list of native packages that must first be in place.  
 
 https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros  
 
+You will find these distro groupings in the Wiki article:
+
+- [Fedora and variants](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#fedora-and-fedora-variants)
+
+- [RHEL, CentOS and clones/compatibles](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#red-hat-enterprise-linux-rhel-clones-centos-stream)
+
+- [openSUSE Leap/Tumbleweed/Aeon](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#opensuse-rpm-based-packaging-system)
+
+- [OpenMandriva](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#openmandriva-dnfrpm-based-descended-from-mandriva-mandrake)
+
+- [Ubuntu and variants](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#ubuntu-variants-and-ubuntu-based-distros)
+
+- [Debian and variants](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#debian-and-debian-based-distros)
+
+- [Arch (... BTW) and variants](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#arch-arch-based-and-related-distros)
+
+- [Solus](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#independent-distros)
+
+- [Void](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#independent-distros)
+
 ## Currently working desktop environments or window managers
 
-- X11/Xorg sessions
+- ### X11/Xorg sessions
 
     - Any desktop environment should work
 
-- Wayland sessions
+- ### Wayland sessions
 
-    - Cinnamon 6.0 or later
-    - GNOME 3.38 or later (needs shell extension, see [**Requirements**](#requirements))
-    - Hyprland
-    - Plasma 5 and 6 (KDE) [a KWin script gets installed]
-    - Sway
+    - **Cinnamon 6.0 or later** - _[uses custom shell extension]_
+    - **GNOME 3.38 or later** - _[needs shell extension, see [**Requirements**](#requirements)]_
+    - **Hyprland** - _[currently uses `hyprpy` Python module]_
+    - **Plasma 5 (KDE)** - _[uses custom KWin script]_
+    - **Plasma 6 (KDE)** - _[uses custom KWin script]_
+    - **Sway** - _[currently uses `ipc` Python module]_
 
-If you are in an X11/Xorg login session, the desktop environment or window manager doesn't really matter. The keymapper gets the window class/name/title information directly from the X server with `Xlib`.  
+If you are in an X11/Xorg login session, the desktop environment or window manager doesn't really matter. The keymapper gets the window class/name/title information directly from the X server with the Python `Xlib` module.  
 
 On the other hand, if you are in a Wayland session, it is only possible to obtain the per-application or per-window information (for the app-specific shortcut keymaps) by using solutions that are custom to a limited set of desktop environments (or window managers).  
 
-For Wayland+GNOME this requires at least one of the known compatible GNOME Shell extensions to be installed and enabled. See above in [**Requirements**](#requirements).  
+For Wayland+GNOME this requires at least one of the known compatible GNOME Shell extensions to be installed and enabled. See above in [**Requirements**](#requirements). I do not maintain the GNOME shell extensions, and they frequently need to be updated for new GNOME releases.  
 
-There are specific remaps or overrides of default remaps for several common desktop environments (or distros which have shortcut peculiarities in their default desktop setups). They become active if the desktop environment is detected correctly by the `env.py` module used by the config file, or the information about the desktop can be placed in some `OVERRIDE` variables in the config file.  
+There are specific remaps or overrides of default remaps for several common desktop environments (or distros which have shortcut peculiarities in their default desktop setups). They become active if the desktop environment is detected correctly by the `env.py` environment evaluation module used by the config file. If that isn't working for some reason, the information about the desktop environment can be placed in some `OVERRIDE` variables in the config file. But open an issue if that seems to be necessary.  
+
+Tiling window managers may need [some adjustments](https://github.com/RedBearAK/toshy/issues/294). The example issue at the link is for i3 WM, with the physical `Meta/Super/Win` key chosen as the `Mod` key in i3 config, on a PC keyboard type. Other WMs or other configuration choices will need modifications of the solution shown.  
 
 ## Usage (changing preferences)
 
