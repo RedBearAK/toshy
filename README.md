@@ -40,6 +40,15 @@ The purpose of Toshy is to match, as closely as possible, the behavior of keyboa
 
 All of this basic functionality is inherited from Kinto. Toshy just tries to be a bit fancier in implementing it.  
 
+> [!IMPORTANT]
+> You **_DO NOT_** need to and **_SHOULD NOT_** change any native keyboard shortcuts in Linux apps when using this keymapper config. If you've already changed some existing in-app shortcuts to try to mimic macOS shortcuts, you will need to reset those in-app shortcuts to their defaults. The keymapper config non-destructively (and temporarily, only while enabled) remaps hundreds of Mac-like shortcut combos onto the **_default_** native shortcuts for many apps in Linux, and global shortcuts. If those defaults are not in place, things will appear to "not work".  
+>  
+> Depending on the desktop environment, there are sometimes a couple of global shortcuts for app launchers and modifier-only shortcuts that need to be changed or disabled for the smoothest experience. Those changes are minimal and easily reversible.  
+>  
+> Competing techniques of remapping modifier keys like other keymappers or `~/.Xmodmap` should be reversed/disabled before trying to use Toshy, or the resulting virtualized modifier locations won't make much sense. The Toshy installer will throw a warning about `~/.Xmodmap` if it exists, to remind you about potential conflicts.  
+>  
+> If you're on an Apple keyboard and you chose "Apple" as the hardware keyboard model in a desktop environment like KDE to try to "fix" the modifier locations prior to trying Toshy, this may also interfere with getting the expected results. Leave the keyboard model in the DE settings to whatever it defaulted to, which is usually something like "Generic 101-key". Then Toshy's modifier remaps can take care of making the keyboard behave predictably like an Apple keyboard (even if it is not an Apple keyboard).  
+
 ## Toshifying an Application
 
 If an app that you use frequently in Linux has some shortcut behavior that still doesn't match what you'd expect from the same application (or a similar application) in macOS, after Toshy's general remapping of the modifier keys, you can add a keymap that matches the app's "class" and/or "name/title" window attributes, to make that application behave as expected. By adding it to the default config file, every user will benefit!  
