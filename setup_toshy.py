@@ -640,6 +640,7 @@ pkg_groups_map: Dict[str, List[str]] = {
 
     # NOTE: Do not add 'gnome-shell-extension-appindicator' to Fedora/RHELs.
     #       This will install extension but requires logging out of GNOME to activate.
+    #       Also, installing DE-specific packages is probably a bad idea.
     'fedora-based':        ["cairo-devel", "cairo-gobject-devel",
                             "dbus-daemon", "dbus-devel",
                             "evtest",
@@ -653,6 +654,7 @@ pkg_groups_map: Dict[str, List[str]] = {
 
     # NOTE: Do not add 'gnome-shell-extension-appindicator' to Fedora/RHELs.
     #       This will install extension but requires logging out of GNOME to activate.
+    #       Also, installing DE-specific packages is probably a bad idea.
     'rhel-based':          ["cairo-devel", "cairo-gobject-devel",
                             "dbus-daemon", "dbus-devel",
                             "gcc", "git", "gobject-introspection-devel",
@@ -664,6 +666,7 @@ pkg_groups_map: Dict[str, List[str]] = {
 
     # NOTE: Do not add 'gnome-shell-extension-appindicator' to Fedora/RHELs.
     #       This will install extension but requires logging out of GNOME to activate.
+    #       Also, installing DE-specific packages is probably a bad idea.
     'fedora-immutables':   ["cairo-devel", "cairo-gobject-devel",
                             "dbus-daemon", "dbus-devel",
                             "evtest",
