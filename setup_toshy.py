@@ -617,7 +617,6 @@ distro_groups_map: Dict[str, List[str]] = {
 
     'void-based':               ["void"],
 
-    # 'kaos-based':               ["kaos"],
     # Add more as needed...
 }
 
@@ -784,18 +783,6 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "xset",
                             "zenity"],
 
-    # NOTE: KaOS is not actually supported at this time! These are preliminary package names!
-    # TODO: Add correct package to support installing `xkbcommon` pip package.
-    'kaos-based':          ["cairo",
-                            "dbus",
-                            "evtest",
-                            "gcc", "git", "gobject-introspection",
-                            "libappindicator-gtk3", "libnotify",
-                            "pkg-config", "python", "python-dbus", "python-pip",
-                            "systemd",
-                            "tk",
-                            "zenity"],
-
 }
 
 extra_pkgs_map = {
@@ -959,7 +946,7 @@ class DistroQuirksHandler:
                 subprocess.run(['sudo', 'dnf', 'makecache'], check=True)
                 print("DNF cache has been refreshed.")
             except subprocess.CalledProcessError as e:
-                error(f"Failed to refresh dnf cache: {e}")
+                error(f"Failed to refresh dnf cache: \n\t{e}")
                 safe_shutdown(1)
 
     def handle_quirks_CentOS_7(self):
