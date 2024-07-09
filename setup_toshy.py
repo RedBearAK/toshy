@@ -955,24 +955,28 @@ class DistroQuirksHandler:
     def handle_quirks_CentOS_7(self):
         print('Doing prep/checks for CentOS 7...')
 
-        # Tell user to handle this with external script
-        # self.update_centos_repos_to_vault()
-
-        # Doing this now in the pip packages install function:
-        # # pin 'evdev' pip package to version 1.6.1 for CentOS 7 to
-        # # deal with ImportError and undefined symbol UI_GET_SYSNAME
-        # global pip_pkgs
-        # pip_pkgs = [pkg if pkg != "evdev" else "evdev==1.6.1" for pkg in pip_pkgs]
-
         native_pkg_installer.check_for_pkg_mgr_cmd('yum')
         yum_cmd_lst = ['sudo', 'yum', 'install', '-y']
         if py_interp_ver_tup >= (3, 8):
             print(f"Good, Python version is 3.8 or later: "
                     f"'{cnfg.py_interp_ver_str}'")
         else:
+            # Check for SCL repo file presence
+            scl_repo_files = [  '/etc/yum.repos.d/CentOS-SCLo-scl.repo',
+                                '/etc/yum.repos.d/CentOS-SCLo-scl-rh.repo']
+            scl_repo_present = all(os.path.exists(repo) for repo in scl_repo_files)
+
+            if not scl_repo_present:
+                try:
+                    # This will install repo files that need to be fixed post-CentOS 7 EOL
+                    scl_repo = ['centos-release-scl']
+                    subprocess.run(yum_cmd_lst + scl_repo, check=True)
+                    self.update_centos_repos_to_vault()
+                except subprocess.CalledProcessError as proc_err:
+                    error(f'ERROR: (CentOS 7-specific) Problem installing SCL repo.\n\t')
+                    safe_shutdown(1)
+
             try:
-                scl_repo = ['centos-release-scl']
-                subprocess.run(yum_cmd_lst + scl_repo, check=True)
                 py38_pkgs = [   'rh-python38',
                                 'rh-python38-python-devel',
                                 'rh-python38-python-tkinter',
