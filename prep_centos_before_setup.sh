@@ -23,7 +23,7 @@ echo "Updating CentOS repos to use the CentOS Vault (if necessary)..."
 repo_dir="/etc/yum.repos.d"
 
 
-check_and_update_repos() {
+check_and_update_repos_to_vault() {
     # Updating CentOS repos to use the CentOS Vault only if necessary
     echo "Checking and updating CentOS repository configurations..."
 
@@ -60,7 +60,7 @@ check_and_update_repos() {
 }
 
 # Call once before trying to install SCL repos
-check_and_update_repos
+check_and_update_repos_to_vault
 
 
 # Check and install SCL repos if they are not present (for CentOS 7)
