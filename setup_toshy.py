@@ -622,15 +622,18 @@ distro_groups_map: Dict[str, List[str]] = {
 }
 
 
-# Checklist of distros with '/usr/bin/gdbus' pre-installed in clean VM
+# Checklist of distro type representatives with 
+# '/usr/bin/gdbus' pre-installed in clean VM:
 # 
-# - AlmaLinux 8.x
+# - AlmaLinux 8.x                               [Provided by 'glib2']
 # - AlmaLinux 9.x                               [Provided by 'glib2']
-# - CentOS 7
-# - KDE Neon User Edition (Ubuntu LTS-based)    [Provided by 'libglib2.0-bin']
+# - CentOS 7                                    [Provided by 'glib2']
+# - KDE Neon User Edition (Ubuntu 22.04 LTS)    [Provided by 'libglib2.0-bin']
 # - Manjaro KDE (Arch-based)                    [Provided by 'glib2']
 # - OpenMandriva Lx 5.0 (Plasma Slim)           [Provided by 'glib2.0-common']
 # - openSUSE Leap 15.6                          [Provided by 'glib2-tools']
+# - Ubuntu 20.04 LTS                            [Provided by 'libglib2.0-bin']
+# - Void Linux (rolling)                        [Provided by 'glib']
 # 
 
 
