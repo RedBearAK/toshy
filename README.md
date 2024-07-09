@@ -179,6 +179,7 @@ There is a weird bug with searching for extensions by name sometimes, where you 
 
 > [!NOTE]  
 > Installer commands and options are now different from early Toshy releases.  
+> CentOS 7 and CentOS Stream 8 users: run `./prep_centos_before_setup.sh` first.  
 
 1. Click the big green **`  <> Code  ▼  `** button near the top of the page.
 1. Download the latest zip file from the drop-down. ("Releases" are older.)  
