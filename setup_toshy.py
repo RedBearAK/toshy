@@ -1188,15 +1188,23 @@ def install_distro_pkgs():
     for version in [cnfg.distro_mjr_ver, None]:
         distro_key = (cnfg.DISTRO_ID, version)
         if distro_key in extra_pkgs_map:
+            print(f"Distro key {distro_key} matched in 'extra_pkgs_map'.")
             cnfg.pkgs_for_distro.extend(extra_pkgs_map[distro_key])
+            print("Added package(s) to queue:")
+            for pkg in extra_pkgs_map[distro_key]:
+                print(f"\t'{pkg}'")
+            print("All necessary extra packages added to queue. Continuing...")
 
     # Remove packages for specific distros and versions
     for version in [cnfg.distro_mjr_ver, None]:
         distro_key = (cnfg.DISTRO_ID, version)
         if distro_key in remove_pkgs_map:
+            print(f"Distro key {distro_key} matched in 'remove_pkgs_map'.")
             for pkg in remove_pkgs_map[distro_key]:
                 if pkg in cnfg.pkgs_for_distro:
                     cnfg.pkgs_for_distro.remove(pkg)
+                    print(f"Removing '{pkg}' from package list.")
+            print("All incompatible packages removed from package list. Continuing...")
 
     # Filter out systemd packages if systemctl is not present
     cnfg.pkgs_for_distro = [
