@@ -923,7 +923,7 @@ class DistroQuirksHandler:
         for command in commands:
             try:
                 subprocess.run(command, shell=True, check=True)
-                print(f"Executed: {command}")
+                # print(f"Executed: {command}")
             except subprocess.CalledProcessError as e:
                 print(f"Failed to execute: {command}\nError: {e}")
                 safe_shutdown(1)  # Ensure safe_shutdown is adequately defined
