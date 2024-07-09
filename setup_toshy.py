@@ -1910,6 +1910,7 @@ def install_toshy_files():
                 'kwin-application-switcher',
                 'LICENSE',
                 'packages.json',
+                'prep_centos_before_setup.sh',
                 'README.md',
                 'requirements.txt',
                 this_file_name,
