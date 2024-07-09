@@ -25,27 +25,27 @@ repo_dir="/etc/yum.repos.d"
 # Updating CentOS repos to use the CentOS Vault only if necessary
 echo "Checking and updating CentOS repository configurations..."
 
-for repo_file in "${repo_dir}"/*.repo; do
-    # Check and update mirror.centos.org to vault.centos.org
-    if grep -q 'mirror.centos.org' "$repo_file"; then
-        echo "Updating mirror to CentOS Vault in $repo_file"
-        sudo sed -i 's/mirror.centos.org/vault.centos.org/g' "$repo_file"
-    fi
+# Reference commands:
+# sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo
+# sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo
+# sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo
 
-    # Check and uncomment baseurl
-    if grep -q '^#.*baseurl=http' "$repo_file"; then
-        echo "Uncommenting baseurl in $repo_file"
-        sudo sed -i 's/^#.*baseurl=http/baseurl=http/g' "$repo_file"
-    fi
+if grep -q -e 'mirror.centos.org' -e '^#.*baseurl=http' -e '^mirrorlist=http' "${repo_dir}"/*.repo; then
+    echo "Updates are necessary, modifying repository files..."
 
-    # Check and comment out mirrorlist
-    if grep -q '^mirrorlist=http' "$repo_file"; then
-        echo "Commenting out mirrorlist in $repo_file"
-        sudo sed -i 's/^mirrorlist=http/#&/' "$repo_file"
-    fi
-done
+    # Update mirror.centos.org to vault.centos.org
+    sudo sed -i 's/mirror.centos.org/vault.centos.org/g' "${repo_dir}"/*.repo
 
-echo "Repository files checked and updated (if necessary)."
+    # Uncomment baseurl
+    sudo sed -i 's/^#.*baseurl=http/baseurl=http/g' "${repo_dir}"/*.repo
+
+    # Comment out mirrorlist
+    sudo sed -i 's/^mirrorlist=http/#mirrorlist=http/g' "${repo_dir}"/*.repo
+
+    echo "Repository files have been updated."
+else
+    echo "No updates are necessary."
+fi
 
 # Clearing and refreshing YUM cache
 if command -v yum &> /dev/null
@@ -87,3 +87,4 @@ fi
 
 echo "Your CentOS system is fully prepped for installing Toshy."
 echo "You can now run the main installer script. (setup_toshy.py)"
+echo ""
