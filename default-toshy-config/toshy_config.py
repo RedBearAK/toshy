@@ -3296,7 +3296,6 @@ keymap("User hardware keys", {
 #     C("Shift-LC-Space"):        None,    # block the default general terminals shortcut for input switching
 # }, when = lambda ctx:
 #       cnfg.screen_has_focus and
-#       # matchProps(lst=terminals_lod)(ctx)
 #       matchProps(clas=termStr)(ctx)
 # )
 # keymap("User overrides general", {
@@ -3398,8 +3397,10 @@ keymap("Overrides for DDE File Manager - Finder Mods", {
     C("Shift-RC-Right"):        C("C-Tab"),                     # Go to next tab
 }, when = matchProps(clas="^dde-file-manager$"))
 
+##########################  DOLPHIN KEYMAPS - BEGIN  ##########################
 # Keybindings overrides for Dolphin (KDE file manager)
 # (overrides some bindings from general file manager code block below)
+
 keymap("Overrides for Dolphin - Finder Mods pre-KF6", {
     # KDE Frameworks 6 assigns F10 to "Open Main Manu" so this is only valid for KF5 now
     # (Reference https://planet.kde.org/felix-ernst-2023-10-13-f10-for-accessibility-in-kf6/)
@@ -3412,6 +3413,14 @@ keymap("Overrides for Dolphin - Finder Mods pre-KF6", {
     DESKTOP_ENV == 'kde' and DE_MAJ_VER in ['5', '4', '3'] and
     matchProps(clas="^dolphin$|^org.kde.dolphin$")(ctx)
 )
+
+keymap("Overrides for Dolphin dialogs - Finder Mods", {
+    C("Enter"):                 C("Enter"),                     # Override Enter to be Enter (never F2) for dialogs
+}, when = matchProps(
+    clas="^dolphin$|^org.kde.dolphin$", 
+    name="^Edit Places Entry.*|^Create New File.*$")
+)
+
 keymap("Overrides for Dolphin - Finder Mods", {
     C("RC-KEY_2"):              C("C-KEY_3"),                   # View as List (Detailed)
     C("RC-KEY_3"):              C("C-KEY_2"),                   # View as List (Compact)
@@ -3423,6 +3432,10 @@ keymap("Overrides for Dolphin - Finder Mods", {
     C("Shift-RC-n"):            iEF2(C("Shift-C-n"), False),    # Create new folder, toggle Enter to be Enter (KF6 and later)
     C("RC-comma"):              C("Shift-C-comma"),             # Open preferences dialog
 }, when = matchProps(clas="^dolphin$|^org.kde.dolphin$"))
+
+# 
+###########################  DOLPHIN KEYMAPS - END  ###########################
+
 
 # Keybindings overrides for elementary OS Files (Pantheon)
 # (overrides some bindings from general file manager code block below)
