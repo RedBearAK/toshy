@@ -955,7 +955,8 @@ class DistroQuirksHandler:
     def handle_quirks_CentOS_7(self):
         print('Doing prep/checks for CentOS 7...')
 
-        self.update_centos_repos_to_vault()
+        # Tell user to handle this with external script
+        # self.update_centos_repos_to_vault()
 
         # Doing this now in the pip packages install function:
         # # pin 'evdev' pip package to version 1.6.1 for CentOS 7 to
@@ -999,7 +1000,8 @@ class DistroQuirksHandler:
     def handle_quirks_CentOS_Stream_8(self):
         print('Doing prep/checks for CentOS Stream 8...')
 
-        self.update_centos_repos_to_vault()
+        # Tell user to handle this with external script
+        # self.update_centos_repos_to_vault()
 
         min_mnr_ver = cnfg.curr_py_rel_ver_mnr - 3           # check up to 2 vers before current
         max_mnr_ver = cnfg.curr_py_rel_ver_mnr + 3           # check up to 3 vers after current
