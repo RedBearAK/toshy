@@ -18,6 +18,7 @@ fi
 echo -e "Stopping Toshy manual config script...\n"
 
 pkill -f "/bin/keyszer"
+pkill -f "/bin/xwaykeyz"
 pkill -f "toshy-config-start"
 # This also kills config process of systemd service. Should avoid:
 # pkill -f "toshy_config"
