@@ -96,7 +96,7 @@ https://github.com/RedBearAK/toshy/wiki/General-improvements-over-Kinto
 
 - Linux (no Windows support planned, use Kinto for Windows)
 
-    - See [**list of supported distros**](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros)
+    - See the full [**list of supported distros**](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros) maintained in the Wiki
 
 - Python >=3.6 (to run the setup script)
 
@@ -108,7 +108,7 @@ https://github.com/RedBearAK/toshy/wiki/General-improvements-over-Kinto
 
 - X11/Xorg, or a supported Wayland environment
 
-    - See [**list of working DEs/WMs**](#currently-working-desktop-environments-or-window-managers)
+    - See the full [**list of working DEs/WMs**](#currently-working-desktop-environments-or-window-managers) further down in the README
 
 - `systemd` (but you can just manually run the config from terminal, shell script, GUI preferences app, or tray indicator menu, so the basic functionality of the Toshy config can work regardless of the init system in use)
 
