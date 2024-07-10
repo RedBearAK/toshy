@@ -110,9 +110,13 @@ https://github.com/RedBearAK/toshy/wiki/General-improvements-over-Kinto
 
     - See the full [**list of working DEs/WMs**](#currently-working-desktop-environments-or-window-managers) further down in the README
 
-- `systemd` (but you can just manually run the config from terminal, shell script, GUI preferences app, or tray indicator menu, so the basic functionality of the Toshy config can work regardless of the init system in use)
+- `systemd` (Optional. You can manually run the config from terminal, shell script, GUI preferences app, or tray indicator menu, so the basic functionality of the Toshy config can work regardless of the init system in use.)
 
-- D-Bus, and `dbus-python`
+- D-Bus, and `dbus-python` (but it is possible to install and run without it)
+
+Several Python modules and their dependencies will be installed in a self-contained `venv` (Python virtual environment) folder to support the operation of the keymapper and accompanying "apps" like the tray indicator. These modules are listed (for information only) in the `requirements.txt` file.  
+
+A short list of native packages (and their automatic dependencies) will be installed as the first setup stage on each supported distro type, mostly to allow the `pip` package list to cleanly build and install in the Python `venv`. But some native packages, like `zenity`, are critical for additional functionality that would stop working if they were removed.  
 
 ### Specific requirements for certain DEs/WMs
 
