@@ -10,7 +10,7 @@
 
 - **KDE USERS**: Did your system update itself from KDE Plasma 5 to Plasma 6, and Toshy stopped working? And you installed Toshy before January 2024? Just grab a new zip file from the big green **`  <> Code  ▼  `** button and reinstall. Your config customizations and preference choices should be preserved (if you made your config changes within the "slice marks"). Support for Plasma 6 was added around late December 2023.  
 
-- **KEYBOARD TYPE**: The Toshy config file tries to automatically identify the "type" of your keyboard based on some pre-existing lists of keyboard device names, which do not have many entries, and there are thousands of keyboard name variants. So your keyboard may be misidentified, leading to modifier keys in the "wrong" place. BE PREPARED to identify the name of your keyboard device (try `toshy-devices` in a terminal) and enter it into the custom list (actually a Python "dictionary") in the config file to fix this problem. The custom entry is designed to be retained even if you reinstall later. There is a sub-menu in the tray icon menu intended to allow temporarily bypassing this problem while you find the device name and enter it in your config file.Go to this FAQ entry for more info:  
+- **KEYBOARD TYPE**: The Toshy config file tries to automatically identify the "type" of your keyboard based on some pre-existing lists of keyboard device names, which do not have many entries, and there are thousands of keyboard name variants. So your keyboard may be misidentified, leading to modifier keys in the "wrong" place. BE PREPARED to identify the name of your keyboard device (try `toshy-devices` in a terminal) and enter it into the custom list (actually a Python "dictionary") in the config file to fix this problem. The custom entry is designed to be retained even if you reinstall later. There is a sub-menu in the tray icon menu intended to allow temporarily bypassing this problem while you find the device name and enter it in your config file. Go to this FAQ entry for more info:  
 
     [Keyboard Type Not Correct](https://github.com/RedBearAK/toshy/wiki/FAQ-(Frequently-Asked-Questions)#my-keyboard-is-not-recognized-as-the-correct-type)  
 
@@ -51,7 +51,7 @@ All of this basic functionality is inherited from Kinto. Toshy just tries to be 
 
 ## Toshifying an Application
 
-A detailed guide to how to identify a window's application class and make a new keymap to apply shortcut remaps to a particular Linux application have been moved into this Wiki article: 
+A detailed guide to how to identify a window's application class and make a new keymap to apply shortcut remaps to a particular Linux application has been moved into this Wiki article: 
 
 https://github.com/RedBearAK/toshy/wiki/Toshifying-a-New-Linux-Application
 
