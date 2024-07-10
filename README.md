@@ -10,7 +10,7 @@
 
 - **KDE USERS**: Did your system update itself from KDE Plasma 5 to Plasma 6, and Toshy stopped working? And you installed Toshy before January 2024? Just grab a new zip file from the big green **`  <> Code  ▼  `** button and reinstall. Your config customizations and preference choices should be preserved (if you made your config changes within the "slice marks"). Support for Plasma 6 was added around late December 2023.  
 
-- **KEYBOARD TYPE**: The Toshy config file tries to automatically identify the "type" of your keyboard based on some pre-existing lists of keyboard device names, which do not have many entries, and there are thousands of keyboard name variants. So your keyboard may be misidentified, leading to modifier keys in the "wrong" place. BE PREPARED to identify the name of your keyboard device (try `toshy-devices` in a terminal) and enter it into the custom list (actually a Python "dictionary") in the config file to fix this problem. The custom entry is designed to be retained even if you reinstall later. There is a sub-menu in the tray icon menu intended to allow temporarily bypassing this problem while you find the device name and enter it in your config file.Go to this FAQ entry for more info:  
+- **KEYBOARD TYPE**: The Toshy config file tries to automatically identify the "type" of your keyboard based on some pre-existing lists of keyboard device names, which do not have many entries, and there are thousands of keyboard name variants. So your keyboard may be misidentified, leading to modifier keys in the "wrong" place. BE PREPARED to identify the name of your keyboard device (try `toshy-devices` in a terminal) and enter it into the custom list (actually a Python "dictionary") in the config file to fix this problem. The custom entry is designed to be retained even if you reinstall later. There is a sub-menu in the tray icon menu intended to allow temporarily bypassing this problem while you find the device name and enter it in your config file. Go to this FAQ entry for more info:  
 
     [Keyboard Type Not Correct](https://github.com/RedBearAK/toshy/wiki/FAQ-(Frequently-Asked-Questions)#my-keyboard-is-not-recognized-as-the-correct-type)  
 
@@ -51,33 +51,9 @@ All of this basic functionality is inherited from Kinto. Toshy just tries to be 
 
 ## Toshifying an Application
 
-If an app that you use frequently in Linux has some shortcut behavior that still doesn't match what you'd expect from the same application (or a similar application) in macOS, after Toshy's general remapping of the modifier keys, you can add a keymap that matches the app's "class" and/or "name/title" window attributes, to make that application behave as expected. By adding it to the default config file, every user will benefit!  
+A detailed guide to how to identify a window's application class and make a new keymap to apply shortcut remaps to a particular Linux application has been moved into this Wiki article: 
 
-> [!TIP]  
-> There's an easier way now, that works in both X11/Xorg and Wayland sessions:  
->
-> - `Shift+Opt+Cmd+I,I` (quickly double-tap the "I" key)  
->
-> This brings up a dialog showing app/window/keyboard info. Use the physical keys in the same position the keys with these names would be in on an Apple keyboard, even if you don't have an Apple keyboard.  
-> 
-> In a "remote" type of app (remote desktop or virtual machine apps), where most modmaps and the general keymap are disabled, the diagnostic shortcut will still work, but the physical keys will be different:  
-> 
-> - `Shift+Alt+RIGHT_CTRL+I,I` (quickly double-tap the "I" key)  
->
-> In this case the literal physical keys matching these names must be used, including using the Ctrl key on the right side of the keyboard.  
-> </br>
-
-Still relevant, but unnecessary with the diagnostic tool in the note above:  
-
-To do this, on X11 you need the tool `xprop` which lets you retrieve the window attributes by clicking on the window with the mouse. Use this command to get only the relevant attributes:  
-
-```sh
-xprop WM_CLASS _NET_WM_NAME
-```
-
-The mouse cursor will change to a cross shape. Click on the window in question and the attributes will appear in the terminal.  
-
-If you're in one of the compatible Wayland environments (see the current list [here](#currently-working-desktop-environments-or-window-managers)), you'll have to rely on other tools, or the verbose logging output from `toshy-config-verbose-start`. When a window has the focus and you use a keyboard shortcut that gets remapped by the keymapper config file, you will see additional output in the terminal showing the window's class and name/title. A good shortcut to use for this that usually won't do anything unless the app has a tabbed UI is `Shift+Cmd+Left_Brace` or `Shift+Cmd+Right_Brace` (those are the defined names of the square bracket keys). Utilities like `xprop` will generally have no output in a Wayland session.  
+https://github.com/RedBearAK/toshy/wiki/Toshifying-a-New-Linux-Application
 
 ## Windows Support
 
@@ -203,6 +179,7 @@ There is a weird bug with searching for extensions by name sometimes, where you 
 
 > [!NOTE]  
 > Installer commands and options are now different from early Toshy releases.  
+> CentOS 7 and CentOS Stream 8 users: run `./prep_centos_before_setup.sh` first.  
 
 1. Click the big green **`  <> Code  ▼  `** button near the top of the page.
 1. Download the latest zip file from the drop-down. ("Releases" are older.)  

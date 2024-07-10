@@ -4,7 +4,7 @@
 # Indicator tray icon menu app for Toshy, using pygobject/gi
 TOSHY_PART      = 'tray'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Tray Icon app'
-APP_VERSION     = '2024.0620'
+APP_VERSION     = '2024.0709'
 
 # -------- COMMON COMPONENTS --------------------------------------------------
 
@@ -215,6 +215,18 @@ cnfg.watch_database()   # start watching the preferences file for changes
 # Notification handler object setup
 from lib.notification_manager import NotificationManager
 ntfy = NotificationManager(icon_file_active, title='Toshy Alert (Tray)')
+
+
+def is_init_systemd():
+    try:
+        with open("/proc/1/comm", "r") as f:
+            return f.read().strip() == 'systemd'
+    except FileNotFoundError:
+        print("Toshy_Tray: The /proc/1/comm file does not exist.")
+        return False
+    except PermissionError:
+        print("Toshy_Tray: Permission denied when trying to read the /proc/1/comm file.")
+        return False
 
 
 def get_settings_list(settings_obj):
@@ -437,13 +449,13 @@ def fn_stop_toshy_services(widget):
     ntfy.send_notification(_ntfy_msg, _ntfy_icon_file)
 
 
-def fn_restart_toshy_script(widget):
+def fn_restart_toshy_config_only(widget):
     """Start the manual run config script"""
     toshy_cfg_restart_cmd = os.path.join(home_local_bin, 'toshy-config-restart')
     subprocess.Popen([toshy_cfg_restart_cmd], stdout=DEVNULL, stderr=DEVNULL)
 
 
-def fn_stop_toshy_script(widget):
+def fn_stop_toshy_config_only(widget):
     """Stop the manual run config script"""
     toshy_cfg_stop_cmd = os.path.join(home_local_bin, 'toshy-config-stop')
     subprocess.Popen([toshy_cfg_stop_cmd], stdout=DEVNULL, stderr=DEVNULL)
@@ -578,7 +590,15 @@ menu.append(session_monitor_status_item)
 
 def is_service_enabled(service_name):
     """Check if a user service is enabled using systemctl."""
+
+    if shutil.which('systemctl') and is_init_systemd():
+        pass
+    else:
+        # If either 'systemctl' is missing or init is not 'systemd', just return False
+        return False
+
     is_enabled_cmd_lst = ["systemctl", "--user", "is-enabled"]
+
     try:
         subprocess.run(is_enabled_cmd_lst + [service_name],
                         check=True, stdout=DEVNULL, stderr=DEVNULL)
@@ -594,6 +614,12 @@ toshy_svc_sessmon_unit_enabled  = is_service_enabled("toshy-session-monitor.serv
 def fn_toggle_toshy_svcs_autostart(widget):
     """Check the status of Toshy services, flip the status, change the menu item label"""
     global toshy_svc_config_unit_enabled, toshy_svc_sessmon_unit_enabled
+
+    if shutil.which('systemctl') and is_init_systemd():
+        pass
+    else:
+        # If either 'systemctl' is missing or init is not 'systemd', immediately return
+        return
 
     try:
         if widget.get_active():
@@ -643,12 +669,12 @@ menu.append(quit_toshy_svcs_item)
 separator_below_svcs_item = Gtk.SeparatorMenuItem()
 menu.append(separator_below_svcs_item)  #-------------------------------------#
 
-restart_toshy_script_item = Gtk.MenuItem(label="Re/Start Toshy Script")
-restart_toshy_script_item.connect("activate", fn_restart_toshy_script)
+restart_toshy_script_item = Gtk.MenuItem(label="Re/Start Config-Only")
+restart_toshy_script_item.connect("activate", fn_restart_toshy_config_only)
 menu.append(restart_toshy_script_item)
 
-stop_toshy_script_item = Gtk.MenuItem(label="Stop Toshy Script")
-stop_toshy_script_item.connect("activate", fn_stop_toshy_script)
+stop_toshy_script_item = Gtk.MenuItem(label="Stop Config-Only")
+stop_toshy_script_item.connect("activate", fn_stop_toshy_config_only)
 menu.append(stop_toshy_script_item)
 
 separator_below_script_item = Gtk.SeparatorMenuItem()
@@ -883,18 +909,6 @@ remove_tray_icon_item.connect("activate", fn_remove_tray_icon)
 menu.append(remove_tray_icon_item)
 
 menu.show_all()
-
-
-def is_init_systemd():
-    try:
-        with open("/proc/1/comm", "r") as f:
-            return f.read().strip() == 'systemd'
-    except FileNotFoundError:
-        print("Toshy_Tray: The /proc/1/comm file does not exist.")
-        return False
-    except PermissionError:
-        print("Toshy_Tray: Permission denied when trying to read the /proc/1/comm file.")
-        return False
 
 
 def main():

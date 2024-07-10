@@ -386,7 +386,37 @@ def md_wrap(text: str, width: int = 80):
     return wrapped_text
 
 
-def fancy_str(text, color_name, *, bold=False):
+def check_term_color_code_support():
+    """
+    Determine if the terminal supports ANSI color codes.
+    :return: True if color is probably supported, False otherwise.
+    """
+
+    # Retrieve environment variables and normalize strings where needed
+    colorterm_env               = os.getenv('COLORTERM', '')
+    ls_colors_env               = os.getenv('LS_COLORS', '')
+    term_env                    = os.getenv('TERM', '').lower()
+
+    # Check if COLORTERM environment variable is set and not empty
+    colorterm_set               = bool(colorterm_env)
+
+    # Check if LS_COLORS environment variable is set and not empty
+    ls_colors_set               = bool(ls_colors_env)
+
+    # Check if the TERM environment variable contains 'color'
+    term_is_color               = "color" in term_env
+
+    # If any variable is truthy, terminal probably supports color codes
+    color_supported = colorterm_set or ls_colors_set or term_is_color
+
+    return color_supported
+
+
+# Global variable to indicate that terminal supports ANSI color codes
+term_supports_color_codes = check_term_color_code_support()
+
+
+def fancy_str(text, color_name, *, bold=False, color_supported=term_supports_color_codes):
     """
     Return text wrapped in the specified color code.
     :param text: Text to be colorized.
@@ -396,7 +426,8 @@ def fancy_str(text, color_name, *, bold=False):
     """
     color_codes = { 'red': '31', 'green': '32', 'yellow': '33', 'blue': '34', 
                     'magenta': '35', 'cyan': '36', 'white': '37', 'default': '0'}
-    if os.getenv('COLORTERM') and color_name in color_codes:
+
+    if color_supported and color_name in color_codes:
         bold_code = '1;' if bold else ''
         return f"\033[{bold_code}{color_codes[color_name]}m{text}\033[0m"
     else:
@@ -617,20 +648,22 @@ distro_groups_map: Dict[str, List[str]] = {
 
     'void-based':               ["void"],
 
-    # 'kaos-based':               ["kaos"],
     # Add more as needed...
 }
 
 
-# Checklist of distros with '/usr/bin/gdbus' pre-installed in clean VM
+# Checklist of distro type representatives with 
+# '/usr/bin/gdbus' pre-installed in clean VM:
 # 
-# - AlmaLinux 8.x
+# - AlmaLinux 8.x                               [Provided by 'glib2']
 # - AlmaLinux 9.x                               [Provided by 'glib2']
-# - CentOS 7
-# - KDE Neon User Edition (Ubuntu LTS-based)    [Provided by 'libglib2.0-bin']
+# - CentOS 7                                    [Provided by 'glib2']
+# - KDE Neon User Edition (Ubuntu 22.04 LTS)    [Provided by 'libglib2.0-bin']
 # - Manjaro KDE (Arch-based)                    [Provided by 'glib2']
 # - OpenMandriva Lx 5.0 (Plasma Slim)           [Provided by 'glib2.0-common']
 # - openSUSE Leap 15.6                          [Provided by 'glib2-tools']
+# - Ubuntu 20.04 LTS                            [Provided by 'libglib2.0-bin']
+# - Void Linux (rolling)                        [Provided by 'glib']
 # 
 
 
@@ -638,6 +671,7 @@ pkg_groups_map: Dict[str, List[str]] = {
 
     # NOTE: Do not add 'gnome-shell-extension-appindicator' to Fedora/RHELs.
     #       This will install extension but requires logging out of GNOME to activate.
+    #       Also, installing DE-specific packages is probably a bad idea.
     'fedora-based':        ["cairo-devel", "cairo-gobject-devel",
                             "dbus-daemon", "dbus-devel",
                             "evtest",
@@ -651,6 +685,7 @@ pkg_groups_map: Dict[str, List[str]] = {
 
     # NOTE: Do not add 'gnome-shell-extension-appindicator' to Fedora/RHELs.
     #       This will install extension but requires logging out of GNOME to activate.
+    #       Also, installing DE-specific packages is probably a bad idea.
     'rhel-based':          ["cairo-devel", "cairo-gobject-devel",
                             "dbus-daemon", "dbus-devel",
                             "gcc", "git", "gobject-introspection-devel",
@@ -662,6 +697,7 @@ pkg_groups_map: Dict[str, List[str]] = {
 
     # NOTE: Do not add 'gnome-shell-extension-appindicator' to Fedora/RHELs.
     #       This will install extension but requires logging out of GNOME to activate.
+    #       Also, installing DE-specific packages is probably a bad idea.
     'fedora-immutables':   ["cairo-devel", "cairo-gobject-devel",
                             "dbus-daemon", "dbus-devel",
                             "evtest",
@@ -725,7 +761,7 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "git", "gobject-introspection-devel",
                             "lib64ayatana-appindicator3_1", "lib64ayatana-appindicator3-gir0.1",
                                 "lib64cairo-gobject2", "lib64python-devel", "lib64systemd-devel",
-                                "libnotify", "lib64xkbcommon-devel",
+                                "lib64xkbcommon-devel", "libnotify",
                             "python-dbus", "python-dbus-devel", "python-ensurepip", "python3-pip",
                             "task-devel", "tkinter",
                             "xset",
@@ -779,18 +815,6 @@ pkg_groups_map: Dict[str, List[str]] = {
                                 "python3-pkgconfig", "python3-tkinter",
                             "wayland-devel", "wget",
                             "xset",
-                            "zenity"],
-
-    # NOTE: KaOS is not actually supported at this time! These are preliminary package names!
-    # TODO: Add correct package to support installing `xkbcommon` pip package.
-    'kaos-based':          ["cairo",
-                            "dbus",
-                            "evtest",
-                            "gcc", "git", "gobject-introspection",
-                            "libappindicator-gtk3", "libnotify",
-                            "pkg-config", "python", "python-dbus", "python-pip",
-                            "systemd",
-                            "tk",
                             "zenity"],
 
 }
@@ -930,7 +954,7 @@ class DistroQuirksHandler:
         for command in commands:
             try:
                 subprocess.run(command, shell=True, check=True)
-                print(f"Executed: {command}")
+                # print(f"Executed: {command}")
             except subprocess.CalledProcessError as e:
                 print(f"Failed to execute: {command}\nError: {e}")
                 safe_shutdown(1)  # Ensure safe_shutdown is adequately defined
@@ -956,19 +980,11 @@ class DistroQuirksHandler:
                 subprocess.run(['sudo', 'dnf', 'makecache'], check=True)
                 print("DNF cache has been refreshed.")
             except subprocess.CalledProcessError as e:
-                error(f"Failed to refresh dnf cache: {e}")
+                error(f"Failed to refresh dnf cache: \n\t{e}")
                 safe_shutdown(1)
 
     def handle_quirks_CentOS_7(self):
         print('Doing prep/checks for CentOS 7...')
-
-        self.update_centos_repos_to_vault()
-
-        # Doing this now in the pip packages install function:
-        # # pin 'evdev' pip package to version 1.6.1 for CentOS 7 to
-        # # deal with ImportError and undefined symbol UI_GET_SYSNAME
-        # global pip_pkgs
-        # pip_pkgs = [pkg if pkg != "evdev" else "evdev==1.6.1" for pkg in pip_pkgs]
 
         native_pkg_installer.check_for_pkg_mgr_cmd('yum')
         yum_cmd_lst = ['sudo', 'yum', 'install', '-y']
@@ -976,9 +992,22 @@ class DistroQuirksHandler:
             print(f"Good, Python version is 3.8 or later: "
                     f"'{cnfg.py_interp_ver_str}'")
         else:
+            # Check for SCL repo file presence
+            scl_repo_files = [  '/etc/yum.repos.d/CentOS-SCLo-scl.repo',
+                                '/etc/yum.repos.d/CentOS-SCLo-scl-rh.repo']
+            scl_repo_present = all(os.path.exists(repo) for repo in scl_repo_files)
+
+            if not scl_repo_present:
+                try:
+                    # This will install repo files that need to be fixed post-CentOS 7 EOL
+                    scl_repo = ['centos-release-scl']
+                    subprocess.run(yum_cmd_lst + scl_repo, check=True)
+                    self.update_centos_repos_to_vault()
+                except subprocess.CalledProcessError as proc_err:
+                    error(f'ERROR: (CentOS 7-specific) Problem installing SCL repo.\n\t')
+                    safe_shutdown(1)
+
             try:
-                scl_repo = ['centos-release-scl']
-                subprocess.run(yum_cmd_lst + scl_repo, check=True)
                 py38_pkgs = [   'rh-python38',
                                 'rh-python38-python-devel',
                                 'rh-python38-python-tkinter',
@@ -1006,7 +1035,8 @@ class DistroQuirksHandler:
     def handle_quirks_CentOS_Stream_8(self):
         print('Doing prep/checks for CentOS Stream 8...')
 
-        self.update_centos_repos_to_vault()
+        # Tell user to handle this with external script
+        # self.update_centos_repos_to_vault()
 
         min_mnr_ver = cnfg.curr_py_rel_ver_mnr - 3           # check up to 2 vers before current
         max_mnr_ver = cnfg.curr_py_rel_ver_mnr + 3           # check up to 3 vers after current
@@ -1195,15 +1225,23 @@ def install_distro_pkgs():
     for version in [cnfg.distro_mjr_ver, None]:
         distro_key = (cnfg.DISTRO_ID, version)
         if distro_key in extra_pkgs_map:
+            print(f"Distro key {distro_key} matched in 'extra_pkgs_map'.")
             cnfg.pkgs_for_distro.extend(extra_pkgs_map[distro_key])
+            print("Added package(s) to queue:")
+            for pkg in extra_pkgs_map[distro_key]:
+                print(f"\t'{pkg}'")
+            print("All necessary extra packages added to queue. Continuing...")
 
     # Remove packages for specific distros and versions
     for version in [cnfg.distro_mjr_ver, None]:
         distro_key = (cnfg.DISTRO_ID, version)
         if distro_key in remove_pkgs_map:
+            print(f"Distro key {distro_key} matched in 'remove_pkgs_map'.")
             for pkg in remove_pkgs_map[distro_key]:
                 if pkg in cnfg.pkgs_for_distro:
                     cnfg.pkgs_for_distro.remove(pkg)
+                    print(f"Removing '{pkg}' from package list.")
+            print("All incompatible packages removed from package list. Continuing...")
 
     # Filter out systemd packages if systemctl is not present
     cnfg.pkgs_for_distro = [
@@ -1907,6 +1945,7 @@ def install_toshy_files():
                 'kwin-application-switcher',
                 'LICENSE',
                 'packages.json',
+                'prep_centos_before_setup.sh',
                 'README.md',
                 'requirements.txt',
                 this_file_name,
