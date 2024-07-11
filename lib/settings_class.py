@@ -28,7 +28,8 @@ class Settings:
         self.autostart_tray_icon    = True              # Default: True
         self.gui_dark_theme         = True              # Default: True
         self.override_kbtype        = 'Auto-Adapt'      # Default: 'Auto-Adapt'
-        self.optspec_layout         = 'US'              # Default: 'US'
+            ###  Disable optspec_layout by default for performance, and international keyboard users
+        self.optspec_layout         = 'Disabled'        # Default: 'Disabled'
         self.mru_layout             = ('us', 'default') # Default: ('us', 'default')
         self.forced_numpad          = True              # Default: True
         self.media_arrows_fix       = False             # Default: False
