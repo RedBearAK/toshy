@@ -577,13 +577,8 @@ as long as it is a single, unbroken string.
 Delimiter for key string can be either plus "+" or minus/dash "-". Will be
 internally converted into a plus "+" for consistency. 
 
-Keys and modifiers in string can be uncapitalized. In some cases where the 
-key name in the enum has internal capitalization that is not matched, a 
-substring search should automatically suggest the correct key (e.g., 
-'quoteleft' or 'Quoteleft' will invoke a suggestion that you may have meant 
-'QuoteLeft'). Same with something like 'Super_R', if entered as 'super_r',
-which will be capitalized to 'Super_r' and not match 'Super_R', but the
-script will suggest 'Super_R' as the correct name. 
+If key name capitalization doesn't match, a search function will suggest
+alternatives based on the substring match. 
 
 
 """
