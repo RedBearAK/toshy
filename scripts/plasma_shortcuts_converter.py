@@ -541,33 +541,113 @@ Example of this phenomenon:
 Ctrl+Meta = 83886114
 Meta+Ctrl = 285212705
 
+
+Notes on some Qt key naming quirks: 
+
+Other sources call the key the Tilde is on the "Grave" key, while Qt::Key
+has several "grave" keys, but the key that correlates to "Grave" is actually
+the "Key_QuoteLeft" key. I'm including a way to use "Grave" as part of the
+input combo string, which will then be matched with "Key_QuoteLeft" on both
+input and output. It shows a note about the conversion in the terminal. 
+
+The Plasma Shortcuts settings dialog displays characters for keys like 
+Grave/QuoteLeft "`" or Tilde "~" instead of the key name. So the actual name
+of the key may not be well-known. I'm not sure I want to process those 
+characters directly as arguments. That would be a lot of work with filtering.
+
+Qt:Key puts the string "Ascii" in front of what are commonly known as just
+"Tilde" and "Circum" in other sources. I'm including some translation
+logic that will add the "Ascii" when necessary for matching, and remove it
+for the "normalized" shortcut combo displayed on output. 
+
+The "Control" key is allowed to be entered in the shortcut string as
+"Ctrl", which is quite common in other shortcut representations. The full
+name of the key will be displayed to make it obvious that "Ctrl" is not
+the name of the key in Qt::Key. 
+
+The Plasma Shortcuts settings dialog also displays "Control" as "Ctrl",
+for the sake of brevity, I assume. So it is not unusual to show the final 
+combo with "Ctrl" instead of "Control". 
+
+Usability enhancements:
+
+Handles string input in the terminal command line with or without quotes, 
+as long as it is a single, unbroken string. 
+
+Delimiter for key string can be either plus "+" or minus/dash "-". Will be
+internally converted into a plus "+" for consistency. 
+
+Keys and modifiers in string can be uncapitalized. In some cases where the 
+key name in the enum has internal capitalization that is not matched, a 
+substring search should automatically suggest the correct key (e.g., 
+'quoteleft' or 'Quoteleft' will invoke a suggestion that you may have meant 
+'QuoteLeft'). Same with something like 'Super_R', if entered as 'super_r',
+which will be capitalized to 'Super_r' and not match 'Super_R', but the
+script will suggest 'Super_R' as the correct name. 
+
+
 """
+
+
+preferred_order = ['Meta', 'Ctrl', 'Control', 'Alt', 'Shift', 'Keypad', 'NumLock']
+
+
+def is_integer(s: str):
+    return s.lstrip('-').isdigit()
+
+
+def format_input(input_string: str):
+    parts = input_string.split('+')  # Adjust the delimiter based on your input structure, e.g., '+', '-', etc.
+    formatted_parts = [part[0].upper() + part[1:] if len(part) > 1 else part.upper() for part in parts]
+    return '+'.join(formatted_parts)
+
+
+def reorder_keys(input_keys, preferred_order):
+    # Create a dictionary that maps each key to its index in the preferred order
+    order_index = {key: index for index, key in enumerate(preferred_order)}
+
+    # Sort the input keys based on their index in the preferred order
+    # If a key is not found in the dictionary, it's assigned a default index that places it at the end
+    sorted_keys = sorted(input_keys, key=lambda x: order_index.get(x, len(preferred_order)))
+
+    return sorted_keys
 
 
 def parse_modifiers(modifiers):
     results = []
+    individual_values = {}
     for modifier in Qt_KeyboardModifier:
         if modifiers & modifier.value:
-            results.append(modifier.name.replace('Modifier', ''))
-    return results
+            mod_name = modifier.name.replace('Modifier', '')
+            results.append(mod_name)
+            individual_values[mod_name] = hex(modifier.value)
+    return results, individual_values
 
 
 def parse_key(key_code):
     for key in Qt_Key:
         if key_code == key.value:
             return key.name.replace('Key_', '')
-    return "Unknown Key"
+    return "No Match to Key"
 
 
 def find_similar_key_names(substring: str):
     substring = substring.lower()  # Convert substring to lowercase for case insensitive comparison
-    matching_keys = [key.name for key in Qt_Key if substring in key.name.lower()]
+    matching_keys = [
+        key.name.replace('Key_', '') for key in Qt_Key 
+        if substring in key.name.lower()
+    ]
     return matching_keys
 
 
 def encode_string_of_keys_to_int(key_name: str, modifier_names: List[str] = []):
 
-    # Let 'AsciiTilde' and 'AsciiCircum' be matched without having 'Ascii' in input string
+    # Make sure everything is capitalized for proper matching in enums
+    key_name = format_input(key_name)
+    modifier_names = [format_input(mod_name) for mod_name in modifier_names]
+
+    # Let 'AsciiTilde' and 'AsciiCircum' be matched without 
+    # having to literally put 'Ascii' in input string
     if key_name in ['Tilde', 'Circum']:
         key_name = 'Ascii' + key_name
 
@@ -575,6 +655,11 @@ def encode_string_of_keys_to_int(key_name: str, modifier_names: List[str] = []):
     # There are several other "grave" keys that might not make this the best solution.
     if key_name == 'Grave':
         key_name = 'QuoteLeft'
+
+    # If 'Ctrl' is being considered a key (multi-mod-only last key, or by itself)
+    # then we need to make sure to convert it to 'Control' to match the key name.
+    if key_name == 'Ctrl':
+        key_name = 'Control'
 
     # Match literal key names in enum without making user enter 'Key_'
     if not key_name.startswith('Key_'):
@@ -585,10 +670,10 @@ def encode_string_of_keys_to_int(key_name: str, modifier_names: List[str] = []):
     except KeyError:
         similar_keys = find_similar_key_names(key_name.replace('Key_', ''))
         if similar_keys:
-            return None, (f"No exact match found for '{key_name}'. "
+            return None, (f"No exact match found for '{key_name.replace('Key_', '')}'. "
                             "Did you mean: " + ', '.join(similar_keys) )
         else:
-            return None, f"No matching or similar keys found for '{key_name}'"
+            return None, f"No matching or similar keys found for '{key_name.replace('Key_', '')}'"
 
     modifier_value = 0
     for mod_name in modifier_names:
@@ -610,33 +695,32 @@ def encode_string_of_keys_to_int(key_name: str, modifier_names: List[str] = []):
     return key_value | modifier_value, None     # Always return a tuple
 
 
-def is_integer(s: str):
-    return s.lstrip('-').isdigit()
-
-
 def main():
+
     parser = argparse.ArgumentParser(
         description=('Convert between integers and shortcut key names for Plasma/Qt/gdbus.')
     )
+
     parser.add_argument(
         'input',
         type=str,
         help='The integer (to decode) or key/modifier names (to encode)'
     )
+
     args = parser.parse_args()
 
     input_str: str = args.input.strip()
 
     # Strip out integer from gdbus a(ai) output from org.kde.KGlobalAccel.shortcutKeys method
     # This will only work for a "conventional" shortcut (not a sequence of shortcuts)
-    a_ai_pref = '(['
-    a_ai_suff = ', 0, 0, 0],)'
+    a_ai_arg_prefix = '(['
+    a_ai_arg_suffix = ', 0, 0, 0],)'
 
-    if input_str.startswith(a_ai_pref) and input_str.endswith(a_ai_suff):
-        input_str = input_str.replace(a_ai_pref, '').replace(a_ai_suff, '')
+    if input_str.startswith(a_ai_arg_prefix) and input_str.endswith(a_ai_arg_suffix):
+        input_str = input_str.replace(a_ai_arg_prefix, '').replace(a_ai_arg_suffix, '')
         print()
         print(f'Integer extracted from a(ai) input argument: {input_str}')
-    elif input_str.startswith(a_ai_pref) and not input_str.endswith(a_ai_suff):
+    elif input_str.startswith(a_ai_arg_prefix) and not input_str.endswith(a_ai_arg_suffix):
         print()
         print("ERROR: Script cannot (yet) process integer arrays with more than one shortcut:")
         print(f"\t'{input_str}'")
@@ -644,17 +728,45 @@ def main():
         print()
         return
 
+
+#####################################################################################################
+##########################  IF INPUT IS AN INTEGER, NOT A STRING ARGUMENT  ##########################
+#####################################################################################################
+
     if is_integer(input_str):  # Check if the input string represents an integer
         input_value = int(input_str)
-        if input_value < 32:
+
+        MAX_KEY_VALUE = 0x01FFFFFF # 33554431 integer
+        MAX_MODIFIER_MASK = 0xFE000000
+
+        if input_value < 32:                # Minimum integer value of a lone key
             print()
             print(f"ERROR: Integer values below 32 are control codes. Nothing to convert.")
             print()
             return
-        key_code = input_value & 0x01FFFFFF
-        modifiers = input_value & 0xFE000000
+        elif input_value > 0xFFFFFFFF:      # Max hex value of combined key and modifiers
+            print()
+            print("ERROR: Integer value too large. Typo?")
+            print()
+            return
+
+        key_code = input_value & MAX_KEY_VALUE
+        modifiers_int = input_value & MAX_MODIFIER_MASK
+
+        if key_code > MAX_KEY_VALUE:
+            print(f"\nERROR: Key code part of integer exceeds maximum value ({MAX_KEY_VALUE}).\n")
+            return
+
+        print()
+        print(f'Converting integer to its component key(s)...')
+
         key_name = parse_key(key_code)
-        modifier_names = parse_modifiers(modifiers)
+        modifier_names, individual_modifier_values = parse_modifiers(modifiers_int)
+
+        # Make sure everything is capitalized for proper display on output
+        key_name = format_input(key_name)
+
+        modifier_names = [format_input(mod_name) for mod_name in modifier_names]
 
         if modifier_names:
             modifier_output = ", ".join(mod_name + 'Modifier' for mod_name in modifier_names)
@@ -664,33 +776,67 @@ def main():
         print()
         print(f"Integer argument:           {input_value}")
         print()
-        print(f"Extracted Mod(s) int:       {modifiers}")
-        print(f"Full Mod Name(s):           {modifier_output}")
+        print(f"Extracted Mod(s) int:       {modifiers_int}")
+
+        for mod, value in individual_modifier_values.items():
+            print(f"{mod + ' hex value:':>23}       {value}")
+
+        print(f"    Full Mod Name(s):       {modifier_output}")
         print()
-        print(f"Extracted Key int:          {key_code}")
-        print(f"Full Key Name:              {'Key_' + key_name}")
+        print(f"Extracted Key int value:    {key_code}")
+        print(f"  Extracted Key hex value:    {hex(key_code)}")
+        print(f"          Full Key Name:    {'Key_' + key_name}")
         print()
+
         # Constructing shortcut combo
         modifier_names = [
             'Ctrl' if 'Control' in mod_name else mod_name 
             for mod_name in modifier_names
         ]
+        # Put combo modifiers for display in same order as Plasma Shortcuts settings dialog
+        modifier_names = reorder_keys(modifier_names, preferred_order)
+        key_name = 'Ctrl' if key_name == 'Control' else key_name
         shortcut_combo = '+'.join(modifier_names + [key_name.replace('Ascii', '')])
+
         print(f"Normalized Shortcut Combo:  '{shortcut_combo}'")
         print()
 
+#####################################################################################################
+##############################  IF INPUT IS A STRING, NOT AN INTEGER  ###############################
+#####################################################################################################
+
     else:
         # Treat as string of key/modifier names
-        delim = '+'         # set default delimiter (to avoid UnboundLocalError)
+        print()
+        print(f'Converting string of keys to integer...')
+
         if '-' in input_str:
-            delim = '-'
-        parts = input_str.split(delim)
-        key_name = parts[-1]  # Last part is the key
+            input_str = input_str.replace('-', '+')
+
+        parts                   = input_str.split('+')
+        key_name                = parts[-1]  # Last part is the key
+
+        # If 'Key_' is actually given on input we need to strip it off for now. 
+        if key_name.startswith('Key_'):
+            key_name = key_name.replace('Key_', '')
+
         if key_name == 'Ctrl':
             # Correct the key name
             key_name = 'Control'
         modifier_names = parts[:-1]  # All other parts are modifiers
+
+        # Make sure everything is capitalized for proper matching and display on output
+        key_name = format_input(key_name)
+        modifier_names = [format_input(mod_name) for mod_name in modifier_names]
+
+        # Now that keys are capitalized: If 'Menu' found, 'Shift' should be removed?
+        # (Shift gets ignored in Plasma Shortcuts settings when Menu is used as part of shortcut.)
+        # TODO: Check that this removal of Shift results in the same integer that shortcut creates.
+        if key_name == 'Menu' and 'Shift' in modifier_names:
+            modifier_names = [mod_name for mod_name in modifier_names if mod_name != 'Shift']
+
         encoded_integer, message = encode_string_of_keys_to_int(key_name, modifier_names)
+
         if message:
             print()
             print(message)
@@ -709,13 +855,32 @@ def main():
                 print()
                 print(f"NOTE: Converting input 'Grave' to Qt:Key name 'QuoteLeft'...")
 
+            # Convert input 'Ctrl' to proper Qt::Key name 'Control' for display on output
+            if key_name == 'Ctrl':
+                key_name = 'Control'
+                print()
+                print(f"NOTE: Converting input 'Ctrl' to Qt::Key/Qt::KeyboardModifier name 'Control'...")
+
             # Add the 'Key_' prefix
             key_name = 'Key_' + key_name
+
+            # Convert 'Ctrl' from input to Qt::KeyboardModifier name 'Control'.
+            # For "Full Key Name:" display.
+            modifier_names = [
+                'Control' if mod_name == 'Ctrl' else mod_name
+                for mod_name in modifier_names
+            ]
+
+            if modifier_names:
+                modifier_output = ", ".join(mod_name + 'Modifier' for mod_name in modifier_names)
+            else:
+                modifier_output = "None"
+
             print()
-            print(f"Modifier Name(s):       {modifier_names}")
+            print(f"Full Mod Name(s):       {modifier_output}")
             print(f"Full Key Name:          {key_name}")
             print()
-            print(f"Encoded Integer:        {encoded_integer}")
+            print(f"Encoded to Integer:     {encoded_integer}")
             print()
             # Sample a(ai) argument to give to gdbus call to setShortcutKeys: "([16777250, 0, 0, 0],)"
             print(f'Gdbus a(ai) argument syntax: "([{encoded_integer}, 0, 0, 0],)"')
