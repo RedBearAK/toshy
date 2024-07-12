@@ -643,7 +643,7 @@ def find_similar_key_names(substring: str):
 def encode_string_of_keys_to_int(key_name: str, modifier_names: List[str] = []):
 
     # Make sure everything is capitalized for proper matching in enums
-    key_name = format_input(key_name)
+    # key_name = format_input(key_name)       # There are key names that aren't capitalized!
     modifier_names = [format_input(mod_name) for mod_name in modifier_names]
 
     # Let 'AsciiTilde' and 'AsciiCircum' be matched without 
@@ -764,7 +764,7 @@ def main():
         modifier_names, individual_modifier_values = parse_modifiers(modifiers_int)
 
         # Make sure everything is capitalized for proper display on output
-        key_name = format_input(key_name)
+        # key_name = format_input(key_name)   # There are key names that aren't capitalized!
 
         modifier_names = [format_input(mod_name) for mod_name in modifier_names]
 
@@ -826,7 +826,7 @@ def main():
         modifier_names = parts[:-1]  # All other parts are modifiers
 
         # Make sure everything is capitalized for proper matching and display on output
-        key_name = format_input(key_name)
+        # key_name = format_input(key_name)       # There are key names that aren't capitalized!
         modifier_names = [format_input(mod_name) for mod_name in modifier_names]
 
         # Now that keys are capitalized: If 'Menu' found, 'Shift' should be removed?
@@ -859,7 +859,7 @@ def main():
             if key_name == 'Ctrl':
                 key_name = 'Control'
                 print()
-                print(f"NOTE: Converting input 'Ctrl' to Qt::Key/Qt::KeyboardModifier name 'Control'...")
+                print(f"NOTE: Converting input 'Ctrl' to Qt::Key name 'Control'...")
 
             # Add the 'Key_' prefix
             key_name = 'Key_' + key_name
