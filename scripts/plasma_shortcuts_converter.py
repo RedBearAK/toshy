@@ -584,7 +584,9 @@ alternatives based on the substring match.
 """
 
 
-preferred_order = ['Meta', 'Ctrl', 'Control', 'Alt', 'Shift', 'Keypad', 'NumLock']
+# 'Ctrl' is not in the modifiers list, but 'Ctrl' is translated to 'Control'
+# internally, and should sort like 'Control' in the preferred order. 
+preferred_order = ['Meta', 'Ctrl', 'Control', 'Alt', 'Shift', 'Keypad']
 
 
 def is_integer(s: str):
