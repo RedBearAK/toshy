@@ -883,6 +883,11 @@ def main():
             # Add the 'Key_' prefix
             key_name = 'Key_' + key_name
 
+            clean_key_name = key_name.replace('Key_', '').replace('Ascii', '')
+
+            # Do this before we switch 'Ctrl' for 'Control'
+            sorted_shortcut = "+".join(mod_name for mod_name in modifier_names) + "+" + clean_key_name
+
             # Convert 'Ctrl' from input to Qt::KeyboardModifier name 'Control'.
             # For "Full Key Name:" display.
             modifier_names = [
@@ -901,6 +906,7 @@ def main():
             print(f"Full Mod Name(s):       {modifier_output}")
             print(f"Full Key Name:          {key_name}")
             print()
+            print(f"Sorted Shortcut:        {sorted_shortcut}")
             print(f"Encoded to Integer:     {encoded_integer}")
             print()
             # Sample a(ai) argument to give to gdbus call to setShortcutKeys: "([16777250, 0, 0, 0],)"
