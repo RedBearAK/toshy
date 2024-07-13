@@ -743,7 +743,7 @@ def main():
             return
         elif input_value > 0xFFFFFFFF:      # Max hex value of combined key and modifiers
             print()
-            print("ERROR: Integer value too large. Typo?")
+            print("ERROR: Integer value too large for any combination of modifiers + key. Typo?")
             print()
             return
 
