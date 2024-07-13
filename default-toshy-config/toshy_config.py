@@ -3243,7 +3243,6 @@ keymap("OptSpecialChars - US", {
     C("Shift-Alt-Dot"):         UC(0x02D8),                     # ˘ Breve diacritic (non-combining)
     C("Shift-Alt-Slash"):       UC(0x00BF),                     # ¿ Inverted Question mark
 
-# }, when = lambda ctx: matchProps(not_lst=terminals_and_remotes_lod)(ctx) and cnfg.optspec_layout == 'US')
 }, when = lambda ctx:
     cnfg.optspec_layout == 'US' and
     matchProps(not_lst=terminals_and_remotes_lod)(ctx)
@@ -4728,8 +4727,13 @@ if DESKTOP_ENV == 'icewm':
 if DESKTOP_ENV == 'kde':
     keymap("GenGUI overrides: KDE", {
 
-        C("RC-Space"):             [iEF2NT(),C("Alt-F1")],          # Default SL - Launch Application Menu (gnome/kde)
-        C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,elementary)
+        # Application launcher menu remap
+        # C("RC-Space"):             [iEF2NT(),C("Alt-F1")],          # Application Launcher Menu
+
+        # krunner drop-down (similar to Spotlight) remap
+        C("RC-Space"):             [iEF2NT(),C("Alt-Space")],          # Invoke krunner drop-down
+
+        C("RC-F3"):                 C("Super-d"),                   # Show Desktop (gnome/kde,elementary)
         C("RC-H"):                  C("Super-Page_Down"),           # Minimize app (KDE Plasma)
 
         # C("Super-RC-f"):               C("Alt-F10"),                   # Toggle window maximized state (pre-Plasma 6)
