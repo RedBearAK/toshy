@@ -902,11 +902,11 @@ def main():
 
             print()
             print(f"String argument given:  {input_str}")
+            print(f"Sorted Shortcut:        {sorted_shortcut}")
             print()
             print(f"Full Mod Name(s):       {modifier_output}")
             print(f"Full Key Name:          {key_name}")
             print()
-            print(f"Sorted Shortcut:        {sorted_shortcut}")
             print(f"Encoded to Integer:     {encoded_integer}")
             print()
             # Sample a(ai) argument to give to gdbus call to setShortcutKeys: "([16777250, 0, 0, 0],)"
