@@ -538,9 +538,15 @@ on the order in which the modifiers are provided in the argument string.
 
 Example of this phenomenon:
 
-Ctrl+Meta = 83886114
-Meta+Ctrl = 285212705
+Meta+Ctrl = 285212705 (Plasma internal order, Ctrl gets its "key" value)
+Ctrl+Meta = 83886114 (Meta gets its "key" value instead, different result)
 
+Handling logic for this special case was added (pre-sorting if all keys
+given in string argument are in the modifiers list). This should cause
+the same integer to come out regardless of the original order:
+
+Meta+Ctrl = 285212705
+Ctrl+Meta = 285212705 (got pre-sorted to Meta+Ctrl)
 
 Notes on some Qt key naming quirks: 
 
@@ -586,14 +592,14 @@ alternatives based on the substring match.
 
 # 'Ctrl' is not in the modifiers list, but 'Ctrl' is translated to 'Control'
 # internally, and should sort like 'Control' in the preferred order. 
-preferred_order = ['Meta', 'Ctrl', 'Control', 'Alt', 'Shift', 'Keypad']
+preferred_mod_order = ['Meta', 'Ctrl', 'Control', 'Alt', 'Shift', 'Keypad']
 
 
 def is_integer(s: str):
     return s.lstrip('-').isdigit()
 
 
-def format_input(input_string: str):
+def capitalize_first_letter(input_string: str):
     parts = input_string.split('+')  # Adjust the delimiter based on your input structure, e.g., '+', '-', etc.
     formatted_parts = [part[0].upper() + part[1:] if len(part) > 1 else part.upper() for part in parts]
     return '+'.join(formatted_parts)
@@ -641,7 +647,7 @@ def encode_string_of_keys_to_int(key_name: str, modifier_names: List[str] = []):
 
     # Make sure everything is capitalized for proper matching in enums
     # key_name = format_input(key_name)       # There are key names that aren't capitalized!
-    modifier_names = [format_input(mod_name) for mod_name in modifier_names]
+    modifier_names = [capitalize_first_letter(mod_name) for mod_name in modifier_names]
 
     # Let 'AsciiTilde' and 'AsciiCircum' be matched without 
     # having to literally put 'Ascii' in input string
@@ -733,25 +739,29 @@ def main():
     if is_integer(input_str):  # Check if the input string represents an integer
         input_value = int(input_str)
 
-        MAX_KEY_VALUE = 0x01FFFFFF # 33554431 integer
-        MAX_MODIFIER_MASK = 0xFE000000
+        # int: 33554431
+        MAX_KEY_VALUE_HX                    = 0x01FFFFFF
+        # int: 4261412864
+        MAX_MODIFIER_MASK_HX                = 0xFE000000
+        # int: 4294967295
+        MAX_MODS_AND_KEY_VALUE_HX           = 0xFFFFFFFF
 
-        if input_value < 32:                # Minimum integer value of a lone key
+        if input_value < 32:                # Minimum integer value of any single key
             print()
             print(f"ERROR: Integer values below 32 are control codes. Nothing to convert.")
             print()
             return
-        elif input_value > 0xFFFFFFFF:      # Max hex value of combined key and modifiers
+        elif input_value > MAX_MODS_AND_KEY_VALUE_HX:
             print()
             print("ERROR: Integer value too large for any combination of modifiers + key. Typo?")
             print()
             return
 
-        key_code = input_value & MAX_KEY_VALUE
-        modifiers_int = input_value & MAX_MODIFIER_MASK
+        key_code = input_value & MAX_KEY_VALUE_HX
+        modifiers_int = input_value & MAX_MODIFIER_MASK_HX
 
-        if key_code > MAX_KEY_VALUE:
-            print(f"\nERROR: Key code part of integer exceeds maximum value ({MAX_KEY_VALUE}).\n")
+        if key_code > MAX_KEY_VALUE_HX:
+            print(f"\nERROR: Key code part of integer exceeds maximum value ({MAX_KEY_VALUE_HX}).\n")
             return
 
         print()
@@ -763,7 +773,7 @@ def main():
         # Make sure everything is capitalized for proper display on output
         # key_name = format_input(key_name)   # There are key names that aren't capitalized!
 
-        modifier_names = [format_input(mod_name) for mod_name in modifier_names]
+        modifier_names = [capitalize_first_letter(mod_name) for mod_name in modifier_names]
 
         if modifier_names:
             modifier_output = ", ".join(mod_name + 'Modifier' for mod_name in modifier_names)
@@ -771,7 +781,7 @@ def main():
             modifier_output = "None"
 
         print()
-        print(f"Integer argument:           {input_value}")
+        print(f"Integer argument given:     {input_value}")
         print()
         print(f"Extracted Mod(s) int:       {modifiers_int}")
 
@@ -791,7 +801,7 @@ def main():
             for mod_name in modifier_names
         ]
         # Put combo modifiers for display in same order as Plasma Shortcuts settings dialog
-        modifier_names = reorder_keys(modifier_names, preferred_order)
+        modifier_names = reorder_keys(modifier_names, preferred_mod_order)
         key_name = 'Ctrl' if key_name == 'Control' else key_name
         shortcut_combo = '+'.join(modifier_names + [key_name.replace('Ascii', '')])
 
@@ -810,21 +820,33 @@ def main():
         if '-' in input_str:
             input_str = input_str.replace('-', '+')
 
-        parts                   = input_str.split('+')
-        key_name                = parts[-1]  # Last part is the key
+        parts = input_str.split('+')
+
+        # Special case handling: All elements in parts list are modifier keys.
+        # Capitalize in temporary list, check for all being in `preferred_order` list,
+        # sort parts list by `preferred_order`, update parts list from new list.
+        temp_parts = [capitalize_first_letter(part) for part in parts]
+        if all(key in preferred_mod_order for key in temp_parts) and len(parts) > 1:
+            print()
+            print("Detected special case: Multi-mod-only shortcut string.")
+            print('One mod will be treated as non-mod "key" for integer value.')
+            print("Pre-sorting for consistent integer conversion result...")
+            parts = reorder_keys(parts, preferred_mod_order)
+
+        key_name = parts[-1]  # Last part is the key
 
         # If 'Key_' is actually given on input we need to strip it off for now. 
         if key_name.startswith('Key_'):
             key_name = key_name.replace('Key_', '')
 
+        # Correct the key name from 'Ctrl' to Qt::Key name 'Control'
         if key_name == 'Ctrl':
-            # Correct the key name
             key_name = 'Control'
         modifier_names = parts[:-1]  # All other parts are modifiers
 
         # Make sure everything is capitalized for proper matching and display on output
         # key_name = format_input(key_name)       # There are key names that aren't capitalized!
-        modifier_names = [format_input(mod_name) for mod_name in modifier_names]
+        modifier_names = [capitalize_first_letter(mod_name) for mod_name in modifier_names]
 
         # Now that keys are capitalized: If 'Menu' found, 'Shift' should be removed?
         # (Shift gets ignored in Plasma Shortcuts settings when Menu is used as part of shortcut.)
@@ -873,6 +895,8 @@ def main():
             else:
                 modifier_output = "None"
 
+            print()
+            print(f"String argument given:  {input_str}")
             print()
             print(f"Full Mod Name(s):       {modifier_output}")
             print(f"Full Key Name:          {key_name}")
