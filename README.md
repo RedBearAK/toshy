@@ -1,5 +1,9 @@
 # Current status: Stable Beta (Please Read)
 
+**2024-07-14 UPDATE**: Toshy was recently mentioned favorably in a video on Framework's YouTube channel, about transitioning from macOS to Linux, by Zach Feldman, a lead software engineer on the Marketplace team at Framework. I discovered this quite by accident, watching the video simply because it was in my recommended videos and the title said it was about macOS and Linux, and I've watched several videos from the Framework team. Imagine my surprise when Zach said one of the more important tools that allowed him to use Linux productively after using macOS for many years was Toshy. 😲🤯 Well, I can't be that surprised, since that's exactly why Toshy (and Kinto) were put together. 
+
+https://www.youtube.com/watch?v=g4aUSRi8QX4
+
 **2024-07-05 UPDATE**: Adding to both of the performance updates below, some lists in the config file that are accessed frequently were optimized in a way that once again reduced overall CPU usage while typing. In testing on a multi-core system the CPU usage is usually less than 2%, even while processing keys much faster than most people can type.  
 
 **2024-06-28 UPDATE**: Additional performance (reduction in CPU usage) was gained by rearranging the order of evaluation of multi-condition modmap and keymap conditional expressions in the config file. Conditions that were "lighter" like a simple boolean variable check were placed before conditions that are computationally "heavier", like asking the matching function to evaluate a list of context conditions. This optimization procedure had a surprisingly large effect on how much CPU is used during rapid typing (tested by mashing keys as fast as possible). To get these optimizations of the config file, you will need to grab a new zip file and reinstall Toshy.The improvements from this optimization of the config file conditionals are in addition to the performance improvements described in the earlier update below.  
