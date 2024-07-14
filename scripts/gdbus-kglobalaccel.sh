@@ -5,7 +5,7 @@ gdbus_base="gdbus call --session --dest=org.kde.kglobalaccel --object-path=/kglo
 
 # Check if at least one argument is provided
 if [ $# -lt 1 ]; then
-    echo "Usage: $0 <method_name> [method_args...]"
+    echo "Usage: $0 <KGlobalAccel_method_name> [method_args...]"
     exit 1
 fi
 
@@ -23,5 +23,9 @@ for arg in "$@"; do
     command+=" \"$(echo "$arg" | sed 's/"/\\"/g')\""
 done
 
-# Use eval to correctly interpret the constructed command string with preserved internal quotes
-eval "$command"
+# Use 'eval' to correctly interpret the constructed command string 
+# with preserved internal quotes.
+# Use 'sed' on result to strip excess (result,) formatting from 
+# 'gdbus' to make result easier to use as args to other methods.
+result=$(eval "$command" | sed -e 's/^(\(.*\),)$/\1/')
+echo "$result"
