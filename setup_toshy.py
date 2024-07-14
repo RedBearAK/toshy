@@ -2948,7 +2948,7 @@ def remove_tweaks_KDE():
 def install_coding_font():
     """Utility function to take care of installing the terminal/coding font"""
 
-    print(f'Installing terminal/coding "Fantasque Sans Mono Nerd Font": ', flush=True)
+    print(f'Installing terminal/coding font "FantasqueSansMNoLig Nerd Font": ', flush=True)
 
     cannot_install_font = False
 
