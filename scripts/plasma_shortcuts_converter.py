@@ -765,7 +765,7 @@ def main():
             return
 
         print()
-        print(f'Converting integer to its component key(s)...')
+        print(f'Converting encoded Plasma shortcut integer to its component key(s)...')
 
         key_name = parse_key(key_code)
         modifier_names, individual_modifier_values = parse_modifiers(modifiers_int)
@@ -780,19 +780,19 @@ def main():
         else:
             modifier_output = "None"
 
+        # print()
+        # print(f"       Integer argument given:  {input_value}")
         print()
-        print(f"Integer argument given:     {input_value}")
-        print()
-        print(f"Extracted Mod(s) int:       {modifiers_int}")
+        print(f"   Extracted mod(s) int value:  {modifiers_int}")
 
         for mod, value in individual_modifier_values.items():
-            print(f"{mod + ' hex value:':>23}       {value}")
+            print(f"    {mod + ' mod hex value:':>26}  {value}")
 
-        print(f"    Full Mod Name(s):       {modifier_output}")
+        print(f"             Full mod name(s):  {modifier_output}")
         print()
-        print(f"Extracted Key int value:    {key_code}")
-        print(f"  Extracted Key hex value:    {hex(key_code)}")
-        print(f"          Full Key Name:    {'Key_' + key_name}")
+        print(f"      Extracted key int value:  {key_code}")
+        print(f"      Extracted key hex value:  {hex(key_code)}")
+        print(f"                Full key name:  {'Key_' + key_name}")
         print()
 
         # Constructing shortcut combo
@@ -805,7 +805,7 @@ def main():
         key_name = 'Ctrl' if key_name == 'Control' else key_name
         shortcut_combo = '+'.join(modifier_names + [key_name.replace('Ascii', '')])
 
-        print(f"Normalized Shortcut Combo:  '{shortcut_combo}'")
+        print(f"    Normalized Shortcut Combo:  {shortcut_combo}")
         print()
 
 #####################################################################################################
@@ -815,7 +815,7 @@ def main():
     else:
         # Treat as string of key/modifier names
         print()
-        print(f'Converting string of keys to integer...')
+        print(f'Converting string of key names to encoded Plasma shortcut integer...')
 
         if '-' in input_str:
             input_str = input_str.replace('-', '+')
@@ -847,6 +847,7 @@ def main():
         # Make sure everything is capitalized for proper matching and display on output
         # key_name = format_input(key_name)       # There are key names that aren't capitalized!
         modifier_names = [capitalize_first_letter(mod_name) for mod_name in modifier_names]
+        modifier_names = reorder_keys(modifier_names, preferred_mod_order)
 
         # Now that keys are capitalized: If 'Menu' found, 'Shift' should be removed?
         # (Shift gets ignored in Plasma Shortcuts settings when Menu is used as part of shortcut.)
@@ -886,10 +887,9 @@ def main():
             clean_key_name = key_name.replace('Key_', '').replace('Ascii', '')
 
             # Do this before we switch 'Ctrl' for 'Control'
-            sorted_shortcut = "+".join(mod_name for mod_name in modifier_names) + "+" + clean_key_name
+            sorted_shortcut = "+".join(modifier_names + [clean_key_name])
 
             # Convert 'Ctrl' from input to Qt::KeyboardModifier name 'Control'.
-            # For "Full Key Name:" display.
             modifier_names = [
                 'Control' if mod_name == 'Ctrl' else mod_name
                 for mod_name in modifier_names
@@ -901,16 +901,18 @@ def main():
                 modifier_output = "None"
 
             print()
-            print(f"String argument given:  {input_str}")
-            print(f"Sorted Shortcut:        {sorted_shortcut}")
+            # print(f"        String argument given:  {input_str}")
+            print(f"              Sorted shortcut:  {sorted_shortcut}")
             print()
-            print(f"Full Mod Name(s):       {modifier_output}")
-            print(f"Full Key Name:          {key_name}")
+            print(f"             Full mod name(s):  {modifier_output}")
+            print(f"                Full key name:  {key_name}")
             print()
-            print(f"Encoded to Integer:     {encoded_integer}")
+            print(f"           Encoded to integer:  {encoded_integer}")
             print()
             # Sample a(ai) argument to give to gdbus call to setShortcutKeys: "([16777250, 0, 0, 0],)"
-            print(f'Gdbus a(ai) argument syntax: "([{encoded_integer}, 0, 0, 0],)"')
+            print(f'gdbus a(ai) argument syntax (single shortcut) for setShortcutKeys: ')
+            print()
+            print(f'                "([{encoded_integer}, 0, 0, 0],)"')
             print()
 
 
