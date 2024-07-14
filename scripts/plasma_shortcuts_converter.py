@@ -910,7 +910,7 @@ def main():
             print(f"           Encoded to integer:  {encoded_integer}")
             print()
             # Sample a(ai) argument to give to gdbus call to setShortcutKeys: "([16777250, 0, 0, 0],)"
-            print(f'gdbus a(ai) argument syntax (single shortcut) for setShortcutKeys: ')
+            print(f"gdbus (ai) argument syntax (single shortcut) for actionList method: ")
             print()
             print(f'                "([{encoded_integer}, 0, 0, 0],)"')
             print()
@@ -918,3 +918,124 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+"""
+Examples of how to use `gdbus` with the encoded Plasma shortcut integers:
+
+
+
+The 'action' method wants an integer argument type (method might be deprecated?):
+
+gdbus call --session --dest=org.kde.kglobalaccel --object-path=/kglobalaccel --method=org.kde.KGlobalAccel.action 134217854
+
+Result:
+
+(['kwin', 'Walk Through Windows of Current Application (Reverse)', 'KWin', 'Walk Through Windows of Current Application (Reverse)'],)
+
+
+
+The 'actionList' method wants an (ai) argument type (array of integers):
+
+gdbus call --session --dest=org.kde.kglobalaccel --object-path=/kglobalaccel --method=org.kde.KGlobalAccel.actionList "([134217854, 0, 0, 0],)"
+
+Result (the same as fro the 'action' method):
+
+(['kwin', 'Walk Through Windows of Current Application Alternative (Reverse)', 'KWin', 'Walk Through Windows of Current Application Alternative (Reverse)'],)
+
+
+
+The 'shortcutKeys' method wants an 'actionId' argument type
+(like what 'action/actionList' returns, but without the extra
+parentheses and comma):
+
+gdbus call --session --dest=org.kde.kglobalaccel --object-path=/kglobalaccel --method=org.kde.KGlobalAccel.shortcutKeys "['kwin', 'Walk Through Windows of Current Application (Reverse)', 'KWin', 'Walk Through Windows of Current Application (Reverse)']"
+
+Result from 'shortcutKeys', in a(ai) argument type format (array of array of integers):
+
+([([134217854, 0, 0, 0],)],)
+
+
+
+Let's look at something with more than one shortcut registered (app launcher): 
+
+gdbus call --session --dest=org.kde.kglobalaccel --object-path=/kglobalaccel --method=org.kde.KGlobalAccel.actionList "([16777250, 0, 0, 0],)"
+(['plasmashell', 'activate application launcher', 'plasmashell', 'Activate Application Launcher'],)
+
+gdbus call --session --dest=org.kde.kglobalaccel --object-path=/kglobalaccel --method=org.kde.KGlobalAccel.shortcutKeys "['plasmashell', 'activate application launcher', 'plasmashell', 'Activate Application Launcher']"
+([([150994992, 0, 0, 0],), ([16777250, 0, 0, 0],)],)
+
+This result is in a(ai) format (array of arrays of integers). 
+Now it's more obvious since there are two arrays of integers 
+inside the main array, representing the two shortcuts (Meta 
+and Alt+F1) assigned to the app launcher.
+
+
+
+Once 'Meta' modifier-only shortcut is disabled, the result is only a single shortcut array: 
+
+gdbus call --session --dest=org.kde.kglobalaccel --object-path=/kglobalaccel --method=org.kde.KGlobalAccel.shortcutKeys "['plasmashell', 'activate application launcher', 'plasmashell', 'Activate Application Launcher']"
+([([150994992, 0, 0, 0],)],)
+
+This script will show that it is 'Alt+F1': 
+
+./plasma_shortcuts_converter.py 150994992
+
+Converting encoded Plasma shortcut integer to its component key(s)...
+
+   Extracted mod(s) int value:  134217728
+            Alt mod hex value:  0x8000000
+             Full mod name(s):  AltModifier
+
+      Extracted key int value:  16777264
+      Extracted key hex value:  0x1000030
+                Full key name:  Key_F1
+
+    Normalized Shortcut Combo:  Alt+F1
+
+
+
+Now, using 'setShortcutKeys' to actually set active shortcuts (does 
+not always work, may require logging out of Plasma session):
+
+Usage (from busctl --user introspect): .setShortcutKeys  method asa(ai)u  a(ai)
+Translated into understandable terms 'setShortcutKeys' wants to see three arguments:
+"[array of strings (actionId)]" "a(ai) formatted array of arrays of integers" uint
+The "uint" can be 0 or 4. Zero will autoload default shortcut, or ignore setting of 
+a different shortcut (still confused about this). 
+
+
+
+Example command that should set both 'Alt+F1' and 'Meta' as active shortcuts for the app launcher:
+(Spaces added to clarify what's happening in the outer array compared to inner arrays.)
+
+gdbus call --session --dest=org.kde.kglobalaccel --object-path=/kglobalaccel --method=org.kde.KGlobalAccel.setShortcutKeys \
+"['plasmashell', 'activate application launcher', 'plasmashell', 'Activate Application Launcher']" \
+"[   ([150994992, 0, 0, 0],),    ([16777250, 0, 0, 0],)   ]" \
+4
+
+Return result, if successful, should be the same a(ai) formatted shortcut array of arrays 
+of integers argument that was given as the second argument (but with extra parentheses and 
+a comma before the last closing parentheses, like most gdbus output):
+
+([([150994992, 0, 0, 0],), ([16777250, 0, 0, 0],)],)
+
+
+
+Example command that should set ONLY 'Alt+F1' and DISABLE 'Meta' as active shortcut for the app launcher:
+(Spaces added to clarify what's happening in the outer array compared to inner arrays.)
+
+gdbus call --session --dest=org.kde.kglobalaccel --object-path=/kglobalaccel --method=org.kde.KGlobalAccel.setShortcutKeys \
+"['plasmashell', 'activate application launcher', 'plasmashell', 'Activate Application Launcher']" \
+"[   ([150994992, 0, 0, 0],)   ]" \
+4
+
+Returns, if successful: 
+
+([([150994992, 0, 0, 0],)],)
+
+
+
+
+"""
