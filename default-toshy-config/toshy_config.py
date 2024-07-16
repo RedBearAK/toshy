@@ -3356,6 +3356,7 @@ keymap("Overrides for Dolphin dialogs - Finder Mods", {
 )
 
 keymap("Overrides for Dolphin - Finder Mods", {
+    C("RC-r"):                  C("F5"),                        # Refresh folder view with Cmd+R (like browsers)
     C("RC-KEY_2"):              C("C-KEY_3"),                   # View as List (Detailed)
     C("RC-KEY_3"):              C("C-KEY_2"),                   # View as List (Compact)
     ##########################################################################################
