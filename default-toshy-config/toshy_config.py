@@ -1308,6 +1308,53 @@ def is_pre_GNOME_45(de_ver):
     return str(de_ver).isdigit() and int(de_ver) in pre_G45_ver_lst
 
 
+def toggle_and_show_capslock_state(ctx: KeyContext):
+    """
+    Show the (coming) state of CapsLock LED in a notification pop-up dialog.
+    Then return the CapsLock key combo to toggle the CapsLock LED state.
+
+    No need to return inner closure because not used in conditionals.
+    Do not use () to 'call' the function from output macro. Not needed.
+
+    Example usage: 
+    C("CapsLock"): toggle_and_show_capslock_state, # Toggle CapsLock, show notification
+    """
+
+    # Logic reversed because notification is constructed before combo is returned.
+    message = 'CapsLock is ON' if not ctx.capslock_on else 'CapsLock is OFF'
+    icon = 'input-caps-on-symbolic' if not ctx.capslock_on else 'window-close'
+    ntfy.send_notification(message, icon, 'low', False)
+    return C("CapsLock")
+
+
+def toggle_and_show_numlock_state(ctx: KeyContext):
+    """
+    Show the (coming) state of NumLock LED in a notification pop-up dialog.
+    Then return the NumLock key combo to toggle the NumLock LED state.
+
+    Only shows notification and toggles if 'Forced Numpad' pref is disabled.
+    Like the isNumlockClearKey() function, returns Escape combo if 'Forced 
+    Numpad' feature is enabled. 'Forced Numpad' must be disabled to use
+    NumLock key normally and see the notifications.
+
+    No need to return inner closure because not used in conditionals.
+    Do not use () to 'call' the function from output macro. Not needed.
+
+    Example usage: 
+    C("NumLock"): toggle_and_show_numlock_state, # Toggle NumLock, show notification
+    """
+
+    if cnfg.forced_numpad:
+        debug(f'Force Numpad is ON: NumLock key is "Clear" (sends Escape)')
+        return C("Esc")
+    else:
+        # Logic reversed because notification is constructed before combo is returned.
+        message = 'NumLock is ON' if not ctx.numlock_on else 'NumLock is OFF'
+        icon = 'input-num-on' if not ctx.numlock_on else 'window-close'
+        ntfy.send_notification(message, icon, 'low', False)
+        return C("NumLock")
+
+
 # Suggested location for adding custom functions for personal use.
 ###################################################################################################
 ###  SLICE_MARK_START: user_custom_functions  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
@@ -1699,7 +1746,6 @@ def toggle_forced_numpad():
     """Toggle the Forced Numpad feature on or off."""
     cnfg.forced_numpad = not cnfg.forced_numpad
     cnfg.save_settings()
-    # forced_numpad_alert()
     ntfy.forced_numpad(cnfg.forced_numpad)
 
 
