@@ -54,7 +54,7 @@ class NotificationManager:
         else:
             message = ( 'Forced Numpad feature is now DISABLED.' +
                         '\rRe-enable with Opt+NumLock or Fn+NumLock.')
-        self.send_notification(message)
+        self.send_notification(message, None, None, False)
 
     def apple_logo(self):
         """Show a notification about needing specific font for displaying Apple logo"""
