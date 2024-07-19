@@ -14,10 +14,6 @@
 
 KDE_ver="$KDE_SESSION_VERSION"
 
-# Define an array of potential dbus command utilities
-dbus_commands=("gdbus" "qdbus" "qdbus-qt6" "qdbus6" "qdbus-qt5" "dbus-send")
-
-
 # Check if we're actually in KDE
 if [ -z "$KDE_ver" ]; then
     echo "KDE_SESSION_VERSION is not set or is empty. Not in KDE? Exiting."
@@ -241,6 +237,10 @@ fi
 # Give a little time to make sure files are actually written and 
 # available for KWin reconfigure.
 sleep 0.5
+
+
+# Define an array of potential dbus command utilities
+dbus_commands=("gdbus" "qdbus" "qdbus-qt6" "qdbus6" "qdbus-qt5" "dbus-send")
 
 
 # Functions to handle KWin reconfiguration with different dbus utilities
