@@ -600,7 +600,7 @@ def is_integer(s: str):
 
 
 def capitalize_first_letter(input_string: str):
-    parts = input_string.split('+')  # Adjust the delimiter based on your input structure, e.g., '+', '-', etc.
+    parts = input_string.split('+')
     formatted_parts = [part[0].upper() + part[1:] if len(part) > 1 else part.upper() for part in parts]
     return '+'.join(formatted_parts)
 
@@ -817,8 +817,11 @@ def main():
         print()
         print(f'Converting string of key names to encoded Plasma shortcut integer...')
 
+        # Normalize input string delimiter (allow "+", "-" and "_" to separate mod/key names)
         if '-' in input_str:
             input_str = input_str.replace('-', '+')
+        elif '_' in input_str:
+            input_str = input_str.replace('_', '+')
 
         parts = input_str.split('+')
 
@@ -909,7 +912,7 @@ def main():
             print()
             print(f"           Encoded to integer:  {encoded_integer}")
             print()
-            # Sample a(ai) argument to give to gdbus call to setShortcutKeys: "([16777250, 0, 0, 0],)"
+            # Sample (ai) argument to give to gdbus call to setShortcutKeys: "([16777250, 0, 0, 0],)"
             print(f"gdbus (ai) argument syntax (single shortcut) for actionList method: ")
             print()
             print(f'                "([{encoded_integer}, 0, 0, 0],)"')
@@ -926,7 +929,7 @@ Examples of how to use `gdbus` with the encoded Plasma shortcut integers:
 
 
 
-The 'action' method wants an integer argument type (method might be deprecated?):
+The 'action' method wants an integer argument type (method is deprecated):
 
 gdbus call --session --dest=org.kde.kglobalaccel --object-path=/kglobalaccel --method=org.kde.KGlobalAccel.action 134217854
 
@@ -978,7 +981,7 @@ Once 'Meta' modifier-only shortcut is disabled, the result is only a single shor
 gdbus call --session --dest=org.kde.kglobalaccel --object-path=/kglobalaccel --method=org.kde.KGlobalAccel.shortcutKeys "['plasmashell', 'activate application launcher', 'plasmashell', 'Activate Application Launcher']"
 ([([150994992, 0, 0, 0],)],)
 
-This script will show that it is 'Alt+F1': 
+This script will show that this integer decodes to 'Alt+F1': 
 
 ./plasma_shortcuts_converter.py 150994992
 
