@@ -1,14 +1,11 @@
 #!/usr/bin/env python3
 
 
-from wlroots.wlr_types.foreign_toplevel_management_v1 import ForeignToplevelManagerV1
 from pywayland.client import Display
+from wlroots.wlr_types.foreign_toplevel_management_v1 import ForeignToplevelManagerV1
 import traceback
 from typing import Optional
 
-
-class MyForeignToplevelManagerV1(ForeignToplevelManagerV1):
-    name = "zwlr_foreign_toplevel_manager_v1"
 
 
 class WaylandClient:
@@ -16,7 +13,7 @@ class WaylandClient:
         """Initialize the WaylandClient."""
         self.display: Optional[Display] = None
         self.registry = None
-        self.topl_mgmt: Optional[MyForeignToplevelManagerV1] = None
+        self.topl_mgmt: Optional[ForeignToplevelManagerV1] = None
         self.topl_mgmt_prot_supported = False
 
     def registry_handler(self, registry, name, interface_name, version):
@@ -24,7 +21,12 @@ class WaylandClient:
         print(f"Registry event: name={name}, interface={interface_name}, version={version}")
         if interface_name == 'zwlr_foreign_toplevel_manager_v1':
             self.topl_mgmt_prot_supported = True
-            self.topl_mgmt = registry.bind(name, MyForeignToplevelManagerV1, version)
+
+            # self.topl_mgmt = registry.bind(name, ForeignToplevelManagerV1, version)
+
+            # Properly create a ForeignToplevelManagerV1 instance
+            self.topl_mgmt = ForeignToplevelManagerV1.create(self.display)
+
             self.topl_mgmt.add_listener(self.handle_toplevel_event)
             print(f"Protocol name '{name}' interface '{interface_name}' version '{version}' is SUPPORTED.")
 
