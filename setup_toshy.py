@@ -857,7 +857,8 @@ pip_pkgs   = [
 
     # NOTE: Installing 'pywlroots' will require native pkg 'libxkbcommon-devel' (Fedora).
     # We are installing 'libxkbcommon-devel' now to support 'xkbcommon' module. 
-    "pywlroots",
+    # "pywlroots",
+    ######  Is 'pywlroots' more about making your own compositor from Python? Only used by Qtile.
 
     # TODO: Check on 'python-xlib' project by mid-2025 to see if this bug is fixed:
     #   [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']
