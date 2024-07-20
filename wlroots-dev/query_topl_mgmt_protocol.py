@@ -59,6 +59,8 @@ class WaylandClient:
 
             print("Getting registry...")
             self.registry = self.display.get_registry()
+            print(f"{self.registry = }")
+            print(f"{dir(self.registry) = }")
             self.registry.dispatcher["global"] = self.registry_handler
             print("Registry obtained")
 
