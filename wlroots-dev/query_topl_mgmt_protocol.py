@@ -43,7 +43,8 @@ class WaylandClient:
             )
             self.topl_mgmt_prot_supported = True
             self.topl_mgmt = registry.bind(name_int, ZwlrForeignToplevelManagerV1, version)
-            self.topl_mgmt.add_listener(self.handle_toplevel_event)
+            # self.topl_mgmt.add_listener(self.handle_toplevel_event)
+            self.topl_mgmt.dispatcher['toplevel_event'] = self.handle_toplevel_event
 
     def handle_toplevel_event(self, toplevel, event):
         """Handle toplevel events."""
