@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+
 from wlroots.wlr_types.foreign_toplevel_management_v1 import (
     ForeignToplevelManagerV1, ForeignToplevelHandleV1
 )
@@ -7,6 +8,13 @@ from pywayland.client import Display
 from pywayland.protocol.wayland import WlRegistry, wl_display, wl_registry
 import traceback
 from typing import Optional
+
+from pywayland.protocol_core import Interface
+
+
+class ZwlrForeignToplevelManagerV1Interface(Interface):
+    name = "zwlr_foreign_toplevel_manager_v1"
+    version = 3
 
 
 class WaylandClient:
@@ -24,7 +32,7 @@ class WaylandClient:
         print(f"Registry event: name={name}, interface={interface}, version={version}")
         if interface == 'zwlr_foreign_toplevel_manager_v1':
             self.topl_mgmt_prot_supported = True
-            self.topl_mgmt = self.also_registry.bind(name, ForeignToplevelManagerV1, version)
+            self.topl_mgmt = self.also_registry.bind(name, ZwlrForeignToplevelManagerV1Interface, version)
             self.topl_mgmt.add_listener(self.handle_toplevel_event)
             print(f"Protocol '{interface}' version '{version}' is SUPPORTED.")
 
