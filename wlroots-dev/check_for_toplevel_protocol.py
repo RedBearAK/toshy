@@ -13,15 +13,25 @@ class WaylandClient:
     def __init__(self):
         self.display: Optional[Display] = None
         self.registry: Optional[WlRegistry]= None
-        self.toplevel_management_supported = False
+        self.topl_mgmt_prot_supported = False
+        self.topl_mgmt_prot_name = None
+        self.topl_mgmt_prot_ver = None
 
     def registry_handler(self, registry, name, interface, version):
         print(f"Registry event: name={name}, interface={interface}, version={version}")
         if 'wlr' in interface:
             print('                             #### wlr protocol detected')
-        if interface == 'wlr_foreign_toplevel_manager_v1':
-            self.toplevel_management_supported = True
-            print(f"Protocol {interface} is supported with version {version}")
+            print()
+        forn_topl_prot_names = [
+            'wlr_foreign_toplevel_manager_v1',
+            'zwlr_foreign_toplevel_manager_v1'
+        ]
+        if interface in forn_topl_prot_names:
+            self.topl_mgmt_prot_supported = True
+            self.topl_mgmt_prot_name = interface
+            self.topl_mgmt_prot_ver = version
+            print(f"Protocol '{interface}' version '{version}' is SUPPORTED.")
+            print()
 
     def run(self):
         try:
@@ -45,16 +55,17 @@ class WaylandClient:
             print("Running roundtrip to process registry events...")
             self.display.roundtrip()
 
-            if not self.toplevel_management_supported:
-                print("Protocol wlr_foreign_toplevel_manager_v1 is not supported.")
+            if self.topl_mgmt_prot_supported:
+                print(f"Protocol '{self.topl_mgmt_prot_name}' "
+                        f"version '{self.topl_mgmt_prot_ver}' is SUPPORTED.")
             else:
-                print("Protocol wlr_foreign_toplevel_manager_v1 is supported.")
+                print("Protocol '[z]wlr_foreign_toplevel_manager_v1' is NOT supported.")
 
         except Exception as e:
             print("An error occurred:")
             print(traceback.format_exc())
         finally:
-            # This 'finally' is to help avoid a segmentation fault when script ends.
+            # This 'finally' is to avoid a segmentation fault when script ends.
             if self.display is not None:
                 print("Disconnecting from Wayland display")
                 self.display.disconnect()
