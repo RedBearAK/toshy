@@ -853,11 +853,11 @@ pip_pkgs   = [
     # Everything below here is just to make keymapper install smoother.
     # Keymapper may be 'xwaykeyz', 'keyszer' or a derivative/fork with same requirements.
 
-    "hyprpy", "i3ipc", "pywayland",
+    "hyprpy", "i3ipc", "pywayland", 
 
     # NOTE: Installing 'pywlroots' will require native pkg 'libxkbcommon-devel' (Fedora).
     # We are installing 'libxkbcommon-devel' now to support 'xkbcommon' module. 
-    # "pywlroots",
+    "pywlroots",
 
     # TODO: Check on 'python-xlib' project by mid-2025 to see if this bug is fixed:
     #   [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']

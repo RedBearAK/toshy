@@ -1,41 +1,32 @@
 #!/usr/bin/env python3
 
-# Script to connect to Wayland compositor and query the focused window's app class and window title.
-
+from wlroots.wlr_types.foreign_toplevel_management_v1 import (
+    ForeignToplevelManagerV1, ForeignToplevelHandleV1
+)
 from pywayland.client import Display
 from pywayland.protocol.wayland import WlRegistry, wl_display, wl_registry
 import traceback
 from typing import Optional
 
+
 class WaylandClient:
     def __init__(self):
         """Initialize the WaylandClient."""
         self.display: Optional[Display] = None
-        self.also_display: Optional[wl_display.WlDisplayProxy] = None
-        self.registry: Optional[wl_registry.WlRegistryProxy] = None
+        self.also_display = None
+        self.registry: Optional[WlRegistry] = None
+        self.also_registry = None
+        self.topl_mgmt: Optional[ForeignToplevelManagerV1] = None
         self.topl_mgmt_prot_supported = False
-        self.toplevel_manager = None
-        self.topl_mgmt_prot_name = None
-        self.topl_mgmt_prot_ver = None
 
     def registry_handler(self, registry, name, interface, version):
         """Handle registry events."""
         print(f"Registry event: name={name}, interface={interface}, version={version}")
-        if 'wlr' in interface:
-            print('                             #### wlr protocol detected')
-            print()
-        topl_mgmt_prot_names = [
-            'zwlr_foreign_toplevel_manager_v1',
-            'wlr_foreign_toplevel_manager_v1',
-        ]
-        if interface in topl_mgmt_prot_names:
+        if interface == 'zwlr_foreign_toplevel_manager_v1':
             self.topl_mgmt_prot_supported = True
-            self.topl_mgmt_prot_name = interface
-            self.topl_mgmt_prot_ver = version
+            self.topl_mgmt = self.also_registry.bind(name, ForeignToplevelManagerV1, version)
+            self.topl_mgmt.add_listener(self.handle_toplevel_event)
             print(f"Protocol '{interface}' version '{version}' is SUPPORTED.")
-            print()
-
-            self.toplevel_manager = self.registry.bind(name, version, interface)
 
     def handle_toplevel_event(self, toplevel, event, *args):
         """Handle toplevel events."""
@@ -50,26 +41,27 @@ class WaylandClient:
             print("Connecting to Wayland display...")
             self.display = Display()
             self.display.connect()
-            # Alias to fix VSCode syntax highlighting on 'self.display.get_registry()' method
-            self.also_display = self.display
+            # Alias for type hinting to light up the '.get_registry()' method below
+            self.also_display: wl_display.WlDisplayProxy = self.display
             print("Connected to Wayland display")
 
             print("Getting registry...")
             self.registry = self.also_display.get_registry()
-            self.registry.dispatcher["global"] = self.registry_handler
+            self.also_registry: wl_registry.WlRegistryProxy = self.registry
+            # self.registry.dispatcher["global"] = self.registry_handler
+            # Alias for type hinting to light up '.dispatcher' attribute 
+            # below, and '.bind()' method in 'registry_handler()'
+            self.also_registry.dispatcher["global"] = self.registry_handler
             print("Registry obtained")
 
             print("Running roundtrip to process registry events...")
             self.display.roundtrip()
 
-            if self.topl_mgmt_prot_supported and self.toplevel_manager:
-                print()
-                print(f"Protocol '{self.topl_mgmt_prot_name}' "
-                        f"version '{self.topl_mgmt_prot_ver}' is SUPPORTED.")
-                print()
-                # Query for focused window's app class and window title
-                print("Querying for focused window's app class and window title...")
-                self.toplevel_manager.dispatcher["toplevel"] = self.handle_toplevel_event
+            if self.topl_mgmt_prot_supported and self.topl_mgmt:
+                print("Protocol is supported, waiting for events...")
+                # Main event loop to keep the client running and handle events
+                while True:
+                    self.display.dispatch()
             else:
                 print("Protocol '[z]wlr_foreign_toplevel_manager_v1' is NOT supported.")
 
