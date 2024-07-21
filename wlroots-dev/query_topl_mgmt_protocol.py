@@ -12,10 +12,16 @@ import sys
 import signal
 import traceback
 
-from protocols.wlr_foreign_toplevel_management_unstable_v1 import (
-    ZwlrForeignToplevelManagerV1,
-    ZwlrForeignToplevelHandleV1
+
+from wlroots.wlr_types.foreign_toplevel_management_v1 import (
+    ForeignToplevelManagerV1 as ZwlrForeignToplevelManagerV1,
+    ForeignToplevelHandleV1 as ZwlrForeignToplevelHandleV1,
 )
+
+# from protocols.wlr_foreign_toplevel_management_unstable_v1 import (
+#     ZwlrForeignToplevelManagerV1,
+#     ZwlrForeignToplevelHandleV1
+# )
 
 from pywayland.client import Display
 from protocols.wayland import WlOutput, WlSeat
@@ -47,7 +53,7 @@ class WaylandClient:
 
     def registry_global_handler(self, registry, id_, interface_name, version):
         """Handle registry events."""
-        print(f"Registry event: id={id_}, interface={interface_name}, version={version}")
+        # print(f"Registry event: id={id_}, interface={interface_name}, version={version}")
         if interface_name == 'zwlr_foreign_toplevel_manager_v1':
             print()
             print(f"Protocol '{interface_name}' version {version} is SUPPORTED.")
@@ -57,11 +63,13 @@ class WaylandClient:
             print(f"Subscribing to 'toplevel' events from toplevel manager")
             self.toplevel_manager.dispatcher['toplevel'] = self.handle_toplevel_event
             print()
+            self.display.roundtrip()
         elif interface_name == 'wl_seat':
             print(f"Binding to wl_seat interface.")
             seat = registry.bind(id_, WlSeat, version)
             seat.dispatcher['capabilities'] = self.handle_seat_capabilities
             seat.dispatcher['name'] = self.handle_seat_name
+            self.display.roundtrip()
         elif interface_name == 'wl_output':
             print(f"Binding to wl_output interface.")
             output = registry.bind(id_, WlOutput, version)
@@ -70,14 +78,13 @@ class WaylandClient:
             output.dispatcher['mode'] = self.handle_output_mode
             output.dispatcher['done'] = self.handle_output_done
             output.dispatcher['scale'] = self.handle_output_scale
-
+            self.display.roundtrip()
 
     def handle_seat_capabilities(self, seat, capabilities):
         print(f"Seat {seat} capabilities changed: {capabilities}")
 
     def handle_seat_name(self, seat, name):
         print(f"Seat {seat} name set to: {name}")
-
 
     def handle_output_geometry(self, output, x, y, physical_width, physical_height, subpixel, make, model, transform):
         print(f"Output {output} geometry updated: {make} {model}, {physical_width}x{physical_height}")
@@ -90,7 +97,6 @@ class WaylandClient:
 
     def handle_output_scale(self, output, factor):
         print(f"Output {output} scale set to {factor}.")
-
 
     def handle_toplevel_event(self, toplevel_handle: ZwlrForeignToplevelHandleV1):
         """Handle events for new toplevel windows."""
@@ -151,13 +157,16 @@ class WaylandClient:
             self.registry.dispatcher["global"] = self.registry_global_handler
 
             print("Running roundtrip to process registry events...")
-            self.display.roundtrip()        # this is what causes initial events to come out...
+            self.display.roundtrip()
 
             if self.forn_topl_mgr_prot_supported and self.toplevel_manager:
                 print()
                 print("Protocol is supported, waiting for events...")
-                while True:
-                    self.display.dispatch()   # Using 'block=True' causes NotImplementedError
+
+                while self.display.dispatch() != -1:
+                    pass
+
+                self.cleanup()
             else:
                 print()
                 print("Protocol 'zwlr_foreign_toplevel_manager_v1' is NOT supported.")
