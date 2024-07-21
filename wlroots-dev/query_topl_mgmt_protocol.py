@@ -46,8 +46,11 @@ class WaylandClient:
     def registry_global_handler(self, registry, id_, interface_name, version):
         """Handle registry events."""
         print(f"Registry event: id={id_}, interface={interface_name}, version={version}")
-        if interface_name == 'zwlr_foreign_toplevel_manager_v1':
-            print(f"Protocol '{interface_name}' version {version} is SUPPORTED.")
+        # if interface_name == 'zwlr_foreign_toplevel_manager_v1':
+        #     print(f"Protocol '{interface_name}' version {version} is SUPPORTED.")
+            # self.forn_topl_mgr_prot_supported = True
+
+        try:
             self.forn_topl_mgr_prot_supported = True
 
             print(f"Creating toplevel manager by binding protocol to registry")
@@ -55,7 +58,10 @@ class WaylandClient:
 
             print(f"Subscribing to 'toplevel' events from toplevel manager")
             self.toplevel_manager.dispatcher['toplevel']       = self.handle_toplevel_event
-            self.display.roundtrip()
+        except Exception as e:
+            print(f"Problem creating toplevel")
+            self.cleanup()
+            sys.exit(1)
 
     def handle_toplevel_event(self, toplevel_handle: ZwlrForeignToplevelHandleV1):
         """Handle events for new toplevel windows."""
@@ -115,8 +121,8 @@ class WaylandClient:
             print("Subscribing to 'global' events from registry")
             self.registry.dispatcher["global"] = self.registry_global_handler
 
-            print("Running roundtrip to process registry events...")
-            self.display.roundtrip()        # must be what causes initial events to come out...
+            # print("Running roundtrip to process registry events...")
+            # self.display.roundtrip()        # must be what causes initial events to come out...
 
             if self.forn_topl_mgr_prot_supported and self.toplevel_manager:
                 print("Protocol is supported, waiting for events...")
