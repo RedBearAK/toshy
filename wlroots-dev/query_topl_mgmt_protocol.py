@@ -59,7 +59,13 @@ class WaylandClient:
             print(f"Protocol '{interface_name}' version {version} is SUPPORTED.")
             self.forn_topl_mgr_prot_supported = True
             print(f"Creating toplevel manager by binding protocol to registry")
-            self.toplevel_manager = registry.bind(id_, ZwlrForeignToplevelManagerV1, version)
+
+            # # pywayland version:
+            # self.toplevel_manager = registry.bind(id_, ZwlrForeignToplevelManagerV1, version)
+
+            # pywlroots version:
+            self.toplevel_manager = ZwlrForeignToplevelManagerV1.create(self.display)
+
             print(f"Subscribing to 'toplevel' events from toplevel manager")
             self.toplevel_manager.dispatcher['toplevel'] = self.handle_toplevel_event
             print()
