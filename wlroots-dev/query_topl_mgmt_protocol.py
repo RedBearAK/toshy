@@ -55,6 +55,7 @@ class WaylandClient:
 
             print(f"Subscribing to 'toplevel' events from toplevel manager")
             self.toplevel_manager.dispatcher['toplevel']       = self.handle_toplevel_event
+            self.display.roundtrip()
 
     def handle_toplevel_event(self, toplevel_handle: ZwlrForeignToplevelHandleV1):
         """Handle events for new toplevel windows."""
@@ -120,8 +121,8 @@ class WaylandClient:
             if self.forn_topl_mgr_prot_supported and self.toplevel_manager:
                 print("Protocol is supported, waiting for events...")
                 while True:
-                    self.display.roundtrip()
-                    # self.display.dispatch()   # Using 'block=True' causes NotImplementedError
+                    # self.display.roundtrip()    # Causes NotImplementedError
+                    self.display.dispatch()   # Using 'block=True' causes NotImplementedError
             else:
                 print("Protocol 'zwlr_foreign_toplevel_manager_v1' is NOT supported.")
 
