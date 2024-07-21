@@ -8,10 +8,12 @@
 import sys
 import signal
 import traceback
+
 from protocols.wlr_foreign_toplevel_management_unstable_v1 import (
     ZwlrForeignToplevelManagerV1,
     ZwlrForeignToplevelHandleV1
 )
+
 from pywayland.client import Display
 from typing import Optional
 
@@ -33,57 +35,63 @@ class WaylandClient:
 
     def cleanup(self):
         if self.display is not None:
+            print("Disconnecting from Wayland display...")
             self.display.disconnect()
-            print("Disconnected from Wayland display")
+            print("Disconnected from Wayland display.")
 
     def registry_global_handler(self, registry, id_, interface_name, version):
         """Handle registry events."""
         print(f"Registry event: id={id_}, interface={interface_name}, version={version}")
         if interface_name == 'zwlr_foreign_toplevel_manager_v1':
-            print(
-                f"Protocol id '{id_}' interface '{interface_name}' "
-                f"version '{version}' is SUPPORTED."
-            )
+            print(f"Protocol '{interface_name}' version '{version}' is SUPPORTED.")
             self.topl_mgmt_prot_supported = True
             self.topl_mgmt = registry.bind(id_, ZwlrForeignToplevelManagerV1, version)
-            self.topl_mgmt.dispatcher['toplevel'] = self.handle_toplevel_event
+            self.topl_mgmt.dispatcher['toplevel']       = self.handle_toplevel_event
 
-    def registry_global_remover(registry, id_):
+    def registry_global_remover(self, registry, id_):
         print(f"got a registry removal event for {id_}")
 
     def handle_toplevel_event(self, toplevel_handle: ZwlrForeignToplevelHandleV1):
         """Handle events for new toplevel windows."""
         print(f"New toplevel window created: {toplevel_handle}")
-        print("Available methods and attributes:", dir(toplevel_handle))
-        # Setup further event handling for this specific toplevel window
-        toplevel_handle.dispatcher['title'] = self.handle_title_change
-        toplevel_handle.dispatcher['app_id_'] = self.handle_app_id_change
-        toplevel_handle.dispatcher['closed'] = self.handle_window_closed
-        toplevel_handle.dispatcher['state'] = self.handle_state_change
+        
+        # Subscribe to title and app_id changes as well as close event
+        toplevel_handle.dispatcher['title']             = self.handle_title_change
+        toplevel_handle.dispatcher['app_id']            = self.handle_app_id_change
+        toplevel_handle.dispatcher['closed']            = self.handle_window_closed
+        toplevel_handle.dispatcher['state']             = self.handle_state_change
 
     def handle_title_change(self, handle, title):
         """Update title in local state."""
         if handle.id not in self.windows:
             self.windows[handle.id] = {}
         self.windows[handle.id]['title'] = title
+        print(f"Title updated for window {handle.id}: {title}")
 
     def handle_app_id_change(self, handle, app_id):
         """Update app_id in local state."""
         if handle.id not in self.windows:
             self.windows[handle.id] = {}
         self.windows[handle.id]['app_id'] = app_id
+        print(f"App ID updated for window {handle.id}: {app_id}")
 
     def handle_window_closed(self, handle):
         """Remove window from local state."""
         if handle.id in self.windows:
             del self.windows[handle.id]
+        print(f"Window {handle.id} has been closed.")
 
     def handle_state_change(self, handle, state):
         """Track active window based on state change."""
-        if state == 'activated':
+        print(f"{type(state) = }")
+        print(f"{dir(state) = }")
+        # Check for 'activated' state based on the array of states provided
+        if 'activated' in state:
             self.active_window = handle.id
-        elif state == 'deactivated' and self.active_window == handle.id:
+            print(f"Window {handle.id} is now active.")
+        elif 'deactivated' in state and self.active_window == handle.id:
             self.active_window = None
+            print(f"Window {handle.id} is no longer active.")
 
     def run(self):
         """Run the Wayland client."""
@@ -95,11 +103,8 @@ class WaylandClient:
 
             print("Getting registry...")
             self.registry = self.display.get_registry()
-            print(f"{self.registry = }")
-            print(f"{dir(self.registry) = }")
-            print(f"{dir(self.registry.dispatcher) = }")
-            self.registry.dispatcher["global"] = self.registry_global_handler
-            self.registry.dispatcher["global_remove"] = self.registry_global_remover
+            self.registry.dispatcher["global"]              = self.registry_global_handler
+            self.registry.dispatcher["global_remove"]       = self.registry_global_remover
             print("Registry obtained")
 
             print("Running roundtrip to process registry events...")
@@ -108,19 +113,16 @@ class WaylandClient:
             if self.topl_mgmt_prot_supported and self.topl_mgmt:
                 print("Protocol is supported, waiting for events...")
                 while True:
-                    self.display.dispatch(block=True)
-                    self.display.roundtrip()
+                    self.display.dispatch(block=True)   # not sure about the 'block=True'
             else:
                 print("Protocol 'zwlr_foreign_toplevel_manager_v1' is NOT supported.")
 
         except Exception as e:
-            print("An error occurred:")
+            print(f"An error occurred: {e}")
             print(traceback.format_exc())
         finally:
             if self.display is not None:
-                print("Disconnecting from Wayland display")
-                self.display.disconnect()
-                print("Disconnected from Wayland display")
+                self.cleanup()
 
 if __name__ == "__main__":
     print("Starting Wayland client...")
