@@ -4,6 +4,9 @@
 # Reference for creating the protocols with pywayland scanner:
 # https://github.com/flacjacket/pywayland/issues/8#issuecomment-987040284
 
+# Protocol documentation:
+# https://wayland.app/protocols/wlr-foreign-toplevel-management-unstable-v1
+
 
 import sys
 import signal
@@ -24,12 +27,13 @@ class WaylandClient:
         signal.signal(signal.SIGINT, self.signal_handler)
         self.display: Optional[Display] = None
         self.registry = None
-        self.topl_mgmt: Optional[ZwlrForeignToplevelManagerV1] = None
-        self.topl_mgmt_prot_supported = False
-        self.windows = {}
+        self.toplevel_manager: Optional[ZwlrForeignToplevelManagerV1] = None
+        self.forn_topl_mgr_prot_supported = False
+        self.window_handles_dct = {}
+        self.active_window_handle = None
 
     def signal_handler(self, signal, frame):
-        print("Signal received, shutting down.")
+        print("\nSignal received, shutting down.")
         self.cleanup()
         sys.exit(0)
 
@@ -43,13 +47,14 @@ class WaylandClient:
         """Handle registry events."""
         print(f"Registry event: id={id_}, interface={interface_name}, version={version}")
         if interface_name == 'zwlr_foreign_toplevel_manager_v1':
-            print(f"Protocol '{interface_name}' version '{version}' is SUPPORTED.")
-            self.topl_mgmt_prot_supported = True
-            self.topl_mgmt = registry.bind(id_, ZwlrForeignToplevelManagerV1, version)
-            self.topl_mgmt.dispatcher['toplevel']       = self.handle_toplevel_event
+            print(f"Protocol '{interface_name}' version {version} is SUPPORTED.")
+            self.forn_topl_mgr_prot_supported = True
 
-    def registry_global_remover(self, registry, id_):
-        print(f"got a registry removal event for {id_}")
+            print(f"Creating toplevel manager by binding protocol to registry")
+            self.toplevel_manager = registry.bind(id_, ZwlrForeignToplevelManagerV1, version)
+
+            print(f"Subscribing to 'toplevel' events from toplevel manager")
+            self.toplevel_manager.dispatcher['toplevel']       = self.handle_toplevel_event
 
     def handle_toplevel_event(self, toplevel_handle: ZwlrForeignToplevelHandleV1):
         """Handle events for new toplevel windows."""
@@ -63,35 +68,36 @@ class WaylandClient:
 
     def handle_title_change(self, handle, title):
         """Update title in local state."""
-        if handle.id not in self.windows:
-            self.windows[handle.id] = {}
-        self.windows[handle.id]['title'] = title
+        if handle.id not in self.window_handles_dct:
+            self.window_handles_dct[handle.id] = {}
+        self.window_handles_dct[handle.id]['title'] = title
         print(f"Title updated for window {handle.id}: {title}")
 
     def handle_app_id_change(self, handle, app_id):
         """Update app_id in local state."""
-        if handle.id not in self.windows:
-            self.windows[handle.id] = {}
-        self.windows[handle.id]['app_id'] = app_id
+        if handle.id not in self.window_handles_dct:
+            self.window_handles_dct[handle.id] = {}
+        self.window_handles_dct[handle.id]['app_id'] = app_id
         print(f"App ID updated for window {handle.id}: {app_id}")
 
     def handle_window_closed(self, handle):
         """Remove window from local state."""
-        if handle.id in self.windows:
-            del self.windows[handle.id]
+        if handle.id in self.window_handles_dct:
+            del self.window_handles_dct[handle.id]
         print(f"Window {handle.id} has been closed.")
 
-    def handle_state_change(self, handle, state):
-        """Track active window based on state change."""
-        print(f"{type(state) = }")
-        print(f"{dir(state) = }")
-        # Check for 'activated' state based on the array of states provided
-        if 'activated' in state:
+    def handle_state_change(self, handle, states):
+        """Track active window based on state changes."""
+        if 'activated' in states:
+            if self.active_window is not None and self.active_window != handle.id:
+                print(f"Window {self.active_window} is no longer active.")
             self.active_window = handle.id
             print(f"Window {handle.id} is now active.")
-        elif 'deactivated' in state and self.active_window == handle.id:
-            self.active_window = None
+        elif self.active_window == handle.id:
+            # If the currently active window reports any state change that might imply it is no longer active,
+            # you would handle that here. Since there's no 'deactivated' state, this part might adjust based on your app's logic.
             print(f"Window {handle.id} is no longer active.")
+            self.active_window = None
 
     def run(self):
         """Run the Wayland client."""
@@ -103,17 +109,19 @@ class WaylandClient:
 
             print("Getting registry...")
             self.registry = self.display.get_registry()
-            self.registry.dispatcher["global"]              = self.registry_global_handler
-            self.registry.dispatcher["global_remove"]       = self.registry_global_remover
             print("Registry obtained")
 
-            print("Running roundtrip to process registry events...")
-            self.display.roundtrip()
+            print("Subscribing to 'global' events from registry")
+            self.registry.dispatcher["global"] = self.registry_global_handler
 
-            if self.topl_mgmt_prot_supported and self.topl_mgmt:
+            print("Running roundtrip to process registry events...")
+            self.display.roundtrip()        # must be what causes initial events to come out...
+
+            if self.forn_topl_mgr_prot_supported and self.toplevel_manager:
                 print("Protocol is supported, waiting for events...")
                 while True:
-                    self.display.dispatch(block=True)   # not sure about the 'block=True'
+                    self.display.roundtrip()
+                    # self.display.dispatch()   # Using 'block=True' causes NotImplementedError
             else:
                 print("Protocol 'zwlr_foreign_toplevel_manager_v1' is NOT supported.")
 
