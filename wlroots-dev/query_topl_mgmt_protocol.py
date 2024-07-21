@@ -36,28 +36,30 @@ class WaylandClient:
             self.display.disconnect()
             print("Disconnected from Wayland display")
 
-    def registry_handler(self, registry, name_int, interface_name, version):
+    def registry_global_handler(self, registry, id_, interface_name, version):
         """Handle registry events."""
-        print(f"Registry event: name={name_int}, interface={interface_name}, version={version}")
+        print(f"Registry event: id={id_}, interface={interface_name}, version={version}")
         if interface_name == 'zwlr_foreign_toplevel_manager_v1':
             print(
-                f"Protocol name '{name_int}' interface '{interface_name}' "
+                f"Protocol id '{id_}' interface '{interface_name}' "
                 f"version '{version}' is SUPPORTED."
             )
             self.topl_mgmt_prot_supported = True
-            self.topl_mgmt = registry.bind(name_int, ZwlrForeignToplevelManagerV1, version)
-            # self.topl_mgmt.add_listener(self.handle_toplevel_event)
+            self.topl_mgmt = registry.bind(id_, ZwlrForeignToplevelManagerV1, version)
             self.topl_mgmt.dispatcher['toplevel'] = self.handle_toplevel_event
+
+    def registry_global_remover(registry, id_):
+        print(f"got a registry removal event for {id_}")
 
     def handle_toplevel_event(self, toplevel_handle: ZwlrForeignToplevelHandleV1):
         """Handle events for new toplevel windows."""
         print(f"New toplevel window created: {toplevel_handle}")
         print("Available methods and attributes:", dir(toplevel_handle))
         # Setup further event handling for this specific toplevel window
-        toplevel_handle.dispatcher['title_changed'] = self.handle_title_change
-        toplevel_handle.dispatcher['app_id_changed'] = self.handle_app_id_change
+        toplevel_handle.dispatcher['title'] = self.handle_title_change
+        toplevel_handle.dispatcher['app_id_'] = self.handle_app_id_change
         toplevel_handle.dispatcher['closed'] = self.handle_window_closed
-        toplevel_handle.dispatcher['state_changed'] = self.handle_state_change
+        toplevel_handle.dispatcher['state'] = self.handle_state_change
 
     def handle_title_change(self, handle, title):
         """Update title in local state."""
@@ -95,7 +97,9 @@ class WaylandClient:
             self.registry = self.display.get_registry()
             print(f"{self.registry = }")
             print(f"{dir(self.registry) = }")
-            self.registry.dispatcher["global"] = self.registry_handler
+            print(f"{dir(self.registry.dispatcher) = }")
+            self.registry.dispatcher["global"] = self.registry_global_handler
+            self.registry.dispatcher["global_remove"] = self.registry_global_remover
             print("Registry obtained")
 
             print("Running roundtrip to process registry events...")
@@ -104,7 +108,8 @@ class WaylandClient:
             if self.topl_mgmt_prot_supported and self.topl_mgmt:
                 print("Protocol is supported, waiting for events...")
                 while True:
-                    self.display.dispatch()
+                    self.display.dispatch(block=True)
+                    self.display.roundtrip()
             else:
                 print("Protocol 'zwlr_foreign_toplevel_manager_v1' is NOT supported.")
 
