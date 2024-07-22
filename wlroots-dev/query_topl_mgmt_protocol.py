@@ -7,6 +7,9 @@
 # Protocol documentation:
 # https://wayland.app/protocols/wlr-foreign-toplevel-management-unstable-v1
 
+# pywlroots method causes a segmentation fault
+# pywayland method has a NotImplementedError
+# ForeignToplevelManagerV1/ZwlrForeignToplevelManagerV1 is unusable? 
 
 import sys
 import signal
