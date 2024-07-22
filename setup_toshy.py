@@ -843,27 +843,27 @@ pip_pkgs   = [
     # NOTE: Version 1.5 of 'xkbcommon' introduced breaking API changes:
     # XKB_CONTEXT_NO_SECURE_GETENV
     # https://github.com/sde1000/python-xkbcommon/issues/23
-    # Need to pin version to less than v1.1 to avoid errors installing 'xkbcommon'.
+    # Need to pin version to less than v1.1 to avoid errors installing 'xkbcommon' on older distros.
     # TODO: Revisit this pinning in... 2028.
     "xkbcommon<1.1",
 
     # NOTE: WE CANNOT USE `xkbregistry` DUE TO CONFUSION AMONG SUPPORTING NATIVE PACKAGES
     # "xkbregistry",
 
-    # Everything below here is just to make keymapper install smoother.
+    # Everything below here is just to make the keymapper install smoother.
     # Keymapper may be 'xwaykeyz', 'keyszer' or a derivative/fork with same requirements.
 
-    "hyprpy", "i3ipc", "pywayland", 
+    "hyprpy", "i3ipc", 
 
-    # NOTE: Installing 'pywlroots' will require native pkg 'libxkbcommon-devel' (Fedora).
-    # We are installing 'libxkbcommon-devel' now to support 'xkbcommon' module. 
-    "pywlroots",
-    ######  Is 'pywlroots' more about making your own compositor from Python? Only used by Qtile.
+    # NOTE: Need to install 'pywayland' from a GitHub PR (#64) for now, to handle NewId error
+    # "pywayland", 
+    # "git+https://github.com/heuer/pywayland@issue_33_newid",
+    "git+https://github.com/flacjacket/pywayland@db8fb1c3a29761a014cfbb57f84025ddf3882c3c",
 
     # TODO: Check on 'python-xlib' project by mid-2025 to see if this bug is fixed:
     #   [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']
-    # If the bug is fixed, remove pinning to v0.31 here. But it does not appear
-    # that the bug is ever likely to be fixed.
+    # If the bug is fixed, remove pinning to v0.31 here.
+    # But it does not appear that the bug is ever likely to be fixed.
 
     "inotify-simple", "evdev", "appdirs", "ordered-set", "python-xlib==0.31", "six"
 ]
