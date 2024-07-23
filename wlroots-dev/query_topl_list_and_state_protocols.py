@@ -165,20 +165,22 @@ class WaylandClient:
 
     def registry_global_handler(self, registry, id_, interface_name, version):
         """Handle registry events."""
-        # print(f"Registry event: id={id_}, interface={interface_name}, version={version}")
-        # if interface_name == 'zwlr_foreign_toplevel_manager_v1':
-        #     print()
-        #     print(f"Protocol '{interface_name}' version {version} is _SUPPORTED_.")
-        #     self.forn_topl_mgr_prot_supported = True
-        #     print(f"Creating toplevel manager...")
+        print(f"Registry event: id={id_}, interface={interface_name}, version={version}")
 
-        #     # pywayland version:
-        #     self.toplevel_manager = registry.bind(id_, ZwlrForeignToplevelManagerV1, version)
+        if interface_name == 'zwlr_foreign_toplevel_manager_v1':
+            print()
+            print(f"Protocol '{interface_name}' version {version} is _SUPPORTED_.")
+            self.forn_topl_mgr_prot_supported = True
+            print(f"Creating toplevel manager...")
 
-        #     print(f"Subscribing to 'toplevel' events from toplevel manager...")
-        #     self.toplevel_manager.dispatcher['toplevel'] = self.handle_toplevel_event
-        #     print()
-        #     self.display.roundtrip()
+            # pywayland version:
+            self.toplevel_manager = registry.bind(id_, ZwlrForeignToplevelManagerV1, version)
+
+            print(f"Subscribing to 'toplevel' events from toplevel manager protocol...")
+            self.toplevel_manager.dispatcher['toplevel'] = self.handle_toplevel_manager_event
+            print()
+            self.display.roundtrip()
+
         if interface_name == 'ext_foreign_toplevel_list_v1':
             print()
             print(f"Protocol '{interface_name}' version {version} is _SUPPORTED_.")
@@ -188,10 +190,11 @@ class WaylandClient:
             # pywayland version:
             self.toplevel_list = registry.bind(id_, ExtForeignToplevelListV1, version)
 
-            print(f"Subscribing to 'toplevel' events from toplevel manager...")
+            print(f"Subscribing to 'toplevel' events from toplevel list protocol...")
             self.toplevel_list.dispatcher['toplevel'] = self.handle_toplevel_list_event
             print()
             self.display.roundtrip()
+
         if interface_name == 'ext_foreign_toplevel_state_v1':
             print()
             print(f"Protocol '{interface_name}' version {version} is _SUPPORTED_.")
@@ -201,7 +204,7 @@ class WaylandClient:
             # pywayland version:
             self.toplevel_state = registry.bind(id_, ExtForeignToplevelStateV1, version)
 
-            print(f"Subscribing to 'toplevel' events from toplevel manager...")
+            print(f"Subscribing to 'toplevel' events from toplevel state protocol...")
             self.toplevel_state.dispatcher['toplevel'] = self.handle_toplevel_state_event
             print()
             self.display.roundtrip()
