@@ -3348,11 +3348,20 @@ keymap("Overrides for Dolphin - Finder Mods pre-KF6", {
     matchProps(clas="^dolphin$|^org.kde.dolphin$")(ctx)
 )
 
+# Dolphin dialog names where Enter should always be Enter (not F2/Enter toggle)
+dlgs_Dolphin_Enter_is_Enter = [
+    "Edit Places Entry.*",
+    "Create New File.*",
+    "Folder Already Exists.*",
+]
+# Convert list to regex pattern string
+dlgs_Dolphin_Enter_is_Enter_Str = toRgxStr(dlgs_Dolphin_Enter_is_Enter)
+
 keymap("Overrides for Dolphin dialogs - Finder Mods", {
     C("Enter"):                 C("Enter"),                     # Override Enter to be Enter (never F2) for dialogs
 }, when = matchProps(
     clas="^dolphin$|^org.kde.dolphin$", 
-    name="^Edit Places Entry.*|^Create New File.*$|^Folder Already Exists.*$")
+    name=dlgs_Dolphin_Enter_is_Enter_Str)
 )
 
 keymap("Overrides for Dolphin - Finder Mods", {
