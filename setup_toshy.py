@@ -2015,6 +2015,21 @@ class PythonVenvQuirksHandler():
     def __init__(self) -> None:
         pass
 
+    def update_C_INCLUDE_PATH(self):
+        # Needed to make a symlink to get `xkbcommon` to install in the venv:
+        # sudo ln -s /usr/include/libxkbcommon/xkbcommon /usr/include/
+
+        # As an alternative without `sudo`, update C_INCLUDE_PATH so that the
+        # `xkbcommon.h` include file can be found during build process.
+        # And the `wayland-client-core.h` include file for `pywayland` build.
+        include_path = "/usr/include/libxkbcommon:/usr/include/wayland"
+        if 'C_INCLUDE_PATH' in os.environ:
+            os.environ['C_INCLUDE_PATH'] = f"{include_path}:{os.environ['C_INCLUDE_PATH']}"
+        else:
+            os.environ['C_INCLUDE_PATH'] = include_path
+        
+        print(f"C_INCLUDE_PATH updated: {os.environ['C_INCLUDE_PATH']}")
+
     def handle_venv_quirks_CentOS_7(self):
         print('Handling Python virtual environment quirks in CentOS 7...')
         # Avoid using systemd packages/services for CentOS 7
@@ -2063,18 +2078,7 @@ class PythonVenvQuirksHandler():
             cnfg.py_interp_path = shutil.which(f'python{cnfg.curr_py_rel_ver_str}')
             cnfg.py_interp_ver_str = cnfg.curr_py_rel_ver_str
 
-            # Needed to make a symlink to get `xkbcommon` to install in the venv:
-            # sudo ln -s /usr/include/libxkbcommon/xkbcommon /usr/include/
-
-            # As an alternative without `sudo`, update C_INCLUDE_PATH so that the
-            # `xkbcommon.h` include file can be found during build process.
-            include_path = "/usr/include/libxkbcommon"
-            if 'C_INCLUDE_PATH' in os.environ:
-                os.environ['C_INCLUDE_PATH'] = f"{include_path}:{os.environ['C_INCLUDE_PATH']}"
-            else:
-                os.environ['C_INCLUDE_PATH'] = include_path
-            
-            print(f"C_INCLUDE_PATH updated: {os.environ['C_INCLUDE_PATH']}")
+            self.update_C_INCLUDE_PATH()
 
         else:
             print(  f'Current stable Python release version '
@@ -2102,19 +2106,7 @@ class PythonVenvQuirksHandler():
     def handle_venv_quirks_Tumbleweed(self):
         print('Handling Python virtual environment quirks in Tumbleweed...')
 
-        # Needed to make a symlink to get `xkbcommon` to install in the venv:
-        # sudo ln -s /usr/include/libxkbcommon/xkbcommon /usr/include/
-
-        # As an alternative without `sudo`, update C_INCLUDE_PATH so that the
-        # `xkbcommon.h` include file can be found during build process.
-        include_path = "/usr/include/libxkbcommon"
-        if 'C_INCLUDE_PATH' in os.environ:
-            os.environ['C_INCLUDE_PATH'] = f"{include_path}:{os.environ['C_INCLUDE_PATH']}"
-        else:
-            os.environ['C_INCLUDE_PATH'] = include_path
-        
-        print(f"C_INCLUDE_PATH updated: {os.environ['C_INCLUDE_PATH']}")
-
+        self.update_C_INCLUDE_PATH()
 
 def setup_python_vir_env():
     """Setup a virtual environment to install Python packages"""
