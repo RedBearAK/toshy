@@ -5,6 +5,14 @@
 # https://github.com/flacjacket/pywayland/issues/8#issuecomment-987040284
 
 # Protocol documentation:
+
+# Read-only "list" protocol, newer than "management" protocol:
+# https://wayland.app/protocols/ext-foreign-toplevel-list-v1
+
+# Docs for new draft "state" protocol?
+# https://gitlab.freedesktop.org/wayland/wayland-protocols/-/merge_requests/196
+
+# "Management" protocol, can be used to control the window:
 # https://wayland.app/protocols/wlr-foreign-toplevel-management-unstable-v1
 
 # pywayland method has a NotImplementedError for NewId argument
@@ -18,6 +26,21 @@ import signal
 import traceback
 
 
+# "List" protocol
+from protocols.ext_foreign_toplevel_list_v1.ext_foreign_toplevel_list_v1 import (
+    ExtForeignToplevelListV1,
+    ExtForeignToplevelListV1Proxy,
+    ExtForeignToplevelHandleV1,
+)
+
+# "State" protocol
+from protocols.ext_foreign_toplevel_state_v1.ext_foreign_toplevel_state_v1 import (
+    ExtForeignToplevelStateV1,
+    ExtForeignToplevelStateV1Proxy,
+    ExtForeignToplevelHandleStateV1,
+)
+
+# "Management" protocol
 from protocols.wlr_foreign_toplevel_management_unstable_v1.zwlr_foreign_toplevel_manager_v1 import (
     ZwlrForeignToplevelManagerV1,
     ZwlrForeignToplevelManagerV1Proxy,
@@ -35,7 +58,11 @@ class WaylandClient:
         self.display                            = None
         self.registry                           = None
         self.forn_topl_mgr_prot_supported       = False
+        self.forn_topl_lst_prot_supported       = False
+        self.forn_topl_state_prot_supported     = False
         self.toplevel_manager                   = None
+        self.toplevel_list                      = None
+        self.toplevel_state                     = None
 
         self.wdw_handles_dct                    = {}
         self.active_app_class                   = None
@@ -52,16 +79,45 @@ class WaylandClient:
             self.display.disconnect()
             print("Disconnected from Wayland display.")
 
-    def handle_toplevel_event(self, 
+    def handle_toplevel_manager_event(self, 
             toplevel_manager: ZwlrForeignToplevelManagerV1Proxy, 
             toplevel_handle: ZwlrForeignToplevelHandleV1):
         """Handle events for new toplevel windows."""
+        print(f"{toplevel_manager = }")
+        print(f"{dir(toplevel_manager) = }")
         print(f"New toplevel window created: {toplevel_handle}")
         # Subscribe to title and app_id changes as well as close event
         toplevel_handle.dispatcher['title']             = self.handle_title_change
         toplevel_handle.dispatcher['app_id']            = self.handle_app_id_change
         toplevel_handle.dispatcher['closed']            = self.handle_window_closed
-        toplevel_handle.dispatcher['state']             = self.handle_state_change
+        toplevel_handle.dispatcher['state']             = self.handle_manager_state_change
+
+    def handle_toplevel_list_event(self, 
+            toplevel_list: ExtForeignToplevelListV1Proxy,
+            toplevel_handle: ExtForeignToplevelHandleV1):
+        """Handle events for new toplevel windows."""
+        print(f"{toplevel_list = }")
+        print(f"{dir(toplevel_list) = }")
+        print(f"New toplevel window created: {toplevel_handle}")
+        # Subscribe to title and app_id changes as well as close event
+        toplevel_handle.dispatcher['title']             = self.handle_title_change
+        toplevel_handle.dispatcher['app_id']            = self.handle_app_id_change
+        toplevel_handle.dispatcher['closed']            = self.handle_window_closed
+        # This protocol doesn't handle "state"
+        # toplevel_handle.dispatcher['state']             = self.handle_state_change
+
+    def handle_toplevel_state_event(self, 
+            toplevel_state: ExtForeignToplevelStateV1Proxy,
+            toplevel_handle: ExtForeignToplevelHandleStateV1):
+        """Handle events for new toplevel windows."""
+        print(f"{toplevel_state = }")
+        print(f"{dir(toplevel_state) = }")
+        print(f"New toplevel window created: {toplevel_handle}")
+        # Subscribe to title and app_id changes as well as close event
+        toplevel_handle.dispatcher['title']             = self.handle_title_change
+        toplevel_handle.dispatcher['app_id']            = self.handle_app_id_change
+        toplevel_handle.dispatcher['closed']            = self.handle_window_closed
+        toplevel_handle.dispatcher['state']             = self.handle_ext_state_change
 
     def handle_title_change(self, handle, title):
         """Update title in local state."""
@@ -83,7 +139,7 @@ class WaylandClient:
             del self.wdw_handles_dct[handle]
         print(f"Window {handle} has been closed.")
 
-    def handle_state_change(self, handle, states_bytes):
+    def handle_manager_state_change(self, handle, states_bytes):
         """Track active window based on state changes."""
         states = []
         if isinstance(states_bytes, bytes):
@@ -95,20 +151,58 @@ class WaylandClient:
             print(f"Active app class: '{self.active_app_class}'")
             print(f"Active window title: '{self.active_wdw_title}'")
 
+    def handle_ext_state_change(self, handle, states_bytes):
+        """Track active window based on state changes."""
+        states = []
+        if isinstance(states_bytes, bytes):
+            states = list(states_bytes)
+        if ExtForeignToplevelHandleStateV1.state.activated.value in states:
+            self.active_app_class = self.wdw_handles_dct[handle]['app_id']
+            self.active_wdw_title = self.wdw_handles_dct[handle]['title']
+            print()
+            print(f"Active app class: '{self.active_app_class}'")
+            print(f"Active window title: '{self.active_wdw_title}'")
+
     def registry_global_handler(self, registry, id_, interface_name, version):
         """Handle registry events."""
         # print(f"Registry event: id={id_}, interface={interface_name}, version={version}")
-        if interface_name == 'zwlr_foreign_toplevel_manager_v1':
+        # if interface_name == 'zwlr_foreign_toplevel_manager_v1':
+        #     print()
+        #     print(f"Protocol '{interface_name}' version {version} is _SUPPORTED_.")
+        #     self.forn_topl_mgr_prot_supported = True
+        #     print(f"Creating toplevel manager...")
+
+        #     # pywayland version:
+        #     self.toplevel_manager = registry.bind(id_, ZwlrForeignToplevelManagerV1, version)
+
+        #     print(f"Subscribing to 'toplevel' events from toplevel manager...")
+        #     self.toplevel_manager.dispatcher['toplevel'] = self.handle_toplevel_event
+        #     print()
+        #     self.display.roundtrip()
+        if interface_name == 'ext_foreign_toplevel_list_v1':
             print()
             print(f"Protocol '{interface_name}' version {version} is _SUPPORTED_.")
-            self.forn_topl_mgr_prot_supported = True
-            print(f"Creating toplevel manager...")
+            self.forn_topl_lst_prot_supported = True
+            print(f"Creating toplevel list...")
 
             # pywayland version:
-            self.toplevel_manager = registry.bind(id_, ZwlrForeignToplevelManagerV1, version)
+            self.toplevel_list = registry.bind(id_, ExtForeignToplevelListV1, version)
 
             print(f"Subscribing to 'toplevel' events from toplevel manager...")
-            self.toplevel_manager.dispatcher['toplevel'] = self.handle_toplevel_event
+            self.toplevel_list.dispatcher['toplevel'] = self.handle_toplevel_list_event
+            print()
+            self.display.roundtrip()
+        if interface_name == 'ext_foreign_toplevel_state_v1':
+            print()
+            print(f"Protocol '{interface_name}' version {version} is _SUPPORTED_.")
+            self.forn_topl_state_prot_supported = True
+            print(f"Creating toplevel state...")
+
+            # pywayland version:
+            self.toplevel_state = registry.bind(id_, ExtForeignToplevelStateV1, version)
+
+            print(f"Subscribing to 'toplevel' events from toplevel manager...")
+            self.toplevel_state.dispatcher['toplevel'] = self.handle_toplevel_state_event
             print()
             self.display.roundtrip()
 
@@ -130,7 +224,19 @@ class WaylandClient:
                 print("Running roundtrip to process registry events...")
                 self.display.roundtrip()
 
-                if self.forn_topl_mgr_prot_supported and self.toplevel_manager:
+                protocols_supported = (
+                    self.forn_topl_mgr_prot_supported or 
+                    self.forn_topl_lst_prot_supported or 
+                    self.forn_topl_state_prot_supported
+                )
+
+                managers_initialized = (
+                    self.toplevel_manager or 
+                    self.toplevel_list or 
+                    self.toplevel_state
+                )
+
+                if protocols_supported and managers_initialized:
                     print()
                     print("Protocol is supported, starting dispatch loop...")
 
