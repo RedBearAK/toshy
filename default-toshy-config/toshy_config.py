@@ -3352,7 +3352,7 @@ keymap("Overrides for Dolphin dialogs - Finder Mods", {
     C("Enter"):                 C("Enter"),                     # Override Enter to be Enter (never F2) for dialogs
 }, when = matchProps(
     clas="^dolphin$|^org.kde.dolphin$", 
-    name="^Edit Places Entry.*|^Create New File.*$")
+    name="^Edit Places Entry.*|^Create New File.*$|^Folder Already Exists.*$")
 )
 
 keymap("Overrides for Dolphin - Finder Mods", {
