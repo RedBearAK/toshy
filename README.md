@@ -200,12 +200,6 @@ There is a weird bug with searching for extensions by name sometimes, where you 
 
 (See the `--options` in the next section if the basic install doesn't work.)  
 
-If for any reason the script is not executable, you can fix that with this command:  
-
-```sh
-chmod +x setup_toshy.py
-```
-
 ### Options for installer script
 
 The installer script has a few different `commands` and `--options` available, as shown in this section.  
