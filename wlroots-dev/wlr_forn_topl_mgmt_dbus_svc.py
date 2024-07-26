@@ -42,7 +42,7 @@ os.environ['PYTHONPATH'] = f'{parent_folder_path}:{current_folder_path}:{existin
 # local imports now that path is prepped
 import lib.env as env
 
-from .protocols.wlr_foreign_toplevel_management_unstable_v1.zwlr_foreign_toplevel_manager_v1 import (
+from protocols.wlr_foreign_toplevel_management_unstable_v1.zwlr_foreign_toplevel_manager_v1 import (
     ZwlrForeignToplevelManagerV1,
     ZwlrForeignToplevelManagerV1Proxy,
     ZwlrForeignToplevelHandleV1
