@@ -165,7 +165,7 @@ def handle_toplevel_event(
 def handle_app_id_change(handle, app_id):
     if handle not in wdw_handles_dct:
         wdw_handles_dct[handle] = {}
-    wdw_handles_dct[handle]['title'] = app_id
+    wdw_handles_dct[handle]['app_id'] = app_id
     print(f"Title updated for window {handle}: '{app_id}'")
 
 
