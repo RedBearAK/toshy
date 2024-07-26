@@ -1439,7 +1439,12 @@ exclude_kpad_devs_UserCustom_lst = [
 # ]
 
 # Ensure the DEPRECATED variable exists and is a list before attempting to access it
+# (New users WILL NOT have it in the marked slice above)
 exclude_kpad_devs_UserCustom_lod = locals().get('exclude_kpad_devs_UserCustom_lod', [])
+
+# Ensure the NEW variable exists and is a list before attempting to access it
+# (Existing users MIGHT NOT have it in the marked slice above)
+exclude_kpad_devs_UserCustom_lst = locals().get('exclude_kpad_devs_UserCustom_lod', [])
 
 DEPRECATED_exclude_kpad_devs_UserCustom_lst = [
     device['devn'] for device in exclude_kpad_devs_UserCustom_lod 
