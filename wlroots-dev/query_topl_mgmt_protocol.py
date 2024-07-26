@@ -14,6 +14,7 @@
 
 
 import sys
+import select
 import signal
 import traceback
 
@@ -33,6 +34,7 @@ class WaylandClient:
         """Initialize the WaylandClient."""
         signal.signal(signal.SIGINT, self.signal_handler)
         self.display                            = None
+        self.wl_fd                              = None
         self.registry                           = None
         self.forn_topl_mgr_prot_supported       = False
         self.toplevel_manager                   = None
@@ -120,6 +122,9 @@ class WaylandClient:
                 self.display.connect()
                 print("Connected to Wayland display")
 
+                self.wl_fd = self.display.get_fd()
+                print("Got Wayland file descriptor")
+
                 print("Getting registry...")
                 self.registry = self.display.get_registry()
                 print("Registry obtained")
@@ -130,17 +135,28 @@ class WaylandClient:
                 print("Running roundtrip to process registry events...")
                 self.display.roundtrip()
 
+                # After initial events are processed, we should know if the right
+                # protocol is supported, and have a toplevel_manager object.
                 if self.forn_topl_mgr_prot_supported and self.toplevel_manager:
                     print()
                     print("Protocol is supported, starting dispatch loop...")
 
-                    # Can't get this to stop pegging a core (or thread) without sleep()
-                    # TODO: Need to properly use a lightweight event-driven loop, but how? 
-                    while self.display.dispatch() != -1:
-                        sleep(0.05)
-                        # seems to be necessary to trigger roundtrip() in a loop,
-                        # or no further events will ever print out in the terminal
-                        self.display.roundtrip()
+                    # # Can't get this to stop pegging a core (or thread) without sleep()
+                    # # It is as if dispatch() does not block at all
+                    # # TODO: Need to properly use a lightweight event-driven loop, but how? 
+                    # while self.display.dispatch() != -1:
+                    #     sleep(0.05)
+                    #     # seems to be necessary to trigger roundtrip() in a loop,
+                    #     # or no further events will ever print out in the terminal
+                    #     self.display.roundtrip()
+
+                    while True:
+                        # Wait for the Wayland file descriptor to be ready
+                        rlist, wlist, xlist = select.select([self.wl_fd], [], [])
+
+                        if self.wl_fd in rlist:
+                            # self.display.dispatch()   # won't show me new events
+                            self.display.roundtrip()
 
                 else:
                     print()
