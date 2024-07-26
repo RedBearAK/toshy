@@ -3994,6 +3994,8 @@ keymap("Sublime Text", {
 
 keymap("Kate Advanced Text Editor", {
     C("RC-Comma"):              C("Shift-C-Comma"),             # Open settings/preferences
+    C("RC-g"):                  C("F3"),                        # Find next
+    C("Super-g"):               C("C-g"),                       # Go to line
 }, when = matchProps(clas="^org.kde.kate$") )
 
 keymap("Linux Mint xed text editor", {
