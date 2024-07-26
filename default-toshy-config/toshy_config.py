@@ -375,8 +375,8 @@ terminals                       = [x.casefold() for x in terminals]
 termStr                         = toRgxStr(terminals)
 
 # DEPRECATED
-# # This is only for use with 'remotes_lod', otherwise regex pattern string is used.
-# terminals_lod = create_list_of_dicts(terminals)
+# This is only for use with 'remotes_lod', otherwise regex pattern string is used.
+terminals_lod = create_list_of_dicts(terminals)
 
 # # DEPRECATED IN FAVOR OF MAINTAINING THE SIMPLE LIST AND 
 # # CONVERTING TO A "LIST OF DICTS" FOR USE WITH THE
@@ -442,8 +442,8 @@ vscodes                         = [x.casefold() for x in vscodes]
 vscodeStr                       = toRgxStr(vscodes)
 
 # DEPRECATED: Converted back to simple list
-# # This is only for use with 'vscodes_and_remotes_lod', otherwise regex pattern string is used.
-# vscodes_lod = create_list_of_dicts(vscodes)
+# This is only for use with 'vscodes_and_remotes_lod', otherwise regex pattern string is used.
+vscodes_lod = create_list_of_dicts(vscodes)
 
 sublimes = [
     "sublime_text",
@@ -492,33 +492,33 @@ remotes = [x.casefold() for x in remotes]
 remoteStr = toRgxStr(remotes)
 
 # DEPRECATED: Converted back to simple list format
-# # Add remote desktop clients & VM software here
-# remotes_lod = [
-#     {clas: "^Anydesk$"                       },
-#     {clas: "^Gnome-boxes$"                   },
-#     {clas: "^gnome-connections$"             },
-#     {clas: "^org.remmina.Remmina$", 
-#         not_name: "^Remmina Remote Desktop Client$|^Remote Connection Profile$"},
-#     {clas: "^Nxplayer.bin$"                  },
-#     {clas: "^remmina$"                       },
-#     {clas: "^qemu-system-.*$"                },
-#     {clas: "^qemu$"                          },
-#     {clas: "^Spicy$"                         },
-#     {clas: "^Virt-manager$"                  },
-#     {clas: "^VirtualBox$"                    },
-#     {clas: "^VirtualBox Machine$"            },
-#     {clas: "^xfreerdp$"                      },
-#     {clas: "^Wfica$"                         },
-# ]
+# Add remote desktop clients & VM software here
+remotes_lod = [
+    {clas: "^Anydesk$"                       },
+    {clas: "^Gnome-boxes$"                   },
+    {clas: "^gnome-connections$"             },
+    {clas: "^org.remmina.Remmina$", 
+        not_name: "^Remmina Remote Desktop Client$|^Remote Connection Profile$"},
+    {clas: "^Nxplayer.bin$"                  },
+    {clas: "^remmina$"                       },
+    {clas: "^qemu-system-.*$"                },
+    {clas: "^qemu$"                          },
+    {clas: "^Spicy$"                         },
+    {clas: "^Virt-manager$"                  },
+    {clas: "^VirtualBox$"                    },
+    {clas: "^VirtualBox Machine$"            },
+    {clas: "^xfreerdp$"                      },
+    {clas: "^Wfica$"                         },
+]
 
 terms_and_remotes_lst = terminals + remotes
 terms_and_remotes_Str = toRgxStr(terms_and_remotes_lst) 
 
 # DEPRECATED: Converted back to simple list
-# terminals_and_remotes_lod = [
-#     {lst: terminals_lod                  },
-#     {lst: remotes_lod                    },
-# ]
+terminals_and_remotes_lod = [
+    {lst: terminals_lod                  },
+    {lst: remotes_lod                    },
+]
 
 # DEPRECATED by 'vscodes_and_remotes_lod' "list of dicts" below
 # vscodes.extend(remotes)
@@ -528,10 +528,10 @@ vscodes_and_remotes_lst = vscodes + remotes
 vscodes_and_remotes_Str = toRgxStr(vscodes_and_remotes_lst)
 
 # DEPRECATED: Converted back to simple list
-# vscodes_and_remotes_lod = [
-#     {lst: vscodes_lod                    },
-#     {lst: remotes_lod                    },
-# ]
+vscodes_and_remotes_lod = [
+    {lst: vscodes_lod                    },
+    {lst: remotes_lod                    },
+]
 
 browsers_chrome = [
     "Brave-browser",
