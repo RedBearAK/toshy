@@ -138,18 +138,19 @@ active_wdw_title                = "NO_WLR_DATA"
 try:
     display = Display()
     display.connect()  # Explicitly attempt to connect to the Wayland display
+    wl_fd = display.get_fd()        # Get the Wayland file descriptor
     registry = display.get_registry()  # Attempt to get the registry
 except ValueError as e:  # ValueError is raised if connection fails in your Display class
     print(f"Failed to connect to the Wayland display: {e}")
 except RuntimeError as e:  # Catching potential runtime errors, adjust exceptions as needed
     print(f"Runtime error occurred: {e}")
+    clean_shutdown()
 except Exception as e:  # Generic catch-all for any other exceptions
     print(f"An unexpected error occurred: {e}")
+    clean_shutdown()
 else:
     print("Connection to Wayland display and registry acquisition successful.")
     # Proceed with further operations, such as setting up listeners on the registry
-
-toplevel_manager                = None
 
 
 def handle_toplevel_event(
@@ -197,14 +198,6 @@ def handle_state_change(handle, states_bytes):
         print(f"Active window title: '{active_wdw_title}'")
 
 
-def wayland_event_check():
-    # Check for Wayland events
-    # display.flush()
-    # display.dispatch()
-    display.roundtrip()
-    return True  # Returning True keeps the callback active
-
-
 def handle_registry_global(registry, id_, interface_name, version):
     if interface_name == 'zwlr_foreign_toplevel_manager_v1':
         toplevel_manager = registry.bind(id_, ZwlrForeignToplevelManagerV1, version)
@@ -230,6 +223,22 @@ class DBUS_Object(dbus.service.Object):
                 'title':            active_wdw_title}
 
 
+# def wayland_event_callback():
+#     # Check for Wayland events
+#     # display.flush()
+#     # display.dispatch()
+#     while display.dispatch() != -1:
+#         display.roundtrip()
+#         time.sleep(0.1)
+#     return True  # Returning True keeps the callback active
+
+
+def wayland_event_callback(fd, condition, display):
+    if condition & GLib.IO_IN:
+        display.dispatch()
+    return True
+
+
 def main():
 
     # Initialize the D-Bus main loop
@@ -245,7 +254,8 @@ def main():
         error(f"{LOG_PFX}: Error occurred while creating D-Bus service object:\n\t{dbus_error}")
         sys.exit(1)
 
-    GLib.idle_add(wayland_event_check)
+    # GLib.idle_add(wayland_event_callback)
+    GLib.io_add_watch(wl_fd, GLib.IO_IN, wayland_event_callback, display)
 
     # Run the main loop
     # dbus.mainloop.glib.DBusGMainLoop().run()
@@ -254,6 +264,5 @@ def main():
 
 if __name__ == "__main__":
     main()
-    # maybe do this at the end? 
-    # if display and display.connected:  # Assuming `connected` is a property indicating the connection status
-    #     display.disconnect()
+    # After main() is done:
+    clean_shutdown()
