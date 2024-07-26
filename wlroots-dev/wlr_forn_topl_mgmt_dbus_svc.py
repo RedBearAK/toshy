@@ -25,7 +25,7 @@ xwaykeyz.lib.logger.VERBOSE = True
 # Independent module/script to create a D-Bus window context service in 
 # a wlroots Wayland environment, which will be notified of window 
 # focus changes by the Wayland compositor, as long as the compositor 
-# implements the `wlr_foreign_toplevel_management_unstable_v1` protocol.
+# implements the `zwlr_foreign_toplevel_management_unstable_v1` protocol.
 
 # Add paths to avoid errors like ModuleNotFoundError or ImportError
 home_dir            = os.path.expanduser("~")
@@ -59,7 +59,6 @@ def signal_handler(sig, frame):
         # Perform any cleanup code here before exiting
         # traceback.print_stack(frame)
         debug(f'\nSIGINT or SIGQUIT received. Exiting.\n')
-        # sys.exit(0)
         clean_shutdown()
 
 
@@ -167,7 +166,7 @@ def handle_app_id_change(handle, app_id):
     if handle not in wdw_handles_dct:
         wdw_handles_dct[handle] = {}
     wdw_handles_dct[handle]['app_id'] = app_id
-    print(f"Title updated for window {handle}: '{app_id}'")
+    # print(f"Title updated for window {handle}: '{app_id}'")
 
 
 def handle_title_change(handle, title):
@@ -175,7 +174,7 @@ def handle_title_change(handle, title):
     if handle not in wdw_handles_dct:
         wdw_handles_dct[handle] = {}
     wdw_handles_dct[handle]['title'] = title
-    print(f"Title updated for window {handle}: '{title}'")
+    # print(f"Title updated for window {handle}: '{title}'")
 
 
 def handle_window_closed(handle):
@@ -223,19 +222,10 @@ class DBUS_Object(dbus.service.Object):
                 'title':            active_wdw_title}
 
 
-# def wayland_event_callback():
-#     # Check for Wayland events
-#     # display.flush()
-#     # display.dispatch()
-#     while display.dispatch() != -1:
-#         display.roundtrip()
-#         time.sleep(0.1)
-#     return True  # Returning True keeps the callback active
-
-
 def wayland_event_callback(fd, condition, display):
     if condition & GLib.IO_IN:
-        display.dispatch()
+        # display.dispatch()    # dispatch() fails to prompt new events to appear
+        display.roundtrip()     # gets new events to appear immediately
     return True
 
 
@@ -256,6 +246,8 @@ def main():
 
     # GLib.idle_add(wayland_event_callback)
     GLib.io_add_watch(wl_fd, GLib.IO_IN, wayland_event_callback, display)
+
+    display.roundtrip() # get the event cycle started (callback never gets called without this)
 
     # Run the main loop
     # dbus.mainloop.glib.DBusGMainLoop().run()
