@@ -28,6 +28,8 @@ from protocols.wlr_foreign_toplevel_management_unstable_v1.zwlr_foreign_toplevel
 from pywayland.client import Display
 from time import sleep
 
+ERR_NO_WLR_APP_CLASS = "ERR_no_wlr_app_class"
+ERR_NO_WLR_WDW_TITLE = "ERR_no_wlr_wdw_title"
 
 class WaylandClient:
     def __init__(self):
@@ -40,8 +42,8 @@ class WaylandClient:
         self.toplevel_manager                   = None
 
         self.wdw_handles_dct                    = {}
-        self.active_app_class                   = None
-        self.active_wdw_title                   = None
+        self.active_app_class                   = ERR_NO_WLR_APP_CLASS
+        self.active_wdw_title                   = ERR_NO_WLR_WDW_TITLE
 
     def signal_handler(self, signal, frame):
         print(f"\nSignal {signal} received, shutting down.")
@@ -96,7 +98,7 @@ class WaylandClient:
             print()
             print(f"Active app class: '{self.active_app_class}'")
             print(f"Active window title: '{self.active_wdw_title}'")
-            self.print_current_app_list()  # Print the list of running applications
+            self.print_running_applications()  # Print the list of running applications
 
     def print_running_applications(self):
         """Print a complete list of running applications."""
@@ -104,8 +106,8 @@ class WaylandClient:
         print(f"{'App ID':<30} {'Title':<50}")
         print("-" * 80)
         for handle, info in self.wdw_handles_dct.items():
-            app_id = info.get('app_id', 'Unknown')
-            title = info.get('title', 'No Title')
+            app_id = info.get('app_id', ERR_NO_WLR_APP_CLASS)
+            title = info.get('title', ERR_NO_WLR_WDW_TITLE)
             print(f"{app_id:<30} {title:<50}")
         print()
 
