@@ -132,8 +132,8 @@ TOSHY_WLR_DBUS_SVC_PATH         = '/org/toshy/Wlroots'
 TOSHY_WLR_DBUS_SVC_IFACE        = 'org.toshy.Wlroots'
 
 wdw_handles_dct                 = {}
-active_app_id                   = "NO_WLR_DATA"
-active_title                    = "NO_WLR_DATA"
+active_app_class                = "NO_WLR_DATA"
+active_wdw_title                = "NO_WLR_DATA"
 
 try:
     display = Display()
@@ -152,6 +152,16 @@ else:
 toplevel_manager                = None
 
 
+def handle_toplevel_event(
+        toplevel_manager: ZwlrForeignToplevelManagerV1Proxy,
+        toplevel_handle: ZwlrForeignToplevelHandleV1):
+    # Here, you should set up event listeners for the toplevel
+    toplevel_handle.dispatcher["app_id"]    = handle_app_id_change
+    toplevel_handle.dispatcher["title"]     = handle_title_change
+    toplevel_handle.dispatcher['closed']    = handle_window_closed
+    toplevel_handle.dispatcher['state']     = handle_state_change
+
+
 def handle_app_id_change(handle, app_id):
     if handle not in wdw_handles_dct:
         wdw_handles_dct[handle] = {}
@@ -167,10 +177,24 @@ def handle_title_change(handle, title):
     print(f"Title updated for window {handle}: '{title}'")
 
 
-def handle_toplevel_event(toplevel_mgr):
-    # Here, you should set up event listeners for the toplevel
-    toplevel_mgr.dispatcher["app_id"]   = handle_app_id_change
-    toplevel_mgr.dispatcher["title"]    = handle_title_change
+def handle_window_closed(handle):
+    """Remove window from local state."""
+    if handle in wdw_handles_dct:
+        del wdw_handles_dct[handle]
+    print(f"Window {handle} has been closed.")
+
+
+def handle_state_change(handle, states_bytes):
+    """Track active window based on state changes."""
+    states = []
+    if isinstance(states_bytes, bytes):
+        states = list(states_bytes)
+    if ZwlrForeignToplevelHandleV1.state.activated.value in states:
+        active_app_class = wdw_handles_dct[handle]['app_id']
+        active_wdw_title = wdw_handles_dct[handle]['title']
+        print()
+        print(f"Active app class: '{active_app_class}'")
+        print(f"Active window title: '{active_wdw_title}'")
 
 
 def wayland_event_check():
@@ -202,8 +226,8 @@ class DBUS_Object(dbus.service.Object):
     @dbus.service.method(TOSHY_WLR_DBUS_SVC_IFACE, out_signature='a{sv}')
     def GetActiveWindow(self):
         debug(f'{LOG_PFX}: GetActiveWindow() called...')
-        return {'app_id':           active_app_id,
-                'title':            active_title}
+        return {'app_id':           active_app_class,
+                'title':            active_wdw_title}
 
 
 def main():
