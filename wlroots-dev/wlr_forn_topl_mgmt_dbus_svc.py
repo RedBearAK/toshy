@@ -225,6 +225,8 @@ class DBUS_Object(dbus.service.Object):
 def wayland_event_callback(fd, condition, display):
     if condition & GLib.IO_IN:
         # display.dispatch()    # dispatch() fails to prompt new events to appear
+        # dispatch() also seems to trigger the callback to get called many times in a loop,
+        # but without any new useful events appearing, while roundtrip() just show what I want.
         display.roundtrip()     # gets new events to appear immediately
     return True
 
