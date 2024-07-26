@@ -96,6 +96,15 @@ class WaylandClient:
             print()
             print(f"Active app class: '{self.active_app_class}'")
             print(f"Active window title: '{self.active_wdw_title}'")
+            self.print_current_app_list()  # Print the list of running applications
+
+    def print_current_app_list(self):
+        """Print a complete list of running applications."""
+        print("\nList of running applications:")
+        for handle, info in self.wdw_handles_dct.items():
+            app_id = info.get('app_id', 'Unknown')
+            title = info.get('title', 'No Title')
+            print(f"App ID: {app_id}, Title: {title}")
 
     def registry_global_handler(self, registry, id_, interface_name, version):
         """Handle registry events."""
