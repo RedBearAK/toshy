@@ -58,7 +58,7 @@ class WaylandClient:
             toplevel_manager: ZwlrForeignToplevelManagerV1Proxy, 
             toplevel_handle: ZwlrForeignToplevelHandleV1):
         """Handle events for new toplevel windows."""
-        print(f"New toplevel window created: {toplevel_handle}")
+        # print(f"New toplevel window created: {toplevel_handle}")
         # Subscribe to title and app_id changes as well as close event
         toplevel_handle.dispatcher['title']             = self.handle_title_change
         toplevel_handle.dispatcher['app_id']            = self.handle_app_id_change
@@ -70,14 +70,14 @@ class WaylandClient:
         if handle not in self.wdw_handles_dct:
             self.wdw_handles_dct[handle] = {}
         self.wdw_handles_dct[handle]['title'] = title
-        print(f"Title updated for window {handle}: '{title}'")
+        # print(f"Title updated for window {handle}: '{title}'")
 
     def handle_app_id_change(self, handle, app_id):
         """Update app_id in local state."""
         if handle not in self.wdw_handles_dct:
             self.wdw_handles_dct[handle] = {}
         self.wdw_handles_dct[handle]['app_id'] = app_id
-        print(f"App ID updated for window {handle}: '{app_id}'")
+        # print(f"App ID updated for window {handle}: '{app_id}'")
 
     def handle_window_closed(self, handle):
         """Remove window from local state."""
