@@ -37,7 +37,7 @@ xwaykeyz.lib.logger.VERBOSE = True
 # Independent module/script to create a D-Bus window context service in 
 # a wlroots Wayland environment, which will be notified of window 
 # focus changes by the Wayland compositor, as long as the compositor 
-# implements the `zwlr_foreign_toplevel_management_unstable_v1` protocol.
+# implements the `wlr_foreign_toplevel_management_unstable_v1` protocol.
 
 # Add paths to avoid errors like ModuleNotFoundError or ImportError
 home_dir            = os.path.expanduser("~")
