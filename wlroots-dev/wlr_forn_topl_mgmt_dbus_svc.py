@@ -65,6 +65,9 @@ if os.name == 'posix' and os.geteuid() == 0:
     sys.exit(1)
 
 
+# Establish our Wayland client global variable
+wl_client = None
+
 def signal_handler(sig, frame):
     """handle signals like Ctrl+C"""
     if sig in (signal.SIGINT, signal.SIGQUIT):
@@ -73,11 +76,10 @@ def signal_handler(sig, frame):
         debug(f'\nSIGINT or SIGQUIT received. Exiting.\n')
         clean_shutdown()
 
-
 def clean_shutdown():
-    if display:  # Check if the display is globally defined and initialized
+    if wl_client and wl_client.display:  # Check if the display is globally defined and initialized
         try:
-            display.disconnect()
+            wl_client.display.disconnect()
         except Exception as e:
             error(f"Error disconnecting display: {e}")
     GLib.MainLoop().quit()  # Stop the GLib main loop if it's running
@@ -145,95 +147,76 @@ TOSHY_WLR_DBUS_SVC_IFACE        = 'org.toshy.Wlroots'
 ERR_NO_WLR_APP_CLASS = "ERR_no_wlr_app_class"
 ERR_NO_WLR_WDW_TITLE = "ERR_no_wlr_wdw_title"
 
-wdw_handles_dct                 = {}
-active_app_class                = ERR_NO_WLR_APP_CLASS
-active_wdw_title                = ERR_NO_WLR_WDW_TITLE
 
-try:
-    display = Display()
-    display.connect()  # Explicitly attempt to connect to the Wayland display
-    wl_fd = display.get_fd()        # Get the Wayland file descriptor
-    registry = display.get_registry()  # Attempt to get the registry
-except ValueError as e:  # ValueError is raised if connection fails in your Display class
-    print(f"Failed to connect to the Wayland display: {e}")
-except RuntimeError as e:  # Catching potential runtime errors, adjust exceptions as needed
-    print(f"Runtime error occurred: {e}")
-    clean_shutdown()
-except Exception as e:  # Generic catch-all for any other exceptions
-    print(f"An unexpected error occurred: {e}")
-    clean_shutdown()
-else:
-    print("Connection to Wayland display and registry acquisition successful.")
-    # Proceed with further operations, such as setting up listeners on the registry
+class WaylandClient:
+    def __init__(self):
+        self.display = None
+        self.registry = None
+        self.toplevel_manager = None
+        self.wl_fd = None
+        self.wdw_handles_dct = {}
+        self.active_app_class = ERR_NO_WLR_APP_CLASS
+        self.active_wdw_title = ERR_NO_WLR_WDW_TITLE
 
+    def connect(self):
+        try:
+            self.display = Display()
+            self.display.connect()
+            self.wl_fd = self.display.get_fd()
+            self.registry = self.display.get_registry()
+            self.registry.dispatcher["global"] = self.handle_registry_global
+            self.display.roundtrip()
+        except Exception as e:
+            print(f"Failed to connect to the Wayland display: {e}")
+            clean_shutdown()
 
-def handle_toplevel_event(
-        toplevel_manager: ZwlrForeignToplevelManagerV1Proxy,
-        toplevel_handle: ZwlrForeignToplevelHandleV1):
-    # Here, you should set up event listeners for the toplevel
-    toplevel_handle.dispatcher["app_id"]    = handle_app_id_change
-    toplevel_handle.dispatcher["title"]     = handle_title_change
-    toplevel_handle.dispatcher['closed']    = handle_window_closed
-    toplevel_handle.dispatcher['state']     = handle_state_change
+    def handle_registry_global(self, registry, id_, interface_name, version):
+        if interface_name == 'zwlr_foreign_toplevel_manager_v1':
+            self.toplevel_manager = registry.bind(id_, ZwlrForeignToplevelManagerV1, version)
+            self.toplevel_manager.dispatcher["toplevel"] = self.handle_toplevel_event
 
+    def handle_toplevel_event(self, toplevel_manager, toplevel_handle):
+        toplevel_handle.dispatcher["app_id"] = self.handle_app_id_change
+        toplevel_handle.dispatcher["title"] = self.handle_title_change
+        toplevel_handle.dispatcher['closed'] = self.handle_window_closed
+        toplevel_handle.dispatcher['state'] = self.handle_state_change
 
-def handle_app_id_change(handle, app_id):
-    if handle not in wdw_handles_dct:
-        wdw_handles_dct[handle] = {}
-    wdw_handles_dct[handle]['app_id'] = app_id
-    # print(f"Title updated for window {handle}: '{app_id}'")
+    def handle_app_id_change(self, handle, app_id):
+        if handle not in self.wdw_handles_dct:
+            self.wdw_handles_dct[handle] = {}
+        self.wdw_handles_dct[handle]['app_id'] = app_id
 
+    def handle_title_change(self, handle, title):
+        if handle not in self.wdw_handles_dct:
+            self.wdw_handles_dct[handle] = {}
+        self.wdw_handles_dct[handle]['title'] = title
 
-def handle_title_change(handle, title):
-    """Update title in local state."""
-    if handle not in wdw_handles_dct:
-        wdw_handles_dct[handle] = {}
-    wdw_handles_dct[handle]['title'] = title
-    # print(f"Title updated for window {handle}: '{title}'")
+    def handle_window_closed(self, handle):
+        if handle in self.wdw_handles_dct:
+            del self.wdw_handles_dct[handle]
+        print(f"Window {handle} has been closed.")
 
+    def handle_state_change(self, handle, states_bytes):
+        states = []
+        if isinstance(states_bytes, bytes):
+            states = list(states_bytes)
+        if ZwlrForeignToplevelHandleV1.state.activated.value in states:
+            self.active_app_class = self.wdw_handles_dct[handle]['app_id']
+            self.active_wdw_title = self.wdw_handles_dct[handle]['title']
+            print()
+            print(f"Active app class: '{self.active_app_class}'")
+            print(f"Active window title: '{self.active_wdw_title}'")
+            self.print_running_applications()
 
-def handle_window_closed(handle):
-    """Remove window from local state."""
-    if handle in wdw_handles_dct:
-        del wdw_handles_dct[handle]
-    print(f"Window {handle} has been closed.")
-
-
-def handle_state_change(handle, states_bytes):
-    """Track active window based on state changes."""
-    states = []
-    if isinstance(states_bytes, bytes):
-        states = list(states_bytes)
-    if ZwlrForeignToplevelHandleV1.state.activated.value in states:
-        active_app_class = wdw_handles_dct[handle]['app_id']
-        active_wdw_title = wdw_handles_dct[handle]['title']
+    def print_running_applications(self):
+        print("\nList of running applications:")
+        print(f"{'App ID':<30} {'Title':<50}")
+        print("-" * 80)
+        for handle, info in self.wdw_handles_dct.items():
+            app_id = info.get('app_id', ERR_NO_WLR_APP_CLASS)
+            title = info.get('title', ERR_NO_WLR_WDW_TITLE)
+            print(f"{app_id:<30} {title:<50}")
         print()
-        print(f"Active app class: '{active_app_class}'")
-        print(f"Active window title: '{active_wdw_title}'")
-        print_running_applications()  # Print the list of running applications
-
-
-def print_running_applications():
-    """Print a complete list of running applications."""
-    print("\nList of running applications:")
-    print(f"{'App ID':<30} {'Title':<50}")
-    print("-" * 80)
-    for handle, info in wdw_handles_dct.items():
-        app_id = info.get('app_id', ERR_NO_WLR_APP_CLASS)
-        title = info.get('title', ERR_NO_WLR_WDW_TITLE)
-        print(f"{app_id:<30} {title:<50}")
-    print()
-
-
-def handle_registry_global(registry, id_, interface_name, version):
-    if interface_name == 'zwlr_foreign_toplevel_manager_v1':
-        toplevel_manager = registry.bind(id_, ZwlrForeignToplevelManagerV1, version)
-        toplevel_manager.dispatcher["toplevel"] = handle_toplevel_event
-
-
-registry.dispatcher["global"]    = handle_registry_global
-
-display.roundtrip()
 
 
 class DBUS_Object(dbus.service.Object):
@@ -246,8 +229,8 @@ class DBUS_Object(dbus.service.Object):
     @dbus.service.method(TOSHY_WLR_DBUS_SVC_IFACE, out_signature='a{sv}')
     def GetActiveWindow(self):
         debug(f'{LOG_PFX}: GetActiveWindow() called...')
-        return {'app_id':           active_app_class,
-                'title':            active_wdw_title}
+        return {'app_id':           wl_client.active_app_class,
+                'title':            wl_client.active_wdw_title}
 
 
 def wayland_event_callback(fd, condition, display):
@@ -275,10 +258,13 @@ def main():
         error(f"{LOG_PFX}: Error occurred while creating D-Bus service object:\n\t{dbus_error}")
         sys.exit(1)
 
-    # GLib.idle_add(wayland_event_callback)
-    GLib.io_add_watch(wl_fd, GLib.IO_IN, wayland_event_callback, display)
+    global wl_client        # Is this necessary?
+    wl_client = WaylandClient()
+    wl_client.connect()     # This connects display, gets registry, and also gets file descriptor
 
-    display.roundtrip() # get the event cycle started (callback never gets called without this)
+    GLib.io_add_watch(wl_client.wl_fd, GLib.IO_IN, wayland_event_callback, wl_client.display)
+
+    wl_client.display.roundtrip() # get the event cycle started (callback never gets called without this)
 
     # Run the main loop
     # dbus.mainloop.glib.DBusGMainLoop().run()
