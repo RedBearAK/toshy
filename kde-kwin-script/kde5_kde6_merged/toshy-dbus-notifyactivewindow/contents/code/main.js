@@ -36,9 +36,9 @@ function notifyActiveWindow(window){
     var resourceName    = window.hasOwnProperty('resourceName')     ? window.resourceName : "UNDEF";
 
     callDBus(
-        "org.toshy.Toshy",
-        "/org/toshy/Toshy",
-        "org.toshy.Toshy",
+        "org.toshy.Plasma",
+        "/org/toshy/Plasma",
+        "org.toshy.Plasma",
         "NotifyActiveWindow",
         caption,
         resourceClass,
