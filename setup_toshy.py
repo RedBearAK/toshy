@@ -2405,6 +2405,25 @@ def setup_kwin2dbus_script():
         # Add metadata.desktop to the kwinscript package
         zipf.write(os.path.join(kwin_script_path, 'metadata.json'), arcname='metadata.json')
 
+    # Try to unload existing KWin script from memory (not the same as uninstalling script files).
+    # Critical step if KWin script has changed, such as new D-Bus address.
+    # gdbus call --session --dest org.kde.KWin --object-path /Scripting \
+                            # --method org.kde.kwin.Scripting.unloadScript "${script_name}"
+    cmd_lst = [
+        'gdbus', 'call', '--session',
+        '--dest', 'org.kde.KWin',
+        '--object-path', '/Scripting',
+        '--method', 'org.kde.kwin.Scripting.unloadScript',
+        kwin_script_name
+    ]
+    try:
+        print(f"Trying to unload existing KWin script...")
+        subprocess.run(cmd_lst, check=True)
+        print(f"Unloaded existing KWin script.")
+    except subprocess.CalledProcessError as proc_err:
+        error(f"Problem while trying to unload existing KWin script:\n\t{proc_err}")
+        error("You may need to remove existing KWin script and restart Toshy.")
+
     # Try to remove existing KWin script, only if it exists
     if os.path.exists(curr_script_path):
         # Try to remove any installed KWin script entirely
@@ -2468,10 +2487,6 @@ def setup_kwin2dbus_script():
 
     # Try to get KWin to notice and activate the script on its own, now that it's in RC file
     do_kwin_reconfigure()
-
-    # Here we will also try to "run" the KWin script, as an alternative to the "kickstart" script
-    # Did things change from Plasma 5 to 6? This doesn't seem to work. 
-    # run_kwin_script(kwin_script_name)
 
     show_task_completed_msg()
 
