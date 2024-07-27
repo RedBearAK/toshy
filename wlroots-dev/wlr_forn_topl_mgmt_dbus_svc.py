@@ -233,7 +233,7 @@ class DBUS_Object(dbus.service.Object):
                 'title':            wl_client.active_wdw_title}
 
 
-def wayland_event_callback(fd, condition, display):
+def wayland_event_callback(fd, condition, display: Display):
     if condition & GLib.IO_IN:
         # display.dispatch()    # dispatch() fails to prompt new events to appear
         # dispatch() also seems to trigger the callback to get called many times in a loop,
