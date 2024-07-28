@@ -183,6 +183,11 @@ OVERRIDE_SESSION_TYPE           = None
 OVERRIDE_DESKTOP_ENV            = None
 OVERRIDE_DE_MAJ_VER             = None
 
+# For wlroots-based Wayland compositors, try using 'wlroots' here, like this:
+# override_context_method         = 'wlroots'
+# Compositor must implement `zwlr_foreign_toplevel_manager_unstable_v1` protocol
+override_context_method         = None
+
 ###  SLICE_MARK_END: env_overrides  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 ###################################################################################################
 
@@ -194,14 +199,14 @@ SESSION_TYPE                    = None
 DESKTOP_ENV                     = None
 DE_MAJ_VER                      = None
 
-env_info: Dict[str, str] = lib.env.get_env_info()   # Returns a dict
+env_info: Dict[str, str] = lib.env.get_env_info()
 
-DISTRO_ID       = locals().get('OVERRIDE_DISTRO_ID')    or env_info.get('DISTRO_ID', 'keymissing')
-DISTRO_VER      = locals().get('OVERRIDE_DISTRO_VER')   or env_info.get('DISTRO_VER', 'keymissing')
-VARIANT_ID      = locals().get('OVERRIDE_VARIANT_ID')   or env_info.get('VARIANT_ID', 'keymissing')
+DISTRO_ID       = locals().get('OVERRIDE_DISTRO_ID')    or env_info.get('DISTRO_ID',    'keymissing')
+DISTRO_VER      = locals().get('OVERRIDE_DISTRO_VER')   or env_info.get('DISTRO_VER',   'keymissing')
+VARIANT_ID      = locals().get('OVERRIDE_VARIANT_ID')   or env_info.get('VARIANT_ID',   'keymissing')
 SESSION_TYPE    = locals().get('OVERRIDE_SESSION_TYPE') or env_info.get('SESSION_TYPE', 'keymissing')
-DESKTOP_ENV     = locals().get('OVERRIDE_DESKTOP_ENV')  or env_info.get('DESKTOP_ENV', 'keymissing')
-DE_MAJ_VER      = locals().get('OVERRIDE_DE_MAJ_VER')   or env_info.get('DE_MAJ_VER', 'keymissing')
+DESKTOP_ENV     = locals().get('OVERRIDE_DESKTOP_ENV')  or env_info.get('DESKTOP_ENV',  'keymissing')
+DE_MAJ_VER      = locals().get('OVERRIDE_DE_MAJ_VER')   or env_info.get('DE_MAJ_VER',   'keymissing')
 
 debug("")
 debug(  f'Toshy config sees this environment:'
@@ -211,11 +216,23 @@ debug(  f'Toshy config sees this environment:'
         f'\n\t{DESKTOP_ENV      = }'
         f'\n\t{DE_MAJ_VER       = }\n', ctx="CG")
 
+
+# This var won't exist in older Toshy configs, until user adds it to 'env_overrides' slice.
+# To prevent errors, we make sure it exists and inherits from existing user variable.
+override_context_method = locals().get('override_context_method', False)
+
+# Wayland window context methods are specific to different desktop environments
+# An override can be used to choose a method like 'wlroots'
+# Check `xwaykeyz` module `lib/window_context.py` to see all available methods
+if override_context_method:
+    _desktop_env = override_context_method
+else:
+    _desktop_env = DESKTOP_ENV
+
 try:
-    # Pylance will complain if function undefined, without 'ignore' comment
-    environ_api(session_type = SESSION_TYPE, wl_desktop_env = DESKTOP_ENV) # type: ignore
+    environ_api(session_type = SESSION_TYPE, wl_desktop_env = _desktop_env) # type: ignore
 except NameError:
-    debug(f"The API function 'environ_api' is not defined yet. Wrong keymapper branch?")
+    error(f"The API function 'environ_api' is not defined yet. Wrong keymapper branch?")
     pass
 
 
