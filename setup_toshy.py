@@ -2418,7 +2418,7 @@ def setup_kwin2dbus_script():
     ]
     try:
         print(f"Trying to unload existing KWin script...")
-        subprocess.run(cmd_lst, check=True)
+        subprocess.run(cmd_lst, check=True, stderr=DEVNULL, stdout=DEVNULL)
         print(f"Unloaded existing KWin script.")
     except subprocess.CalledProcessError as proc_err:
         error(f"Problem while trying to unload existing KWin script:\n\t{proc_err}")
