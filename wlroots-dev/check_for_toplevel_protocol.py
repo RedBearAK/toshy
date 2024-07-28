@@ -19,12 +19,12 @@ class WaylandClient:
 
     def registry_handler(self, registry, name, interface, version):
         print(f"Registry event: name={name}, interface={interface}, version={version}")
-        if 'wlr' in interface:
-            print('                             #### wlr protocol detected')
-            print()
+        # if 'wlr' in interface:
+        #     print('                             #### wlr protocol detected')
+        #     print()
         forn_topl_prot_names = [
-            'wlr_foreign_toplevel_manager_v1',
-            'zwlr_foreign_toplevel_manager_v1'
+            'zwlr_foreign_toplevel_manager_v1',
+            # 'wlr_foreign_toplevel_manager_v1',
         ]
         if interface in forn_topl_prot_names:
             self.topl_mgmt_prot_supported = True
@@ -55,11 +55,12 @@ class WaylandClient:
             print("Running roundtrip to process registry events...")
             self.display.roundtrip()
 
+            print()
             if self.topl_mgmt_prot_supported:
                 print(f"Protocol '{self.topl_mgmt_prot_name}' "
                         f"version '{self.topl_mgmt_prot_ver}' is SUPPORTED.")
             else:
-                print("Protocol '[z]wlr_foreign_toplevel_manager_v1' is NOT supported.")
+                print("Protocol 'zwlr_foreign_toplevel_manager_v1' is NOT supported.")
 
         except Exception as e:
             print("An error occurred:")
