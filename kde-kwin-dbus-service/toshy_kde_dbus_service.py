@@ -102,8 +102,12 @@ else:
 #         f'\n\t{DE_MAJ_VER       = }\n', ctx="CG")
 
 
-TOSHY_KDE_DBUS_SVC_PATH         = '/org/toshy/Toshy'
-TOSHY_KDE_DBUS_SVC_IFACE        = 'org.toshy.Toshy'
+# TOSHY_KDE_DBUS_SVC_PATH         = '/org/toshy/Toshy'
+# TOSHY_KDE_DBUS_SVC_IFACE        = 'org.toshy.Toshy'
+
+# Rename the D-Bus object/path more specifically for Plasma (there are others, like Wlroots)
+TOSHY_KDE_DBUS_SVC_PATH         = '/org/toshy/Plasma'
+TOSHY_KDE_DBUS_SVC_IFACE        = 'org.toshy.Plasma'
 
 
 class DBUS_Object(dbus.service.Object):

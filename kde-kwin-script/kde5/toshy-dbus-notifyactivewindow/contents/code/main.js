@@ -10,9 +10,9 @@ function notifyActiveWindow(client){
     var resourceName = client.hasOwnProperty('resourceName') ? client.resourceName : "UNDEF";
 
     callDBus(
-        "org.toshy.Toshy",
-        "/org/toshy/Toshy",
-        "org.toshy.Toshy",
+        "org.toshy.Plasma",
+        "/org/toshy/Plasma",
+        "org.toshy.Plasma",
         "NotifyActiveWindow",
         caption,
         resourceClass,

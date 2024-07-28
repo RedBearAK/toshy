@@ -1,14 +1,12 @@
 # Current status: Stable Beta (Please Read)
 
-**2024-07-14 UPDATE**: Toshy was recently mentioned favorably in a video on Framework's YouTube channel, about transitioning from macOS to Linux, by Zach Feldman, a lead software engineer on the Marketplace team at Framework. I discovered this quite by accident, watching the video simply because it was in my recommended videos and the title said it was about macOS and Linux, and I've watched several videos from the Framework team. Imagine my surprise when Zach said one of the more important tools that allowed him to use Linux productively after using macOS for many years was Toshy. 😲🤯 Well, I can't be that surprised, since that's exactly why Toshy (and Kinto) were put together. 
+**2024-07-28 UPDATE**: Some basic `wlroots` based Wayland compositor support has been added. See the [Wiki article](https://github.com/wiki/Wlroots-Based-Wayland-Compositors.md).
 
-https://www.youtube.com/watch?v=g4aUSRi8QX4
+**2024-07-14 UPDATE**: Toshy was recently mentioned favorably in a video on Framework's YouTube channel, about transitioning from macOS to Linux, by Zach Feldman, a lead software engineer on the Marketplace team at Framework. I discovered this quite by accident, watching the video simply because it was in my recommended videos and the title said it was about macOS and Linux, and I've watched several videos from the Framework team. Imagine my surprise when Zach said one of the more important tools that allowed him to use Linux productively after using macOS for many years was Toshy. 😲🤯 Well, I can't be that surprised, since that's exactly why Toshy (and Kinto) were put together. Toshy references start about 2 minutes into the video:  
 
-**2024-07-05 UPDATE**: Adding to both of the performance updates below, some lists in the config file that are accessed frequently were optimized in a way that once again reduced overall CPU usage while typing. In testing on a multi-core system the CPU usage is usually less than 2%, even while processing keys much faster than most people can type.  
+https://www.youtube.com/watch?v=g4aUSRi8QX4  
 
-**2024-06-28 UPDATE**: Additional performance (reduction in CPU usage) was gained by rearranging the order of evaluation of multi-condition modmap and keymap conditional expressions in the config file. Conditions that were "lighter" like a simple boolean variable check were placed before conditions that are computationally "heavier", like asking the matching function to evaluate a list of context conditions. This optimization procedure had a surprisingly large effect on how much CPU is used during rapid typing (tested by mashing keys as fast as possible). To get these optimizations of the config file, you will need to grab a new zip file and reinstall Toshy.The improvements from this optimization of the config file conditionals are in addition to the performance improvements described in the earlier update below.  
-
-**2024-06-15 UPDATE**: Some major performance updates to a core property matching function have significantly reduced the CPU usage of Toshy while typing, especially while typing very fast. This should reduce the incidence of seeing a "delay" in characters appearing while typing, which can happen sometimes when a system is experiencing high CPU usage in general. (You can do something like `sudo renice -n -10 $(pgrep xwaykeyz)` if you still have an issue with that, and want the keymapper process to have a higher priority when the system is under heavy load.) There was also a sort of fix inside the keymapper recently to keep repeating keys from using up CPU for no particular benefit. Any new install of Toshy, even from an older zip file, will get that when it clones the keymapper from its GitHub repo. Mostly this will be meaningful in gaming situations where one needs to hold down non-modifier keys, which used to cause the keymapper to use an entire core (or thread) for as long as the key was held down.  
+For new updates on the performance advancements, check the dedicated [Wiki page](https://github.com/RedBearAK/toshy/wiki/Performance-Improvement-History).  
 
 ## Main issues you might run into
 
@@ -200,12 +198,6 @@ There is a weird bug with searching for extensions by name sometimes, where you 
 
 (See the `--options` in the next section if the basic install doesn't work.)  
 
-If for any reason the script is not executable, you can fix that with this command:  
-
-```sh
-chmod +x setup_toshy.py
-```
-
 ### Options for installer script
 
 The installer script has a few different `commands` and `--options` available, as shown in this section.  
@@ -362,6 +354,9 @@ You will find these distro groupings in the Wiki article:
     - **Plasma 5 (KDE)** - _[uses custom KWin script]_
     - **Plasma 6 (KDE)** - _[uses custom KWin script]_
     - **Sway** - _[currently uses `ipc` Python module]_
+    - **Wlroots-based Wayland Compositors**
+        - Req's `zwlr_foreign_toplevel_manager_v1` protocol support
+        - See usage details in this [Wiki article](https://github.com/RedBearAK/toshy/wiki/Wlroots-Based-Wayland-Compositors.md)
 
 If you are in an X11/Xorg login session, the desktop environment or window manager doesn't really matter. The keymapper gets the window class/name/title information directly from the X server with the Python `Xlib` module.  
 

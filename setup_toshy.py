@@ -843,26 +843,27 @@ pip_pkgs   = [
     # NOTE: Version 1.5 of 'xkbcommon' introduced breaking API changes:
     # XKB_CONTEXT_NO_SECURE_GETENV
     # https://github.com/sde1000/python-xkbcommon/issues/23
-    # Need to pin version to less than v1.1 to avoid errors installing 'xkbcommon'.
+    # Need to pin version to less than v1.1 to avoid errors installing 'xkbcommon' on older distros.
     # TODO: Revisit this pinning in... 2028.
     "xkbcommon<1.1",
 
     # NOTE: WE CANNOT USE `xkbregistry` DUE TO CONFUSION AMONG SUPPORTING NATIVE PACKAGES
     # "xkbregistry",
 
-    # Everything below here is just to make keymapper install smoother.
+    # Everything below here is just to make the keymapper install smoother.
     # Keymapper may be 'xwaykeyz', 'keyszer' or a derivative/fork with same requirements.
 
-    "hyprpy", "i3ipc", "pywayland",
+    "hyprpy", "i3ipc", 
 
-    # NOTE: Installing 'pywlroots' will require native pkg 'libxkbcommon-devel' (Fedora).
-    # We are installing 'libxkbcommon-devel' now to support 'xkbcommon' module. 
-    # "pywlroots",
+    # NOTE: Need to install 'pywayland' from a GitHub PR (#64) for now, to handle NewId error
+    # "pywayland", 
+    # "git+https://github.com/heuer/pywayland@issue_33_newid",
+    "git+https://github.com/flacjacket/pywayland@db8fb1c3a29761a014cfbb57f84025ddf3882c3c",
 
     # TODO: Check on 'python-xlib' project by mid-2025 to see if this bug is fixed:
     #   [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']
-    # If the bug is fixed, remove pinning to v0.31 here. But it does not appear
-    # that the bug is ever likely to be fixed.
+    # If the bug is fixed, remove pinning to v0.31 here.
+    # But it does not appear that the bug is ever likely to be fixed.
 
     "inotify-simple", "evdev", "appdirs", "ordered-set", "python-xlib==0.31", "six"
 ]
@@ -2014,6 +2015,21 @@ class PythonVenvQuirksHandler():
     def __init__(self) -> None:
         pass
 
+    def update_C_INCLUDE_PATH(self):
+        # Needed to make a symlink to get `xkbcommon` to install in the venv:
+        # sudo ln -s /usr/include/libxkbcommon/xkbcommon /usr/include/
+
+        # As an alternative without `sudo`, update C_INCLUDE_PATH so that the
+        # `xkbcommon.h` include file can be found during build process.
+        # And the `wayland-client-core.h` include file for `pywayland` build.
+        include_path = "/usr/include/libxkbcommon:/usr/include/wayland"
+        if 'C_INCLUDE_PATH' in os.environ:
+            os.environ['C_INCLUDE_PATH'] = f"{include_path}:{os.environ['C_INCLUDE_PATH']}"
+        else:
+            os.environ['C_INCLUDE_PATH'] = include_path
+        
+        print(f"C_INCLUDE_PATH updated: {os.environ['C_INCLUDE_PATH']}")
+
     def handle_venv_quirks_CentOS_7(self):
         print('Handling Python virtual environment quirks in CentOS 7...')
         # Avoid using systemd packages/services for CentOS 7
@@ -2062,18 +2078,7 @@ class PythonVenvQuirksHandler():
             cnfg.py_interp_path = shutil.which(f'python{cnfg.curr_py_rel_ver_str}')
             cnfg.py_interp_ver_str = cnfg.curr_py_rel_ver_str
 
-            # Needed to make a symlink to get `xkbcommon` to install in the venv:
-            # sudo ln -s /usr/include/libxkbcommon/xkbcommon /usr/include/
-
-            # As an alternative without `sudo`, update C_INCLUDE_PATH so that the
-            # `xkbcommon.h` include file can be found during build process.
-            include_path = "/usr/include/libxkbcommon"
-            if 'C_INCLUDE_PATH' in os.environ:
-                os.environ['C_INCLUDE_PATH'] = f"{include_path}:{os.environ['C_INCLUDE_PATH']}"
-            else:
-                os.environ['C_INCLUDE_PATH'] = include_path
-            
-            print(f"C_INCLUDE_PATH updated: {os.environ['C_INCLUDE_PATH']}")
+            self.update_C_INCLUDE_PATH()
 
         else:
             print(  f'Current stable Python release version '
@@ -2101,19 +2106,7 @@ class PythonVenvQuirksHandler():
     def handle_venv_quirks_Tumbleweed(self):
         print('Handling Python virtual environment quirks in Tumbleweed...')
 
-        # Needed to make a symlink to get `xkbcommon` to install in the venv:
-        # sudo ln -s /usr/include/libxkbcommon/xkbcommon /usr/include/
-
-        # As an alternative without `sudo`, update C_INCLUDE_PATH so that the
-        # `xkbcommon.h` include file can be found during build process.
-        include_path = "/usr/include/libxkbcommon"
-        if 'C_INCLUDE_PATH' in os.environ:
-            os.environ['C_INCLUDE_PATH'] = f"{include_path}:{os.environ['C_INCLUDE_PATH']}"
-        else:
-            os.environ['C_INCLUDE_PATH'] = include_path
-        
-        print(f"C_INCLUDE_PATH updated: {os.environ['C_INCLUDE_PATH']}")
-
+        self.update_C_INCLUDE_PATH()
 
 def setup_python_vir_env():
     """Setup a virtual environment to install Python packages"""
@@ -2412,6 +2405,25 @@ def setup_kwin2dbus_script():
         # Add metadata.desktop to the kwinscript package
         zipf.write(os.path.join(kwin_script_path, 'metadata.json'), arcname='metadata.json')
 
+    # Try to unload existing KWin script from memory (not the same as uninstalling script files).
+    # Critical step if KWin script has changed, such as new D-Bus address.
+    # gdbus call --session --dest org.kde.KWin --object-path /Scripting \
+                            # --method org.kde.kwin.Scripting.unloadScript "${script_name}"
+    cmd_lst = [
+        'gdbus', 'call', '--session',
+        '--dest', 'org.kde.KWin',
+        '--object-path', '/Scripting',
+        '--method', 'org.kde.kwin.Scripting.unloadScript',
+        kwin_script_name
+    ]
+    try:
+        print(f"Trying to unload existing KWin script...")
+        subprocess.run(cmd_lst, check=True, stderr=DEVNULL, stdout=DEVNULL)
+        print(f"Unloaded existing KWin script.")
+    except subprocess.CalledProcessError as proc_err:
+        error(f"Problem while trying to unload existing KWin script:\n\t{proc_err}")
+        error("You may need to remove existing KWin script and restart Toshy.")
+
     # Try to remove existing KWin script, only if it exists
     if os.path.exists(curr_script_path):
         # Try to remove any installed KWin script entirely
@@ -2475,10 +2487,6 @@ def setup_kwin2dbus_script():
 
     # Try to get KWin to notice and activate the script on its own, now that it's in RC file
     do_kwin_reconfigure()
-
-    # Here we will also try to "run" the KWin script, as an alternative to the "kickstart" script
-    # Did things change from Plasma 5 to 6? This doesn't seem to work. 
-    # run_kwin_script(kwin_script_name)
 
     show_task_completed_msg()
 

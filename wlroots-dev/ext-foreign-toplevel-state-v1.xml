@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="ext_foreign_toplevel_state_v1">
+  <copyright>
+    Copyright © 2018 Ilia Bozhinov
+    Copyright © 2020 Isaac Freund
+    Copyright © 2022 wb9688
+    Copyright © 2023 i509VCB
+
+    Permission to use, copy, modify, distribute, and sell this
+    software and its documentation for any purpose is hereby granted
+    without fee, provided that the above copyright notice appear in
+    all copies and that both that copyright notice and this permission
+    notice appear in supporting documentation, and that the name of
+    the copyright holders not be used in advertising or publicity
+    pertaining to distribution of the software without specific,
+    written prior permission.  The copyright holders make no
+    representations about the suitability of this software for any
+    purpose.  It is provided "as is" without express or implied
+    warranty.
+
+    THE COPYRIGHT HOLDERS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
+    SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+    FITNESS, IN NO EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY
+    SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+    WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
+    AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+    ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+    THIS SOFTWARE.
+  </copyright>
+
+  <description summary="describe toplevel state">
+    The purpose of this protocol is to describe the state of a foreign toplevel.
+
+    This protocol depends on the ext-foreign-toplevel-list protocol.
+
+    The compositor may choose to restrict this protocol to a special client
+    launched by the compositor itself or expose it to all clients,
+    this is compositor policy.
+
+    The key words "must", "must not", "required", "shall", "shall not",
+    "should", "should not", "recommended",  "may", and "optional" in this
+    document are to be interpreted as described in IETF RFC 2119.
+
+    Warning! The protocol described in this file is currently in the testing
+    phase. Backward compatible changes may be added together with the
+    corresponding interface version bump. Backward incompatible changes can
+    only be done by creating a new major version of the extension.
+  </description>
+
+  <interface name="ext_foreign_toplevel_state_v1" version="1">
+    <description summary="describe toplevel state">
+      The global object used to initialize the extension interfaces to get updates
+      to the state of a toplevel.
+    </description>
+
+    <enum name="error">
+      <description summary="ext_foreign_toplevel_state_v1 errors">
+        These errors are sent in response to ext_foreign_toplevel_state_v1 requests.
+      </description>
+      <entry name="already_constructed" value="0"
+        summary="the ext_foreign_toplevel_state_v1 was already constructed for the specified ext_foreign_toplevel_handle_v1 object"/>
+    </enum>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the ext_foreign_toplevel_state_v1 object">
+        Destroys the ext_foreign_toplevel_state_v1 object.
+
+        This does not affect any existing ext_foreign_toplevel_handle_state_v1 objects.
+      </description>
+    </request>
+
+    <request name="get_handle_state">
+      <description summary="create the object for toplevel state updates">
+        This request creates an extension object to receive state updates for the
+        foreign toplevel.
+
+        It is illegal to destroy the ext_foreign_toplevel_handle_v1 before the
+        ext_foreign_toplevel_handle_state_v1 object is destroyed and must result in
+        a orphaned error.
+
+        It is also illegal to create more than one ext_foreign_toplevel_handle_state_v1
+        object per toplevel handle instance and must result in a already_constructed
+        error.
+      </description>
+
+      <arg name="handle" type="object" interface="ext_foreign_toplevel_handle_v1"/>
+      <arg name="id" type="new_id" interface="ext_foreign_toplevel_handle_state_v1"/>
+    </request>
+  </interface>
+
+  <interface name="ext_foreign_toplevel_handle_state_v1" version="1">
+    <description summary="toplevel state updates">
+      This object receives events when the state of a toplevel has changed.
+
+      This object extends the ext_foreign_toplevel_handle_v1 interface and uses the
+      ext_foreign_toplevel_handle_v1.done event to atomically apply pending state.
+    </description>
+
+    <enum name="error">
+      <description summary="ext_foreign_toplevel_handle_state_v1 errors">
+        These errors are sent in response to ext_foreign_toplevel_handle_state_v1 requests.
+      </description>
+
+      <entry name="orphaned" value="0"
+          summary="the ext_foreign_toplevel_handle_v1 was destroyed before this object"/>
+    </enum>
+
+    <enum name="state">
+      <description summary="types of states on the toplevel">
+        The different states that a toplevel may have.
+      </description>
+      <entry name="maximized"  value="0" summary="the toplevel is maximized"/>
+      <entry name="minimized"  value="1" summary="the toplevel is minimized"/>
+      <entry name="activated"  value="2" summary="the toplevel is active"/>
+      <entry name="fullscreen" value="3" summary="the toplevel is fullscreen"/>
+    </enum>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the ext_foreign_toplevel_handle_state_v1 object">
+        This request should be used when the client no longer wishes to receive
+        updates to the toplevel state or after the closed event has been received to
+        allow destruction of the object.
+
+        See ext_foreign_toplevel_state_v1 for more information about destroying this
+        object.
+      </description>
+    </request>
+
+    <event name="state">
+      <description summary="the toplevel state changed">
+        This event is emitted once on creation of the ext_foreign_toplevel_handle_state_v1
+        and again whenever the state of the toplevel changes.
+
+        The array contains 32-bit unsigned integers of host endianness that
+        must be interpreted as ext_foreign_toplevel_handle_state_v1.state values.
+
+        The configured state must not be applied immediately. See
+        ext_foreign_toplevel_handle_v1.done for details.
+      </description>
+      <arg name="states" type="array" summary="array of ext_foreign_toplevel_handle_state_v1.state"/>
+    </event>
+
+    <event name="output_enter">
+      <description summary="toplevel entered an output">
+        The toplevel has entered the output. Like wl_surface.enter, the toplevel
+        may overlap with zero or more outputs.
+
+        The compositor must only send wl_output objects which the client has bound.
+        The compositor must also send this event for every wl_output the client has
+        bound. Clients can filter out wl_output objects which do not belong to the same
+        event queue.
+
+        If the ext_foreign_toplevel_handle_v1.finished event was received, then the
+        compositor must not send this event.
+
+        The configured state must not be applied immediately. See
+        ext_foreign_toplevel_handle_v1.done for details.
+      </description>
+      <arg name="output" type="object" interface="wl_output" summary="the output the toplevel entered"/>
+    </event>
+
+    <event name="output_leave">
+      <description summary="toplevel left an output">
+        The toplevel has left the output. Like wl_surface.leave, the toplevel
+        may leave the output due to movement, resizing or the output is being
+        destroyed.
+
+        The compositor must only send wl_output objects which the client has bound.
+        The compositor must also send this event for every wl_output the client has
+        bound. Clients can filter out wl_output objects which do not belong to the same
+        event queue.
+
+        If the ext_foreign_toplevel_handle_v1.finished event was received, then the
+        compositor must not send this event.
+
+        The configured state must not be applied immediately. See
+        ext_foreign_toplevel_handle_v1.done for details.
+      </description>
+      <arg name="output" type="object" interface="wl_output" summary="the output the toplevel left"/>
+    </event>
+
+    <event name="parent">
+      <description summary="parent change">
+        This event is emitted whenever the parent of the toplevel changes. A
+        value of NULL means that there is no parent.
+
+        The compositor must only send a ext_foreign_toplevel_handle_v1 object
+        which was created using the same ext_foreign_toplevel_list object as
+        the ext_foreign_toplevel_handle_v1 object this interface extends. No
+        event is emitted when the parent handle is destroyed by the client.
+
+        If the ext_foreign_toplevel_handle_v1.finished event was received, then the
+        compositor must not send this event.
+
+        The configured state must not be applied immediately. See
+        ext_foreign_toplevel_handle_v1.done for details.
+      </description>
+      <arg name="parent" type="object" interface="ext_foreign_toplevel_handle_v1" allow-null="true"
+        summary="parent of the toplevel"/>
+    </event>
+  </interface>
+</protocol>
