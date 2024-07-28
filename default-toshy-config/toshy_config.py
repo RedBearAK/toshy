@@ -225,6 +225,7 @@ override_context_method = locals().get('override_context_method', False)
 # An override can be used to choose a method like 'wlroots'
 # Check `xwaykeyz` module `lib/window_context.py` to see all available methods
 if override_context_method:
+    debug(f"{override_context_method = }")
     _desktop_env = override_context_method
 else:
     _desktop_env = DESKTOP_ENV
