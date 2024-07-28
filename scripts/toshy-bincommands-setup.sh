@@ -44,7 +44,7 @@ ln -sf "${TOSHY_BIN}/toshy-venv.sh"                     "${LOCAL_BIN}/toshy-venv
 ln -sf "${TOSHY_BIN}/toshy-fnmode.sh"                   "${LOCAL_BIN}/toshy-fnmode"
 ln -sf "${TOSHY_BIN}/toshy-devices.sh"                  "${LOCAL_BIN}/toshy-devices"
 ln -sf "${TOSHY_BIN}/toshy-kde-dbus-service.sh"         "${LOCAL_BIN}/toshy-kde-dbus-service"
-ln -sf "${TOSHY_BIN}/toshy-wlroots-dbus-service.sh"     "${LOCAL_BIN}/toshy-kde-dbus-service"
+ln -sf "${TOSHY_BIN}/toshy-wlroots-dbus-service.sh"     "${LOCAL_BIN}/toshy-wlroots-dbus-service"
 
 
 echo ""
