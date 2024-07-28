@@ -38,7 +38,7 @@ else
 fi
 
 
-echo -e "\nStopping Toshy systemd services..."
+echo "Stopping Toshy systemd services..."
 
 systemctl --user stop toshy-kde-dbus.service
 sleep 0.5
@@ -46,5 +46,5 @@ systemctl --user stop toshy-session-monitor.service
 sleep 0.5
 systemctl --user stop toshy-config.service
 
-echo -e "\nToshy systemd services stopped.\n"
+echo "Toshy systemd services stopped."
 sleep 0.5

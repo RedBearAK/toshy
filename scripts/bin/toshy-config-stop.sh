@@ -15,7 +15,7 @@ if [[ -z $USER ]] || [[ -z $HOME ]]; then
     exit 1
 fi
 
-echo -e "Stopping Toshy manual config script...\n"
+echo "Stopping Toshy manual config script..."
 
 pkill -f "/bin/keyszer"
 pkill -f "/bin/xwaykeyz"
