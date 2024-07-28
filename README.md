@@ -20,7 +20,7 @@ For new updates on the performance advancements, check the dedicated [Wiki page]
 
 - **DISTRO SUPPORT**: Toshy will have issues installing on distros not on the [list of supported distros](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros) in the Wiki. If you think your distro is closely related to one on the supported list, try the `./setup_toshy.py list-distros` command, and then use one of the distro names with the `--override-distro` option added to the `./setup_toshy.py install` command. See the [**How to Install**](#how-to-install) section.  
 
-- **STARTUP**: Toshy may seem to run at login, but not do any remapping, needing the use of the debugging command `toshy-config-verbose-start` in the terminal to troubleshoot. Or, it may just need a restart of the services from the tray icon or with `toshy-services-restart`. Check the output of `toshy-services-log` and `toshy-services-status` first to see if there is an obvious error message that explains the problem. Like not having a compatible GNOME Shell extension installed/enabled to support a Wayland+GNOME session. Other than the Wayland+GNOME situation, I don't really see this much anymore.  
+- **STARTUP**: Toshy may seem to run at login, but not do any remapping, needing the use of the debugging command `toshy-debug` in the terminal to troubleshoot. Or, it may just need a restart of the services from the tray icon or with `toshy-services-restart`. Check the output of `toshy-services-log` and `toshy-services-status` first to see if there is an obvious error message that explains the problem. Like not having a compatible GNOME Shell extension installed/enabled to support a Wayland+GNOME session. Other than the Wayland+GNOME situation, I don't really see this much anymore.  
 
 - **INIT SYSTEMS**: On a dual-init distro like MX Linux, if you install Toshy while using SysVinit (default on MX) the installer will avoid installing the `systemd` packages and service unit files. If you then switch to using `systemd` as init at the boot screen (you can do this from the "Advanced" menu) you'll need to re-run the Toshy installer (only once) while using `systemd` to make Toshy work automatically like it does on other distros where the default init is `systemd`. Or, you can just keep running the config manually, like is currently necessary under SysVinit and any other init system besides `systemd`.  
 
@@ -496,8 +496,9 @@ Restarting the Toshy services, either with one of the above commands or from the
 toshy-config-restart
 toshy-config-start
 toshy-config-start-verbose  (show debugging output in the terminal)
-toshy-config-verbose-start  (alias of 'toshy-config-start-verbose')
+toshy-config-verbose-start  (older alias of 'toshy-config-start-verbose')
 toshy-config-stop
+toshy-debug                 (newer alias of 'toshy-config-start-verbose')
 ```
 
 And a command that will show what Toshy sees as the environment when you launch the config. This may be helpful when troubleshooting or making reports:  
