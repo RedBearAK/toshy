@@ -60,4 +60,7 @@ python-xlib==0.31
 # Migrating to using a new fork of `keyszer` called `xwaykeyz`
 # Not available via `pip` yet!
 # https://github.com/RedBearAK/xwaykeyz/
+# No way to 'pin' a version range in this syntax, but window context method
+# for KDE Plasma changed, and requires >=1.2.0 for `xwaykeyz` to be talking
+# to the correct D-Bus interface/object path. (org.toshy.Plasma)
 git+https://github.com/RedBearAK/xwaykeyz.git@main#egg=xwaykeyz
