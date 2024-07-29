@@ -1,6 +1,6 @@
 # Current status: Stable Beta (Please Read)
 
-**2024-07-28 UPDATE**: Some basic `wlroots` based Wayland compositor support has been added. See the [Wiki article](https://github.com/RedBearAK/toshy/wiki/Wlroots-Based-Wayland-Compositors.md).
+**2024-07-28 UPDATE**: Some basic `wlroots` based Wayland compositor support has been added. See the [Wiki article](https://github.com/RedBearAK/toshy/wiki/Wlroots-Based-Wayland-Compositors).
 
 **2024-07-14 UPDATE**: Toshy was recently mentioned favorably in a video on Framework's YouTube channel, about transitioning from macOS to Linux, by Zach Feldman, a lead software engineer on the Marketplace team at Framework. I discovered this quite by accident, watching the video simply because it was in my recommended videos and the title said it was about macOS and Linux, and I've watched several videos from the Framework team. Imagine my surprise when Zach said one of the more important tools that allowed him to use Linux productively after using macOS for many years was Toshy. 😲🤯 Well, I can't be that surprised, since that's exactly why Toshy (and Kinto) were put together. Toshy references start about 2 minutes into the video:  
 
