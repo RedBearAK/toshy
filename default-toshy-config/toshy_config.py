@@ -3308,10 +3308,10 @@ keymap("Overrides for Caja - Finder Mods", {
 # (overrides some bindings from general file manager code block below)
 keymap("Overrides for COSMIC Files - Finder Mods", {
     # Tab nav uses Ctrl+Tab/Shift+Ctrl+Tab
-    C("Shift-RC-Left_Brace"):   C("C-Tab"),                     # Go to prior tab (left)
-    C("Shift-RC-Right_Brace"):  C("Shift-C-Tab"),               # Go to next tab (right)
-    C("Shift-RC-Left"):         C("C-Tab"),                     # Go to prior tab (left)
-    C("Shift-RC-Right"):        C("Shift-C-Tab"),               # Go to next tab (right)
+    C("Shift-RC-Left_Brace"):   C("Shift-C-Tab"),               # Go to prior tab (left)
+    C("Shift-RC-Right_Brace"):  C("C-Tab"),                     # Go to next tab (right)
+    C("Shift-RC-Left"):         C("Shift-C-Tab"),               # Go to prior tab (left)
+    C("Shift-RC-Right"):        C("C-Tab"),                     # Go to next tab (right)
     # No shortcut yet to change the view mode?
 
 }, when = matchProps(clas="^com.system76.CosmicFiles$"))
