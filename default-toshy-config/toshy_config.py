@@ -540,6 +540,7 @@ browsers_allStr         = "|".join('^'+x+'$' for x in browsers_all)
 # If the list contains only app classes, the regex pattern string is much faster.
 filemanagers = [
     "caja",
+    "com.system76.CosmicFiles",
     "dde-file-manager",
     "dolphin",
     "io.elementary.files",
@@ -3303,6 +3304,18 @@ keymap("Overrides for Caja - Finder Mods", {
     # C("RC-Super-o"):            C("Shift-C-W"),                 # Open in new window
 }, when = matchProps(clas="^caja$"))
 
+# Keybindings overrides for COSMIC Files
+# (overrides some bindings from general file manager code block below)
+keymap("Overrides for COSMIC Files - Finder Mods", {
+    # Tab nav uses Ctrl+Tab/Shift+Ctrl+Tab
+    C("Shift-RC-Left_Brace"):   C("C-Tab"),                     # Go to prior tab (left)
+    C("Shift-RC-Right_Brace"):  C("Shift-C-Tab"),               # Go to next tab (right)
+    C("Shift-RC-Left"):         C("C-Tab"),                     # Go to prior tab (left)
+    C("Shift-RC-Right"):        C("Shift-C-Tab"),               # Go to next tab (right)
+    # No shortcut yet to change the view mode?
+
+}, when = matchProps(clas="^com.system76.CosmicFiles$"))
+
 # Keybindings overrides for DDE (Deepin) File Manager
 # (overrides some bindings from general file manager code block below)
 keymap("Overrides for DDE File Manager - Finder Mods", {
@@ -3491,6 +3504,7 @@ keymap("XDG file dialogs", {
 ##  Currently supported Linux file managers (file browsers):
 ##  
 ##  Caja File Browser (MATE file manager, fork of Nautilus)
+##  COSMIC Files (Pop!_OS COSMIC file manager)
 ##  DDE File Manager (Deepin Linux file manager)
 ##  Dolphin (KDE file manager)
 ##  Krusader (Alternative/old KDE file manager)
@@ -4479,6 +4493,17 @@ if DESKTOP_ENV == 'budgie':
 if DESKTOP_ENV == 'cinnamon':
     keymap("GenGUI overrides: Cinnamon", {
         C("RC-Space"):             [iEF2NT(),C("C-Esc")],           # Right click, configure Mint menu shortcut to Ctrl+Esc
+    }, when = lambda ctx:
+        cnfg.screen_has_focus and
+        matchProps(not_clas=remoteStr)(ctx)
+    )
+
+if DESKTOP_ENV == 'cosmic':
+    keymap("GenGUI overrides: COSMIC", {
+        # No shortcuts settings panel seems to be available at this time (July 30, 2024),
+        # so we can't "fix" this during Toshy install to not use the Meta/Super key.
+        C("RC-Space"):             [Key.LEFT_META,iEF2NT()],        # Launcher or Workspaces or Applications (user choice)
+        C("RC-Q"):                  C("C-Q"),                       # Close window/Quit (overrides Alt+F4 from General GUI)
     }, when = lambda ctx:
         cnfg.screen_has_focus and
         matchProps(not_clas=remoteStr)(ctx)
