@@ -354,10 +354,10 @@ You will find these distro groupings in the Wiki article:
     - **Plasma 5 (KDE)** - _[uses custom KWin script]_
     - **Plasma 6 (KDE)** - _[uses custom KWin script]_
     - **Sway** - _[currently uses `ipc` Python module]_
-    - **Wlroots-based Wayland Compositors**
+    - **Wlroots-based Wayland Compositors** - _[preliminary/manual start]_
         - Req's `zwlr_foreign_toplevel_manager_v1` protocol support
         - See usage details in this [Wiki article](https://github.com/RedBearAK/toshy/wiki/Wlroots-Based-Wayland-Compositors.md)
-    - **Pop!_OS COSMIC**
+    - **Pop!\_OS COSMIC** - _[preliminary/manual start]_
         - Based on `wlroots` method
         - See usage details in the same [Wiki article](https://github.com/RedBearAK/toshy/wiki/Wlroots-Based-Wayland-Compositors.md)
 
