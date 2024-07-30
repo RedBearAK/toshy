@@ -350,6 +350,7 @@ def create_list_of_dicts(lst: List[str]):
 terminals = [
     "alacritty",
     "com.raggesilver.BlackBox",
+    "com.system76.CosmicTerm",
     "contour",
     "cutefish-terminal",
     "deepin-terminal",
@@ -396,60 +397,6 @@ termStr                         = toRgxStr(terminals)
 # This is only for use with 'remotes_lod', otherwise regex pattern string is used.
 terminals_lod = create_list_of_dicts(terminals)
 
-# # DEPRECATED IN FAVOR OF MAINTAINING THE SIMPLE LIST AND 
-# # CONVERTING TO A "LIST OF DICTS" FOR USE WITH THE
-# # 'remotes_lod' "LIST OF DICTS". 
-# terminals_lod = [
-#     {clas: "^alacritty$"                 },
-#     {clas: "^com.raggesilver.BlackBox$"  },
-#     {clas: "^contour$"                   },
-#     {clas: "^cutefish-terminal$"         },
-#     {clas: "^deepin-terminal$"           },
-#     {clas: "^dev.warp.Warp$"             },
-#     {clas: "^eterm$"                     },
-#     {clas: "^gnome-terminal$"            },
-#     {clas: "^gnome-terminal-server$"     },
-#     {clas: "^guake$"                     },
-#     {clas: "^hyper$"                     },
-#     {clas: "^io.elementary.terminal$"    },
-#     {clas: "^kinto-gui.py$"              },
-#     {clas: "^kitty$"                     },
-#     {clas: "^Kgx$"                       },
-#     {clas: "^konsole$"                   },
-#     {clas: "^lxterminal$"                },
-#     {clas: "^mate-terminal$"             },
-#     {clas: "^MateTerminal$"              },
-#     {clas: "^org.gnome.Console$"         },
-#     {clas: "^org.gnome.Ptyxis.*$"        },
-#     {clas: "^org.kde.konsole$"           },
-#     {clas: "^org.kde.yakuake$"           },
-#     {clas: "^org.wezfurlong.wezterm$"    },
-#     {clas: "^roxterm$"                   },
-#     {clas: "^qterminal$"                 },
-#     {clas: "^st$"                        },
-#     {clas: "^sakura$"                    },
-#     {clas: "^station$"                   },
-#     {clas: "^tabby$"                     },
-#     {clas: "^terminator$"                },
-#     {clas: "^terminology$"               },
-#     {clas: "^termite$"                   },
-#     {clas: "^Termius$"                   },
-#     {clas: "^tilda$"                     },
-#     {clas: "^tilix$"                     },
-#     {clas: "^urxvt$"                     },
-#     {clas: "^xfce4-terminal$"            },
-#     {clas: "^xterm$"                     },
-#     {clas: "^yakuake$"                   },
-# ]
-
-
-# TODO: Maintain both the simple list and the "list of dicts" for terminals at the same time.
-# 
-# Simple lists of app classes converted to regex pattern strings allow
-# for a much faster conditional check than using the recursive 
-# "lists of dicts" that are needed for more complex conditionals. 
-# But 'terminals_lod' gets merged with 'remotes_lod' which has
-# the more complex conditionals involved, so we can't get rid of it.
 vscodes = [
     "code",
     "vscodium",
@@ -4101,6 +4048,7 @@ keymap("Cmd+W dialog fix - Alt+F4", {
 
 tab_UI_fix_CtrlShiftTab_lst = [
     "com.raggesilver.BlackBox",
+    "com.system76.CosmicTerm",
     "org.gnome.Console|Console",
     "deepin-terminal",
     "hyper",
@@ -4169,6 +4117,12 @@ keymap("Elementary Terminal tab switching", {
 keymap("Alacritty terminal", {
     C("RC-K"):                  C("C-L"),                       # clear log
 }, when = matchProps(clas="^alacritty$"))
+
+
+# keymap("COSMIC Terminal overrides", {
+#     # Not sure what to put here yet. There are tab nav fixes in the usual place.
+# }, when = matchProps(clas="^com.system76.CosmicTerm$"))
+
 
 keymap("Deepin Terminal overrides", {
     C("RC-w"):                  C("Alt-w"),                     # Close only current tab, instead of all other tabs

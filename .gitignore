@@ -21,6 +21,8 @@ keyszer/
 keyszer-temp/
 keyszer*/
 
+# Ignore Dolphin `.directory` files with custom folder view settings
+.directory
 
 ###############################################################################
 # Copied from GitHub's Python gitignore template:
