@@ -540,6 +540,7 @@ browsers_allStr         = "|".join('^'+x+'$' for x in browsers_all)
 # If the list contains only app classes, the regex pattern string is much faster.
 filemanagers = [
     "caja",
+    "com.system76.CosmicFiles",
     "dde-file-manager",
     "dolphin",
     "io.elementary.files",
@@ -3303,6 +3304,13 @@ keymap("Overrides for Caja - Finder Mods", {
     # C("RC-Super-o"):            C("Shift-C-W"),                 # Open in new window
 }, when = matchProps(clas="^caja$"))
 
+# Keybindings overrides for COSMIC Files
+# (overrides some bindings from general file manager code block below)
+keymap("Overrides for COSMIC Files - Finder Mods", {
+    # Tab nav fixes in the usual place
+    # No shortcut yet to change the view mode?
+}, when = matchProps(clas="^com.system76.CosmicFiles$"))
+
 # Keybindings overrides for DDE (Deepin) File Manager
 # (overrides some bindings from general file manager code block below)
 keymap("Overrides for DDE File Manager - Finder Mods", {
@@ -3491,6 +3499,7 @@ keymap("XDG file dialogs", {
 ##  Currently supported Linux file managers (file browsers):
 ##  
 ##  Caja File Browser (MATE file manager, fork of Nautilus)
+##  COSMIC Files (Pop!_OS COSMIC file manager)
 ##  DDE File Manager (Deepin Linux file manager)
 ##  Dolphin (KDE file manager)
 ##  Krusader (Alternative/old KDE file manager)
@@ -4041,6 +4050,7 @@ keymap("Cmd+W dialog fix - Alt+F4", {
 
 tab_UI_fix_CtrlShiftTab_lst = [
     "com.raggesilver.BlackBox",
+    "com.system76.CosmicFiles",
     "com.system76.CosmicTerm",
     "org.gnome.Console|Console",
     "deepin-terminal",
