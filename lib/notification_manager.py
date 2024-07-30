@@ -12,6 +12,7 @@ class NotificationManager:
         self.ntfy_cmd       = shutil.which('notify-send')
         self.prio_arg       = f'--urgency={urgency}'
         self.icon_arg       = '' if icon_file is None else f'--icon={icon_file}'
+        self.app_name_arg   = '--app-name=Toshy'
         self.title_arg      = "" if title is None else title
         self.ntfy_id_new    = None
         self.ntfy_id_last   = '0'
@@ -36,14 +37,16 @@ class NotificationManager:
         _prio_arg = self.prio_arg if urgency is None else f'--urgency={urgency}'
         if self.is_p_option_supported and replace_previous:
             _ntfy_id_new = subprocess.run(
-                [self.ntfy_cmd, _prio_arg, _icon_arg, self.title_arg, 
-                                message, '-p','-r', self.ntfy_id_last], 
+                [self.ntfy_cmd, _prio_arg, self.app_name_arg,
+                    _icon_arg, self.title_arg,
+                    message, '-p','-r', self.ntfy_id_last],
                 stdout=subprocess.PIPE).stdout # .decode().strip()
             _ntfy_id_new: bytes     # type hint to help VSCode validate the ".decode().strip()"
             self.ntfy_id_new = _ntfy_id_new.decode().strip()
             self.ntfy_id_last = self.ntfy_id_new
         else:
-            subprocess.run([self.ntfy_cmd, _prio_arg, _icon_arg, self.title_arg, message])
+            subprocess.run([self.ntfy_cmd, self.app_name_arg, 
+                            _prio_arg, _icon_arg, self.title_arg, message])
 
     def forced_numpad(self, state):
         """Show a notification when Forced Numpad feature is enabled/disabled."""
