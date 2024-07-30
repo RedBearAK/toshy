@@ -3313,7 +3313,7 @@ keymap("Overrides for COSMIC Files - Finder Mods", {
     C("Shift-RC-Left"):         C("C-Tab"),                     # Go to prior tab (left)
     C("Shift-RC-Right"):        C("Shift-C-Tab"),               # Go to next tab (right)
     # No shortcut yet to change the view mode?
-    
+
 }, when = matchProps(clas="^com.system76.CosmicFiles$"))
 
 # Keybindings overrides for DDE (Deepin) File Manager
@@ -4493,6 +4493,16 @@ if DESKTOP_ENV == 'budgie':
 if DESKTOP_ENV == 'cinnamon':
     keymap("GenGUI overrides: Cinnamon", {
         C("RC-Space"):             [iEF2NT(),C("C-Esc")],           # Right click, configure Mint menu shortcut to Ctrl+Esc
+    }, when = lambda ctx:
+        cnfg.screen_has_focus and
+        matchProps(not_clas=remoteStr)(ctx)
+    )
+
+if DESKTOP_ENV == 'cosmic':
+    keymap("GenGUI overrides: COSMIC", {
+        # No shortcuts settings panel seems to be available at this time (July 30, 2024),
+        # so we can't "fix" this during Toshy install to not use the Meta/Super key.
+        C("RC-Space"):             [Key.LEFT_META,iEF2NT()],        # Launcher or Workspaces or Applications (user choice)
     }, when = lambda ctx:
         cnfg.screen_has_focus and
         matchProps(not_clas=remoteStr)(ctx)
