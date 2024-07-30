@@ -340,13 +340,6 @@ def create_list_of_dicts(lst: List[str]):
     return [{'clas': f"^{item}$"} for item in cleaned_list]
 
 
-# TODO: Maintain both the simple list and the "list of dicts" for terminals at the same time.
-# 
-# Simple lists of app classes converted to regex pattern strings allow
-# for a much faster conditional check than using the recursive 
-# "lists of dicts" that are needed for more complex conditionals. 
-# But 'terminals_lod' gets merged with 'remotes_lod' which has
-# the more complex conditionals involved, so we can't get rid of it.
 terminals = [
     "alacritty",
     "com.raggesilver.BlackBox",
