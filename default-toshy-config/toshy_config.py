@@ -3307,8 +3307,13 @@ keymap("Overrides for Caja - Finder Mods", {
 # Keybindings overrides for COSMIC Files
 # (overrides some bindings from general file manager code block below)
 keymap("Overrides for COSMIC Files - Finder Mods", {
-    # Tab nav fixes in the usual place
+    # Tab nav uses Ctrl+Tab/Shift+Ctrl+Tab
+    C("Shift-RC-Left_Brace"):   C("C-Tab"),                     # Go to prior tab (left)
+    C("Shift-RC-Right_Brace"):  C("Shift-C-Tab"),               # Go to next tab (right)
+    C("Shift-RC-Left"):         C("C-Tab"),                     # Go to prior tab (left)
+    C("Shift-RC-Right"):        C("Shift-C-Tab"),               # Go to next tab (right)
     # No shortcut yet to change the view mode?
+    
 }, when = matchProps(clas="^com.system76.CosmicFiles$"))
 
 # Keybindings overrides for DDE (Deepin) File Manager
@@ -4050,7 +4055,6 @@ keymap("Cmd+W dialog fix - Alt+F4", {
 
 tab_UI_fix_CtrlShiftTab_lst = [
     "com.raggesilver.BlackBox",
-    "com.system76.CosmicFiles",
     "com.system76.CosmicTerm",
     "org.gnome.Console|Console",
     "deepin-terminal",
