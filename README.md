@@ -357,6 +357,9 @@ You will find these distro groupings in the Wiki article:
     - **Wlroots-based Wayland Compositors**
         - Req's `zwlr_foreign_toplevel_manager_v1` protocol support
         - See usage details in this [Wiki article](https://github.com/RedBearAK/toshy/wiki/Wlroots-Based-Wayland-Compositors.md)
+    - **Pop!_OS COSMIC**
+        - Based on `wlroots` method
+        - See usage details in the same [Wiki article](https://github.com/RedBearAK/toshy/wiki/Wlroots-Based-Wayland-Compositors.md)
 
 If you are in an X11/Xorg login session, the desktop environment or window manager doesn't really matter. The keymapper gets the window class/name/title information directly from the X server with the Python `Xlib` module.  
 
