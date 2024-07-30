@@ -122,8 +122,7 @@ class WaylandClient:
     def registry_global_handler(self, registry, id_, interface_name, version):
         """Handle registry events."""
         print(f"Registry event: id={id_}, interface={interface_name}, version={version}")
-
-        # if interface_name == 'zwlr_foreign_toplevel_manager_v1':
+        # COSMIC is using their own namespace instead of 'zwlr_foreign_toplevel_manager_v1'
         if interface_name == 'zcosmic_toplevel_info_v1':
             print()
             print(f"Protocol '{interface_name}' version {version} is _SUPPORTED_.")
