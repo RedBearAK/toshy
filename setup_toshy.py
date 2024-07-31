@@ -858,7 +858,9 @@ pip_pkgs   = [
     # NOTE: Need to install 'pywayland' from a GitHub PR (#64) for now, to handle NewId error
     # "pywayland", 
     # "git+https://github.com/heuer/pywayland@issue_33_newid",
-    "git+https://github.com/flacjacket/pywayland@db8fb1c3a29761a014cfbb57f84025ddf3882c3c",
+    # "git+https://github.com/flacjacket/pywayland@db8fb1c3a29761a014cfbb57f84025ddf3882c3c",
+    # NOTE: PR #64 on pywayland GitHub was merged, so we should be able to install from main
+    "pywayland",
 
     # TODO: Check on 'python-xlib' project by mid-2025 to see if this bug is fixed:
     #   [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']
