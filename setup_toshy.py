@@ -196,14 +196,9 @@ class InstallerSettings:
 
         self.keymapper_tmp_path     = os.path.join(this_file_dir, 'keymapper-temp')
 
-        # Older branches of the 'keyszer' fork with Wayland support:
-        # self.keymapper_branch       = 'device_grab_fix'           # most recent before 'xwaykeyz'
-        # self.keymapper_branch       = 'environ_api_hyprland'      # before 'device_grab_fix'
-
-        # self.keymapper_branch       = 'toshy_main'
         self.keymapper_branch       = 'main'          # new branch when switched to 'xwaykeyz'
+        self.keymapper_dev_branch   = 'dev_beta'      # branch to test new keymapper features
 
-        # self.keymapper_url          = 'https://github.com/RedBearAK/keyszer.git'
         self.keymapper_url          = 'https://github.com/RedBearAK/xwaykeyz.git'
 
         self.keymapper_clone_cmd    = f'git clone -b {self.keymapper_branch} {self.keymapper_url}'
@@ -850,8 +845,7 @@ pip_pkgs   = [
     # NOTE: WE CANNOT USE `xkbregistry` DUE TO CONFUSION AMONG SUPPORTING NATIVE PACKAGES
     # "xkbregistry",
 
-    # Everything below here is just to make the keymapper install smoother.
-    # Keymapper may be 'xwaykeyz', 'keyszer' or a derivative/fork with same requirements.
+    # Everything below here is just to make the keymapper (xwaykeyz) install smoother.
 
     "hyprpy", "i3ipc", 
 
