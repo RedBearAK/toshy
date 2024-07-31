@@ -51,6 +51,14 @@ throttle_delays(
     key_post_delay_ms   = 18,      # default: 0 ms, range: 0-150 ms, suggested: 1-100 ms
 )
 
+devices_api(
+    # Only the specified devices will be "grabbed" and watched for during 
+    # device connections/disconnections. 
+    only_devices = [
+        # 'Example Disconnected Keyboard',
+        # 'Example Connected Keyboard',
+    ]
+)
 
 ###  SLICE_MARK_END: keymapper_api  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 ###################################################################################################
