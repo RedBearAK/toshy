@@ -227,7 +227,8 @@ def get_env_info():
         error("ERROR: Desktop Environment not found in XDG_SESSION_DESKTOP or XDG_CURRENT_DESKTOP.")
         error("ERROR: Config file will not be able to adapt automatically to Desktop Environment.")
 
-    if 'unity' in _desktop_env.lower():
+    # Protect '.lower()' method from NoneType error
+    if _desktop_env and 'unity' in _desktop_env.lower():
         DESKTOP_ENV = 'unity'
 
     # Produce a simplified desktop environment name
