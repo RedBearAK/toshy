@@ -234,16 +234,22 @@ def get_env_info():
         wayland_display = os.environ.get('WAYLAND_DISPLAY')
         desktop_session = os.environ.get('DESKTOP_SESSION')
 
+        socket_paths = []
+        
         if display:
-            socket_path = os.path.join(xdg_cache_home, f'qtile/qtilesocket.{display}')
-        elif wayland_display:
-            socket_path = os.path.join(xdg_cache_home, f'qtile/qtilesocket.{wayland_display}')
-        elif desktop_session and 'qtile' in desktop_session:
-            return True
-        else:
-            return False
+            socket_paths.append(os.path.join(xdg_cache_home, f'qtile/qtilesocket.{display}'))
+        
+        if wayland_display:
+            socket_paths.append(os.path.join(xdg_cache_home, f'qtile/qtilesocket.{wayland_display}'))
 
-        return os.path.exists(socket_path)
+        if desktop_session and 'qtile' in desktop_session:
+            return True
+
+        for socket_path in socket_paths:
+            if os.path.exists(socket_path):
+                return True
+
+        return False
 
 
     # Check for Qtile if the environment variables were not set/empty
