@@ -230,17 +230,26 @@ def get_env_info():
     def is_qtile_running():
         """Utility function to detect Qtile if the usual environment vars are not set/empty"""
         xdg_cache_home = os.environ.get('XDG_CACHE_HOME', os.path.expanduser('~/.cache'))
-        wayland_display = os.environ.get('WAYLAND_DISPLAY')
         display = os.environ.get('DISPLAY')
+        wayland_display = os.environ.get('WAYLAND_DISPLAY')
+        desktop_session = os.environ.get('DESKTOP_SESSION')
 
+        socket_paths = []
+        
+        if display:
+            socket_paths.append(os.path.join(xdg_cache_home, f'qtile/qtilesocket.{display}'))
+        
         if wayland_display:
-            socket_path = os.path.join(xdg_cache_home, f'qtile/qtilesocket.{wayland_display}')
-        elif display:
-            socket_path = os.path.join(xdg_cache_home, f'qtile/qtilesocket.{display}')
-        else:
-            return False
+            socket_paths.append(os.path.join(xdg_cache_home, f'qtile/qtilesocket.{wayland_display}'))
 
-        return os.path.exists(socket_path)
+        if desktop_session and 'qtile' in desktop_session:
+            return True
+
+        for socket_path in socket_paths:
+            if os.path.exists(socket_path):
+                return True
+
+        return False
 
 
     # Check for Qtile if the environment variables were not set/empty
@@ -249,8 +258,10 @@ def get_env_info():
 
     if not _desktop_env:
         _desktop_env = None
-        error("ERROR: Desktop Environment not found in XDG_SESSION_DESKTOP or XDG_CURRENT_DESKTOP.")
-        error("ERROR: Config file will not be able to adapt automatically to Desktop Environment.")
+        error("ERR: DE not found in XDG_SESSION_DESKTOP, XDG_CURRENT_DESKTOP or DESKTOP_SESSION.")
+        error("ERR: Config file will not be able to adapt automatically to Desktop Environment.")
+        if SESSION_TYPE == 'wayland':
+            error("ERR: No generic Wayland window context method is currently available.")
 
     # Protect '.lower()' method from NoneType error
     if _desktop_env and 'unity' in _desktop_env.lower():
@@ -279,7 +290,8 @@ def get_env_info():
         'Plasma':                   'kde',
         'qtile:wlroots':            'qtile',
         'Qtile':                    'qtile',
-        'qtilewayland':             'qtile',
+        'qtilewaylan':              'qtile',    # actual value in real life (typo in Qtile code?)
+        'qtilewayland':             'qtile',    # might appear if they fix the typo
         'qtilex11':                 'qtile',
         'Sway':                     'sway',
         'SwayWM':                   'sway',
