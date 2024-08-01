@@ -98,7 +98,7 @@ sep_reps        = 80
 sep_char        = '='
 separator       = sep_char * sep_reps
 
-LOG_PFX = 'TOSHY_WLR_DBUS_SVC'
+LOG_PFX = 'TOSHY_COSMIC_DBUS_SVC'
 
 DISTRO_ID       = None
 DISTRO_VER      = None
@@ -112,21 +112,21 @@ def check_environment():
     """Retrieve the current environment from env module"""
     env_info: Dict[str, str] = env.get_env_info()   # Returns a dict
     global DISTRO_ID, DISTRO_VER, VARIANT_ID, SESSION_TYPE, DESKTOP_ENV, DE_MAJ_VER
-    DISTRO_ID       = env_info.get('DISTRO_ID')
-    DISTRO_VER      = env_info.get('DISTRO_VER')
-    VARIANT_ID      = env_info.get('VARIANT_ID')
-    SESSION_TYPE    = env_info.get('SESSION_TYPE')
-    DESKTOP_ENV     = env_info.get('DESKTOP_ENV')
-    DE_MAJ_VER      = env_info.get('DE_MAJ_VER')
+    DISTRO_ID       = env_info.get('DISTRO_ID', 'keymissing')
+    DISTRO_VER      = env_info.get('DISTRO_VER', 'keymissing')
+    VARIANT_ID      = env_info.get('VARIANT_ID', 'keymissing')
+    SESSION_TYPE    = env_info.get('SESSION_TYPE', 'keymissing')
+    DESKTOP_ENV     = env_info.get('DESKTOP_ENV', 'keymissing')
+    DE_MAJ_VER      = env_info.get('DE_MAJ_VER', 'keymissing')
 
 
 check_environment()
 
-# TODO: put the DE restriction back in place, find a way to identify wlroots compositors
-if SESSION_TYPE == 'wayland': # and DESKTOP_ENV not in ['kde', 'plasma', 'gnome', 'cinnamon']:
+# TODO: Get this script to stop if not in COSMIC
+if SESSION_TYPE == 'wayland' and DESKTOP_ENV in ['cosmic']:
     pass
 else:
-    debug(f'{LOG_PFX}: Probably not a wlroots environment. Exiting.')
+    debug(f'{LOG_PFX}: Probably not COSMIC environment. Exiting.')
     time.sleep(2)
     sys.exit(0)
 
@@ -141,8 +141,6 @@ debug(  f'Toshy KDE D-Bus service script sees this environment:'
         f'\n\t{DE_MAJ_VER       = }\n', ctx="CG")
 
 
-# TODO: Make a different path/interface and a new method in keymapper for COSMIC?
-# For now this is just a duplicate of the `wlroots` D-Bus service script.
 TOSHY_COSMIC_DBUS_SVC_PATH      = '/org/toshy/Cosmic'
 TOSHY_COSMIC_DBUS_SVC_IFACE     = 'org.toshy.Cosmic'
 

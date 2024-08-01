@@ -147,6 +147,21 @@ TOSHY_WLR_DBUS_SVC_IFACE        = 'org.toshy.Wlroots'
 ERR_NO_WLR_APP_CLASS = "ERR_no_wlr_app_class"
 ERR_NO_WLR_WDW_TITLE = "ERR_no_wlr_wdw_title"
 
+COUNTDOWN_MS = 6000  # 6 seconds
+countdown_timer = COUNTDOWN_MS
+interface_is_bound = False
+
+
+def countdown_callback():
+    global countdown_timer
+    if interface_is_bound:
+        return False  # Stop calling this function
+    countdown_timer -= 100  # Decrement by 100ms
+    if countdown_timer <= 0:
+        error("Failed to bind the required Wayland interface within the timeout period.")
+        clean_shutdown()
+    return True  # Continue calling this function
+
 
 class WaylandClient:
     def __init__(self):
@@ -167,13 +182,15 @@ class WaylandClient:
             self.registry.dispatcher["global"] = self.handle_registry_global
             self.display.roundtrip()
         except Exception as e:
-            print(f"Failed to connect to the Wayland display: {e}")
+            error(f"Failed to connect to the Wayland display: {e}")
             clean_shutdown()
 
     def handle_registry_global(self, registry, id_, interface_name, version):
+        global interface_is_bound
         if interface_name == 'zwlr_foreign_toplevel_manager_v1':
             self.toplevel_manager = registry.bind(id_, ZwlrForeignToplevelManagerV1, version)
             self.toplevel_manager.dispatcher["toplevel"] = self.handle_toplevel_event
+            interface_is_bound = True
 
     def handle_toplevel_event(self, toplevel_manager, toplevel_handle):
         toplevel_handle.dispatcher["app_id"] = self.handle_app_id_change
@@ -256,7 +273,7 @@ def main():
         DBUS_Object(session_bus, TOSHY_WLR_DBUS_SVC_PATH, TOSHY_WLR_DBUS_SVC_IFACE)
     except DBusException as dbus_error:
         error(f"{LOG_PFX}: Error occurred while creating D-Bus service object:\n\t{dbus_error}")
-        sys.exit(1)
+        clean_shutdown()
 
     global wl_client        # Is this necessary?
     wl_client = WaylandClient()
@@ -265,6 +282,9 @@ def main():
     GLib.io_add_watch(wl_client.wl_fd, GLib.IO_IN, wayland_event_callback, wl_client.display)
 
     wl_client.display.roundtrip() # get the event cycle started (callback never gets called without this)
+
+    # Add the countdown callback to the GLib main loop with a 100ms interval
+    GLib.timeout_add(100, countdown_callback)
 
     # Run the main loop
     # dbus.mainloop.glib.DBusGMainLoop().run()
