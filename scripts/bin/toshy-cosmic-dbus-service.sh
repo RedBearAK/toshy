@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-# Start Toshy Wlroots D-Bus service, after terminating existing
+# Start Toshy COSMIC D-Bus service, after terminating existing
 # processes and activating Python virtual environment
 
 # Check if the script is being run as root
@@ -17,8 +17,8 @@ if [[ -z $USER ]] || [[ -z $HOME ]]; then
 fi
 
 TOSHY_CFG="${HOME}/.config/toshy"
-TOSHY_WLROOTS="${TOSHY_CFG}/wlroots-dbus-service"
-FILE_NAME="toshy_wlroots_dbus_service"
+TOSHY_COSMIC="${TOSHY_CFG}/cosmic-dbus-service"
+FILE_NAME="toshy_cosmic_dbus_service"
 
 pkill -f "${FILE_NAME}"
 
@@ -29,4 +29,4 @@ sleep 1
 source "${TOSHY_CFG}/.venv/bin/activate"
 
 # start the script that will create the D-Bus object/interface
-python3 "${TOSHY_WLROOTS}/${FILE_NAME}.py"
+python3 "${TOSHY_COSMIC}/${FILE_NAME}.py"

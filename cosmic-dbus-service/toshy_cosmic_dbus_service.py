@@ -12,7 +12,7 @@
 # git+https://github.com/flacjacket/pywayland@db8fb1c3a29761a014cfbb57f84025ddf3882c3c
 
 
-print("(--) Starting D-Bus service to monitor wlr-foreign-toplevel-management protocol...")
+print("(--) Starting D-Bus service to monitor 'zcosmic_toplevel_info_v1'...")
 
 import os
 import sys
@@ -54,10 +54,10 @@ os.environ['PYTHONPATH'] = f'{parent_folder_path}:{current_folder_path}:{existin
 # local imports now that path is prepped
 import lib.env as env
 
-from protocols.wlr_foreign_toplevel_management_unstable_v1.zwlr_foreign_toplevel_manager_v1 import (
-    ZwlrForeignToplevelManagerV1,
-    ZwlrForeignToplevelManagerV1Proxy,
-    ZwlrForeignToplevelHandleV1
+from protocols.cosmic_toplevel_info_unstable_v1.zcosmic_toplevel_info_v1 import (
+    ZcosmicToplevelInfoV1,
+    ZcosmicToplevelInfoV1Proxy,
+    ZcosmicToplevelHandleV1
 )
 
 if os.name == 'posix' and os.geteuid() == 0:
@@ -98,7 +98,7 @@ sep_reps        = 80
 sep_char        = '='
 separator       = sep_char * sep_reps
 
-LOG_PFX = 'TOSHY_WLR_DBUS_SVC'
+LOG_PFX = 'TOSHY_COSMIC_DBUS_SVC'
 
 DISTRO_ID       = None
 DISTRO_VER      = None
@@ -112,40 +112,40 @@ def check_environment():
     """Retrieve the current environment from env module"""
     env_info: Dict[str, str] = env.get_env_info()   # Returns a dict
     global DISTRO_ID, DISTRO_VER, VARIANT_ID, SESSION_TYPE, DESKTOP_ENV, DE_MAJ_VER
-    DISTRO_ID       = env_info.get('DISTRO_ID')
-    DISTRO_VER      = env_info.get('DISTRO_VER')
-    VARIANT_ID      = env_info.get('VARIANT_ID')
-    SESSION_TYPE    = env_info.get('SESSION_TYPE')
-    DESKTOP_ENV     = env_info.get('DESKTOP_ENV')
-    DE_MAJ_VER      = env_info.get('DE_MAJ_VER')
+    DISTRO_ID       = env_info.get('DISTRO_ID', 'keymissing')
+    DISTRO_VER      = env_info.get('DISTRO_VER', 'keymissing')
+    VARIANT_ID      = env_info.get('VARIANT_ID', 'keymissing')
+    SESSION_TYPE    = env_info.get('SESSION_TYPE', 'keymissing')
+    DESKTOP_ENV     = env_info.get('DESKTOP_ENV', 'keymissing')
+    DE_MAJ_VER      = env_info.get('DE_MAJ_VER', 'keymissing')
 
 
 check_environment()
 
-# TODO: put the DE restriction back in place, find a way to identify wlroots compositors
-if SESSION_TYPE == 'wayland': # and DESKTOP_ENV not in ['kde', 'plasma', 'gnome', 'cinnamon']:
+# TODO: Get this script to stop if not in COSMIC
+if SESSION_TYPE == 'wayland' and DESKTOP_ENV in ['cosmic']:
     pass
 else:
-    debug(f'{LOG_PFX}: Probably not a wlroots environment. Exiting.')
+    debug(f'{LOG_PFX}: Probably not COSMIC environment. Exiting.')
     time.sleep(2)
     sys.exit(0)
 
 
-debug("")
-debug(  f'Toshy KDE D-Bus service script sees this environment:'
-        f'\n\t{DISTRO_ID        = }'
-        f'\n\t{DISTRO_VER       = }'
-        f'\n\t{VARIANT_ID       = }'
-        f'\n\t{SESSION_TYPE     = }'
-        f'\n\t{DESKTOP_ENV      = }'
-        f'\n\t{DE_MAJ_VER       = }\n', ctx="CG")
+# debug("")
+# debug(  f'Toshy COSMIC D-Bus service script sees this environment:'
+#         f'\n\t{DISTRO_ID        = }'
+#         f'\n\t{DISTRO_VER       = }'
+#         f'\n\t{VARIANT_ID       = }'
+#         f'\n\t{SESSION_TYPE     = }'
+#         f'\n\t{DESKTOP_ENV      = }'
+#         f'\n\t{DE_MAJ_VER       = }\n', ctx="CG")
 
 
-TOSHY_WLR_DBUS_SVC_PATH         = '/org/toshy/Wlroots'
-TOSHY_WLR_DBUS_SVC_IFACE        = 'org.toshy.Wlroots'
+TOSHY_COSMIC_DBUS_SVC_PATH      = '/org/toshy/Cosmic'
+TOSHY_COSMIC_DBUS_SVC_IFACE     = 'org.toshy.Cosmic'
 
-ERR_NO_WLR_APP_CLASS = "ERR_no_wlr_app_class"
-ERR_NO_WLR_WDW_TITLE = "ERR_no_wlr_wdw_title"
+ERR_NO_COSMIC_APP_CLASS = "ERR_no_cosmic_app_class"
+ERR_NO_COSMIC_WDW_TITLE = "ERR_no_cosmic_wdw_title"
 
 
 class WaylandClient:
@@ -155,8 +155,8 @@ class WaylandClient:
         self.toplevel_manager = None
         self.wl_fd = None
         self.wdw_handles_dct = {}
-        self.active_app_class = ERR_NO_WLR_APP_CLASS
-        self.active_wdw_title = ERR_NO_WLR_WDW_TITLE
+        self.active_app_class = ERR_NO_COSMIC_APP_CLASS
+        self.active_wdw_title = ERR_NO_COSMIC_WDW_TITLE
 
     def connect(self):
         try:
@@ -167,15 +167,18 @@ class WaylandClient:
             self.registry.dispatcher["global"] = self.handle_registry_global
             self.display.roundtrip()
         except Exception as e:
-            print(f"Failed to connect to the Wayland display: {e}")
+            debug(f"Failed to connect to the Wayland display: {e}")
             clean_shutdown()
 
     def handle_registry_global(self, registry, id_, interface_name, version):
-        if interface_name == 'zwlr_foreign_toplevel_manager_v1':
-            self.toplevel_manager = registry.bind(id_, ZwlrForeignToplevelManagerV1, version)
+        # COSMIC is using their own namespace instead of 'zwlr_foreign_toplevel_manager_v1'
+        if interface_name == 'zcosmic_toplevel_info_v1':
+            self.toplevel_manager = registry.bind(id_, ZcosmicToplevelInfoV1, version)
             self.toplevel_manager.dispatcher["toplevel"] = self.handle_toplevel_event
 
-    def handle_toplevel_event(self, toplevel_manager, toplevel_handle):
+    def handle_toplevel_event(self,
+                                toplevel_manager: ZcosmicToplevelInfoV1Proxy,
+                                toplevel_handle: ZcosmicToplevelHandleV1):
         toplevel_handle.dispatcher["app_id"] = self.handle_app_id_change
         toplevel_handle.dispatcher["title"] = self.handle_title_change
         toplevel_handle.dispatcher['closed'] = self.handle_window_closed
@@ -194,27 +197,27 @@ class WaylandClient:
     def handle_window_closed(self, handle):
         if handle in self.wdw_handles_dct:
             del self.wdw_handles_dct[handle]
-        print(f"Window {handle} has been closed.")
+        # print(f"Window {handle} has been closed.")
 
     def handle_state_change(self, handle, states_bytes):
         states = []
         if isinstance(states_bytes, bytes):
             states = list(states_bytes)
-        if ZwlrForeignToplevelHandleV1.state.activated.value in states:
+        if ZcosmicToplevelHandleV1.state.activated.value in states:
             self.active_app_class = self.wdw_handles_dct[handle]['app_id']
             self.active_wdw_title = self.wdw_handles_dct[handle]['title']
-            print()
-            print(f"Active app class: '{self.active_app_class}'")
-            print(f"Active window title: '{self.active_wdw_title}'")
-            self.print_running_applications()
+            # print()
+            # print(f"Active app class: '{self.active_app_class}'")
+            # print(f"Active window title: '{self.active_wdw_title}'")
+            # self.print_running_applications()
 
     def print_running_applications(self):
         print("\nList of running applications:")
         print(f"{'App ID':<30} {'Title':<50}")
         print("-" * 80)
         for handle, info in self.wdw_handles_dct.items():
-            app_id = info.get('app_id', ERR_NO_WLR_APP_CLASS)
-            title = info.get('title', ERR_NO_WLR_WDW_TITLE)
+            app_id = info.get('app_id', ERR_NO_COSMIC_APP_CLASS)
+            title = info.get('title', ERR_NO_COSMIC_WDW_TITLE)
             print(f"{app_id:<30} {title:<50}")
         print()
 
@@ -226,9 +229,9 @@ class DBUS_Object(dbus.service.Object):
         self.interface_name     = interface_name
         self.dbus_svc_bus_name  = dbus.service.BusName(interface_name, bus=session_bus)
 
-    @dbus.service.method(TOSHY_WLR_DBUS_SVC_IFACE, out_signature='a{sv}')
+    @dbus.service.method(TOSHY_COSMIC_DBUS_SVC_IFACE, out_signature='a{sv}')
     def GetActiveWindow(self):
-        debug(f'{LOG_PFX}: GetActiveWindow() called...')
+        # debug(f'{LOG_PFX}: GetActiveWindow() called...')
         return {'app_id':           wl_client.active_app_class,
                 'title':            wl_client.active_wdw_title}
 
@@ -253,7 +256,7 @@ def main():
 
     # Create the DBUS_Object
     try:
-        DBUS_Object(session_bus, TOSHY_WLR_DBUS_SVC_PATH, TOSHY_WLR_DBUS_SVC_IFACE)
+        DBUS_Object(session_bus, TOSHY_COSMIC_DBUS_SVC_PATH, TOSHY_COSMIC_DBUS_SVC_IFACE)
     except DBusException as dbus_error:
         error(f"{LOG_PFX}: Error occurred while creating D-Bus service object:\n\t{dbus_error}")
         sys.exit(1)

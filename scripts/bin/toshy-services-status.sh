@@ -42,7 +42,15 @@ export SYSTEMD_PAGER=""
 echo -e "\nCurrent status of Toshy systemd services..."
 echo "--------------------------------------------------------------------------------"
 
+systemctl --user status toshy-cosmic-dbus.service
+
+echo "--------------------------------------------------------------------------------"
+
 systemctl --user status toshy-kde-dbus.service
+
+echo "--------------------------------------------------------------------------------"
+
+systemctl --user status toshy-wlroots-dbus.service
 
 echo "--------------------------------------------------------------------------------"
 

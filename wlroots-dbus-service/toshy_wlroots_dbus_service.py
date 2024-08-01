@@ -12,7 +12,7 @@
 # git+https://github.com/flacjacket/pywayland@db8fb1c3a29761a014cfbb57f84025ddf3882c3c
 
 
-print("(--) Starting D-Bus service to monitor 'zcosmic_toplevel_info_v1'...")
+print("(--) Starting D-Bus service to monitor wlr-foreign-toplevel-management protocol...")
 
 import os
 import sys
@@ -54,10 +54,10 @@ os.environ['PYTHONPATH'] = f'{parent_folder_path}:{current_folder_path}:{existin
 # local imports now that path is prepped
 import lib.env as env
 
-from protocols.cosmic_toplevel_info_unstable_v1.zcosmic_toplevel_info_v1 import (
-    ZcosmicToplevelInfoV1,
-    ZcosmicToplevelInfoV1Proxy,
-    ZcosmicToplevelHandleV1
+from protocols.wlr_foreign_toplevel_management_unstable_v1.zwlr_foreign_toplevel_manager_v1 import (
+    ZwlrForeignToplevelManagerV1,
+    ZwlrForeignToplevelManagerV1Proxy,
+    ZwlrForeignToplevelHandleV1
 )
 
 if os.name == 'posix' and os.geteuid() == 0:
@@ -131,23 +131,36 @@ else:
     sys.exit(0)
 
 
-debug("")
-debug(  f'Toshy KDE D-Bus service script sees this environment:'
-        f'\n\t{DISTRO_ID        = }'
-        f'\n\t{DISTRO_VER       = }'
-        f'\n\t{VARIANT_ID       = }'
-        f'\n\t{SESSION_TYPE     = }'
-        f'\n\t{DESKTOP_ENV      = }'
-        f'\n\t{DE_MAJ_VER       = }\n', ctx="CG")
+# debug("")
+# debug(  f'Toshy Wlroots D-Bus service script sees this environment:'
+#         f'\n\t{DISTRO_ID        = }'
+#         f'\n\t{DISTRO_VER       = }'
+#         f'\n\t{VARIANT_ID       = }'
+#         f'\n\t{SESSION_TYPE     = }'
+#         f'\n\t{DESKTOP_ENV      = }'
+#         f'\n\t{DE_MAJ_VER       = }\n', ctx="CG")
 
 
-# TODO: Make a different path/interface and a new method in keymapper for COSMIC?
-# For now this is just a duplicate of the `wlroots` D-Bus service script.
-TOSHY_COSMIC_DBUS_SVC_PATH      = '/org/toshy/Cosmic'
-TOSHY_COSMIC_DBUS_SVC_IFACE     = 'org.toshy.Cosmic'
+TOSHY_WLR_DBUS_SVC_PATH         = '/org/toshy/Wlroots'
+TOSHY_WLR_DBUS_SVC_IFACE        = 'org.toshy.Wlroots'
 
-ERR_NO_COSMIC_APP_CLASS = "ERR_no_cosmic_app_class"
-ERR_NO_COSMIC_WDW_TITLE = "ERR_no_cosmic_wdw_title"
+ERR_NO_WLR_APP_CLASS = "ERR_no_wlr_app_class"
+ERR_NO_WLR_WDW_TITLE = "ERR_no_wlr_wdw_title"
+
+COUNTDOWN_MS = 6000  # 6 seconds
+countdown_timer = COUNTDOWN_MS
+interface_is_bound = False
+
+
+def countdown_callback():
+    global countdown_timer
+    if interface_is_bound:
+        return False  # Stop calling this function
+    countdown_timer -= 100  # Decrement by 100ms
+    if countdown_timer <= 0:
+        debug("Failed to bind Wayland interface within timeout period. Wlroots exiting.")
+        clean_shutdown()
+    return True  # Continue calling this function
 
 
 class WaylandClient:
@@ -157,8 +170,8 @@ class WaylandClient:
         self.toplevel_manager = None
         self.wl_fd = None
         self.wdw_handles_dct = {}
-        self.active_app_class = ERR_NO_COSMIC_APP_CLASS
-        self.active_wdw_title = ERR_NO_COSMIC_WDW_TITLE
+        self.active_app_class = ERR_NO_WLR_APP_CLASS
+        self.active_wdw_title = ERR_NO_WLR_WDW_TITLE
 
     def connect(self):
         try:
@@ -169,18 +182,17 @@ class WaylandClient:
             self.registry.dispatcher["global"] = self.handle_registry_global
             self.display.roundtrip()
         except Exception as e:
-            print(f"Failed to connect to the Wayland display: {e}")
+            error(f"Failed to connect to the Wayland display: {e}")
             clean_shutdown()
 
     def handle_registry_global(self, registry, id_, interface_name, version):
-        # COSMIC is using their own namespace instead of 'zwlr_foreign_toplevel_manager_v1'
-        if interface_name == 'zcosmic_toplevel_info_v1':
-            self.toplevel_manager = registry.bind(id_, ZcosmicToplevelInfoV1, version)
+        global interface_is_bound
+        if interface_name == 'zwlr_foreign_toplevel_manager_v1':
+            self.toplevel_manager = registry.bind(id_, ZwlrForeignToplevelManagerV1, version)
             self.toplevel_manager.dispatcher["toplevel"] = self.handle_toplevel_event
+            interface_is_bound = True
 
-    def handle_toplevel_event(self,
-                                toplevel_manager: ZcosmicToplevelInfoV1Proxy,
-                                toplevel_handle: ZcosmicToplevelHandleV1):
+    def handle_toplevel_event(self, toplevel_manager, toplevel_handle):
         toplevel_handle.dispatcher["app_id"] = self.handle_app_id_change
         toplevel_handle.dispatcher["title"] = self.handle_title_change
         toplevel_handle.dispatcher['closed'] = self.handle_window_closed
@@ -199,27 +211,27 @@ class WaylandClient:
     def handle_window_closed(self, handle):
         if handle in self.wdw_handles_dct:
             del self.wdw_handles_dct[handle]
-        print(f"Window {handle} has been closed.")
+        # print(f"Window {handle} has been closed.")
 
     def handle_state_change(self, handle, states_bytes):
         states = []
         if isinstance(states_bytes, bytes):
             states = list(states_bytes)
-        if ZcosmicToplevelHandleV1.state.activated.value in states:
+        if ZwlrForeignToplevelHandleV1.state.activated.value in states:
             self.active_app_class = self.wdw_handles_dct[handle]['app_id']
             self.active_wdw_title = self.wdw_handles_dct[handle]['title']
-            print()
-            print(f"Active app class: '{self.active_app_class}'")
-            print(f"Active window title: '{self.active_wdw_title}'")
-            self.print_running_applications()
+            # print()
+            # print(f"Active app class: '{self.active_app_class}'")
+            # print(f"Active window title: '{self.active_wdw_title}'")
+            # self.print_running_applications()
 
     def print_running_applications(self):
         print("\nList of running applications:")
         print(f"{'App ID':<30} {'Title':<50}")
         print("-" * 80)
         for handle, info in self.wdw_handles_dct.items():
-            app_id = info.get('app_id', ERR_NO_COSMIC_APP_CLASS)
-            title = info.get('title', ERR_NO_COSMIC_WDW_TITLE)
+            app_id = info.get('app_id', ERR_NO_WLR_APP_CLASS)
+            title = info.get('title', ERR_NO_WLR_WDW_TITLE)
             print(f"{app_id:<30} {title:<50}")
         print()
 
@@ -231,9 +243,9 @@ class DBUS_Object(dbus.service.Object):
         self.interface_name     = interface_name
         self.dbus_svc_bus_name  = dbus.service.BusName(interface_name, bus=session_bus)
 
-    @dbus.service.method(TOSHY_COSMIC_DBUS_SVC_IFACE, out_signature='a{sv}')
+    @dbus.service.method(TOSHY_WLR_DBUS_SVC_IFACE, out_signature='a{sv}')
     def GetActiveWindow(self):
-        debug(f'{LOG_PFX}: GetActiveWindow() called...')
+        # debug(f'{LOG_PFX}: GetActiveWindow() called...')
         return {'app_id':           wl_client.active_app_class,
                 'title':            wl_client.active_wdw_title}
 
@@ -258,10 +270,10 @@ def main():
 
     # Create the DBUS_Object
     try:
-        DBUS_Object(session_bus, TOSHY_COSMIC_DBUS_SVC_PATH, TOSHY_COSMIC_DBUS_SVC_IFACE)
+        DBUS_Object(session_bus, TOSHY_WLR_DBUS_SVC_PATH, TOSHY_WLR_DBUS_SVC_IFACE)
     except DBusException as dbus_error:
         error(f"{LOG_PFX}: Error occurred while creating D-Bus service object:\n\t{dbus_error}")
-        sys.exit(1)
+        clean_shutdown()
 
     global wl_client        # Is this necessary?
     wl_client = WaylandClient()
@@ -270,6 +282,9 @@ def main():
     GLib.io_add_watch(wl_client.wl_fd, GLib.IO_IN, wayland_event_callback, wl_client.display)
 
     wl_client.display.roundtrip() # get the event cycle started (callback never gets called without this)
+
+    # Add the countdown callback to the GLib main loop with a 100ms interval
+    GLib.timeout_add(100, countdown_callback)
 
     # Run the main loop
     # dbus.mainloop.glib.DBusGMainLoop().run()

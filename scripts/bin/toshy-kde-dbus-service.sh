@@ -18,9 +18,9 @@ fi
 
 TOSHY_CFG="${HOME}/.config/toshy"
 TOSHY_KDE="${TOSHY_CFG}/kde-kwin-dbus-service"
+FILE_NAME="toshy_kde_dbus_service"
 
-
-pkill -f "toshy_kde_dbus_service"
+pkill -f "${FILE_NAME}"
 
 sleep 1
 
@@ -32,4 +32,4 @@ source "${TOSHY_CFG}/.venv/bin/activate"
 nohup python3 "${TOSHY_KDE}/toshy_kde_kwin_script_setup.py" &
 
 # start the script that will create the D-Bus object/interface
-python3 "${TOSHY_KDE}/toshy_kde_dbus_service.py"
+python3 "${TOSHY_KDE}/${FILE_NAME}.py"

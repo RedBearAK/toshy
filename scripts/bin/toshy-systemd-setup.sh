@@ -42,7 +42,9 @@ mkdir -p "$HOME/.config/autostart"
 # Stop, disable, and remove existing unit files
 eval "$LOCAL_BIN_PATH/toshy-systemd-remove"
 
+cp -f "$SYSD_UNIT_PATH/toshy-cosmic-dbus.service"           "$USER_SYSD_PATH/"
 cp -f "$SYSD_UNIT_PATH/toshy-kde-dbus.service"              "$USER_SYSD_PATH/"
+cp -f "$SYSD_UNIT_PATH/toshy-wlroots-dbus.service"          "$USER_SYSD_PATH/"
 cp -f "$SYSD_UNIT_PATH/toshy-config.service"                "$USER_SYSD_PATH/"
 cp -f "$SYSD_UNIT_PATH/toshy-session-monitor.service"       "$USER_SYSD_PATH/"
 
@@ -68,7 +70,9 @@ sleep $DELAY
 echo -e "\nStarting Toshy systemd services..."
 
 service_names=(
+    "toshy-cosmic-dbus.service"
     "toshy-kde-dbus.service"
+    "toshy-wlroots-dbus.service"
     "toshy-config.service"
     "toshy-session-monitor.service"
 )
@@ -83,7 +87,17 @@ export SYSTEMD_PAGER=""
 
 echo -e "\nDisplaying status of Toshy systemd services...\n"
 
+systemctl --user status toshy-cosmic-dbus.service
+echo ""
+
+sleep $DELAY
+
 systemctl --user status toshy-kde-dbus.service
+echo ""
+
+sleep $DELAY
+
+systemctl --user status toshy-wlroots-dbus.service
 echo ""
 
 sleep $DELAY

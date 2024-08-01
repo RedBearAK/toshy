@@ -42,9 +42,11 @@ echo -e "\nRemoving Toshy systemd services...\n"
 
 
 service_names=(
+    "toshy-cosmic-dbus.service"
     "toshy-kde-dbus.service"
-    "toshy-session-monitor.service"
+    "toshy-wlroots-dbus.service"
     "toshy-config.service"
+    "toshy-session-monitor.service"
 )
 
 for service_name in "${service_names[@]}"; do

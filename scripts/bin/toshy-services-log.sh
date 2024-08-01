@@ -51,9 +51,19 @@ trap 'clean_exit' SIGINT
 
 echo "Showing systemd journal messages for Toshy services (since last boot):"
 
+
+# Check if stdbuf is available and set the appropriate command
+# Hopefully this may stop certain terminals from holding back journal
+# output and showing new output in large bursts.
+if command -v stdbuf >/dev/null 2>&1; then
+    STDBUF_CMD="stdbuf -oL"
+else
+    STDBUF_CMD=""
+fi
+
 # -b flag to only show messages since last boot
 # -f flag to follow new journal output
 # -n100 to show the last 100 lines (max) of existing log output
 # journalctl --user -n100 -b -f -u toshy-config -u toshy-session-monitor -u toshy-kde-dbus
 # newer(?) syntax to do the same thing? 
-journalctl -n100 -b -f --user-unit 'toshy-*'
+${STDBUF_CMD} journalctl -n100 -b -f --user-unit 'toshy-*'
