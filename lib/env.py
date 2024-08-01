@@ -220,7 +220,32 @@ def get_env_info():
     ########################################################################
     ##  Get desktop environment
     # _desktop_env = os.environ.get("XDG_SESSION_DESKTOP") or os.environ.get("XDG_CURRENT_DESKTOP")
-    _desktop_env = os.environ.get("XDG_CURRENT_DESKTOP") or os.environ.get("XDG_SESSION_DESKTOP")
+    _desktop_env = (
+        os.environ.get("XDG_CURRENT_DESKTOP") or
+        os.environ.get("XDG_SESSION_DESKTOP") or
+        os.environ.get("DESKTOP_SESSION")
+    )
+
+
+    def is_qtile_running():
+        """Utility function to detect Qtile if the usual environment vars are not set/empty"""
+        xdg_cache_home = os.environ.get('XDG_CACHE_HOME', os.path.expanduser('~/.cache'))
+        wayland_display = os.environ.get('WAYLAND_DISPLAY')
+        display = os.environ.get('DISPLAY')
+
+        if wayland_display:
+            socket_path = os.path.join(xdg_cache_home, f'qtile/qtilesocket.{wayland_display}')
+        elif display:
+            socket_path = os.path.join(xdg_cache_home, f'qtile/qtilesocket.{display}')
+        else:
+            return False
+
+        return os.path.exists(socket_path)
+
+
+    # Check for Qtile if the environment variables were not set/empty
+    if not _desktop_env and is_qtile_running():
+        _desktop_env = 'qtile'
 
     if not _desktop_env:
         _desktop_env = None
@@ -249,8 +274,13 @@ def get_env_info():
         'LXDE':                     'lxde',
         'LXQt':                     'lxqt',
         'MATE':                     'mate',
+        'Niri':                     'niri',
         'Pantheon':                 'pantheon',
         'Plasma':                   'kde',
+        'qtile:wlroots':            'qtile',
+        'Qtile':                    'qtile',
+        'qtilewayland':             'qtile',
+        'qtilex11':                 'qtile',
         'Sway':                     'sway',
         'SwayWM':                   'sway',
         'Trinity':                  'trinity',
