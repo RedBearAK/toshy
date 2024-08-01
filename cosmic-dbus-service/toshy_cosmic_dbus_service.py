@@ -131,14 +131,14 @@ else:
     sys.exit(0)
 
 
-debug("")
-debug(  f'Toshy KDE D-Bus service script sees this environment:'
-        f'\n\t{DISTRO_ID        = }'
-        f'\n\t{DISTRO_VER       = }'
-        f'\n\t{VARIANT_ID       = }'
-        f'\n\t{SESSION_TYPE     = }'
-        f'\n\t{DESKTOP_ENV      = }'
-        f'\n\t{DE_MAJ_VER       = }\n', ctx="CG")
+# debug("")
+# debug(  f'Toshy COSMIC D-Bus service script sees this environment:'
+#         f'\n\t{DISTRO_ID        = }'
+#         f'\n\t{DISTRO_VER       = }'
+#         f'\n\t{VARIANT_ID       = }'
+#         f'\n\t{SESSION_TYPE     = }'
+#         f'\n\t{DESKTOP_ENV      = }'
+#         f'\n\t{DE_MAJ_VER       = }\n', ctx="CG")
 
 
 TOSHY_COSMIC_DBUS_SVC_PATH      = '/org/toshy/Cosmic'
