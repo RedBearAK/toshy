@@ -237,6 +237,10 @@ class DBUS_Object(dbus.service.Object):
 
 
 def wayland_event_callback(fd, condition, display: Display):
+    if condition & GLib.IO_ERR or condition & GLib.IO_HUP:
+        error("Wayland display file descriptor is no longer valid.")
+        clean_shutdown()  # Perform cleanup and shutdown
+        return False  # Stop calling this function
     if condition & GLib.IO_IN:
         # display.dispatch()    # dispatch() fails to prompt new events to appear
         # dispatch() also seems to trigger the callback to get called many times in a loop,
