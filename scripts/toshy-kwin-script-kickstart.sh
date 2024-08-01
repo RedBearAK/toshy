@@ -25,7 +25,7 @@ icon_file="${HOME}/.local/share/icons/toshy_app_icon_rainbow.svg"
 icon_name="toshy_app_icon_rainbow"
 time1_s=2
 time2_s=3
-message="Kickstarting the Toshy KWin script."
+message="Kickstarting Toshy window context."
 
 
 if command -v timeout &> /dev/null; then

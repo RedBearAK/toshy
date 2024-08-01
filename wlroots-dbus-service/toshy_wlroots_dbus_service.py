@@ -20,6 +20,7 @@ import dbus
 import time
 import signal
 import platform
+import subprocess
 import dbus.service
 import dbus.mainloop.glib
 import xwaykeyz.lib.logger
@@ -205,6 +206,15 @@ class WaylandClient:
             self.toplevel_manager = registry.bind(id_, ZwlrForeignToplevelManagerV1, version)
             self.toplevel_manager.dispatcher["toplevel"] = self.handle_toplevel_event
             interface_is_bound = True
+            # run the kickstart script here to generate a KWin event (hopefully)
+            kickstart_script    = 'toshy-kwin-script-kickstart.sh'
+            kickstart_cmd       = os.path.join(home_dir, '.config', 'toshy', 'scripts', kickstart_script)
+            try:
+                subprocess.Popen([kickstart_cmd], stderr=DEVNULL, stdout=DEVNULL)
+            except subprocess.CalledProcessError as proc_err:
+                error(f"Problem running the kickstart script: {proc_err}")
+            except FileNotFoundError as file_err:
+                error(f"Kickstart script not found:\n\t{file_err}")
 
     def handle_toplevel_event(self, toplevel_manager, toplevel_handle):
         toplevel_handle.dispatcher["app_id"] = self.handle_app_id_change
