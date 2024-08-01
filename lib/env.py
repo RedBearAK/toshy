@@ -220,7 +220,11 @@ def get_env_info():
     ########################################################################
     ##  Get desktop environment
     # _desktop_env = os.environ.get("XDG_SESSION_DESKTOP") or os.environ.get("XDG_CURRENT_DESKTOP")
-    _desktop_env = os.environ.get("XDG_CURRENT_DESKTOP") or os.environ.get("XDG_SESSION_DESKTOP")
+    _desktop_env = (
+        os.environ.get("XDG_CURRENT_DESKTOP") or
+        os.environ.get("XDG_SESSION_DESKTOP") or
+        os.environ.get("DESKTOP_SESSION")
+    )
 
 
     def is_qtile_running():
@@ -270,8 +274,13 @@ def get_env_info():
         'LXDE':                     'lxde',
         'LXQt':                     'lxqt',
         'MATE':                     'mate',
+        'Niri':                     'niri',
         'Pantheon':                 'pantheon',
         'Plasma':                   'kde',
+        'qtile:wlroots':            'qtile',
+        'Qtile':                    'qtile',
+        'qtilewayland':             'qtile',
+        'qtilex11':                 'qtile',
         'Sway':                     'sway',
         'SwayWM':                   'sway',
         'Trinity':                  'trinity',
