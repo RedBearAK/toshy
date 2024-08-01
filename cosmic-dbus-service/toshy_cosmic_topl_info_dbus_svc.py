@@ -143,11 +143,11 @@ debug(  f'Toshy KDE D-Bus service script sees this environment:'
 
 # TODO: Make a different path/interface and a new method in keymapper for COSMIC?
 # For now this is just a duplicate of the `wlroots` D-Bus service script.
-TOSHY_WLR_DBUS_SVC_PATH         = '/org/toshy/Wlroots'
-TOSHY_WLR_DBUS_SVC_IFACE        = 'org.toshy.Wlroots'
+TOSHY_COSMIC_DBUS_SVC_PATH      = '/org/toshy/Cosmic'
+TOSHY_COSMIC_DBUS_SVC_IFACE     = 'org.toshy.Cosmic'
 
-ERR_NO_WLR_APP_CLASS = "ERR_no_cosmic_app_class"
-ERR_NO_WLR_WDW_TITLE = "ERR_no_cosmic_wdw_title"
+ERR_NO_COSMIC_APP_CLASS = "ERR_no_cosmic_app_class"
+ERR_NO_COSMIC_WDW_TITLE = "ERR_no_cosmic_wdw_title"
 
 
 class WaylandClient:
@@ -157,8 +157,8 @@ class WaylandClient:
         self.toplevel_manager = None
         self.wl_fd = None
         self.wdw_handles_dct = {}
-        self.active_app_class = ERR_NO_WLR_APP_CLASS
-        self.active_wdw_title = ERR_NO_WLR_WDW_TITLE
+        self.active_app_class = ERR_NO_COSMIC_APP_CLASS
+        self.active_wdw_title = ERR_NO_COSMIC_WDW_TITLE
 
     def connect(self):
         try:
@@ -218,8 +218,8 @@ class WaylandClient:
         print(f"{'App ID':<30} {'Title':<50}")
         print("-" * 80)
         for handle, info in self.wdw_handles_dct.items():
-            app_id = info.get('app_id', ERR_NO_WLR_APP_CLASS)
-            title = info.get('title', ERR_NO_WLR_WDW_TITLE)
+            app_id = info.get('app_id', ERR_NO_COSMIC_APP_CLASS)
+            title = info.get('title', ERR_NO_COSMIC_WDW_TITLE)
             print(f"{app_id:<30} {title:<50}")
         print()
 
@@ -231,7 +231,7 @@ class DBUS_Object(dbus.service.Object):
         self.interface_name     = interface_name
         self.dbus_svc_bus_name  = dbus.service.BusName(interface_name, bus=session_bus)
 
-    @dbus.service.method(TOSHY_WLR_DBUS_SVC_IFACE, out_signature='a{sv}')
+    @dbus.service.method(TOSHY_COSMIC_DBUS_SVC_IFACE, out_signature='a{sv}')
     def GetActiveWindow(self):
         debug(f'{LOG_PFX}: GetActiveWindow() called...')
         return {'app_id':           wl_client.active_app_class,
@@ -258,7 +258,7 @@ def main():
 
     # Create the DBUS_Object
     try:
-        DBUS_Object(session_bus, TOSHY_WLR_DBUS_SVC_PATH, TOSHY_WLR_DBUS_SVC_IFACE)
+        DBUS_Object(session_bus, TOSHY_COSMIC_DBUS_SVC_PATH, TOSHY_COSMIC_DBUS_SVC_IFACE)
     except DBusException as dbus_error:
         error(f"{LOG_PFX}: Error occurred while creating D-Bus service object:\n\t{dbus_error}")
         sys.exit(1)
