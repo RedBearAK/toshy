@@ -158,7 +158,7 @@ def countdown_callback():
         return False  # Stop calling this function
     countdown_timer -= 100  # Decrement by 100ms
     if countdown_timer <= 0:
-        error("Failed to bind the required Wayland interface within the timeout period.")
+        debug("Failed to bind Wayland interface within timeout period. Wlroots exiting.")
         clean_shutdown()
     return True  # Continue calling this function
 
