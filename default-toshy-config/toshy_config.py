@@ -191,10 +191,14 @@ OVERRIDE_SESSION_TYPE           = None
 OVERRIDE_DESKTOP_ENV            = None
 OVERRIDE_DE_MAJ_VER             = None
 
-# For wlroots-based Wayland compositors, try using 'wlroots' here, like this:
-# override_context_method         = 'wlroots'
-# Compositor must implement `zwlr_foreign_toplevel_manager_unstable_v1` protocol
-override_context_method         = None
+wlroots_compositors             = [
+    # Comma-separated list of Wayland desktop environments or window managers
+    # that should try to use the 'wlroots' window context provider. Use the 
+    # 'DESKTOP_ENV' name that appears when running `toshy-env`. 
+    # 'obscurewm',
+    # 'unknownwm',
+
+]
 
 ###  SLICE_MARK_END: env_overrides  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 ###################################################################################################
@@ -225,20 +229,21 @@ debug(  f'Toshy config sees this environment:'
         f'\n\t{DE_MAJ_VER       = }\n', ctx="CG")
 
 
-# This var won't exist in older Toshy configs, until user adds it to 'env_overrides' slice.
-# To prevent errors, we make sure it exists and inherits from existing user variable.
-override_context_method = locals().get('override_context_method', False)
+# Make sure the 'wlroots_compositors' list variable exists before checking it.
+# Older config files won't have it in the 'env_overrides' slice. 
+wlroots_compositors = locals().get('wlroots_compositors', [])
 
-# Wayland window context methods are specific to different desktop environments
-# An override can be used to choose a method like 'wlroots'
-# Check `xwaykeyz` module `lib/window_context.py` to see all available methods
-if override_context_method:
-    debug(f"{override_context_method = }")
-    _desktop_env = override_context_method
+# Direct the keymapper to try to use `wlroots` window context for
+# all DEs/WMs in user list, if list is not empty.
+if wlroots_compositors and DESKTOP_ENV in wlroots_compositors:
+    debug(f"Will use 'wlroots' context provider for '{DESKTOP_ENV}' DE/WM", ctx="CG")
+    debug("File an issue on GitHub repo if this works for your DE/WM.", ctx="CG")
+    _desktop_env = 'wlroots'
 else:
     _desktop_env = DESKTOP_ENV
 
 try:
+    # Help the keymapper select the correct window context provider object
     environ_api(session_type = SESSION_TYPE, wl_desktop_env = _desktop_env) # type: ignore
 except NameError:
     error(f"The API function 'environ_api' is not defined yet. Wrong keymapper branch?")
