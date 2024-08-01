@@ -211,7 +211,7 @@ class WaylandClient:
     def handle_window_closed(self, handle):
         if handle in self.wdw_handles_dct:
             del self.wdw_handles_dct[handle]
-        print(f"Window {handle} has been closed.")
+        # print(f"Window {handle} has been closed.")
 
     def handle_state_change(self, handle, states_bytes):
         states = []
@@ -220,10 +220,10 @@ class WaylandClient:
         if ZwlrForeignToplevelHandleV1.state.activated.value in states:
             self.active_app_class = self.wdw_handles_dct[handle]['app_id']
             self.active_wdw_title = self.wdw_handles_dct[handle]['title']
-            print()
-            print(f"Active app class: '{self.active_app_class}'")
-            print(f"Active window title: '{self.active_wdw_title}'")
-            self.print_running_applications()
+            # print()
+            # print(f"Active app class: '{self.active_app_class}'")
+            # print(f"Active window title: '{self.active_wdw_title}'")
+            # self.print_running_applications()
 
     def print_running_applications(self):
         print("\nList of running applications:")
@@ -245,7 +245,7 @@ class DBUS_Object(dbus.service.Object):
 
     @dbus.service.method(TOSHY_WLR_DBUS_SVC_IFACE, out_signature='a{sv}')
     def GetActiveWindow(self):
-        debug(f'{LOG_PFX}: GetActiveWindow() called...')
+        # debug(f'{LOG_PFX}: GetActiveWindow() called...')
         return {'app_id':           wl_client.active_app_class,
                 'title':            wl_client.active_wdw_title}
 
