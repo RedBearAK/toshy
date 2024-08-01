@@ -4574,7 +4574,8 @@ if DESKTOP_ENV == 'gnome':
 
 if DESKTOP_ENV == 'hyprland':
     keymap("GenGUI overrides: Hyprland", {
-        C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # Hyprland (override in "User Apps" slice if necessary)
+        # C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # Open Launcher with Cmd+Space
+        C("RC-Space"):             [C("Super-d"), iEF2NT()],        # Open Launcher with Cmd+Space
     }, when = lambda ctx:
         cnfg.screen_has_focus and
         matchProps(not_clas=remoteStr)(ctx)
