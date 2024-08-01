@@ -150,6 +150,7 @@ ERR_NO_WLR_WDW_TITLE = "ERR_no_wlr_wdw_title"
 COUNTDOWN_MS = 6000  # 6 seconds
 countdown_timer = COUNTDOWN_MS
 interface_is_bound = False
+interface_is_available = True
 
 
 def countdown_callback():
@@ -161,6 +162,15 @@ def countdown_callback():
         debug("Failed to bind Wayland interface within timeout period. Wlroots exiting.")
         clean_shutdown()
     return True  # Continue calling this function
+
+
+def check_interface_availability():
+    global interface_is_available
+    if not wl_client.toplevel_manager:  # Check if the interface is still available
+        debug("Wayland interface is no longer available. Toshy Wlroots D-Bus service exiting.")
+        interface_is_available = False
+        clean_shutdown()  # Perform cleanup and shutdown
+    return interface_is_available  # Continue calling this function if the interface is available
 
 
 class WaylandClient:
@@ -285,6 +295,9 @@ def main():
 
     # Add the countdown callback to the GLib main loop with a 100ms interval
     GLib.timeout_add(100, countdown_callback)
+
+    # Add the periodic check to the GLib main loop with a 1-second interval
+    GLib.timeout_add_seconds(1, check_interface_availability)
 
     # Run the main loop
     # dbus.mainloop.glib.DBusGMainLoop().run()
