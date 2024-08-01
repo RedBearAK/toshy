@@ -170,6 +170,10 @@ def check_interface_availability():
         debug("Wayland interface is no longer available. Toshy Wlroots D-Bus service exiting.")
         interface_is_available = False
         clean_shutdown()  # Perform cleanup and shutdown
+    if not wl_client.check_connection():  # Check if the connection to the Wayland server is still available
+        debug("Wayland interface is no longer available. Wlroots going dormant.")
+        interface_is_available = False
+        clean_shutdown()  # Perform cleanup and shutdown
     return interface_is_available  # Continue calling this function if the interface is available
 
 
@@ -235,6 +239,14 @@ class WaylandClient:
             # print(f"Active window title: '{self.active_wdw_title}'")
             # self.print_running_applications()
 
+    def check_connection(self):
+        try:
+            self.display.roundtrip()
+        except Exception as e:
+            error(f"Wayland connection lost: {e}")
+            return False
+        return True
+
     def print_running_applications(self):
         print("\nList of running applications:")
         print(f"{'App ID':<30} {'Title':<50}")
@@ -261,6 +273,10 @@ class DBUS_Object(dbus.service.Object):
 
 
 def wayland_event_callback(fd, condition, display: Display):
+    if condition & GLib.IO_ERR or condition & GLib.IO_HUP:
+        error("Wayland display file descriptor is no longer valid.")
+        clean_shutdown()  # Perform cleanup and shutdown
+        return False  # Stop calling this function
     if condition & GLib.IO_IN:
         # display.dispatch()    # dispatch() fails to prompt new events to appear
         # dispatch() also seems to trigger the callback to get called many times in a loop,
