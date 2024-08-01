@@ -39,7 +39,11 @@ fi
 
 echo -e "\nRe-enabling Toshy systemd services..."
 
+systemctl --user reenable toshy-cosmic-dbus.service
+sleep 0.5
 systemctl --user reenable toshy-kde-dbus.service
+sleep 0.5
+systemctl --user reenable toshy-wlroots-dbus.service
 sleep 0.5
 systemctl --user reenable toshy-config.service
 sleep 0.5

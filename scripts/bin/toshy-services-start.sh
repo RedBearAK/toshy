@@ -39,7 +39,11 @@ fi
 
 echo -e "\nStarting Toshy systemd services..."
 
+systemctl --user start toshy-cosmic-dbus.service
+sleep 0.5
 systemctl --user start toshy-kde-dbus.service
+sleep 0.5
+systemctl --user start toshy-wlroots-dbus.service
 sleep 0.5
 systemctl --user start toshy-config.service
 sleep 0.5
