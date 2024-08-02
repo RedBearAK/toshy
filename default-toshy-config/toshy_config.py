@@ -229,6 +229,16 @@ debug(  f'Toshy config sees this environment:'
         f'\n\t{DE_MAJ_VER       = }\n', ctx="CG")
 
 
+# TODO: Add a list here to concat with 'wlroots_compositors', instead of
+# continuing to add new environments into the 'wlroots' provider inside 
+# the keymapper. 
+known_wlroots_compositors = [
+    'hyprland',
+    'niri',
+    'qtile',
+    'sway',
+]
+
 # Make sure the 'wlroots_compositors' list variable exists before checking it.
 # Older config files won't have it in the 'env_overrides' slice. 
 wlroots_compositors = locals().get('wlroots_compositors', [])
@@ -3849,6 +3859,10 @@ keymap("VSCodes", {
 
     C("Shift-Super-RC-Right"):  C("Shift-Alt-Right"),           # Expand Selection (increase logical scope of smart selection) [alt]
     C("Shift-Super-RC-Left"):   C("Shift-Alt-Left"),            # Shrink Selection (reduce logical scope of smart selection) [alt]
+
+    # On Mac, Cmd+G and Shift+Cmd+G are for Find Next/Previous.
+    # Correct combo on Mac for Source Control sidebar panel is physical Shift+Ctrl+G
+    C("Shift-Super-g"):         C("Shift-C-g"),                 # Show Source Control
 
     # Wordwise remaining - for VS Code
     # Alt-F19 hack fixes Alt menu activation

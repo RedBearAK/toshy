@@ -927,6 +927,9 @@ def main():
             "XDG_SESSION_TYPE",
             "XDG_SESSION_DESKTOP",
             "XDG_CURRENT_DESKTOP",
+            "DESKTOP_SESSION",
+            "DISPLAY",
+            "WAYLAND_DISPLAY",
         ]
         subprocess.run(cmd_lst)
         # Start a separate thread to watch the status of Toshy systemd services (or script?)

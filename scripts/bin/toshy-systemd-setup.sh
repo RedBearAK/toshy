@@ -34,7 +34,7 @@ DELAY=0.5
 
 export PATH="$LOCAL_BIN_PATH:$PATH"
 
-echo -e "\nSetting up Toshy service unit files in $USER_SYSD_PATH..."
+echo -e "\nSetting up Toshy service unit files in '$USER_SYSD_PATH'..."
 
 mkdir -p "$USER_SYSD_PATH"
 mkdir -p "$HOME/.config/autostart"
@@ -57,7 +57,7 @@ sleep $DELAY
 # XDG_SESSION_TYPE XDG_SESSION_DESKTOP XDG_CURRENT_DESKTOP
 # Do this BEFORE daemon-reload? Maybe not necessary. 
 # But silence errors (e.g., "XDG_SESSION_DESKTOP not set, ignoring")
-vars_to_import="KDE_SESSION_VERSION PATH XDG_SESSION_TYPE XDG_SESSION_DESKTOP XDG_CURRENT_DESKTOP"
+vars_to_import="KDE_SESSION_VERSION PATH XDG_SESSION_TYPE XDG_SESSION_DESKTOP XDG_CURRENT_DESKTOP DESKTOP_SESSION DISPLAY WAYLAND_DISPLAY"
 # shellcheck disable=SC2086
 systemctl --user import-environment $vars_to_import >/dev/null 2>&1
 

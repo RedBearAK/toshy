@@ -12,6 +12,11 @@ log_and_echo() {
 
 log_and_echo "Processing user XDG Autostart folder contents..."
 
+# Let the environment be established for a bit before loading autostart items,
+# in case anything here needs to grab environment variables that may not be
+# set immediately upon login. 
+sleep 5
+
 
 for entry in ~/.config/autostart/*.desktop; do
     if [[ -f "$entry" ]]; then

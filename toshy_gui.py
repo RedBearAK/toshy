@@ -922,6 +922,9 @@ if __name__ == "__main__":
             "XDG_SESSION_TYPE",
             "XDG_SESSION_DESKTOP",
             "XDG_CURRENT_DESKTOP",
+            "DESKTOP_SESSION",
+            "DISPLAY",
+            "WAYLAND_DISPLAY",
         ]
         subprocess.run(cmd_lst)
         monitor_toshy_settings_thread = threading.Thread(target=fn_monitor_toshy_services)
