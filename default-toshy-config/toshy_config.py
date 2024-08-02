@@ -249,6 +249,9 @@ if wlroots_compositors and DESKTOP_ENV in wlroots_compositors:
     debug(f"Will use 'wlroots' context provider for '{DESKTOP_ENV}' DE/WM", ctx="CG")
     debug("File an issue on GitHub repo if this works for your DE/WM.", ctx="CG")
     _desktop_env = 'wlroots'
+elif DESKTOP_ENV in known_wlroots_compositors:
+    debug(f"DE/WM '{DESKTOP_ENV}' is in known 'wlroots' compositor list.", ctx="CG")
+    _desktop_env = 'wlroots'
 else:
     _desktop_env = DESKTOP_ENV
 
