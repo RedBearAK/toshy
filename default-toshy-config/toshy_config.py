@@ -156,7 +156,7 @@ icon_file_inverse   = os.path.join(assets_path, "toshy_app_icon_rainbow_inverse.
 # Toshy config file
 TOSHY_PART      = 'config'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Config file'
-APP_VERSION     = '2024.0727'
+APP_VERSION     = '2024.0801'
 
 # Settings object used to tweak preferences "live" between gui, tray and config.
 cnfg = Settings(current_folder_path)
@@ -726,20 +726,6 @@ not_win_type_rgx    = re.compile("IBM|Chromebook|Apple", re.I)
 
 # Instantiate a useful notification object class instance, to make notifications easier
 ntfy = NotificationManager(icon_file_active, title='Toshy Alert (Config)')
-
-
-# def isKBtype(kbtype: str, map=None):
-#     # guard against failure to give valid type arg
-#     if kbtype not in ['IBM', 'Chromebook', 'Windows', 'Apple']:
-#         raise ValueError(f"Invalid type given to isKBtype() function: '{kbtype}'"
-#                 f'\n\t Valid keyboard types (case sensitive): IBM | Chromebook | Windows | Apple')
-#     kbtype_cf = kbtype.casefold()
-#     KBTYPE_cf = KBTYPE.casefold() if isinstance(KBTYPE, str) else None
-
-#     def _isKBtype(ctx: KeyContext):
-#         # debug(f"KBTYPE: '{KBTYPE}' | isKBtype check from map: '{map}'")
-#         return kbtype_cf == KBTYPE_cf
-#     return _isKBtype
 
 
 def isKBtype(kbtype: str, map=None):

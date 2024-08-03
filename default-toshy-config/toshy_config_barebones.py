@@ -1,44 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import re
-import os
-import sys
-import time
-import shutil
-import inspect
-import subprocess
-
-from subprocess import DEVNULL
-from typing import Callable, List, Dict, Union
-
-from xwaykeyz.lib.logger import debug, error
-from xwaykeyz.lib.key_context import KeyContext
-from xwaykeyz.config_api import *
-
-
-###################################################################################################
-###  SLICE_MARK_START: keymapper_api  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
-
-# Keymapper-specific config settings - REMOVE OR SET TO DEFAULTS FOR DISTRIBUTION
-dump_diagnostics_key(Key.F15)   # default key: F15
-emergency_eject_key(Key.F16)    # default key: F16
-
-timeouts(
-    multipurpose        = 1,        # default: 1 sec
-    suspend             = 1,        # default: 1 sec, try 0.1 sec for touchpads
-)
-
-# Delays often needed for Wayland (at least in GNOME using shell extensions)
-throttle_delays(
-    key_pre_delay_ms    = 12,      # default: 0 ms, range: 0-150 ms, suggested: 1-50 ms
-    key_post_delay_ms   = 18,      # default: 0 ms, range: 0-150 ms, suggested: 1-100 ms
-)
-
-###  SLICE_MARK_END: keymapper_api  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
-###################################################################################################
-
-
-
 ###############################################################################
 ############################   Welcome to Toshy!   ############################
 ###  
@@ -54,6 +15,56 @@ throttle_delays(
 ###      (http://github.com/joshgoebel/keyszer)
 ###  
 ###############################################################################
+
+import re
+import os
+import sys
+import time
+import shutil
+import inspect
+import subprocess
+
+from typing import Callable, List, Dict, Union
+from subprocess import DEVNULL
+
+from xwaykeyz.config_api import *
+from xwaykeyz.lib.key_context import KeyContext
+from xwaykeyz.lib.logger import debug, error
+from xwaykeyz.models.modifier import Modifier
+
+
+###################################################################################################
+###  SLICE_MARK_START: keymapper_api  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
+
+# Keymapper-specific config settings - REMOVE OR SET TO DEFAULTS FOR DISTRIBUTION
+dump_diagnostics_key(Key.F15)   # default key: F15
+emergency_eject_key(Key.F16)    # default key: F16
+
+timeouts(
+    multipurpose        = 1,        # default: 1 sec
+    suspend             = 1,        # default: 1 sec, try 0.1 sec for touchpads
+)
+
+# Delays often needed for Wayland and/or virtual machines or slow systems
+throttle_delays(
+    key_pre_delay_ms    = 12,      # default: 0 ms, range: 0-150 ms, suggested: 1-50 ms
+    key_post_delay_ms   = 18,      # default: 0 ms, range: 0-150 ms, suggested: 1-100 ms
+)
+
+devices_api(
+    # Only the specified devices will be "grabbed" and watched for during 
+    # device connections/disconnections. 
+    only_devices = [
+        # 'Example Disconnected Keyboard',
+        # 'Example Connected Keyboard',
+    ]
+)
+
+###  SLICE_MARK_END: keymapper_api  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
+###################################################################################################
+
+
+
 
 home_dir = os.path.expanduser('~')
 icons_dir = os.path.join(home_dir, '.local', 'share', 'icons')
@@ -75,7 +86,7 @@ icon_file_inverse   = os.path.join(assets_path, "toshy_app_icon_rainbow_inverse.
 # Toshy config file
 TOSHY_PART      = 'config'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Barebones Config'
-APP_VERSION     = '2024.0322'
+APP_VERSION     = '2024.0801'
 
 # Settings object used to tweak preferences "live" between gui, tray and config.
 cnfg = Settings(current_folder_path)
@@ -103,32 +114,41 @@ debug(cnfg, ctx="CG")
 ###  SLICE_MARK_START: env_overrides  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 
 # MANUALLY set any environment information if the auto-identification isn't working:
-OVERRIDE_DISTRO_ID          = None
-OVERRIDE_DISTRO_VER         = None
-OVERRIDE_VARIANT_ID         = None
-OVERRIDE_SESSION_TYPE       = None
-OVERRIDE_DESKTOP_ENV        = None
-OVERRIDE_DE_MAJ_VER         = None
+OVERRIDE_DISTRO_ID              = None
+OVERRIDE_DISTRO_VER             = None
+OVERRIDE_VARIANT_ID             = None
+OVERRIDE_SESSION_TYPE           = None
+OVERRIDE_DESKTOP_ENV            = None
+OVERRIDE_DE_MAJ_VER             = None
+
+wlroots_compositors             = [
+    # Comma-separated list of Wayland desktop environments or window managers
+    # that should try to use the 'wlroots' window context provider. Use the 
+    # 'DESKTOP_ENV' name that appears when running `toshy-env`. 
+    # 'obscurewm',
+    # 'unknownwm',
+
+]
 
 ###  SLICE_MARK_END: env_overrides  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 ###################################################################################################
 
 # leave all of this alone!
-DISTRO_ID       = None
-DISTRO_VER      = None
-VARIANT_ID      = None
-SESSION_TYPE    = None
-DESKTOP_ENV     = None
-DE_MAJ_VER      = None
+DISTRO_ID                       = None
+DISTRO_VER                      = None
+VARIANT_ID                      = None
+SESSION_TYPE                    = None
+DESKTOP_ENV                     = None
+DE_MAJ_VER                      = None
 
-env_info: Dict[str, str] = lib.env.get_env_info()   # Returns a dict
+env_info: Dict[str, str] = lib.env.get_env_info()
 
-DISTRO_ID       = locals().get('OVERRIDE_DISTRO_ID')    or env_info.get('DISTRO_ID', 'keymissing')
-DISTRO_VER      = locals().get('OVERRIDE_DISTRO_VER')   or env_info.get('DISTRO_VER', 'keymissing')
-VARIANT_ID      = locals().get('OVERRIDE_VARIANT_ID')   or env_info.get('VARIANT_ID', 'keymissing')
+DISTRO_ID       = locals().get('OVERRIDE_DISTRO_ID')    or env_info.get('DISTRO_ID',    'keymissing')
+DISTRO_VER      = locals().get('OVERRIDE_DISTRO_VER')   or env_info.get('DISTRO_VER',   'keymissing')
+VARIANT_ID      = locals().get('OVERRIDE_VARIANT_ID')   or env_info.get('VARIANT_ID',   'keymissing')
 SESSION_TYPE    = locals().get('OVERRIDE_SESSION_TYPE') or env_info.get('SESSION_TYPE', 'keymissing')
-DESKTOP_ENV     = locals().get('OVERRIDE_DESKTOP_ENV')  or env_info.get('DESKTOP_ENV', 'keymissing')
-DE_MAJ_VER      = locals().get('OVERRIDE_DE_MAJ_VER')   or env_info.get('DE_MAJ_VER', 'keymissing')
+DESKTOP_ENV     = locals().get('OVERRIDE_DESKTOP_ENV')  or env_info.get('DESKTOP_ENV',  'keymissing')
+DE_MAJ_VER      = locals().get('OVERRIDE_DE_MAJ_VER')   or env_info.get('DE_MAJ_VER',   'keymissing')
 
 debug("")
 debug(  f'Toshy (barebones) config sees this environment:'
@@ -138,11 +158,38 @@ debug(  f'Toshy (barebones) config sees this environment:'
         f'\n\t{DESKTOP_ENV      = }'
         f'\n\t{DE_MAJ_VER       = }\n', ctx="CG")
 
+
+# TODO: Add a list here to concat with 'wlroots_compositors', instead of
+# continuing to add new environments into the 'wlroots' provider inside 
+# the keymapper. 
+known_wlroots_compositors = [
+    'hyprland',
+    'niri',
+    'qtile',
+    'sway',
+]
+
+# Make sure the 'wlroots_compositors' list variable exists before checking it.
+# Older config files won't have it in the 'env_overrides' slice. 
+wlroots_compositors = locals().get('wlroots_compositors', [])
+
+# Direct the keymapper to try to use `wlroots` window context for
+# all DEs/WMs in user list, if list is not empty.
+if wlroots_compositors and DESKTOP_ENV in wlroots_compositors:
+    debug(f"Will use 'wlroots' context provider for '{DESKTOP_ENV}' DE/WM", ctx="CG")
+    debug("File an issue on GitHub repo if this works for your DE/WM.", ctx="CG")
+    _desktop_env = 'wlroots'
+elif DESKTOP_ENV in known_wlroots_compositors:
+    debug(f"DE/WM '{DESKTOP_ENV}' is in known 'wlroots' compositor list.", ctx="CG")
+    _desktop_env = 'wlroots'
+else:
+    _desktop_env = DESKTOP_ENV
+
 try:
-    # Pylance will complain if function undefined, without 'ignore' comment
-    environ_api(session_type = SESSION_TYPE, wl_desktop_env = DESKTOP_ENV) # type: ignore
+    # Help the keymapper select the correct window context provider object
+    environ_api(session_type = SESSION_TYPE, wl_desktop_env = _desktop_env) # type: ignore
 except NameError:
-    debug(f"The API function 'environ_api' is not defined yet. Using wrong 'keyszer' branch?")
+    error(f"The API function 'environ_api' is not defined yet. Wrong keymapper branch?")
     pass
 
 
@@ -166,7 +213,7 @@ startup_timestamp = time.time()     # only gets evaluated once for each run of k
 # Variable to hold the keyboard type
 KBTYPE = None
 
-# Short names for the `keyszer` string and Unicode processing helper functions
+# Short names for the `xwaykeyz/keyszer` string and Unicode processing helper functions
 ST = to_US_keystrokes           # was 'to_keystrokes' originally
 UC = unicode_keystrokes
 ignore_combo = ComboHint.IGNORE
@@ -331,22 +378,18 @@ not_win_type_rgx    = re.compile("IBM|Chromebook|Apple", re.I)
 ###########################################################################################
 
 
-
 # Instantiate a useful notification object class instance, to make notifications easier
 ntfy = NotificationManager(icon_file_active, title='Toshy Alert (Config)')
 
 
 def isKBtype(kbtype: str, map=None):
-    # guard against failure to give valid type arg
+    # guard against failure to give valid type arg (we don't need to casefold anything with this)
     if kbtype not in ['IBM', 'Chromebook', 'Windows', 'Apple']:
         raise ValueError(f"Invalid type given to isKBtype() function: '{kbtype}'"
                 f'\n\t Valid keyboard types (case sensitive): IBM | Chromebook | Windows | Apple')
-    kbtype_cf = kbtype.casefold()
-    KBTYPE_cf = KBTYPE.casefold() if isinstance(KBTYPE, str) else None
-
     def _isKBtype(ctx: KeyContext):
         # debug(f"KBTYPE: '{KBTYPE}' | isKBtype check from map: '{map}'")
-        return kbtype_cf == KBTYPE_cf
+        return kbtype == KBTYPE
     return _isKBtype
 
 
@@ -566,7 +609,7 @@ def matchProps(*,
     current_timestamp = time.time()
     time_elapsed = current_timestamp - startup_timestamp
 
-    # Bypass all guard clauses if more than 10 seconds have passed since keymapper 
+    # Bypass all guard clauses if more than a few seconds have passed since keymapper 
     # started and loaded the config file. Inputs never change until keymapper 
     # restarts and reloads the config file, so we don't need to keep checking.
     bypass_guard_clauses = time_elapsed > 6
@@ -608,10 +651,6 @@ def matchProps(*,
     _name = not_name if name is None else name
     _devn = not_devn if devn is None else devn
 
-    def _isScreenFocusActive():
-        # If screen focus is lost, return False immediately
-        return False if cnfg.screen_has_focus is False else True
-
     # process lists of conditions
     if _lst is not None:
 
@@ -635,7 +674,7 @@ def matchProps(*,
                             f"See log output before traceback.\n")
 
         def _matchProps_Lst(ctx: KeyContext):
-            if not _isScreenFocusActive():
+            if not cnfg.screen_has_focus:
                 return False
             if not_lst is not None:
                 if logging_enabled: print(f"## _matchProps_Lst()[not_lst] ## {dbg=}")
@@ -652,7 +691,7 @@ def matchProps(*,
     if _devn is not None: devn_rgx = re.compile(_devn, 0 if cse else re.I)
 
     def _matchProps(ctx: KeyContext):
-        if not _isScreenFocusActive():
+        if not cnfg.screen_has_focus:
             return False
         cond_list       = []
         nt_err          = 'ERR: matchProps: NoneType in ctx.'
@@ -850,6 +889,7 @@ def notify_context():
         kdialog_cmd_lst = [kdialog_cmd, '--msgbox', message, '--title', 'Toshy Context Info']
         # Add icon if needed: kdialog_cmd_lst += ['--icon', '/path/to/icon']
         # TODO: Figure out why icon argument doesn't work. Need a proper icon theme folder?
+        # Figured out: Kdialog does not support custom icons!
         kdialog_cmd_lst += ['--icon', 'toshy_app_icon_rainbow']
 
         if dialog_cmd == kdialog_cmd:
@@ -861,13 +901,6 @@ def notify_context():
         # ntfy.send_notification(message)
     return _notify_context
 
-
-def is_pre_GNOME_45(de_ver):
-    """Utility function to check if GNOME version is older than GNOME 45"""
-    pre_G45_ver_lst = [44, 43, 42, 41, 40, 3]
-    def _is_pre_GNOME_45(ctx: KeyContext):
-        return  DESKTOP_ENV == 'gnome' and str(de_ver).isdigit() and int(de_ver) in pre_G45_ver_lst
-    return _is_pre_GNOME_45
 
 ###################################################################################################
 ###  SLICE_MARK_START: barebones_user_cfg  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
