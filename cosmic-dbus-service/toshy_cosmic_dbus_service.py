@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 
+
 # Reference for generating the protocol modules with pywayland scanner:
 # https://github.com/flacjacket/pywayland/issues/8#issuecomment-987040284
 
-# Protocol documentation:
+# Protocol documentation (original on which COSMIC variant is based):
 # https://wayland.app/protocols/wlr-foreign-toplevel-management-unstable-v1
 
-# pywayland method has a NotImplementedError for NewId argument
-# (Use GitHub repo PR #64 branch or commit to install with 'pip')
-# git+https://github.com/heuer/pywayland@issue_33_newid
-# git+https://github.com/flacjacket/pywayland@db8fb1c3a29761a014cfbb57f84025ddf3882c3c
+# COSMIC protocol specification XML files:
+# https://github.com/pop-os/cosmic-protocols/blob/main/unstable/cosmic-toplevel-info-unstable-v1.xml
+# https://github.com/pop-os/cosmic-protocols/blob/main/unstable/cosmic-workspace-unstable-v1.xml
+
+# pywayland method had a NotImplementedError for NewId argument,
+# but PR #64 was merged. 
 
 
 print("(--) Starting D-Bus service to monitor 'zcosmic_toplevel_info_v1'...")
