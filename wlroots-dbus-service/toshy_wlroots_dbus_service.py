@@ -6,10 +6,8 @@
 # Protocol documentation:
 # https://wayland.app/protocols/wlr-foreign-toplevel-management-unstable-v1
 
-# pywayland method has a NotImplementedError for NewId argument
-# (Use GitHub repo PR #64 branch or commit to install with 'pip')
-# git+https://github.com/heuer/pywayland@issue_33_newid
-# git+https://github.com/flacjacket/pywayland@db8fb1c3a29761a014cfbb57f84025ddf3882c3c
+# pywayland method had a NotImplementedError for NewId argument,
+# but PR #64 was merged. 
 
 
 print("(--) Starting D-Bus service to monitor wlr-foreign-toplevel-management protocol...")
