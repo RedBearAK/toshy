@@ -3,15 +3,16 @@
 ###############################################################################
 ############################   Welcome to Toshy!   ############################
 ###  
-###  This is a highly customized fork of the config file that powers Kinto.sh, 
-###  by Ben Reaves
+###  This is a highly customized fork of the config file that powers 
+###  Kinto.sh, by Ben Reaves
 ###      (https://kinto.sh)
 ###  
-###  All credit for the basis of this goes to Ben Reaves. 
+###  All credit for the basis of this config goes to Ben Reaves. 
 ###      (https://github.com/rbreaves/)
 ###  
 ###  Much assistance was provided by Josh Goebel, the developer of the
-###  xkeysnail fork "keyszer"
+###  `xkeysnail` fork `keyszer`, which is now forked into `xwaykeyz` to
+###  provide support for some Wayland environments.
 ###      (http://github.com/joshgoebel/keyszer)
 ###  
 ###############################################################################
