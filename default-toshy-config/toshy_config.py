@@ -157,7 +157,7 @@ icon_file_inverse   = os.path.join(assets_path, "toshy_app_icon_rainbow_inverse.
 # Toshy config file
 TOSHY_PART      = 'config'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Config file'
-APP_VERSION     = '2024.0801'
+APP_VERSION     = '2024.0804'
 
 # Settings object used to tweak preferences "live" between gui, tray and config.
 cnfg = Settings(current_folder_path)
@@ -279,7 +279,7 @@ except NameError:
 # Establish important global variables here
 
 
-startup_timestamp = time.time()     # only gets evaluated once for each run of keymapper
+STARTUP_TIMESTAMP = time.time()     # only gets evaluated once for each run of keymapper
 
 # Variable to hold the keyboard type
 KBTYPE = None
@@ -888,6 +888,11 @@ def isDoubleTap(dt_combo):
     return _isDoubleTap
 
 
+total_matchProps_iterations = 0
+MAX_MATCHPROPS_ITERATIONS = 1000
+MAX_MATCHPROPS_ITERATIONS_REACHED = False
+
+
 # Correct syntax to reject all positional parameters: put `*,` at beginning
 def matchProps(*,
     # string parameters (positive matching)
@@ -951,15 +956,31 @@ def matchProps(*,
     # https://stackoverflow.com/questions/406230/\
         # regular-expression-to-match-a-line-that-doesnt-contain-a-word
 
+    global MAX_MATCHPROPS_ITERATIONS_REACHED
+    global total_matchProps_iterations
+
+    # Return `False` immediately if screen does not have focus (e.g. Synergy),
+    # but only after the guard clauses have had a chance to evaluate on
+    # all possible uses of the function that may exist in the config.
+    if MAX_MATCHPROPS_ITERATIONS_REACHED and not cnfg.screen_has_focus:
+        return False
+
+    if total_matchProps_iterations >= MAX_MATCHPROPS_ITERATIONS:
+        MAX_MATCHPROPS_ITERATIONS_REACHED = True
+        bypass_guard_clauses = True
+    else:
+        total_matchProps_iterations += 1
+        current_timestamp = time.time()
+
+        # 'STARTUP_TIMESTAMP' is a global variable, set when config is executed
+        time_elapsed = current_timestamp - STARTUP_TIMESTAMP
+
+        # Bypass all guard clauses if more than a few seconds have passed since keymapper 
+        # started and loaded the config file. Inputs never change until keymapper 
+        # restarts and reloads the config file, so we don't need to keep checking.
+        bypass_guard_clauses = time_elapsed > 6
+
     logging_enabled = False
-
-    current_timestamp = time.time()
-    time_elapsed = current_timestamp - startup_timestamp
-
-    # Bypass all guard clauses if more than a few seconds have passed since keymapper 
-    # started and loaded the config file. Inputs never change until keymapper 
-    # restarts and reloads the config file, so we don't need to keep checking.
-    bypass_guard_clauses = time_elapsed > 6
 
     allowed_params  = (clas, name, devn, not_clas, not_name, not_devn, 
                         numlk, capslk, cse, lst, not_lst, dbg)
@@ -979,7 +1000,7 @@ def matchProps(*,
         'numlk', 'capslk', 'cse', 'lst', 'not_lst', 'dbg'
     ]
 
-    if not bypass_guard_clauses:
+    if not MAX_MATCHPROPS_ITERATIONS_REACHED or not bypass_guard_clauses:
         if all([x is None for x in allowed_params]): 
             raise ValueError(f"\n\n(EE) matchProps(): Received no valid argument\n")
         if any([x not in (True, False, None) for x in (numlk, capslk, cse)]): 
@@ -1001,7 +1022,7 @@ def matchProps(*,
     # process lists of conditions
     if _lst is not None:
 
-        if not bypass_guard_clauses:
+        if not MAX_MATCHPROPS_ITERATIONS_REACHED or not bypass_guard_clauses:
             if any([x is not None for x in lst_dct_params]): 
                 raise TypeError(f"\n\n(EE) matchProps(): Param 'lst|not_lst' must be used alone\n")
             if not isinstance(_lst, list) or not all(isinstance(item, dict) for item in _lst): 
@@ -1384,6 +1405,7 @@ modmap("Cond modmap - Media Arrows Fix",{
     Key.NEXTSONG:               Key.END,
 }, when = lambda ctx:
     cnfg.media_arrows_fix and
+    cnfg.screen_has_focus and
     matchProps(not_clas=remoteStr)(ctx)
 )
 
@@ -3280,7 +3302,9 @@ keymap("JDownloader", {
     C("RC-i"):                  C("Alt-Enter"),                 # Open properties
     C("RC-Backspace"):          C("Delete"),                    # Remove download from list
     C("RC-Comma"):              C("C-P"),                       # Open preferences (settings)
-}, when = matchProps(lst=JDownloader_lod) )
+}, when = lambda ctx:
+    cnfg.screen_has_focus and
+    matchProps(lst=JDownloader_lod)(ctx) )
 
 keymap("Totem video player", {
     C("RC-dot"):                C("C-q"),                       # Stop (quit player, there is no "Stop" function)
