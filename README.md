@@ -349,17 +349,16 @@ You will find these distro groupings in the Wiki article:
 - ### Wayland sessions
 
     - **Cinnamon 6.0 or later** - _[uses custom shell extension]_
+    - **COSMIC desktop environment** - _[uses D-Bus service]_
     - **GNOME 3.38 or later** - _[needs shell extension, see [**Requirements**](#requirements)]_
     - **Hyprland** - _[currently uses `hyprpy` Python module]_
-    - **Plasma 5 (KDE)** - _[uses custom KWin script]_
-    - **Plasma 6 (KDE)** - _[uses custom KWin script]_
+    - **Niri** - _[via `wlroots` method]_
+    - **Plasma 5 (KDE)** - _[uses custom KWin script and D-Bus service]_
+    - **Plasma 6 (KDE)** - _[uses custom KWin script and D-Bus service]_
+    - **Qtile** - _[via `wlroots` method]_
     - **Sway** - _[currently uses `ipc` Python module]_
-    - **Wlroots-based Wayland Compositors** - _[preliminary/manual start]_
-        - Req's `zwlr_foreign_toplevel_manager_v1` protocol support
-        - See usage details in this [Wiki article](https://github.com/RedBearAK/toshy/wiki/Wlroots-Based-Wayland-Compositors.md)
-    - **Pop!\_OS COSMIC** - _[preliminary/manual start]_
-        - Based on `wlroots` method
-        - See usage details in the same [Wiki article](https://github.com/RedBearAK/toshy/wiki/Wlroots-Based-Wayland-Compositors.md)
+    - **Wayland compositors with `zwlr_foreign_toplevel_manager_v1` interface**
+        - See [Wiki article](https://github.com/RedBearAK/toshy/wiki/Wlroots-Based-Wayland-Compositors.md) for usage of this method with unknown compositors that may be compatible
 
 If you are in an X11/Xorg login session, the desktop environment or window manager doesn't really matter. The keymapper gets the window class/name/title information directly from the X server with the Python `Xlib` module.  
 
