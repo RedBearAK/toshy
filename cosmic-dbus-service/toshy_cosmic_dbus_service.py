@@ -207,8 +207,16 @@ class WaylandClient:
         if isinstance(states_bytes, bytes):
             states = list(states_bytes)
         if ZcosmicToplevelHandleV1.state.activated.value in states:
-            self.active_app_class = self.wdw_handles_dct[handle]['app_id']
-            self.active_wdw_title = self.wdw_handles_dct[handle]['title']
+            try:
+                self.active_app_class = self.wdw_handles_dct[handle]['app_id']
+            except KeyError as key_err:
+                # error(f"Problem accessing app_id:\n\t{key_err}")
+                self.active_app_class = 'KeyErr_accessing_app_id'
+            try:
+                self.active_wdw_title = self.wdw_handles_dct[handle]['title']
+            except KeyError as key_err:
+                # error(f"Problem accessing title:\n\t{key_err}")
+                self.active_wdw_title = 'KeyErr_accessing_wdw_title'
             # print()
             # print(f"Active app class: '{self.active_app_class}'")
             # print(f"Active window title: '{self.active_wdw_title}'")
