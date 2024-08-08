@@ -3344,13 +3344,16 @@ keymap("Overrides for Caja - Finder Mods", {
 # Keybindings overrides for COSMIC Files
 # (overrides some bindings from general file manager code block below)
 keymap("Overrides for COSMIC Files - Finder Mods", {
+    # No shortcuts yet to change the view modes?
+    # TODO: Add Grid/List view mode shortcuts when available (if different from general FMs)
     # Tab nav uses Ctrl+Tab/Shift+Ctrl+Tab
     C("Shift-RC-Left_Brace"):   C("Shift-C-Tab"),               # Go to prior tab (left)
     C("Shift-RC-Right_Brace"):  C("C-Tab"),                     # Go to next tab (right)
     C("Shift-RC-Left"):         C("Shift-C-Tab"),               # Go to prior tab (left)
     C("Shift-RC-Right"):        C("C-Tab"),                     # Go to next tab (right)
-    # No shortcut yet to change the view mode?
-
+    # COSMIC uses nonstandard shortcut (Space) for file/folder Properties dialog
+    C("RC-i"):                  C("Space"),                     # Get info (properties) [MacOS shortcut]
+    C("Alt-Enter"):             C("Space"),                     # Get info (properties) [Linux shortcut]
 }, when = matchProps(clas="^com.system76.CosmicFiles$"))
 
 # Keybindings overrides for DDE (Deepin) File Manager
@@ -4650,7 +4653,8 @@ if DESKTOP_ENV == 'kde':
 
 if DESKTOP_ENV == 'mate':
     keymap("GenGUI overrides: MATE", {
-        C("RC-Space"):             [iEF2NT(),C("Alt-Space")],       # Right click, configure Mint menu shortcut to match
+        # Right click, configure Mint menu shortcut to match `Alt+Space` shortcut
+        C("RC-Space"):             [iEF2NT(),C("Alt-Space")],       # Open Mint app menu
     }, when = lambda ctx:
         cnfg.screen_has_focus and
         matchProps(not_clas=remoteStr)(ctx)
