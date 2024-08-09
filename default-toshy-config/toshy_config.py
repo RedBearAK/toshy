@@ -4025,6 +4025,9 @@ keymap("KWrite text editor - Close Document dialog", {
 keymap("KWrite text editor", {
     C("RC-comma"):              C("Shift-C-comma"),             # Open preferences dialog
     C("RC-t"):                  C("C-n"),                       # New tab (new document)
+    C("Super-g"):               C("C-g"),                       # Go to line with physical Ctrl+G
+    C("RC-g"):                  C("F3"),                        # Find next instance (Cmd+G)
+    C("Shift-RC-g"):            C("Shift-F3"),                  # Find previous instance (Shift+Cmd+G)
 }, when = matchProps(clas="^kwrite$|^org.kde.Kwrite$") )
 
 keymap("GNOME Text Editor", {
