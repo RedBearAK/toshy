@@ -497,6 +497,7 @@ def run_cmd_lst_in_terminal(command_list: List[str]):
         ('qterminal',           ['-e'],     ['lxqt']                                    ),
         ('lxterminal',          ['-e'],     ['lxde']                                    ),
         ('terminology',         ['-e'],     ['enlightenment']                           ),
+        ('cosmic-term',         ['-e'],     ['cosmic']                                  ),
         ('kitty',               ['-e'],     []                                          ),
         ('alacritty',           ['-e'],     []                                          ),
         ('tilix',               ['-e'],     []                                          ),
