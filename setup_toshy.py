@@ -3224,6 +3224,7 @@ def handle_cli_arguments():
 
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
 
+
     subparser_install           = subparsers.add_parser(
         'install',
         help='Install Toshy (see options to modify install actions)'
@@ -3255,6 +3256,7 @@ def handle_cli_arguments():
         help='See README for more info on this option.'
     )
 
+
     subparser_list_distros      = subparsers.add_parser(
         'list-distros',
         help='Display list of distros to use with "--override-distro"'
@@ -3265,10 +3267,18 @@ def handle_cli_arguments():
         help='Show the environment the installer detects, and exit'
     )
 
+
     subparser_apply_tweaks      = subparsers.add_parser(
         'apply-tweaks',
         help='Apply desktop environment tweaks only, no install'
     )
+
+    subparser_apply_tweaks.add_argument(
+        '--fancy-pants',
+        action='store_true',
+        help='See README for more info on this option.'
+    )
+
 
     subparser_remove_tweaks     = subparsers.add_parser(
         'remove-tweaks',
@@ -3284,6 +3294,7 @@ def handle_cli_arguments():
         'uninstall',
         help='Uninstall Toshy'
     )
+
 
     args = parser.parse_args()
 
@@ -3327,6 +3338,8 @@ def handle_cli_arguments():
         safe_shutdown(0)
 
     if args.command == 'apply-tweaks':
+        if args.fancy_pants:
+            cnfg.fancy_pants = True
         get_environment_info()
         apply_desktop_tweaks()
         if cnfg.should_reboot:
