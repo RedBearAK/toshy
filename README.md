@@ -129,11 +129,11 @@ On some Wayland environments it takes extra steps to get the per-app or per-app-
 - **`Wayland+GNOME`** sessions require one of the GNOME Shell extensions listed in this section to be installed and enabled (see the [**`next section`**](#managing-shell-extensions-in-gnome) below on how to easily download and install GNOME Shell extensions):
 
     ___
-    - **Name: 'Xremap' (try this on older GNOME shells)**
+    - **Name: 'Xremap'** (try this on older GNOME shells)
     - UUID: `xremap@k0kubun.com`
     - URL: https://extensions.gnome.org/extension/5060/xremap/
     ___
-    - **Name: 'Window Calls Extended'**
+    - **Name: 'Window Calls Extended'** (lagging, not updated for G46)
     - UUID: `window-calls-extended@hseliger.eu`
     - URL: https://extensions.gnome.org/extension/4974/window-calls-extended/
     ___
