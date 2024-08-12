@@ -773,7 +773,7 @@ if not barebones_config:
 
     # Create submenu items using RadioMenuItem
     group_optspec = None
-    optspec_us_item = Gtk.RadioMenuItem.new_with_label(group_optspec, 'US*')
+    optspec_us_item = Gtk.RadioMenuItem.new_with_label(group_optspec, 'US')
     optspec_us_item.connect('toggled', save_optspec_layout_setting, 'US')
     optspec_layout_submenu.append(optspec_us_item)
     group_optspec = optspec_us_item.get_group()
@@ -782,7 +782,7 @@ if not barebones_config:
     optspec_abc_extended_item.connect('toggled', save_optspec_layout_setting, 'ABC')
     optspec_layout_submenu.append(optspec_abc_extended_item)
 
-    optspec_disabled_item = Gtk.RadioMenuItem.new_with_label(group_optspec, 'Disabled')
+    optspec_disabled_item = Gtk.RadioMenuItem.new_with_label(group_optspec, 'Disabled*')
     optspec_disabled_item.connect('toggled', save_optspec_layout_setting, 'Disabled')
     optspec_layout_submenu.append(optspec_disabled_item)
 
