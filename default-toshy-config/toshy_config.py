@@ -3631,6 +3631,9 @@ keymap("Firefox Browsers Overrides", {
     C("Shift-RC-N"):            C("Shift-C-P"),                     # Open private window with Cmd+Shift+N like other browsers
     C("RC-Backspace"):         [C("Shift-Home"), C("Backspace")],   # Delete Entire Line Left of Cursor
     C("RC-Delete"):            [C("Shift-End"), C("Delete")],       # Delete Entire Line Right of Cursor
+    # Block shortcuts that might get confused with Shift+Cmd+[Left/Right]_Brace
+    C("Shift-RC-Minus"):        ignore_combo,                       # Ignore alternate zoom out shortcut
+    C("Shift-RC-Equal"):        ignore_combo,                       # Ignore alternate zoom in shortcut
 }, when = matchProps(clas=browsers_firefoxStr))
 
 # Vivaldi is a Chromium based web browser
