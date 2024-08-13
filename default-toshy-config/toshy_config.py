@@ -3538,28 +3538,28 @@ keymap("XDG file dialogs", {
     matchProps(lst=file_open_save_dialogs)(ctx)
 )
 
-############################################################
+####################################################################################################
 ##  Keybindings for Linux general file managers group:
 ##
 ##  Currently supported Linux file managers (file browsers):
 ##  
-##  Caja File Browser (MATE file manager, fork of Nautilus)
-##  COSMIC Files (Pop!_OS COSMIC file manager)
-##  DDE File Manager (Deepin Linux file manager)
-##  Dolphin (KDE file manager)
-##  Krusader (Alternative/old KDE file manager)
-##  Nautilus (GNOME file manager, may be named "Files")
-##  Nemo (Cinnamon file manager, fork of Nautilus, may be named "Files")
-##  Pantheon Files (elementary OS file manager, may be named "Files")
-##  PCManFM (LXDE file manager)
-##  PCManFM-Qt (LXQt file manager)
-##  Peony-Qt (UKUI file manager, found in Ubuntu Kylin)
-##  SpaceFM (Fork of PCManFM file manager)
-##  Thunar File Manager (Xfce file manager)
+##  Caja File Browser       (MATE file manager, fork of Nautilus)
+##  COSMIC Files            (Pop!_OS COSMIC desktop environment file manager)
+##  DDE File Manager        (Deepin Linux file manager)
+##  Dolphin                 (KDE file manager)
+##  Krusader                (Alternative/old KDE file manager)
+##  Nautilus                (GNOME file manager, may be named "Files")
+##  Nemo                    (Cinnamon file manager, fork of Nautilus, may be named "Files")
+##  Pantheon Files          (elementary OS file manager, may be named "Files")
+##  PCManFM                 (LXDE file manager)
+##  PCManFM-Qt              (LXQt file manager)
+##  Peony-Qt                (UKUI file manager, found in Ubuntu Kylin)
+##  SpaceFM                 (Fork of PCManFM file manager)
+##  Thunar File Manager     (Xfce file manager)
 ##  
 ##  GNOME XDG file dialogs ("Open File" and "Save As" windows in apps like Firefox)
 ## 
-##############################################
+####################################################################################################
 
 keymap("General File Managers - Finder Mods", {
     ###########################################################################################################
