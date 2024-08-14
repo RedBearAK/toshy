@@ -129,15 +129,15 @@ On some Wayland environments it takes extra steps to get the per-app or per-app-
 - **`Wayland+GNOME`** sessions require one of the GNOME Shell extensions listed in this section to be installed and enabled (see the [**`next section`**](#managing-shell-extensions-in-gnome) below on how to easily download and install GNOME Shell extensions):
 
     ___
-    - **Name: 'Xremap'** (try this on older GNOME shells)
+    - **Name: 'Xremap'** (Supports GNOME 3.36/3.38, and 40 or later)
     - UUID: `xremap@k0kubun.com`
     - URL: https://extensions.gnome.org/extension/5060/xremap/
     ___
-    - **Name: 'Window Calls Extended'** (lagging, not updated for G46)
+    - **Name: 'Window Calls Extended'** (Supports GNOME 41 or later)
     - UUID: `window-calls-extended@hseliger.eu`
     - URL: https://extensions.gnome.org/extension/4974/window-calls-extended/
     ___
-    - **Name: 'Focused Window D-Bus'**
+    - **Name: 'Focused Window D-Bus'** (Supports GNOME 43 or later)
     - UUID: `focused-window-dbus@flexagoon.com`
     - URL: https://extensions.gnome.org/extension/5592/focused-window-d-bus/
     ___
