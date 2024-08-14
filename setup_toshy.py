@@ -622,7 +622,7 @@ distro_groups_map: Dict[str, List[str]] = {
 
     # separate references for RHEL types versus Fedora types
     'fedora-based':             ["fedora", "fedoralinux", "ultramarine", "nobara"],
-    'rhel-based':               ["rhel", "almalinux", "rocky", "eurolinux", "centos"],
+    'rhel-based':               ["rhel", "almalinux", "rocky", "eurolinux", "centos", "oreon"],
 
     # separate references for Fedora immutables using rpm-ostree
     'fedora-immutables':        ["silverblue-experimental", "kinoite-experimental"],
