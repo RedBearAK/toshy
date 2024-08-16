@@ -441,7 +441,7 @@ After verifying that the forced keyboard type puts the modifiers in the correct 
 
 See above section for the GUI tools and preferences explanations. This section is only about the Toshy terminal commands. 
 
-Toshy does its best to set itself up automatically on any Linux system that uses `systemd` and that is a "known" Linux distro type that the installer knows how to deal with (i.e., has a list of the correct native packages to install, and knows how to use the package manager). Generally this means distros that use any of these package managers:  
+Toshy does its best to set itself up automatically on any Linux system that uses `systemd` and that is a "known" Linux distro type that the installer knows how to deal with (i.e., has a list of the correct native support packages to install, and knows how to use the package manager). Generally this means distros that use one of these package managers:  
 
 - `apt`
 - `dnf`
@@ -452,15 +452,15 @@ Toshy does its best to set itself up automatically on any Linux system that uses
 - `xbps-install`
 - `zypper`
 
-If the install was successful, there should be a number of different terminal commands available to check the status of the Toshy `systemd` user services (the services are not system-wide, in an attempt to support multi-user setups and support Wayland environments more easily) and stop/start/restart the services.  
+If the install was successful, there should be a number of different `toshy-*` terminal commands available to check the status of the Toshy `systemd` user services (the services are not system-wide, in an attempt to support multi-user setups and support Wayland environments more easily) and stop/start/restart the services.  
 
-Toshy actually consists of two separate `systemd` services meant to work together, with one monitoring the other, so the shell commands are meant to make working with the paired services much easier.  
+Toshy primarily consists of two separate `systemd` services meant to work together, with one monitoring the other, so the shell commands are meant to make working with the paired services much easier.  
 
-(There is now a third service, but it is only active in a Wayland+Plasma environment, creating a D-Bus service to receive updates from the KWin script with the necessary window info.)  
+(There are now multiple other services, but they are each only active in a specific Wayland environment, creating a D-Bus service for the keymapper to query. The D-Bus service in turn receives updates from some source with the necessary window info, such as a KWin script in Plasma, or events from a Wayland protocol interface in `wlroots` or COSMIC. If you aren't in one of the relevant environments, these extra service units should all be inactive a few seconds after all the services start.)  
 
 The commands are copied into `~/.local/bin`, and you will be prompted to add that location to your shell's `PATH` if it is not present. Depends on the distro whether that location is already set up as part of the path or not.  
 
-If you change your shell or reset your RC file and need to fix the path, an easy way to do that is to run this script that re-installs the terminal commands in the same way they were initially installed:  
+If you change your shell or reset your RC file and need to fix the `PATH`, an easy way to do that is to run this script that re-installs the terminal commands in the same way they were initially installed:  
 
 ```sh
 ~/.config/toshy/scripts/toshy-bincommands-setup.sh
@@ -469,14 +469,17 @@ If you change your shell or reset your RC file and need to fix the path, an easy
 These are the main commands for managing and checking the services:  
 
 ```
-toshy-services-log      (shows journalctl output for Toshy services)
-toshy-services-status   (shows the current state of all Toshy services)
+toshy-services-restart
 toshy-services-start
 toshy-services-stop
-toshy-services-restart
 ```
 
-To disable/enable the Toshy services (to prevent or restore autostart at login), use the commands below. It should still be possible to start/restart the services with the commands above if they are disabled. Using the "enable" command in turn will not automatically start the services immediately if they are not running (but the services will then autostart at the next login). If the services are enabled they can be stopped at any time with the command above, but the enabled services will start automatically at the next login. (NEW: This can finally also be dealt with in the tray icon menu, by toggling the `Autostart Toshy Services` item near the top of the menu.)  
+```
+toshy-services-log      (shows journalctl output for Toshy services)
+toshy-services-status   (shows the current state of all Toshy services)
+```
+
+To disable or re-enable the Toshy services (to prevent or restore autostart at login), use the commands below. It should still be possible to start/restart the services with the commands above if they are disabled. Using the "enable" command in turn will not automatically start the services immediately if they are not running (but the services will then autostart at the next login). If the services are enabled they can be stopped at any time with the command above, but the enabled services will start automatically at the next login. (NEW: This can finally also be dealt with in the tray icon menu, by toggling the `Autostart Toshy Services` item near the top of the menu.)  
 
 ```
 toshy-services-disable  (services can still be started/stopped manually)
@@ -490,17 +493,20 @@ toshy-systemd-remove    (stops and removes the systemd service units)
 toshy-systemd-setup     (installs and starts the systemd service units)
 ```
 
-The following commands are also available, and meant to allow manually running just the Toshy config file, without any reliance on `systemd`. These will automatically stop the `systemd` services so there is no conflict, for instance if you need to run the `verbose` version of the command to debug a shortcut that is not working as expected, or find out how you broke the config file.  
+The following commands are also available, and meant to allow manually running just the Toshy config file, without any reliance on `systemd`. These will automatically stop the `systemd` services so there is no conflict, for instance if you need to run the `-debug` or `-verbose-start` version of the command (same thing) to debug a shortcut that is not working as expected, or find out how you broke the config file.  
 
 Restarting the Toshy services, either with one of the above commands or from the GUI preferences app or tray icon menu, will stop any manual config process and return to running the Toshy config as a `systemd` service. All the commands are designed to work together as conveniently as possible.  
 
 ```
 toshy-config-restart
 toshy-config-start
-toshy-config-start-verbose  (show debugging output in the terminal)
-toshy-config-verbose-start  (older alias of 'toshy-config-start-verbose')
 toshy-config-stop
+```
+
+```
 toshy-debug                 (newer alias of 'toshy-config-start-verbose')
+toshy-config-verbose-start  (older alias of 'toshy-config-start-verbose')
+toshy-config-start-verbose  (show debugging output in the terminal)
 ```
 
 And a command that will show what Toshy sees as the environment when you launch the config. This may be helpful when troubleshooting or making reports:  
@@ -518,7 +524,7 @@ toshy-fnmode --info             (show current status of fnmode)
 toshy-fnmode [--option] [mode]  (change fnmode non-interactively)
 ```
 
-To activate the Toshy Python virtual environment for doing things like running the keymapper directly, it is necessary to run this command:  
+To activate the Toshy Python virtual environment for doing things like running the keymapper command directly instead of through one of the launcher scripts, it is necessary to first run this command:  
 
 ```
 source toshy-venv
@@ -542,7 +548,7 @@ toshy-tray
 
 ## FAQ (Frequently Asked Questions)
 
-FAQ section has been moved to a Wiki page to make the README shorter:  
+The lengthy FAQ section has been moved to a Wiki page to make the README shorter:  
 
 https://github.com/RedBearAK/toshy/wiki/FAQ-(Frequently-Asked-Questions)
 
