@@ -157,7 +157,7 @@ class InstallerSettings:
         self.sep_char               = '='
         self.separator              = self.sep_char * sep_reps
 
-        self.DISTRO_ID            = None
+        self.DISTRO_ID              = None
         self.DISTRO_VER: str        = ""
         self.VARIANT_ID             = None
         self.SESSION_TYPE           = None
