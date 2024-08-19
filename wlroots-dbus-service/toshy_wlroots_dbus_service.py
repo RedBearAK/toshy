@@ -10,7 +10,7 @@
 # but PR #64 was merged. 
 
 
-print("(--) Starting D-Bus service to monitor 'zwlr_foreign_toplevel_manager_v1'...")
+print("(--) Starting Toshy D-Bus service to monitor 'zwlr_foreign_toplevel_manager_v1'...")
 
 import os
 import sys
@@ -97,7 +97,7 @@ sep_reps        = 80
 sep_char        = '='
 separator       = sep_char * sep_reps
 
-LOG_PFX = 'TOSHY_WLR_DBUS_SVC'
+LOG_PFX = 'TOSHY_WLROOTS_DBUS_SVC'
 
 DISTRO_ID       = None
 DISTRO_VER      = None
@@ -166,7 +166,7 @@ def countdown_callback():
 def check_interface_availability():
     global interface_is_available
     if not wl_client.toplevel_manager:  # Check if the interface is still available
-        debug("Wayland interface is no longer available. Toshy Wlroots D-Bus service exiting.")
+        debug(f"{LOG_PFX}: The Wayland interface is no longer available. Exiting.")
         interface_is_available = False
         clean_shutdown()  # Perform cleanup and shutdown
     if not wl_client.check_connection():  # Check if the connection to the Wayland server is still available
