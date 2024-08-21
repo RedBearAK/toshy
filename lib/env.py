@@ -211,8 +211,8 @@ def get_env_info():
     if isinstance(SESSION_TYPE, str):
         SESSION_TYPE = SESSION_TYPE.casefold()
 
-    if SESSION_TYPE not in ['x11', 'wayland']:
-        raise EnvironmentError(f'\n\nENV: Unknown session type: {SESSION_TYPE}.\n')
+    if SESSION_TYPE not in ['x11', 'wayland', 'tty']:
+        error(f'\n\nENV: Unknown session type: {SESSION_TYPE}.\n')
 
     env_info_dct['SESSION_TYPE'] = SESSION_TYPE
 
