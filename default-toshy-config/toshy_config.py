@@ -146,6 +146,7 @@ current_folder_path = os.path.dirname(os.path.abspath(config_globals["__config__
 sys.path.insert(0, current_folder_path)
 
 import lib.env
+from lib.env_context import EnvironmentInfo
 from lib.settings_class import Settings
 from lib.notification_manager import NotificationManager
 
@@ -191,6 +192,7 @@ OVERRIDE_VARIANT_ID             = None
 OVERRIDE_SESSION_TYPE           = None
 OVERRIDE_DESKTOP_ENV            = None
 OVERRIDE_DE_MAJ_VER             = None
+OVERRIDE_WINDOW_MGR             = None
 
 wlroots_compositors             = [
     # Comma-separated list of Wayland desktop environments or window managers
@@ -204,30 +206,44 @@ wlroots_compositors             = [
 ###  SLICE_MARK_END: env_overrides  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 ###################################################################################################
 
-# leave all of this alone!
+# Leave all of this alone! Don't try to override values here. 
 DISTRO_ID                       = None
 DISTRO_VER                      = None
 VARIANT_ID                      = None
 SESSION_TYPE                    = None
 DESKTOP_ENV                     = None
 DE_MAJ_VER                      = None
+WINDOW_MGR                      = None
 
-env_info: Dict[str, str] = lib.env.get_env_info()
+# env_info: Dict[str, str] = lib.env.get_env_info()
 
-DISTRO_ID       = locals().get('OVERRIDE_DISTRO_ID')    or env_info.get('DISTRO_ID',    'keymissing')
-DISTRO_VER      = locals().get('OVERRIDE_DISTRO_VER')   or env_info.get('DISTRO_VER',   'keymissing')
-VARIANT_ID      = locals().get('OVERRIDE_VARIANT_ID')   or env_info.get('VARIANT_ID',   'keymissing')
-SESSION_TYPE    = locals().get('OVERRIDE_SESSION_TYPE') or env_info.get('SESSION_TYPE', 'keymissing')
-DESKTOP_ENV     = locals().get('OVERRIDE_DESKTOP_ENV')  or env_info.get('DESKTOP_ENV',  'keymissing')
-DE_MAJ_VER      = locals().get('OVERRIDE_DE_MAJ_VER')   or env_info.get('DE_MAJ_VER',   'keymissing')
+# DISTRO_ID       = locals().get('OVERRIDE_DISTRO_ID')    or env_info.get('DISTRO_ID',    'keymissing')
+# DISTRO_VER      = locals().get('OVERRIDE_DISTRO_VER')   or env_info.get('DISTRO_VER',   'keymissing')
+# VARIANT_ID      = locals().get('OVERRIDE_VARIANT_ID')   or env_info.get('VARIANT_ID',   'keymissing')
+# SESSION_TYPE    = locals().get('OVERRIDE_SESSION_TYPE') or env_info.get('SESSION_TYPE', 'keymissing')
+# DESKTOP_ENV     = locals().get('OVERRIDE_DESKTOP_ENV')  or env_info.get('DESKTOP_ENV',  'keymissing')
+# DE_MAJ_VER      = locals().get('OVERRIDE_DE_MAJ_VER')   or env_info.get('DE_MAJ_VER',   'keymissing')
+
+env_ctxt_getter = EnvironmentInfo()
+env_ctxt: Dict[str, str] = env_ctxt_getter.get_env_info()
+
+DISTRO_ID       = locals().get('OVERRIDE_DISTRO_ID')    or env_ctxt.get('DISTRO_ID',    'keymissing')
+DISTRO_VER      = locals().get('OVERRIDE_DISTRO_VER')   or env_ctxt.get('DISTRO_VER',   'keymissing')
+VARIANT_ID      = locals().get('OVERRIDE_VARIANT_ID')   or env_ctxt.get('VARIANT_ID',   'keymissing')
+SESSION_TYPE    = locals().get('OVERRIDE_SESSION_TYPE') or env_ctxt.get('SESSION_TYPE', 'keymissing')
+DESKTOP_ENV     = locals().get('OVERRIDE_DESKTOP_ENV')  or env_ctxt.get('DESKTOP_ENV',  'keymissing')
+DE_MAJ_VER      = locals().get('OVERRIDE_DE_MAJ_VER')   or env_ctxt.get('DE_MAJ_VER',   'keymissing')
+WINDOW_MGR      = locals().get('OVERRIDE_WINDOW_MGR')   or env_ctxt.get('WINDOW_MGR',   'keymissing')
 
 debug("")
 debug(  f'Toshy config sees this environment:'
         f'\n\t{DISTRO_ID        = }'
         f'\n\t{DISTRO_VER       = }'
+        f'\n\t{VARIANT_ID       = }'
         f'\n\t{SESSION_TYPE     = }'
         f'\n\t{DESKTOP_ENV      = }'
-        f'\n\t{DE_MAJ_VER       = }\n', ctx="CG")
+        f'\n\t{DE_MAJ_VER       = }'
+        f'\n\t{WINDOW_MGR       = }\n', ctx="CG")
 
 
 # TODO: Add a list here to concat with 'wlroots_compositors', instead of
