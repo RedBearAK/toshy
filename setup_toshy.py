@@ -653,6 +653,7 @@ distro_groups_map: Dict[str, List[str]] = {
 # - AlmaLinux 8.x                               [Provided by 'glib2']
 # - AlmaLinux 9.x                               [Provided by 'glib2']
 # - CentOS 7                                    [Provided by 'glib2']
+# - Fedora                                      [Provided by 'glib2']
 # - KDE Neon User Edition (Ubuntu 22.04 LTS)    [Provided by 'libglib2.0-bin']
 # - Manjaro KDE (Arch-based)                    [Provided by 'glib2']
 # - OpenMandriva Lx 5.0 (Plasma Slim)           [Provided by 'glib2.0-common']
