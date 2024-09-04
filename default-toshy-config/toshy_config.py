@@ -158,7 +158,7 @@ icon_file_inverse   = os.path.join(assets_path, "toshy_app_icon_rainbow_inverse.
 # Toshy config file
 TOSHY_PART      = 'config'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Config file'
-APP_VERSION     = '2024.0804'
+APP_VERSION     = '2024.0904'
 
 # Settings object used to tweak preferences "live" between gui, tray and config.
 cnfg = Settings(current_folder_path)
@@ -1266,6 +1266,7 @@ def notify_context():
             f"<b> • SESSION_TYPE _________</b> '{SESSION_TYPE   }' {nwln_str}"
             f"<b> • DESKTOP_ENV __________</b> '{DESKTOP_ENV    }' {nwln_str}"
             f"<b> • DE_MAJ_VER ___________</b> '{DE_MAJ_VER     }' {nwln_str}"
+            f"<b> • WINDOW_MGR ___________</b> '{WINDOW_MGR     }' {nwln_str}"
             f"{nwln_str}"
             f"<b>Do any app class groups match on this window?:</b>  {nwln_str}"
             f"<b> • Terminals ____________</b> '{ctx_term}' {nwln_str}"
