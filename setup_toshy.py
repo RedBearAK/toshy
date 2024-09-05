@@ -165,6 +165,7 @@ class InstallerSettings:
         self.SESSION_TYPE           = None
         self.DESKTOP_ENV            = None
         self.DE_MAJ_VER: str        = ""
+        self.WINDOW_MGR             = None
 
         self.distro_mjr_ver: str    = ""
         self.distro_mnr_ver: str    = ""
@@ -321,6 +322,7 @@ def get_environment_info():
     cnfg.SESSION_TYPE   = str(env_info_dct.get('SESSION_TYPE',  'keymissing')).casefold()
     cnfg.DESKTOP_ENV    = str(env_info_dct.get('DESKTOP_ENV',   'keymissing')).casefold()
     cnfg.DE_MAJ_VER     = str(env_info_dct.get('DE_MAJ_VER',    'keymissing')).casefold()
+    cnfg.WINDOW_MGR     = str(env_info_dct.get('WINDOW_MGR',    'keymissing')).casefold()
 
     # split out the major version from the minor version, if there is one
     distro_ver_parts            = cnfg.DISTRO_VER.split('.') if cnfg.DISTRO_VER else []
@@ -334,6 +336,7 @@ def get_environment_info():
         f"\n\t SESSION_TYPE     = '{cnfg.SESSION_TYPE}'"
         f"\n\t DESKTOP_ENV      = '{cnfg.DESKTOP_ENV}'"
         f"\n\t DE_MAJ_VER       = '{cnfg.DE_MAJ_VER}'"
+        f"\n\t WINDOW_MGR       = '{cnfg.WINDOW_MGR}'"
         # '\n', ctx='EV')
         '', ctx='EV')
 
