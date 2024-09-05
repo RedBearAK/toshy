@@ -146,6 +146,7 @@ current_folder_path = os.path.dirname(os.path.abspath(config_globals["__config__
 sys.path.insert(0, current_folder_path)
 
 import lib.env
+
 from lib.env_context import EnvironmentInfo
 from lib.settings_class import Settings
 from lib.notification_manager import NotificationManager
