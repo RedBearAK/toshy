@@ -25,6 +25,8 @@ from typing import Dict, List, Tuple, Optional
 
 # local import
 import lib.env as env
+
+from lib.env_context import EnvironmentInfo
 from lib.logger import debug, error, warn, info
 from lib import logger
 
@@ -267,7 +269,7 @@ def show_reboot_prompt():
 
 def get_environment_info():
     """Get back the distro name (ID), distro version, session type and desktop 
-        environment from `env.py` module"""
+        environment from the environment evaluation module"""
     print(f'\n§  Getting environment information...\n{cnfg.separator}')
 
     known_init_systems = {
@@ -305,7 +307,9 @@ def get_environment_info():
         # we don't care what it is, just that it is set to avoid errors in get_env_info()
         os.environ['XDG_SESSION_TYPE'] = 'x11'
 
-    env_info_dct   = env.get_env_info()
+    # env_info_dct   = env.get_env_info()
+    env_ctxt_getter = EnvironmentInfo()
+    env_info_dct   = env_ctxt_getter.get_env_info()
 
     # Avoid casefold() errors by converting all to strings
     if cnfg.override_distro:
