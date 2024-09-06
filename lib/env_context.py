@@ -2,14 +2,13 @@
 
 import re
 import os
-import sys
 import time
 import shutil
 import subprocess
 
 from typing import Dict
 
-# ENV_INFO module version: 2024-09-03
+# ENV_CONTEXT module version: 2024-09-05
 
 VERBOSE = True
 FLUSH = True
@@ -64,6 +63,31 @@ class EnvironmentInfo:
 
         self.env_info_dct: Dict[str, str]   = {}
         self.release_files: Dict[str, str]  = self.read_release_files()
+
+    def get_env_info(self):
+        """Primary method to get complete environment info"""
+
+        # Call methods to populate the instance variables with info.
+        # As of 2024-09-04 there are seven different bits of info to generate. 
+        self.get_distro_id()
+        self.get_distro_version()
+        self.get_variant_id()
+        self.get_session_type()
+        self.get_desktop_environment()
+        self.get_desktop_env_version()
+        self.get_window_manager()
+
+        # Collect all info into a dictionary
+        self.env_info_dct = {
+            'DISTRO_ID':        self.DISTRO_ID,
+            'DISTRO_VER':       self.DISTRO_VER,
+            'VARIANT_ID':       self.VARIANT_ID,
+            'SESSION_TYPE':     self.SESSION_TYPE,
+            'DESKTOP_ENV':      self.DESKTOP_ENV,
+            'DE_MAJ_VER':       self.DE_MAJ_VER,
+            'WINDOW_MGR':       self.WINDOW_MGR,
+        }
+        return self.env_info_dct
 
     def read_release_files(self) -> Dict[str, str]:
         paths = [
@@ -396,6 +420,34 @@ class EnvironmentInfo:
         else:
             self.env_info_dct['DE_MAJ_VER'] = self.DE_MAJ_VER
 
+    def get_lxqt_window_manager(self):
+        """Further steps to identify possible LXQt window manager"""
+        # If DE is LXQt and WM still not found after above search, try checking its config file:
+        # cat ~/.config/lxqt/session.conf | grep WindowManager
+        config_path = os.path.expanduser('~/.config/lxqt/session.conf')
+        try:
+            with open(config_path, 'r') as config_file:
+                for line in config_file:
+                    if line.startswith('window_manager='):
+                        # Typically the line would be like "window_manager=openbox\n"
+                        wm_name = line.strip().split('=')[1]
+                        if self.is_process_running(wm_name):
+                            self.WINDOW_MGR = wm_name
+                            return
+                        else:
+                            # Fallback to checking other known WMs in case config is outdated
+                            break
+        except FileNotFoundError:
+            # Handle cases where the config file does not exist
+            print(f"Could not find LXQt config file at: {config_path}")
+
+    def is_process_running(self, process_name):
+        try:
+            subprocess.check_output(['pgrep', '-x', process_name])
+            return True
+        except subprocess.CalledProcessError:
+            return False
+
     def get_window_manager(self):
         """
         logic to set self.WINDOW_MGR
@@ -404,72 +456,66 @@ class EnvironmentInfo:
 
         # Common "desktop environments" mapped to likely actual "window manager" process names
         de_wm_map = {
-            'openbox':      'openbox',
-            'kde':         [
+
+            # Older KDE may use 'kwin' process name
+            'kde': [
                 'kwin', 
                 'kwin_x11', 
                 'kwin_wayland'
-            ],      # Older KDE may use 'kwin' process name
-            'gnome':        'mutter',
+            ],
+
+            # Older GNOME may have 'mutter' integrated into 'gnome-shell' process
+            'gnome': [
+                'mutter',
+                'gnome-shell'
+            ],
+
+            # LXQt often uses OpenBox, but can use a number of different WMs in X11 or Wayland
+            'lxqt': [
+                'openbox',
+                'labwc',
+                'sway',
+                'hyprland',
+                'kwin_wayland',
+                'wayfire',
+                'river'
+            ],
+
+            'openbox':      'openbox',
             'xfce':         'xfwm4',
             'i3':           'i3',
             'i3-gaps':      'i3',
             'sway':         'sway',
             'awesome':      'awesome',
             'dwm':          'dwm',
-            'lxqt':        [
-                'openbox', 
-                'labwc', 
-                'sway', 
-                'hyprland', 
-                'kwin_wayland', 
-                'wayfire', 
-                'river'
-            ],
+
         }
 
-        # Check running processes to determine the window manager
+        # First try to limit search for window managers associated with desktop environment
+        if self.DESKTOP_ENV and self.DESKTOP_ENV in de_wm_map:
+            possible_wms = de_wm_map[self.DESKTOP_ENV]
+            for wm in possible_wms:
+                if self.is_process_running(wm):
+                    self.WINDOW_MGR = wm
+                    return
+
+        if self.DESKTOP_ENV and self.DESKTOP_ENV == 'lxqt' and not self.WINDOW_MGR:
+            self.get_lxqt_window_manager()
+            if self.WINDOW_MGR:
+                return
+
+        # Iterate through whole dictionary if desktop environment not found in de_wm_map
         for DE, process_names in de_wm_map.items():
             if not isinstance(process_names, list):
                 process_names = [process_names]  # Ensure we can iterate
             for process_name in process_names:
-                try:
-                    # Check if the process is running
-                    subprocess.check_output(['pgrep', '-x', process_name])
+                if self.is_process_running(process_name):
                     self.WINDOW_MGR = process_name
                     return
-                except subprocess.CalledProcessError:
-                    continue
 
-        # If nothing found, set to Unknown
+        # If nothing found, set a default value
         if not self.WINDOW_MGR:
-            self.WINDOW_MGR = 'Unidentified_by_logic'
-
-
-    def get_env_info(self):
-        """Primary method to get complete environment info"""
-
-        # Call methods to populate the instance variables with info.
-        # As of 2024-09-04 there are seven different bits of info to generate. 
-        self.get_distro_id()
-        self.get_distro_version()
-        self.get_variant_id()
-        self.get_session_type()
-        self.get_desktop_environment()
-        self.get_desktop_env_version()
-        self.get_window_manager()
-
-        # Collect all info into a dictionary
-        self.env_info_dct = {
-            'DISTRO_ID':        self.DISTRO_ID,
-            'DISTRO_VER':       self.DISTRO_VER,
-            'VARIANT_ID':       self.VARIANT_ID,
-            'SESSION_TYPE':     self.SESSION_TYPE,
-            'DESKTOP_ENV':      self.DESKTOP_ENV,
-            'DE_MAJ_VER':       self.DE_MAJ_VER,
-            'WINDOW_MGR':       self.WINDOW_MGR,
-        }
-        return self.env_info_dct
+            self.WINDOW_MGR = 'WM_unidentified_by_logic'
 
 
 if __name__ == "__main__":
