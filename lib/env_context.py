@@ -159,8 +159,6 @@ class EnvironmentInfo:
         if isinstance(self.DISTRO_ID, str):
             self.DISTRO_ID = self.DISTRO_ID.casefold()
 
-        self.env_info_dct['DISTRO_ID'] = self.DISTRO_ID
-
     def get_distro_version(self):
         """logic to set self.DISTRO_VER"""
 
@@ -178,9 +176,7 @@ class EnvironmentInfo:
                     break
 
         if not self.DISTRO_VER:
-            self.env_info_dct['DISTRO_VER'] = 'notfound'
-        else:
-            self.env_info_dct['DISTRO_VER'] = self.DISTRO_VER
+            self.DISTRO_VER = 'notfound'
 
     def get_variant_id(self):
         """logic to set self.VARIANT_ID, if variant info available"""
@@ -199,9 +195,7 @@ class EnvironmentInfo:
                     break
 
         if not self.VARIANT_ID:
-            self.env_info_dct['VARIANT_ID'] = 'notfound'
-        else:
-            self.env_info_dct['VARIANT_ID'] = self.VARIANT_ID
+            self.VARIANT_ID = 'notfound'
 
     def get_session_type(self):
         """logic to set self.SESSION_TYPE"""
@@ -247,8 +241,6 @@ class EnvironmentInfo:
 
         if self.SESSION_TYPE not in ['x11', 'wayland', 'tty']:
             error(f'\n\nENV: Unknown session type: {self.SESSION_TYPE}.\n')
-
-        self.env_info_dct['SESSION_TYPE'] = self.SESSION_TYPE
 
     def is_qtile_running(self):
         """Utility function to detect Qtile if the usual environment vars are not set/empty"""
@@ -377,9 +369,6 @@ class EnvironmentInfo:
             for desktop_env, process_names in processes.items():
                 check_process(process_names, desktop_env)
 
-
-        self.env_info_dct['DESKTOP_ENV'] = self.DESKTOP_ENV
-
     def get_kde_version(self):
         kde_session_version = os.environ.get('KDE_SESSION_VERSION')
         if kde_session_version:
@@ -416,9 +405,7 @@ class EnvironmentInfo:
             self.DE_MAJ_VER = self.get_kde_version()
 
         if not self.DE_MAJ_VER:
-            self.env_info_dct['DE_MAJ_VER'] = 'no_logic_for_DE'
-        else:
-            self.env_info_dct['DE_MAJ_VER'] = self.DE_MAJ_VER
+            self.DE_MAJ_VER = 'no_logic_for_DE'
 
     def get_lxqt_window_manager(self):
         """Further steps to identify possible LXQt window manager"""
