@@ -57,6 +57,8 @@ os.environ['PYTHONPATH'] = f'{parent_folder_path}:{current_folder_path}:{existin
 # local imports now that path is prepped
 import lib.env as env
 
+from lib.env_context import EnvironmentInfo
+
 from protocols.cosmic_toplevel_info_unstable_v1.zcosmic_toplevel_info_v1 import (
     ZcosmicToplevelInfoV1,
     ZcosmicToplevelInfoV1Proxy,
@@ -113,14 +115,16 @@ DE_MAJ_VER      = None
 
 def check_environment():
     """Retrieve the current environment from env module"""
-    env_info: Dict[str, str] = env.get_env_info()   # Returns a dict
+    # env_info_dct   = env.get_env_info()
+    env_ctxt_getter = EnvironmentInfo()
+    env_info_dct   = env_ctxt_getter.get_env_info()
     global DISTRO_ID, DISTRO_VER, VARIANT_ID, SESSION_TYPE, DESKTOP_ENV, DE_MAJ_VER
-    DISTRO_ID       = env_info.get('DISTRO_ID', 'keymissing')
-    DISTRO_VER      = env_info.get('DISTRO_VER', 'keymissing')
-    VARIANT_ID      = env_info.get('VARIANT_ID', 'keymissing')
-    SESSION_TYPE    = env_info.get('SESSION_TYPE', 'keymissing')
-    DESKTOP_ENV     = env_info.get('DESKTOP_ENV', 'keymissing')
-    DE_MAJ_VER      = env_info.get('DE_MAJ_VER', 'keymissing')
+    DISTRO_ID       = env_info_dct.get('DISTRO_ID', 'keymissing')
+    DISTRO_VER      = env_info_dct.get('DISTRO_VER', 'keymissing')
+    VARIANT_ID      = env_info_dct.get('VARIANT_ID', 'keymissing')
+    SESSION_TYPE    = env_info_dct.get('SESSION_TYPE', 'keymissing')
+    DESKTOP_ENV     = env_info_dct.get('DESKTOP_ENV', 'keymissing')
+    DE_MAJ_VER      = env_info_dct.get('DE_MAJ_VER', 'keymissing')
 
 
 check_environment()

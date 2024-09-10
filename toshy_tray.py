@@ -29,6 +29,8 @@ from typing import List, Dict, Tuple
 
 # Local imports
 import lib.env as env
+
+from lib.env_context import EnvironmentInfo
 from lib.logger import *
 from lib import logger
 from lib.settings_class import Settings
@@ -916,7 +918,9 @@ def main():
 
     global loop
     global DESKTOP_ENV
-    env_info_dct = env.get_env_info()
+    # env_info_dct   = env.get_env_info()
+    env_ctxt_getter = EnvironmentInfo()
+    env_info_dct   = env_ctxt_getter.get_env_info()
     DESKTOP_ENV = str(env_info_dct.get('DESKTOP_ENV', None)).casefold()
 
     if shutil.which('systemctl') and is_init_systemd():

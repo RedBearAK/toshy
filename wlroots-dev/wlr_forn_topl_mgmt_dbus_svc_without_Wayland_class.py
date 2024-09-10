@@ -54,6 +54,8 @@ os.environ['PYTHONPATH'] = f'{parent_folder_path}:{current_folder_path}:{existin
 # local imports now that path is prepped
 import lib.env as env
 
+from lib.env_context import EnvironmentInfo
+
 from protocols.wlr_foreign_toplevel_management_unstable_v1.zwlr_foreign_toplevel_manager_v1 import (
     ZwlrForeignToplevelManagerV1,
     ZwlrForeignToplevelManagerV1Proxy,
@@ -108,14 +110,16 @@ DE_MAJ_VER      = None
 
 def check_environment():
     """Retrieve the current environment from env module"""
-    env_info: Dict[str, str] = env.get_env_info()   # Returns a dict
+    # env_info_dct   = env.get_env_info()
+    env_ctxt_getter = EnvironmentInfo()
+    env_info_dct   = env_ctxt_getter.get_env_info()
     global DISTRO_ID, DISTRO_VER, VARIANT_ID, SESSION_TYPE, DESKTOP_ENV, DE_MAJ_VER
-    DISTRO_ID       = env_info.get('DISTRO_ID')
-    DISTRO_VER      = env_info.get('DISTRO_VER')
-    VARIANT_ID      = env_info.get('VARIANT_ID')
-    SESSION_TYPE    = env_info.get('SESSION_TYPE')
-    DESKTOP_ENV     = env_info.get('DESKTOP_ENV')
-    DE_MAJ_VER      = env_info.get('DE_MAJ_VER')
+    DISTRO_ID       = env_info_dct.get('DISTRO_ID')
+    DISTRO_VER      = env_info_dct.get('DISTRO_VER')
+    VARIANT_ID      = env_info_dct.get('VARIANT_ID')
+    SESSION_TYPE    = env_info_dct.get('SESSION_TYPE')
+    DESKTOP_ENV     = env_info_dct.get('DESKTOP_ENV')
+    DE_MAJ_VER      = env_info_dct.get('DE_MAJ_VER')
 
 
 check_environment()

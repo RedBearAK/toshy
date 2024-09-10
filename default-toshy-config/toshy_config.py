@@ -146,6 +146,8 @@ current_folder_path = os.path.dirname(os.path.abspath(config_globals["__config__
 sys.path.insert(0, current_folder_path)
 
 import lib.env
+
+from lib.env_context import EnvironmentInfo
 from lib.settings_class import Settings
 from lib.notification_manager import NotificationManager
 
@@ -157,7 +159,7 @@ icon_file_inverse   = os.path.join(assets_path, "toshy_app_icon_rainbow_inverse.
 # Toshy config file
 TOSHY_PART      = 'config'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Config file'
-APP_VERSION     = '2024.0804'
+APP_VERSION     = '2024.0904'
 
 # Settings object used to tweak preferences "live" between gui, tray and config.
 cnfg = Settings(current_folder_path)
@@ -191,6 +193,7 @@ OVERRIDE_VARIANT_ID             = None
 OVERRIDE_SESSION_TYPE           = None
 OVERRIDE_DESKTOP_ENV            = None
 OVERRIDE_DE_MAJ_VER             = None
+OVERRIDE_WINDOW_MGR             = None
 
 wlroots_compositors             = [
     # Comma-separated list of Wayland desktop environments or window managers
@@ -204,30 +207,44 @@ wlroots_compositors             = [
 ###  SLICE_MARK_END: env_overrides  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 ###################################################################################################
 
-# leave all of this alone!
+# Leave all of this alone! Don't try to override values here. 
 DISTRO_ID                       = None
 DISTRO_VER                      = None
 VARIANT_ID                      = None
 SESSION_TYPE                    = None
 DESKTOP_ENV                     = None
 DE_MAJ_VER                      = None
+WINDOW_MGR                      = None
 
-env_info: Dict[str, str] = lib.env.get_env_info()
+# env_info: Dict[str, str] = lib.env.get_env_info()
 
-DISTRO_ID       = locals().get('OVERRIDE_DISTRO_ID')    or env_info.get('DISTRO_ID',    'keymissing')
-DISTRO_VER      = locals().get('OVERRIDE_DISTRO_VER')   or env_info.get('DISTRO_VER',   'keymissing')
-VARIANT_ID      = locals().get('OVERRIDE_VARIANT_ID')   or env_info.get('VARIANT_ID',   'keymissing')
-SESSION_TYPE    = locals().get('OVERRIDE_SESSION_TYPE') or env_info.get('SESSION_TYPE', 'keymissing')
-DESKTOP_ENV     = locals().get('OVERRIDE_DESKTOP_ENV')  or env_info.get('DESKTOP_ENV',  'keymissing')
-DE_MAJ_VER      = locals().get('OVERRIDE_DE_MAJ_VER')   or env_info.get('DE_MAJ_VER',   'keymissing')
+# DISTRO_ID       = locals().get('OVERRIDE_DISTRO_ID')    or env_info.get('DISTRO_ID',    'keymissing')
+# DISTRO_VER      = locals().get('OVERRIDE_DISTRO_VER')   or env_info.get('DISTRO_VER',   'keymissing')
+# VARIANT_ID      = locals().get('OVERRIDE_VARIANT_ID')   or env_info.get('VARIANT_ID',   'keymissing')
+# SESSION_TYPE    = locals().get('OVERRIDE_SESSION_TYPE') or env_info.get('SESSION_TYPE', 'keymissing')
+# DESKTOP_ENV     = locals().get('OVERRIDE_DESKTOP_ENV')  or env_info.get('DESKTOP_ENV',  'keymissing')
+# DE_MAJ_VER      = locals().get('OVERRIDE_DE_MAJ_VER')   or env_info.get('DE_MAJ_VER',   'keymissing')
+
+env_ctxt_getter = EnvironmentInfo()
+env_ctxt: Dict[str, str] = env_ctxt_getter.get_env_info()
+
+DISTRO_ID       = locals().get('OVERRIDE_DISTRO_ID')    or env_ctxt.get('DISTRO_ID',    'keymissing')
+DISTRO_VER      = locals().get('OVERRIDE_DISTRO_VER')   or env_ctxt.get('DISTRO_VER',   'keymissing')
+VARIANT_ID      = locals().get('OVERRIDE_VARIANT_ID')   or env_ctxt.get('VARIANT_ID',   'keymissing')
+SESSION_TYPE    = locals().get('OVERRIDE_SESSION_TYPE') or env_ctxt.get('SESSION_TYPE', 'keymissing')
+DESKTOP_ENV     = locals().get('OVERRIDE_DESKTOP_ENV')  or env_ctxt.get('DESKTOP_ENV',  'keymissing')
+DE_MAJ_VER      = locals().get('OVERRIDE_DE_MAJ_VER')   or env_ctxt.get('DE_MAJ_VER',   'keymissing')
+WINDOW_MGR      = locals().get('OVERRIDE_WINDOW_MGR')   or env_ctxt.get('WINDOW_MGR',   'keymissing')
 
 debug("")
 debug(  f'Toshy config sees this environment:'
         f'\n\t{DISTRO_ID        = }'
         f'\n\t{DISTRO_VER       = }'
+        f'\n\t{VARIANT_ID       = }'
         f'\n\t{SESSION_TYPE     = }'
         f'\n\t{DESKTOP_ENV      = }'
-        f'\n\t{DE_MAJ_VER       = }\n', ctx="CG")
+        f'\n\t{DE_MAJ_VER       = }'
+        f'\n\t{WINDOW_MGR       = }\n', ctx="CG")
 
 
 # TODO: Add a list here to concat with 'wlroots_compositors', instead of
@@ -235,14 +252,19 @@ debug(  f'Toshy config sees this environment:'
 # the keymapper. 
 known_wlroots_compositors = [
     'hyprland',
+    'labwc',        # untested but should work
     'niri',
     'qtile',
+    'river',        # untested but should work
     'sway',
+    'wayfire',      # untested but should work
 ]
 
 # Make sure the 'wlroots_compositors' list variable exists before checking it.
 # Older config files won't have it in the 'env_overrides' slice. 
 wlroots_compositors = locals().get('wlroots_compositors', [])
+
+all_wlroots_compositors = known_wlroots_compositors + wlroots_compositors
 
 # Direct the keymapper to try to use `wlroots` window context for
 # all DEs/WMs in user list, if list is not empty.
@@ -252,6 +274,13 @@ if wlroots_compositors and DESKTOP_ENV in wlroots_compositors:
     _desktop_env = 'wlroots'
 elif DESKTOP_ENV in known_wlroots_compositors:
     debug(f"DE/WM '{DESKTOP_ENV}' is in known 'wlroots' compositor list.", ctx="CG")
+    _desktop_env = 'wlroots'
+elif (SESSION_TYPE, DESKTOP_ENV) == ('wayland', 'lxqt') and WINDOW_MGR == 'kwin_wayland':
+    # The Toshy KWin script must be installed in the LXQt/KWin environment for this to work!
+    debug(f"DE is LXQt, WM is '{WINDOW_MGR}', using 'kde' window context method.", ctx="CG")
+    _desktop_env = 'kde'
+elif (SESSION_TYPE, DESKTOP_ENV) == ('wayland', 'lxqt') and WINDOW_MGR in all_wlroots_compositors:
+    debug(f"DE is LXQt, WM is '{WINDOW_MGR}', using 'wlroots' window context method.", ctx="CG")
     _desktop_env = 'wlroots'
 else:
     _desktop_env = DESKTOP_ENV
@@ -1250,6 +1279,7 @@ def notify_context():
             f"<b> • SESSION_TYPE _________</b> '{SESSION_TYPE   }' {nwln_str}"
             f"<b> • DESKTOP_ENV __________</b> '{DESKTOP_ENV    }' {nwln_str}"
             f"<b> • DE_MAJ_VER ___________</b> '{DE_MAJ_VER     }' {nwln_str}"
+            f"<b> • WINDOW_MGR ___________</b> '{WINDOW_MGR     }' {nwln_str}"
             f"{nwln_str}"
             f"<b>Do any app class groups match on this window?:</b>  {nwln_str}"
             f"<b> • Terminals ____________</b> '{ctx_term}' {nwln_str}"

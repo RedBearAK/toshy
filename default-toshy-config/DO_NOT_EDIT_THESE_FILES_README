@@ -1,0 +1,29 @@
+DO NOT EDIT THE FILES IN THIS FOLDER
+
+
+The files in this folder are meant to be "clean" copies of the
+default Toshy configuration files, to be used by the installer
+or copied by the user into the parent folder in case there is
+a major problem with the user's `toshy_config.py` config file.
+
+
+
+The user's editable config file is located here in the parent folder:
+
+~/.config/toshy/toshy_config.py
+
+
+
+To replace your config file with a new default config:
+
+mv ~/.config/toshy/toshy_config.py ~/.config/toshy/toshy_config.py.old
+cp ~/.config/toshy/default-toshy-config/toshy_config.py ~/.config/toshy/toshy_config.py
+toshy-services-restart
+
+
+
+Or, if you were using the "barebones" config file:
+
+mv ~/.config/toshy/toshy_config.py ~/.config/toshy/toshy_config.py.old
+cp ~/.config/toshy/default-toshy-config/toshy_config_barebones.py ~/.config/toshy/toshy_config.py
+toshy-services-restart

@@ -19,4 +19,4 @@ fi
 # shellcheck disable=SC1091
 source "$HOME/.config/toshy/.venv/bin/activate"
 
-python3 "$HOME/.config/toshy/lib/env.py"
+python3 "$HOME/.config/toshy/lib/env_context.py"

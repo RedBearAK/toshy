@@ -76,6 +76,8 @@ current_folder_path = os.path.dirname(os.path.abspath(config_globals["__config__
 sys.path.insert(0, current_folder_path)
 
 import lib.env
+
+from lib.env_context import EnvironmentInfo
 from lib.settings_class import Settings
 from lib.notification_manager import NotificationManager
 
@@ -87,7 +89,7 @@ icon_file_inverse   = os.path.join(assets_path, "toshy_app_icon_rainbow_inverse.
 # Toshy config file
 TOSHY_PART      = 'config'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Barebones Config'
-APP_VERSION     = '2024.0801'
+APP_VERSION     = '2024.0904'
 
 # Settings object used to tweak preferences "live" between gui, tray and config.
 cnfg = Settings(current_folder_path)
@@ -121,6 +123,7 @@ OVERRIDE_VARIANT_ID             = None
 OVERRIDE_SESSION_TYPE           = None
 OVERRIDE_DESKTOP_ENV            = None
 OVERRIDE_DE_MAJ_VER             = None
+OVERRIDE_WINDOW_MGR             = None
 
 wlroots_compositors             = [
     # Comma-separated list of Wayland desktop environments or window managers
@@ -134,30 +137,44 @@ wlroots_compositors             = [
 ###  SLICE_MARK_END: env_overrides  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 ###################################################################################################
 
-# leave all of this alone!
+# Leave all of this alone! Don't try to override values here. 
 DISTRO_ID                       = None
 DISTRO_VER                      = None
 VARIANT_ID                      = None
 SESSION_TYPE                    = None
 DESKTOP_ENV                     = None
 DE_MAJ_VER                      = None
+WINDOW_MGR                      = None
 
-env_info: Dict[str, str] = lib.env.get_env_info()
+# env_info: Dict[str, str] = lib.env.get_env_info()
 
-DISTRO_ID       = locals().get('OVERRIDE_DISTRO_ID')    or env_info.get('DISTRO_ID',    'keymissing')
-DISTRO_VER      = locals().get('OVERRIDE_DISTRO_VER')   or env_info.get('DISTRO_VER',   'keymissing')
-VARIANT_ID      = locals().get('OVERRIDE_VARIANT_ID')   or env_info.get('VARIANT_ID',   'keymissing')
-SESSION_TYPE    = locals().get('OVERRIDE_SESSION_TYPE') or env_info.get('SESSION_TYPE', 'keymissing')
-DESKTOP_ENV     = locals().get('OVERRIDE_DESKTOP_ENV')  or env_info.get('DESKTOP_ENV',  'keymissing')
-DE_MAJ_VER      = locals().get('OVERRIDE_DE_MAJ_VER')   or env_info.get('DE_MAJ_VER',   'keymissing')
+# DISTRO_ID       = locals().get('OVERRIDE_DISTRO_ID')    or env_info.get('DISTRO_ID',    'keymissing')
+# DISTRO_VER      = locals().get('OVERRIDE_DISTRO_VER')   or env_info.get('DISTRO_VER',   'keymissing')
+# VARIANT_ID      = locals().get('OVERRIDE_VARIANT_ID')   or env_info.get('VARIANT_ID',   'keymissing')
+# SESSION_TYPE    = locals().get('OVERRIDE_SESSION_TYPE') or env_info.get('SESSION_TYPE', 'keymissing')
+# DESKTOP_ENV     = locals().get('OVERRIDE_DESKTOP_ENV')  or env_info.get('DESKTOP_ENV',  'keymissing')
+# DE_MAJ_VER      = locals().get('OVERRIDE_DE_MAJ_VER')   or env_info.get('DE_MAJ_VER',   'keymissing')
+
+env_ctxt_getter = EnvironmentInfo()
+env_ctxt: Dict[str, str] = env_ctxt_getter.get_env_info()
+
+DISTRO_ID       = locals().get('OVERRIDE_DISTRO_ID')    or env_ctxt.get('DISTRO_ID',    'keymissing')
+DISTRO_VER      = locals().get('OVERRIDE_DISTRO_VER')   or env_ctxt.get('DISTRO_VER',   'keymissing')
+VARIANT_ID      = locals().get('OVERRIDE_VARIANT_ID')   or env_ctxt.get('VARIANT_ID',   'keymissing')
+SESSION_TYPE    = locals().get('OVERRIDE_SESSION_TYPE') or env_ctxt.get('SESSION_TYPE', 'keymissing')
+DESKTOP_ENV     = locals().get('OVERRIDE_DESKTOP_ENV')  or env_ctxt.get('DESKTOP_ENV',  'keymissing')
+DE_MAJ_VER      = locals().get('OVERRIDE_DE_MAJ_VER')   or env_ctxt.get('DE_MAJ_VER',   'keymissing')
+WINDOW_MGR      = locals().get('OVERRIDE_WINDOW_MGR')   or env_ctxt.get('WINDOW_MGR',   'keymissing')
 
 debug("")
 debug(  f'Toshy (barebones) config sees this environment:'
         f'\n\t{DISTRO_ID        = }'
         f'\n\t{DISTRO_VER       = }'
+        f'\n\t{VARIANT_ID       = }'
         f'\n\t{SESSION_TYPE     = }'
         f'\n\t{DESKTOP_ENV      = }'
-        f'\n\t{DE_MAJ_VER       = }\n', ctx="CG")
+        f'\n\t{DE_MAJ_VER       = }'
+        f'\n\t{WINDOW_MGR       = }\n', ctx="CG")
 
 
 # TODO: Add a list here to concat with 'wlroots_compositors', instead of
@@ -209,7 +226,7 @@ except NameError:
 # Establish important global variables here
 
 
-startup_timestamp = time.time()     # only gets evaluated once for each run of keymapper
+STARTUP_TIMESTAMP = time.time()     # only gets evaluated once for each run of keymapper
 
 # Variable to hold the keyboard type
 KBTYPE = None
@@ -542,6 +559,11 @@ def isDoubleTap(dt_combo):
     return _isDoubleTap
 
 
+total_matchProps_iterations = 0
+MAX_MATCHPROPS_ITERATIONS = 1000
+MAX_MATCHPROPS_ITERATIONS_REACHED = False
+
+
 # Correct syntax to reject all positional parameters: put `*,` at beginning
 def matchProps(*,
     # string parameters (positive matching)
@@ -605,15 +627,31 @@ def matchProps(*,
     # https://stackoverflow.com/questions/406230/\
         # regular-expression-to-match-a-line-that-doesnt-contain-a-word
 
+    global MAX_MATCHPROPS_ITERATIONS_REACHED
+    global total_matchProps_iterations
+
+    # Return `False` immediately if screen does not have focus (e.g. Synergy),
+    # but only after the guard clauses have had a chance to evaluate on
+    # all possible uses of the function that may exist in the config.
+    if MAX_MATCHPROPS_ITERATIONS_REACHED and not cnfg.screen_has_focus:
+        return False
+
+    if total_matchProps_iterations >= MAX_MATCHPROPS_ITERATIONS:
+        MAX_MATCHPROPS_ITERATIONS_REACHED = True
+        bypass_guard_clauses = True
+    else:
+        total_matchProps_iterations += 1
+        current_timestamp = time.time()
+
+        # 'STARTUP_TIMESTAMP' is a global variable, set when config is executed
+        time_elapsed = current_timestamp - STARTUP_TIMESTAMP
+
+        # Bypass all guard clauses if more than a few seconds have passed since keymapper 
+        # started and loaded the config file. Inputs never change until keymapper 
+        # restarts and reloads the config file, so we don't need to keep checking.
+        bypass_guard_clauses = time_elapsed > 6
+
     logging_enabled = False
-
-    current_timestamp = time.time()
-    time_elapsed = current_timestamp - startup_timestamp
-
-    # Bypass all guard clauses if more than a few seconds have passed since keymapper 
-    # started and loaded the config file. Inputs never change until keymapper 
-    # restarts and reloads the config file, so we don't need to keep checking.
-    bypass_guard_clauses = time_elapsed > 6
 
     allowed_params  = (clas, name, devn, not_clas, not_name, not_devn, 
                         numlk, capslk, cse, lst, not_lst, dbg)
@@ -633,7 +671,7 @@ def matchProps(*,
         'numlk', 'capslk', 'cse', 'lst', 'not_lst', 'dbg'
     ]
 
-    if not bypass_guard_clauses:
+    if not MAX_MATCHPROPS_ITERATIONS_REACHED or not bypass_guard_clauses:
         if all([x is None for x in allowed_params]): 
             raise ValueError(f"\n\n(EE) matchProps(): Received no valid argument\n")
         if any([x not in (True, False, None) for x in (numlk, capslk, cse)]): 
@@ -655,7 +693,7 @@ def matchProps(*,
     # process lists of conditions
     if _lst is not None:
 
-        if not bypass_guard_clauses:
+        if not MAX_MATCHPROPS_ITERATIONS_REACHED or not bypass_guard_clauses:
             if any([x is not None for x in lst_dct_params]): 
                 raise TypeError(f"\n\n(EE) matchProps(): Param 'lst|not_lst' must be used alone\n")
             if not isinstance(_lst, list) or not all(isinstance(item, dict) for item in _lst): 
@@ -871,6 +909,7 @@ def notify_context():
             f"<b> • SESSION_TYPE _________</b> '{SESSION_TYPE   }' {nwln_str}"
             f"<b> • DESKTOP_ENV __________</b> '{DESKTOP_ENV    }' {nwln_str}"
             f"<b> • DE_MAJ_VER ___________</b> '{DE_MAJ_VER     }' {nwln_str}"
+            f"<b> • WINDOW_MGR ___________</b> '{WINDOW_MGR     }' {nwln_str}"
             f"{nwln_str}"
             f"<b> __________________________________________________ </b>{nwln_str}"
             f"<i>Keyboard shortcuts (Ctrl+C/Cmd+C) may not work here.</i>{nwln_str}"

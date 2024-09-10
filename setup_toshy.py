@@ -25,6 +25,8 @@ from typing import Dict, List, Tuple, Optional
 
 # local import
 import lib.env as env
+
+from lib.env_context import EnvironmentInfo
 from lib.logger import debug, error, warn, info
 from lib import logger
 
@@ -163,6 +165,7 @@ class InstallerSettings:
         self.SESSION_TYPE           = None
         self.DESKTOP_ENV            = None
         self.DE_MAJ_VER: str        = ""
+        self.WINDOW_MGR             = None
 
         self.distro_mjr_ver: str    = ""
         self.distro_mnr_ver: str    = ""
@@ -267,7 +270,7 @@ def show_reboot_prompt():
 
 def get_environment_info():
     """Get back the distro name (ID), distro version, session type and desktop 
-        environment from `env.py` module"""
+        environment from the environment evaluation module"""
     print(f'\n§  Getting environment information...\n{cnfg.separator}')
 
     known_init_systems = {
@@ -305,7 +308,9 @@ def get_environment_info():
         # we don't care what it is, just that it is set to avoid errors in get_env_info()
         os.environ['XDG_SESSION_TYPE'] = 'x11'
 
-    env_info_dct   = env.get_env_info()
+    # env_info_dct   = env.get_env_info()
+    env_ctxt_getter = EnvironmentInfo()
+    env_info_dct   = env_ctxt_getter.get_env_info()
 
     # Avoid casefold() errors by converting all to strings
     if cnfg.override_distro:
@@ -317,6 +322,7 @@ def get_environment_info():
     cnfg.SESSION_TYPE   = str(env_info_dct.get('SESSION_TYPE',  'keymissing')).casefold()
     cnfg.DESKTOP_ENV    = str(env_info_dct.get('DESKTOP_ENV',   'keymissing')).casefold()
     cnfg.DE_MAJ_VER     = str(env_info_dct.get('DE_MAJ_VER',    'keymissing')).casefold()
+    cnfg.WINDOW_MGR     = str(env_info_dct.get('WINDOW_MGR',    'keymissing')).casefold()
 
     # split out the major version from the minor version, if there is one
     distro_ver_parts            = cnfg.DISTRO_VER.split('.') if cnfg.DISTRO_VER else []
@@ -330,6 +336,7 @@ def get_environment_info():
         f"\n\t SESSION_TYPE     = '{cnfg.SESSION_TYPE}'"
         f"\n\t DESKTOP_ENV      = '{cnfg.DESKTOP_ENV}'"
         f"\n\t DE_MAJ_VER       = '{cnfg.DE_MAJ_VER}'"
+        f"\n\t WINDOW_MGR       = '{cnfg.WINDOW_MGR}'"
         # '\n', ctx='EV')
         '', ctx='EV')
 
@@ -653,6 +660,7 @@ distro_groups_map: Dict[str, List[str]] = {
 # - AlmaLinux 8.x                               [Provided by 'glib2']
 # - AlmaLinux 9.x                               [Provided by 'glib2']
 # - CentOS 7                                    [Provided by 'glib2']
+# - Fedora                                      [Provided by 'glib2']
 # - KDE Neon User Edition (Ubuntu 22.04 LTS)    [Provided by 'libglib2.0-bin']
 # - Manjaro KDE (Arch-based)                    [Provided by 'glib2']
 # - OpenMandriva Lx 5.0 (Plasma Slim)           [Provided by 'glib2.0-common']

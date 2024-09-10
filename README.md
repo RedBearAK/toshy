@@ -366,7 +366,7 @@ On the other hand, if you are in a Wayland session, it is only possible to obtai
 
 For Wayland+GNOME this requires at least one of the known compatible GNOME Shell extensions to be installed and enabled. See above in [**Requirements**](#requirements). I do not maintain the GNOME shell extensions, and they frequently need to be updated for new GNOME releases.  
 
-There are specific remaps or overrides of default remaps for several common desktop environments (or distros which have shortcut peculiarities in their default desktop setups). They become active if the desktop environment is detected correctly by the `env.py` environment evaluation module used by the config file. If that isn't working for some reason, the information about the desktop environment can be placed in some `OVERRIDE` variables in the config file. But open an issue if that seems to be necessary.  
+There are specific remaps or overrides of default remaps for several common desktop environments (or distros which have shortcut peculiarities in their default desktop setups). They become active if the desktop environment is detected correctly by the environment evaluation module used by the config file. If that isn't working for some reason, the information about the desktop environment can be placed in some `OVERRIDE` variables in the config file. But open an issue if that seems to be necessary.  
 
 Tiling window managers may need [some adjustments](https://github.com/RedBearAK/toshy/issues/294). The example issue at the link is for i3 WM, with the physical `Meta/Super/Win` key chosen as the `Mod` key in i3 config, on a PC keyboard type. Other WMs or other configuration choices will need modifications of the solution shown.  
 
