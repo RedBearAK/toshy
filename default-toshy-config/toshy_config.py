@@ -4698,6 +4698,15 @@ if DESKTOP_ENV == 'mate':
         matchProps(not_clas=remoteStr)(ctx)
     )
 
+if DESKTOP_ENV == 'miracle-wm':
+    keymap("GenGUI overrides: MiracleWM", {
+        # C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # Open Launcher with Cmd+Space
+        C("RC-Space"):             [C("Super-d"), iEF2NT()],        # Open Launcher with Cmd+Space
+    }, when = lambda ctx:
+        cnfg.screen_has_focus and
+        matchProps(not_clas=remoteStr)(ctx)
+    )
+
 if DESKTOP_ENV == 'sway':
     keymap("GenGUI overrides: swaywm", {
         C("RC-Space"):             [iEF2NT(),C("Super-d")],         # Open sway launcher
