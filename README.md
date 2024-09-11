@@ -352,6 +352,7 @@ You will find these distro groupings in the Wiki article:
     - **COSMIC desktop environment** - _[uses D-Bus service]_
     - **GNOME 3.38 or later** - _[needs shell extension, see [**Requirements**](#requirements)]_
     - **Hyprland** - _[currently uses `hyprpy` Python module]_
+    - **MiracleWM** - _[via `wlroots` method]_
     - **Niri** - _[via `wlroots` method]_
     - **Plasma 5 (KDE)** - _[uses custom KWin script and D-Bus service]_
     - **Plasma 6 (KDE)** - _[uses custom KWin script and D-Bus service]_
@@ -360,7 +361,7 @@ You will find these distro groupings in the Wiki article:
     - **Wayland compositors with `zwlr_foreign_toplevel_manager_v1` interface**
         - See [Wiki article](https://github.com/RedBearAK/toshy/wiki/Wlroots-Based-Wayland-Compositors.md) for usage of this method with unknown compositors that may be compatible
 
-If you are in an X11/Xorg login session, the desktop environment or window manager doesn't really matter. The keymapper gets the window class/name/title information directly from the X server with the Python `Xlib` module.  
+If you are in an X11/Xorg login session, the desktop environment or window manager doesn't really matter. The keymapper gets the window class/name/title information directly from the X server using functionality available in the `Xlib` Python module.  
 
 On the other hand, if you are in a Wayland session, it is only possible to obtain the per-application or per-window information (for the app-specific shortcut keymaps) by using solutions that are custom to a limited set of desktop environments (or window managers).  
 
@@ -368,7 +369,7 @@ For Wayland+GNOME this requires at least one of the known compatible GNOME Shell
 
 There are specific remaps or overrides of default remaps for several common desktop environments (or distros which have shortcut peculiarities in their default desktop setups). They become active if the desktop environment is detected correctly by the environment evaluation module used by the config file. If that isn't working for some reason, the information about the desktop environment can be placed in some `OVERRIDE` variables in the config file. But open an issue if that seems to be necessary.  
 
-Tiling window managers may need [some adjustments](https://github.com/RedBearAK/toshy/issues/294). The example issue at the link is for i3 WM, with the physical `Meta/Super/Win` key chosen as the `Mod` key in i3 config, on a PC keyboard type. Other WMs or other configuration choices will need modifications of the solution shown.  
+Tiling window managers may need [some adjustments](https://github.com/RedBearAK/toshy/issues/294) in your config file, to be usable while retaining the tiling shortcuts. The example issue at the link is for a user's setup of i3 WM, where the physical `Meta/Super/Win` key was chosen as the `Mod` key in i3 config, on a PC keyboard type. Other WMs or other configuration choices will need modifications of the solution shown.  
 
 ## Usage (changing preferences)
 
