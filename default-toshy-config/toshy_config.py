@@ -418,6 +418,7 @@ terminals = [
     "lxterminal",
     "mate-terminal",
     "MateTerminal",
+    "org.codeberg.dnkl.foot.desktop",
     "org.gnome.Console",
     "org.gnome.Ptyxis.*",
     "org.kde.konsole",
