@@ -301,9 +301,7 @@ class EnvironmentInfo:
         if not _desktop_env:
             _desktop_env = None
             error("ERR: DE not found in XDG_SESSION_DESKTOP, XDG_CURRENT_DESKTOP or DESKTOP_SESSION.")
-            error("ERR: Config file will not be able to adapt automatically to Desktop Environment.")
-            if self.SESSION_TYPE == 'wayland':
-                error("ERR: No generic Wayland window context method is currently available.")
+            error("ERR: Config file may not be able to adapt automatically to Desktop Environment.")
 
         # Protect '.lower()' method from NoneType error
         if _desktop_env and 'unity' in _desktop_env.lower():
@@ -389,6 +387,9 @@ class EnvironmentInfo:
 
             for desktop_env, process_names in processes.items():
                 check_process(process_names, desktop_env)
+
+            if not _desktop_env and self.SESSION_TYPE == 'wayland':
+                error("ERR: No generic Wayland window context method is currently available.")
 
     def get_kde_version(self):
         kde_session_version = os.environ.get('KDE_SESSION_VERSION')
