@@ -366,7 +366,7 @@ class EnvironmentInfo:
             def check_process(names, desktop_env):
                 # nonlocal DESKTOP_ENV
                 for name in names:
-                    command = f"pgrep {name}"
+                    command = f"pgrep -x {name}"
                     try:
                         subprocess.check_output(command, shell=True)
                         if self.DESKTOP_ENV != desktop_env:
@@ -386,10 +386,8 @@ class EnvironmentInfo:
             }
 
             for desktop_env, process_names in processes.items():
-                check_process(process_names, desktop_env)
-
-            if not _desktop_env and self.SESSION_TYPE == 'wayland':
-                error("ERR: No generic Wayland window context method is currently available.")
+                if check_process(process_names, desktop_env):
+                    break   # Stop this loop when some process is found by exact match
 
     def get_kde_version(self):
         kde_session_version = os.environ.get('KDE_SESSION_VERSION')
