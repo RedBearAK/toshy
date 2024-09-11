@@ -199,13 +199,33 @@ class EnvironmentInfo:
 
     def get_session_type(self):
         """logic to set self.SESSION_TYPE"""
+        valid_session_types = ['x11', 'wayland']
         self.SESSION_TYPE   = os.environ.get("XDG_SESSION_TYPE") or None
 
         if not self.SESSION_TYPE:  # Why isn't XDG_SESSION_TYPE set? This shouldn't happen.
-            error(f'ENV: XDG_SESSION_TYPE should really be set. Are you in a graphical environment?')
+            error(f'ENV: XDG_SESSION_TYPE should really be set. Not a graphical environment?')
+
+        if self.SESSION_TYPE not in valid_session_types or self.SESSION_TYPE == 'tty':
+            # This is seen sometimes in situations like starting a window manager
+            # or desktop environment session from a TTY, without using a login
+            # manager like GDM or SDDM. This is not good. Treat as error. 
+            error(f"ENV: XDG_SESSION_TYPE is 'tty' for some reason. Why?")
+
+            # We need to check in some other way whether we are in Wayland or X11
+            # Usually for Wayland there will be: WAYLAND_DISPLAY=wayland-[number]
+            wayland_display = os.environ.get('WAYLAND_DISPLAY')
+            if wayland_display and wayland_display.startswith('wayland'):
+                self.SESSION_TYPE = 'wayland'
+
+            # If the Wayland display variable was not set or not 'wayland*', 
+            # then check for the usual X11 display variable.
+            elif os.environ.get('DISPLAY'):
+                self.SESSION_TYPE = 'x11'
+
+        if self.SESSION_TYPE not in valid_session_types:
+            # Deal with archaic distros like antiX that fail to set XDG_SESSION_TYPE
             time.sleep(3)
 
-            # Deal with archaic distros like antiX that fail to set XDG_SESSION_TYPE
             xorg_check_p1 = subprocess.Popen(['ps', 'ax'], stdout=subprocess.PIPE)
             xorg_check_p2 = subprocess.Popen(
                                         ['grep', '-i', '-c', 'xorg'], 
@@ -230,16 +250,14 @@ class EnvironmentInfo:
             if wayland_count:
                 self.SESSION_TYPE = 'wayland'
 
-        if not self.SESSION_TYPE:
-            self.SESSION_TYPE = os.environ.get("WAYLAND_DISPLAY") or None
-            if not self.SESSION_TYPE:
-                raise EnvironmentError(
-                    f'\n\nENV: Detecting session type failed.\n')
+        if self.SESSION_TYPE is None:
+            raise EnvironmentError(
+                f'\n\nENV: Detecting session type failed.\n')
 
         if isinstance(self.SESSION_TYPE, str):
             self.SESSION_TYPE = self.SESSION_TYPE.casefold()
 
-        if self.SESSION_TYPE not in ['x11', 'wayland', 'tty']:
+        if self.SESSION_TYPE not in valid_session_types:
             error(f'\n\nENV: Unknown session type: {self.SESSION_TYPE}.\n')
 
     def is_qtile_running(self):
@@ -364,6 +382,7 @@ class EnvironmentInfo:
             processes = {
                 'kde':          ['plasmashell', 'kwin_ft', 'kwin_wayland', 'kwin_x11', 'kwin'],
                 'gnome':        ['gnome-shell'],
+                'miracle-wm':   ['miracle-wm'],
                 'sway':         ['sway', 'swaywm'],
                 'hyprland':     ['hyprland'],
             }
