@@ -199,13 +199,33 @@ class EnvironmentInfo:
 
     def get_session_type(self):
         """logic to set self.SESSION_TYPE"""
+        valid_session_types = ['x11', 'wayland']
         self.SESSION_TYPE   = os.environ.get("XDG_SESSION_TYPE") or None
 
         if not self.SESSION_TYPE:  # Why isn't XDG_SESSION_TYPE set? This shouldn't happen.
-            error(f'ENV: XDG_SESSION_TYPE should really be set. Are you in a graphical environment?')
+            error(f'ENV: XDG_SESSION_TYPE should really be set. Not a graphical environment?')
+
+        if self.SESSION_TYPE not in valid_session_types or self.SESSION_TYPE == 'tty':
+            # This is seen sometimes in situations like starting a window manager
+            # or desktop environment session from a TTY, without using a login
+            # manager like GDM or SDDM. This is not good. Treat as error. 
+            error(f"ENV: XDG_SESSION_TYPE is 'tty' for some reason. Why?")
+
+            # We need to check in some other way whether we are in Wayland or X11
+            # Usually for Wayland there will be: WAYLAND_DISPLAY=wayland-[number]
+            wayland_display = os.environ.get('WAYLAND_DISPLAY')
+            if wayland_display and wayland_display.startswith('wayland'):
+                self.SESSION_TYPE = 'wayland'
+
+            # If the Wayland display variable was not set or not 'wayland*', 
+            # then check for the usual X11 display variable.
+            elif os.environ.get('DISPLAY'):
+                self.SESSION_TYPE = 'x11'
+
+        if self.SESSION_TYPE not in valid_session_types:
+            # Deal with archaic distros like antiX that fail to set XDG_SESSION_TYPE
             time.sleep(3)
 
-            # Deal with archaic distros like antiX that fail to set XDG_SESSION_TYPE
             xorg_check_p1 = subprocess.Popen(['ps', 'ax'], stdout=subprocess.PIPE)
             xorg_check_p2 = subprocess.Popen(
                                         ['grep', '-i', '-c', 'xorg'], 
@@ -230,16 +250,14 @@ class EnvironmentInfo:
             if wayland_count:
                 self.SESSION_TYPE = 'wayland'
 
-        if not self.SESSION_TYPE:
-            self.SESSION_TYPE = os.environ.get("WAYLAND_DISPLAY") or None
-            if not self.SESSION_TYPE:
-                raise EnvironmentError(
-                    f'\n\nENV: Detecting session type failed.\n')
+        if self.SESSION_TYPE is None:
+            raise EnvironmentError(
+                f'\n\nENV: Detecting session type failed.\n')
 
         if isinstance(self.SESSION_TYPE, str):
             self.SESSION_TYPE = self.SESSION_TYPE.casefold()
 
-        if self.SESSION_TYPE not in ['x11', 'wayland', 'tty']:
+        if self.SESSION_TYPE not in valid_session_types:
             error(f'\n\nENV: Unknown session type: {self.SESSION_TYPE}.\n')
 
     def is_qtile_running(self):
@@ -283,9 +301,7 @@ class EnvironmentInfo:
         if not _desktop_env:
             _desktop_env = None
             error("ERR: DE not found in XDG_SESSION_DESKTOP, XDG_CURRENT_DESKTOP or DESKTOP_SESSION.")
-            error("ERR: Config file will not be able to adapt automatically to Desktop Environment.")
-            if self.SESSION_TYPE == 'wayland':
-                error("ERR: No generic Wayland window context method is currently available.")
+            error("ERR: Config file may not be able to adapt automatically to Desktop Environment.")
 
         # Protect '.lower()' method from NoneType error
         if _desktop_env and 'unity' in _desktop_env.lower():
@@ -309,6 +325,8 @@ class EnvironmentInfo:
             'LXDE':                     'lxde',
             'LXQt':                     'lxqt',
             'MATE':                     'mate',
+            'Miracle-WM':               'miracle-wm',
+            'miracle-wm:mir':           'miracle-wm',
             'Niri':                     'niri',
             'Pantheon':                 'pantheon',
             'Plasma':                   'kde',
@@ -348,7 +366,7 @@ class EnvironmentInfo:
             def check_process(names, desktop_env):
                 # nonlocal DESKTOP_ENV
                 for name in names:
-                    command = f"pgrep {name}"
+                    command = f"pgrep -x {name}"
                     try:
                         subprocess.check_output(command, shell=True)
                         if self.DESKTOP_ENV != desktop_env:
@@ -362,12 +380,14 @@ class EnvironmentInfo:
             processes = {
                 'kde':          ['plasmashell', 'kwin_ft', 'kwin_wayland', 'kwin_x11', 'kwin'],
                 'gnome':        ['gnome-shell'],
+                'miracle-wm':   ['miracle-wm'],
                 'sway':         ['sway', 'swaywm'],
                 'hyprland':     ['hyprland'],
             }
 
             for desktop_env, process_names in processes.items():
-                check_process(process_names, desktop_env)
+                if check_process(process_names, desktop_env):
+                    break   # Stop this loop when some process is found by exact match
 
     def get_kde_version(self):
         kde_session_version = os.environ.get('KDE_SESSION_VERSION')
@@ -444,11 +464,11 @@ class EnvironmentInfo:
         # Common "desktop environments" mapped to likely actual "window manager" process names
         de_wm_map = {
 
-            # Older KDE may use 'kwin' process name
+            # Older KDE may just use 'kwin' process name
             'kde': [
-                'kwin', 
+                'kwin_wayland',
                 'kwin_x11', 
-                'kwin_wayland'
+                'kwin', 
             ],
 
             # Older GNOME may have 'mutter' integrated into 'gnome-shell' process
@@ -468,13 +488,14 @@ class EnvironmentInfo:
                 'river'
             ],
 
-            'openbox':      'openbox',
-            'xfce':         'xfwm4',
-            'i3':           'i3',
-            'i3-gaps':      'i3',
-            'sway':         'sway',
-            'awesome':      'awesome',
-            'dwm':          'dwm',
+            'awesome':          'awesome',
+            'dwm':              'dwm',
+            'i3':               'i3',
+            'i3-gaps':          'i3',
+            'miracle-wm':       'miracle-wm',
+            'openbox':          'openbox',
+            'sway':             'sway',
+            'xfce':             'xfwm4',
 
         }
 

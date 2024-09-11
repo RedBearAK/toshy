@@ -253,6 +253,7 @@ debug(  f'Toshy config sees this environment:'
 known_wlroots_compositors = [
     'hyprland',
     'labwc',        # untested but should work
+    'miracle-wm',
     'niri',
     'qtile',
     'river',        # untested but should work
@@ -417,6 +418,7 @@ terminals = [
     "lxterminal",
     "mate-terminal",
     "MateTerminal",
+    "org.codeberg.dnkl.foot.desktop",
     "org.gnome.Console",
     "org.gnome.Ptyxis.*",
     "org.kde.konsole",
@@ -4691,6 +4693,15 @@ if DESKTOP_ENV == 'mate':
     keymap("GenGUI overrides: MATE", {
         # Right click, configure Mint menu shortcut to match `Alt+Space` shortcut
         C("RC-Space"):             [iEF2NT(),C("Alt-Space")],       # Open Mint app menu
+    }, when = lambda ctx:
+        cnfg.screen_has_focus and
+        matchProps(not_clas=remoteStr)(ctx)
+    )
+
+if DESKTOP_ENV == 'miracle-wm':
+    keymap("GenGUI overrides: MiracleWM", {
+        # C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # Open Launcher with Cmd+Space
+        C("RC-Space"):             [C("Super-d"), iEF2NT()],        # Open Launcher with Cmd+Space
     }, when = lambda ctx:
         cnfg.screen_has_focus and
         matchProps(not_clas=remoteStr)(ctx)
