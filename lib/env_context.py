@@ -309,6 +309,8 @@ class EnvironmentInfo:
             'LXDE':                     'lxde',
             'LXQt':                     'lxqt',
             'MATE':                     'mate',
+            'Miracle-WM':               'miracle-wm',
+            'miracle-wm:mir':           'miracle-wm',
             'Niri':                     'niri',
             'Pantheon':                 'pantheon',
             'Plasma':                   'kde',
@@ -444,11 +446,11 @@ class EnvironmentInfo:
         # Common "desktop environments" mapped to likely actual "window manager" process names
         de_wm_map = {
 
-            # Older KDE may use 'kwin' process name
+            # Older KDE may just use 'kwin' process name
             'kde': [
-                'kwin', 
+                'kwin_wayland',
                 'kwin_x11', 
-                'kwin_wayland'
+                'kwin', 
             ],
 
             # Older GNOME may have 'mutter' integrated into 'gnome-shell' process
@@ -468,13 +470,14 @@ class EnvironmentInfo:
                 'river'
             ],
 
-            'openbox':      'openbox',
-            'xfce':         'xfwm4',
-            'i3':           'i3',
-            'i3-gaps':      'i3',
-            'sway':         'sway',
-            'awesome':      'awesome',
-            'dwm':          'dwm',
+            'awesome':          'awesome',
+            'dwm':              'dwm',
+            'i3':               'i3',
+            'i3-gaps':          'i3',
+            'miracle-wm':       'miracle-wm',
+            'openbox':          'openbox',
+            'sway':             'sway',
+            'xfce':             'xfwm4',
 
         }
 

@@ -253,6 +253,7 @@ debug(  f'Toshy config sees this environment:'
 known_wlroots_compositors = [
     'hyprland',
     'labwc',        # untested but should work
+    'miracle-wm',
     'niri',
     'qtile',
     'river',        # untested but should work
