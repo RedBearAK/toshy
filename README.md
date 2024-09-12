@@ -187,16 +187,17 @@ There is a weird bug with searching for extensions by name sometimes, where you 
 > Installer commands and options are now different from early Toshy releases.  
 > CentOS 7 and CentOS Stream 8 users: run `./prep_centos_before_setup.sh` first.  
 
+0. Verify that your specific distro or basic distro type is [supported](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros)
 1. Click the big green **`  <> Code  ▼  `** button near the top of the page.
 1. Download the latest zip file from the drop-down. ("Releases" are older.)  
 1. Unzip the archive, and open a terminal in the resulting folder.  
-1. Run the `setup_toshy.py` script in the terminal, like this:  
+1. Run the Toshy installer script command in the terminal, like this:  
 
 ```sh
 ./setup_toshy.py install
 ```
 
-(See the `--options` in the next section if the basic install doesn't work.)  
+Check out the `--options` in the next section if the basic install doesn't work. If you are on KDE Plasma and want a more Mac-like task switching experience, take a look at the `--fancy-pants` option in particular.  
 
 ### Options for installer script
 
