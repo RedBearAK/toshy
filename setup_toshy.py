@@ -337,7 +337,6 @@ def get_environment_info():
         f"\n\t DESKTOP_ENV      = '{cnfg.DESKTOP_ENV}'"
         f"\n\t DE_MAJ_VER       = '{cnfg.DE_MAJ_VER}'"
         f"\n\t WINDOW_MGR       = '{cnfg.WINDOW_MGR}'"
-        # '\n', ctx='EV')
         '', ctx='EV')
 
 
@@ -628,21 +627,21 @@ def elevate_privileges():
 distro_groups_map: Dict[str, List[str]] = {
 
     # separate references for RHEL types versus Fedora types
-    'fedora-based':             ["fedora", "fedoralinux", "ultramarine", "nobara"],
-    'rhel-based':               ["rhel", "almalinux", "rocky", "eurolinux", "centos", "oreon"],
+    'fedora-based':             ["fedora", "fedoralinux", "nobara", "ultramarine"],
+    'rhel-based':               ["almalinux", "centos", "eurolinux", "oreon", "rhel", "rocky"],
 
     # separate references for Fedora immutables using rpm-ostree
-    'fedora-immutables':        ["silverblue-experimental", "kinoite-experimental"],
+    'fedora-immutables':        ["kinoite", "silverblue"],
 
     # separate references for Tumbleweed types, Leap types, MicroOS types
     'tumbleweed-based':         ["opensuse-tumbleweed"],
     'leap-based':               ["opensuse-leap"],
-    'microos-based':            ["opensuse-microos", "opensuse-aeon", "opensuse-kalpa"],
+    'microos-based':            ["opensuse-aeon", "opensuse-kalpa", "opensuse-microos"],
 
     'mandriva-based':           ["openmandriva"],
 
-    'ubuntu-based':             ["ubuntu", "mint", "pop", "elementary", "neon", "tuxedo", "zorin"],
-    'debian-based':             ["deepin", "lmde", "peppermint", "debian", "kali", "q4os"],
+    'ubuntu-based':             ["elementary", "mint", "neon", "pop", "tuxedo", "ubuntu", "zorin"],
+    'debian-based':             ["debian", "deepin", "kali", "lmde", "peppermint", "q4os"],
 
     'arch-based':               ["arch", "arcolinux", "endeavouros", "garuda", "manjaro"],
 
