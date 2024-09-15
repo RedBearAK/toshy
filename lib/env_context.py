@@ -100,6 +100,23 @@ class EnvironmentInfo:
                     contents[path] = file.read().splitlines()
         return contents
 
+    def is_process_running(self, process_name):
+        try:
+            subprocess.check_output(['pgrep', '-x', process_name])
+            return True
+        except subprocess.CalledProcessError:
+            return False
+
+####################################################################################################
+##                                                                                                ##
+##                ██████  ██ ███████ ████████ ██████   ██████      ██ ██████                      ##
+##                ██   ██ ██ ██         ██    ██   ██ ██    ██     ██ ██   ██                     ##
+##                ██   ██ ██ ███████    ██    ██████  ██    ██     ██ ██   ██                     ##
+##                ██   ██ ██      ██    ██    ██   ██ ██    ██     ██ ██   ██                     ##
+##                ██████  ██ ███████    ██    ██   ██  ██████      ██ ██████                      ##
+##                                                                                                ##
+####################################################################################################
+
     def get_distro_id(self):
         """logic to set self.DISTRO_ID"""
         _distro_id          = ""
@@ -159,6 +176,16 @@ class EnvironmentInfo:
         if isinstance(self.DISTRO_ID, str):
             self.DISTRO_ID = self.DISTRO_ID.casefold()
 
+####################################################################################################
+##                                                                                                ##
+##           ██████  ██ ███████ ████████ ██████   ██████      ██    ██ ███████ ██████             ##
+##           ██   ██ ██ ██         ██    ██   ██ ██    ██     ██    ██ ██      ██   ██            ##
+##           ██   ██ ██ ███████    ██    ██████  ██    ██     ██    ██ █████   ██████             ##
+##           ██   ██ ██      ██    ██    ██   ██ ██    ██      ██  ██  ██      ██   ██            ##
+##           ██████  ██ ███████    ██    ██   ██  ██████        ████   ███████ ██   ██            ##
+##                                                                                                ##
+####################################################################################################
+
     def get_distro_version(self):
         """logic to set self.DISTRO_VER"""
 
@@ -178,6 +205,16 @@ class EnvironmentInfo:
         if not self.DISTRO_VER:
             self.DISTRO_VER = 'notfound'
 
+####################################################################################################
+##                                                                                                ##
+##             ██    ██  █████  ██████  ██  █████  ███    ██ ████████     ██ ██████               ##
+##             ██    ██ ██   ██ ██   ██ ██ ██   ██ ████   ██    ██        ██ ██   ██              ##
+##             ██    ██ ███████ ██████  ██ ███████ ██ ██  ██    ██        ██ ██   ██              ##
+##              ██  ██  ██   ██ ██   ██ ██ ██   ██ ██  ██ ██    ██        ██ ██   ██              ##
+##               ████   ██   ██ ██   ██ ██ ██   ██ ██   ████    ██        ██ ██████               ##
+##                                                                                                ##
+####################################################################################################
+
     def get_variant_id(self):
         """logic to set self.VARIANT_ID, if variant info available"""
 
@@ -196,6 +233,16 @@ class EnvironmentInfo:
 
         if not self.VARIANT_ID:
             self.VARIANT_ID = 'notfound'
+
+####################################################################################################
+##                                                                                                ##
+##  ███████ ███████ ███████ ███████ ██  ██████  ███    ██     ████████ ██    ██ ██████  ███████   ##
+##  ██      ██      ██      ██      ██ ██    ██ ████   ██        ██     ██  ██  ██   ██ ██        ##
+##  ███████ █████   ███████ ███████ ██ ██    ██ ██ ██  ██        ██      ████   ██████  █████     ##
+##       ██ ██           ██      ██ ██ ██    ██ ██  ██ ██        ██       ██    ██      ██        ##
+##  ███████ ███████ ███████ ███████ ██  ██████  ██   ████        ██       ██    ██      ███████   ##
+##                                                                                                ##
+####################################################################################################
 
     def get_session_type(self):
         """logic to set self.SESSION_TYPE"""
@@ -260,29 +307,15 @@ class EnvironmentInfo:
         if self.SESSION_TYPE not in valid_session_types:
             error(f'\n\nENV: Unknown session type: {self.SESSION_TYPE}.\n')
 
-    def is_qtile_running(self):
-        """Utility function to detect Qtile if the usual environment vars are not set/empty"""
-        xdg_cache_home      = os.environ.get('XDG_CACHE_HOME', os.path.expanduser('~/.cache'))
-        display             = os.environ.get('DISPLAY')
-        wayland_display     = os.environ.get('WAYLAND_DISPLAY')
-        desktop_session     = os.environ.get('DESKTOP_SESSION')
-
-        socket_paths = []
-        
-        if display:
-            socket_paths.append(os.path.join(xdg_cache_home, f'qtile/qtilesocket.{display}'))
-        
-        if wayland_display:
-            socket_paths.append(os.path.join(xdg_cache_home, f'qtile/qtilesocket.{wayland_display}'))
-
-        if desktop_session and 'qtile' in desktop_session:
-            return True
-
-        for socket_path in socket_paths:
-            if os.path.exists(socket_path):
-                return True
-
-        return False
+####################################################################################################
+##                                                                                                ##
+##    ██████  ███████ ███████ ██   ██ ████████  ██████  ██████      ███████ ███    ██ ██    ██    ##
+##    ██   ██ ██      ██      ██  ██     ██    ██    ██ ██   ██     ██      ████   ██ ██    ██    ##
+##    ██   ██ █████   ███████ █████      ██    ██    ██ ██████      █████   ██ ██  ██ ██    ██    ##
+##    ██   ██ ██           ██ ██  ██     ██    ██    ██ ██          ██      ██  ██ ██  ██  ██     ##
+##    ██████  ███████ ███████ ██   ██    ██     ██████  ██          ███████ ██   ████   ████      ##
+##                                                                                                ##
+####################################################################################################
 
     def get_desktop_environment(self):
         """logic to set self.DESKTOP_ENV and self.DE_MAJ_VER"""
@@ -389,23 +422,39 @@ class EnvironmentInfo:
                 if check_process(process_names, desktop_env):
                     break   # Stop this loop when some process is found by exact match
 
-    def get_kde_version(self):
-        kde_session_version = os.environ.get('KDE_SESSION_VERSION')
-        if kde_session_version:
-            if kde_session_version in ['3', '4', '5', '6']:
-                return kde_session_version
-            else:
-                error(f"KDE_SESSION_VERSION contains unrecognized value: '{kde_session_version}'")
-        if shutil.which("kpackagetool6"): # or shutil.which("kwriteconfig6"):
-            return '6'
-        elif shutil.which("kpackagetool5"): # or shutil.which("kwriteconfig5"):
-            return '5'
-        elif shutil.which("kpackagetool"): # or shutil.which("kwriteconfig"): 
-            # In KDE 4, these tools don't have a version number in their name
-            # Additional check for KDE 4 versioning can be done here if necessary
-            return '4'
-        # no 'kpackagetool' command in KDE 3?
-        return 'kde_ver_check_err'
+    def is_qtile_running(self):
+        """Utility function to detect Qtile if the usual environment vars are not set/empty"""
+        xdg_cache_home      = os.environ.get('XDG_CACHE_HOME', os.path.expanduser('~/.cache'))
+        display             = os.environ.get('DISPLAY')
+        wayland_display     = os.environ.get('WAYLAND_DISPLAY')
+        desktop_session     = os.environ.get('DESKTOP_SESSION')
+
+        socket_paths = []
+        
+        if display:
+            socket_paths.append(os.path.join(xdg_cache_home, f'qtile/qtilesocket.{display}'))
+        
+        if wayland_display:
+            socket_paths.append(os.path.join(xdg_cache_home, f'qtile/qtilesocket.{wayland_display}'))
+
+        if desktop_session and 'qtile' in desktop_session:
+            return True
+
+        for socket_path in socket_paths:
+            if os.path.exists(socket_path):
+                return True
+
+        return False
+
+####################################################################################################
+##                                                                                                ##
+##          ██████  ███████     ██    ██ ███████ ██████  ███████ ██  ██████  ███    ██            ##
+##          ██   ██ ██          ██    ██ ██      ██   ██ ██      ██ ██    ██ ████   ██            ##
+##          ██   ██ █████       ██    ██ █████   ██████  ███████ ██ ██    ██ ██ ██  ██            ##
+##          ██   ██ ██           ██  ██  ██      ██   ██      ██ ██ ██    ██ ██  ██ ██            ##
+##          ██████  ███████       ████   ███████ ██   ██ ███████ ██  ██████  ██   ████            ##
+##                                                                                                ##
+####################################################################################################
 
     def get_desktop_env_version(self):
         """logic to set self.DE_MAJ_VER"""
@@ -427,33 +476,33 @@ class EnvironmentInfo:
         if not self.DE_MAJ_VER:
             self.DE_MAJ_VER = 'no_logic_for_DE'
 
-    def get_lxqt_window_manager(self):
-        """Further steps to identify possible LXQt window manager"""
-        # If DE is LXQt and WM still not found after above search, try checking its config file:
-        # cat ~/.config/lxqt/session.conf | grep WindowManager
-        config_path = os.path.expanduser('~/.config/lxqt/session.conf')
-        try:
-            with open(config_path, 'r') as config_file:
-                for line in config_file:
-                    if line.startswith('window_manager='):
-                        # Typically the line would be like "window_manager=openbox\n"
-                        wm_name = line.strip().split('=')[1]
-                        if self.is_process_running(wm_name):
-                            self.WINDOW_MGR = wm_name
-                            return
-                        else:
-                            # Fallback to checking other known WMs in case config is outdated
-                            break
-        except FileNotFoundError:
-            # Handle cases where the config file does not exist
-            print(f"Could not find LXQt config file at: {config_path}")
+    def get_kde_version(self):
+        kde_session_version = os.environ.get('KDE_SESSION_VERSION')
+        if kde_session_version:
+            if kde_session_version in ['3', '4', '5', '6']:
+                return kde_session_version
+            else:
+                error(f"KDE_SESSION_VERSION contains unrecognized value: '{kde_session_version}'")
+        if shutil.which("kpackagetool6"): # or shutil.which("kwriteconfig6"):
+            return '6'
+        elif shutil.which("kpackagetool5"): # or shutil.which("kwriteconfig5"):
+            return '5'
+        elif shutil.which("kpackagetool"): # or shutil.which("kwriteconfig"): 
+            # In KDE 4, these tools don't have a version number in their name
+            # Additional check for KDE 4 versioning can be done here if necessary
+            return '4'
+        # no 'kpackagetool' command in KDE 3?
+        return 'kde_ver_check_err'
 
-    def is_process_running(self, process_name):
-        try:
-            subprocess.check_output(['pgrep', '-x', process_name])
-            return True
-        except subprocess.CalledProcessError:
-            return False
+####################################################################################################
+##                                                                                                ##
+##       ██     ██ ██ ███    ██ ██████   ██████  ██     ██     ███    ███  ██████  ██████         ##
+##       ██     ██ ██ ████   ██ ██   ██ ██    ██ ██     ██     ████  ████ ██       ██   ██        ##
+##       ██  █  ██ ██ ██ ██  ██ ██   ██ ██    ██ ██  █  ██     ██ ████ ██ ██   ███ ██████         ##
+##       ██ ███ ██ ██ ██  ██ ██ ██   ██ ██    ██ ██ ███ ██     ██  ██  ██ ██    ██ ██   ██        ##
+##        ███ ███  ██ ██   ████ ██████   ██████   ███ ███      ██      ██  ██████  ██   ██        ##
+##                                                                                                ##
+####################################################################################################
 
     def get_window_manager(self):
         """
@@ -524,6 +573,27 @@ class EnvironmentInfo:
         # If nothing found, set a default value
         if not self.WINDOW_MGR:
             self.WINDOW_MGR = 'WM_unidentified_by_logic'
+
+    def get_lxqt_window_manager(self):
+        """Further steps to identify possible LXQt window manager"""
+        # If DE is LXQt and WM still not found after above search, try checking its config file:
+        # cat ~/.config/lxqt/session.conf | grep WindowManager
+        config_path = os.path.expanduser('~/.config/lxqt/session.conf')
+        try:
+            with open(config_path, 'r') as config_file:
+                for line in config_file:
+                    if line.startswith('window_manager='):
+                        # Typically the line would be like "window_manager=openbox\n"
+                        wm_name = line.strip().split('=')[1]
+                        if self.is_process_running(wm_name):
+                            self.WINDOW_MGR = wm_name
+                            return
+                        else:
+                            # Fallback to checking other known WMs in case config is outdated
+                            break
+        except FileNotFoundError:
+            # Handle cases where the config file does not exist
+            print(f"Could not find LXQt config file at: {config_path}")
 
 
 if __name__ == "__main__":
