@@ -202,8 +202,19 @@ class EnvironmentInfo:
                     self.DISTRO_VER = line.split('=')[1].strip().strip('"')
                     break
 
+        arch_distros = [
+            'arch',
+            'arcolinux',
+            'endeavouros',
+            'garuda',
+            'manjaro',
+        ]
+
         if not self.DISTRO_VER:
-            self.DISTRO_VER = 'notfound'
+            if self.DISTRO_ID in arch_distros:
+                self.DISTRO_VER = 'arch_btw'
+            else:
+                self.DISTRO_VER = 'notfound'
 
 ####################################################################################################
 ##                                                                                                ##
