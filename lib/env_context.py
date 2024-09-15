@@ -459,31 +459,38 @@ class EnvironmentInfo:
 
     def get_desktop_env_version(self):
         """logic to set self.DE_MAJ_VER"""
+        # Desktop environments for which we need the major version:
+        # - GNOME
+        # - KDE Plasma
 
         if self.DESKTOP_ENV == 'gnome':
-            try:
-                # Run the gnome-shell command to get the version
-                output = subprocess.check_output(["gnome-shell", "--version"]).decode().strip()
-                # Use regular expression to extract the major version number
-                match = re.search(r"GNOME Shell (\d+)\.", output)
-                if match:
-                    self.DE_MAJ_VER = match.group(1)
-            except subprocess.CalledProcessError as proc_err:
-                error(f"Error obtaining GNOME version: {proc_err}")
-
+            self.DE_MAJ_VER = self.get_gnome_version()
         elif self.DESKTOP_ENV == 'kde':
             self.DE_MAJ_VER = self.get_kde_version()
 
         if not self.DE_MAJ_VER:
             self.DE_MAJ_VER = 'no_logic_for_DE'
 
+    def get_gnome_version(self):
+            try:
+                # Run the gnome-shell command to get the version
+                output = subprocess.check_output(["gnome-shell", "--version"]).decode().strip()
+                # Use regular expression to extract the major version number
+                match = re.search(r"GNOME Shell (\d+)\.", output)
+                if match:
+                    return match.group(1)
+            except subprocess.CalledProcessError as proc_err:
+                error(f"Error obtaining GNOME version: {proc_err}")
+                return 'gnome_ver_check_err'
+
     def get_kde_version(self):
-        kde_session_version = os.environ.get('KDE_SESSION_VERSION')
-        if kde_session_version:
-            if kde_session_version in ['3', '4', '5', '6']:
-                return kde_session_version
-            else:
-                error(f"KDE_SESSION_VERSION contains unrecognized value: '{kde_session_version}'")
+        KDE_session_ver = os.environ.get('KDE_SESSION_VERSION')
+        if KDE_session_ver is None:
+            error(f"KDE_SESSION_VERSION was not set.")
+        elif KDE_session_ver in ['3', '4', '5', '6']:
+            return KDE_session_ver
+        else:
+            error(f"KDE_SESSION_VERSION contains unrecognized value: '{KDE_session_ver}'")
         if shutil.which("kpackagetool6"): # or shutil.which("kwriteconfig6"):
             return '6'
         elif shutil.which("kpackagetool5"): # or shutil.which("kwriteconfig5"):
