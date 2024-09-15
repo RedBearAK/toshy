@@ -390,7 +390,8 @@ class EnvironmentInfo:
 
         # say DE should be added to list only if it it isn't None
         if not self.DESKTOP_ENV and _desktop_env is not None:
-            error(f'DE or window manager not in desktop_env_names list! Should fix this.\n\t{_desktop_env}')
+            error(f'DE or window manager not in desktop_env_names list! Should fix this.'
+                    f'\n\t{_desktop_env}')
             self.DESKTOP_ENV = _desktop_env
 
         # do this only if DESKTOP_ENV is still None after the above step
