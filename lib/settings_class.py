@@ -1,3 +1,5 @@
+__version__ = '20240915'
+
 import os
 import inspect
 import sqlite3

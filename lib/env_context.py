@@ -8,7 +8,8 @@ import subprocess
 
 from typing import Dict
 
-# ENV_CONTEXT module version: 2024-09-06
+# ENV_CONTEXT module version:
+__version__ = '20240915'
 
 VERBOSE = True
 FLUSH = True

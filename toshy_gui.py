@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+__version__ = '20240915'
 
 # Preferences app for Toshy, using tkinter GUI and "Sun Valley" theme
 TOSHY_PART      = 'gui'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
 TOSHY_PART_NAME = 'Toshy Preferences app'  # pretty name to print out
-APP_VERSION     = '2024.0620'
+APP_VERSION     = __version__
 
 # -------- COMMON COMPONENTS --------------------------------------------------
 

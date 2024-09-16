@@ -511,16 +511,18 @@ toshy-config-verbose-start  (older alias of 'toshy-config-start-verbose')
 toshy-config-start-verbose  (show debugging output in the terminal)
 ```
 
-And a command that will show what Toshy sees as the environment when you launch the config. This may be helpful when troubleshooting or making reports:  
+There are some informative commands that will print different kinds of useful output. These commands may be helpful when troubleshooting or making reports:  
 
 ```
-toshy-env
+toshy-env                   (show what Toshy sees as the "environment")
+toshy-devices               (show the keymapper's list of evdev devices)
+toshy-versions              (show versions of some major Toshy components)
 ```
 
 For changing the function keys mode of a keyboard device that uses the `hid_apple` device driver/kernel module, use this command:  
 
 ```
-toshy-fnmode                    (interactive prompts mode)
+toshy-fnmode                    (change fnmode with interactive prompts)
 toshy-fnmode --help             (show usage/options)
 toshy-fnmode --info             (show current status of fnmode)
 toshy-fnmode [--option] [mode]  (change fnmode non-interactively)
