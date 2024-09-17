@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20240915'    # TODO: Add CLI option to print this out?
+__version__ = '20240915'                        # TODO: Add CLI option to print this out?
 
 import os
 os.environ['PYTHONDONTWRITEBYTECODE'] = '1'     # prevent this script from creating cache files
@@ -81,22 +81,28 @@ if original_PATH_str is None:
 # TODO: Integrate this into the rest of the setup script?
 def get_linux_app_dirs(app_name):
     # Default XDG directories
-    xdg_data_home = os.environ.get('XDG_DATA_HOME', os.path.join(os.environ['HOME'], '.local', 'share'))
-    xdg_config_home = os.environ.get('XDG_CONFIG_HOME', os.path.join(os.environ['HOME'], '.config'))
-    xdg_cache_home = os.environ.get('XDG_CACHE_HOME', os.path.join(os.environ['HOME'], '.cache'))
-    xdg_state_home = os.environ.get('XDG_STATE_HOME', os.path.join(os.environ['HOME'], '.local', 'state'))
+    def_xdg_data_home       = os.path.join(os.environ['HOME'], '.local', 'share')
+    def_xdg_config_home     = os.path.join(os.environ['HOME'], '.config')
+    def_xdg_cache_home      = os.path.join(os.environ['HOME'], '.cache')
+    def_xdg_state_home      = os.path.join(os.environ['HOME'], '.local', 'state')
+
+    # Actual XDG directories on system
+    xdg_data_home           = os.environ.get('XDG_DATA_HOME',   def_xdg_data_home)
+    xdg_config_home         = os.environ.get('XDG_CONFIG_HOME', def_xdg_config_home)
+    xdg_cache_home          = os.environ.get('XDG_CACHE_HOME',  def_xdg_cache_home)
+    xdg_state_home          = os.environ.get('XDG_STATE_HOME',  def_xdg_state_home)
 
     app_dirs = {
-        'data_dir': os.path.join(xdg_data_home, app_name),
-        'config_dir': os.path.join(xdg_config_home, app_name),
-        'cache_dir': os.path.join(xdg_cache_home, app_name),
-        'log_dir': os.path.join(xdg_state_home, app_name)
+        'data_dir':         os.path.join(xdg_data_home,     app_name),
+        'config_dir':       os.path.join(xdg_config_home,   app_name),
+        'cache_dir':        os.path.join(xdg_cache_home,    app_name),
+        'log_dir':          os.path.join(xdg_state_home,    app_name)
     }
 
     return app_dirs
 
 # Example usage
-app_name = 'MyApp'
+app_name = 'toshy'
 app_dirs = get_linux_app_dirs(app_name)
 # print(app_dirs)
 
@@ -911,10 +917,10 @@ def exit_with_invalid_distro_error(pkg_mgr_err=None):
     error(f'ERROR: Installer does not know how to handle distro: "{cnfg.DISTRO_ID}"')
     if pkg_mgr_err:
         error('ERROR: No valid package manager logic was encountered for this distro.')
+    # print()
+    # print(f'Try some options in "./{this_file_name} --help".')
     print()
-    print(f'Try some options in "./{this_file_name} --help".')
-    print()
-    print(f'Maybe try one of these with "--override-distro" option:\n\n\t{get_supported_distro_ids()}')
+    print(f'Try one of these with "--override-distro" option:\n\n\t{get_supported_distro_ids()}')
     safe_shutdown(1)
 
 
@@ -1113,7 +1119,7 @@ class DistroQuirksHandler:
                     print(f'No match for potential Python version {version}.')
                     # if the installation fails, continue loop and check for next version in list
                     continue
-            # NB: This 'else' is part of the 'for' loop above, not an 'if' condition! Don't indent!
+            # NOTE: This 'else' is part of the 'for' loop above, not an 'if' condition! Don't indent!
             else:
                 # if no suitable version was found, print an error message and exit
                 error('ERROR: Did not find any appropriate Python interpreter version.')
@@ -1299,6 +1305,17 @@ def install_distro_pkgs():
     ###########################################################################
     def install_on_transupd_distro():
         """utility function that gets dispatched for distros that use Transactional-Update"""
+
+        def print_incomplete_setup_warning():
+            """utility function to print the warning about rebooting and running setup again"""
+            print()
+            print('###############################################################################')
+            print('############       WARNING: Toshy setup is NOT yet complete!       ############')
+            print('###########      This distro type uses "transactional-update".      ###########')
+            print('##########   You MUST reboot now to make native packages available.  ##########')
+            print('#########  After REBOOTING, run the Toshy setup script a second time. #########')
+            print('###############################################################################')
+
         if cnfg.DISTRO_ID in distro_groups_map['microos-based']:
             print('Distro is openSUSE MicroOS/Aeon/Kalpa immutable. Using "transactional-update".')
 
@@ -1319,13 +1336,7 @@ def install_distro_pkgs():
                 verify_user_groups()
                 install_udev_rules()
                 show_reboot_prompt()
-                print()
-                print('###############################################################################')
-                print('############       WARNING: Toshy setup is NOT yet complete!       ############')
-                print('###########      This distro type uses "transactional-update".      ###########')
-                print('##########   You MUST reboot now to make native packages available.  ##########')
-                print('#########  After REBOOTING, run the Toshy setup script a second time. #########')
-                print('###############################################################################')
+                print_incomplete_setup_warning()
                 safe_shutdown(0)
             else:
                 print('All needed packages are already available. Continuing setup...')
@@ -1571,10 +1582,8 @@ def install_udev_rules():
         acl_rule                = f', RUN+="{setfacl_path} -m g::rw /dev/uinput"'
     new_rules_content           = (
         'SUBSYSTEM=="input", GROUP="input", MODE="0660", TAG+="uaccess"\n'
-        f'KERNEL=="uinput", SUBSYSTEM=="misc", GROUP="input", MODE="0660", TAG+="uaccess"{acl_rule}\n'
-        # 'ACTION=="add", KERNEL=="event*", ATTRS{name}=="XWayKeyz (virtual) Keyboard", '   # no line break!
-        # 'ENV{ID_INPUT_KEYBOARD}="1", ENV{ID_INPUT_KEY}="1", '   # no line break!
-        # 'ENV{LIBINPUT_ATTR_KEYBOARD_INTEGRATION}="internal"\n'
+        'KERNEL=="uinput", SUBSYSTEM=="misc", GROUP="input", MODE="0660", ' # No line break here!
+        f'TAG+="uaccess"{acl_rule}\n'
     )
 
     def rules_file_missing_or_content_differs():
@@ -1654,7 +1663,8 @@ def create_group(group_name):
                     # https://docs.fedoraproject.org/en-US/fedora-silverblue/troubleshooting/
                     # Special command to make Fedora Silverblue/uBlue work, or usermod will fail: 
                     # grep -E '^input:' /usr/lib/group | sudo tee -a /etc/group
-                    command = f"grep -E '^{group_name}:' /usr/lib/group | sudo tee -a /etc/group >/dev/null"
+                    command = (f"grep -E '^{group_name}:' /usr/lib/group | "
+                                "sudo tee -a /etc/group >/dev/null")
                     try:
                         subprocess.run(command, shell=True, check=True)
                         print(f"Added '{group_name}' group to system.")
@@ -1752,7 +1762,11 @@ def is_barebones_config_file() -> bool:
 
         pattern = r'###  SLICE_MARK_(?:START|END): (\w+)  ###.*'
         matches = re.findall(pattern, cnfg.existing_cfg_data)
-        return 'barebones_user_cfg' in matches or any('barebones' in slice_name for slice_name in matches)
+
+        if 'barebones_user_cfg' in matches:
+            return True
+        elif any('barebones' in slice_name for slice_name in matches):
+            return True
     else:
         print(f"No existing config file found at '{cfg_file_path}'.")
         return False
@@ -2541,7 +2555,7 @@ def setup_kde_dbus_service():
 
     ensure_XDG_autostart_dir_exists()
 
-    # try to delete old desktop entry file that would have been installed by code below
+    # try to delete old desktop entry file that would have been installed by older setup script
     autostart_dbus_dt_file = os.path.join(autostart_dir_path, 'Toshy_KDE_DBus_Service.desktop')
     if os.path.isfile(autostart_dbus_dt_file):
         try:
@@ -2549,18 +2563,6 @@ def setup_kde_dbus_service():
             print(f'Removed older KDE D-Bus desktop entry autostart.')
         except subprocess.CalledProcessError as proc_err:
             debug(f'Problem removing old D-Bus service desktop entry autostart:\n\t{proc_err}')
-
-    # # STOP DOING THIS, IN FAVOR OF SYSTEMD SERVICE, INSTALLED BY BASH SCRIPT
-    # shutil.copy(dbus_svc_desktop_file, autostart_dir_path)
-    # print(f'Toshy KDE D-Bus service should autostart at login.')
-    # subprocess.run(['pkill', '-u', cnfg.user_name, '-f', 'toshy_kde_dbus_service'])
-    # subprocess.Popen([start_dbus_svc_cmd], stdout=DEVNULL, stderr=DEVNULL)
-    
-    # # DON'T DO THIS HERE, IT'S IN THE KDE D-BUS SERVICE PYTHON SCRIPT NOW
-    # # Try to kickstart the KWin script so that it can start sending focused window info
-    # kickstart_script    = 'toshy-kwin-script-kickstart.sh'
-    # kickstart_cmd       = os.path.join(cnfg.toshy_dir_path, 'scripts', kickstart_script)
-    # subprocess.Popen([kickstart_cmd])
 
     print(f'Toshy KDE D-Bus service should automatically start when needed.')
     show_task_completed_msg()
@@ -2698,7 +2700,8 @@ def apply_tweaks_GNOME():
             error(f'Problem while setting the "toggle-overview" shortcut.\n\t{proc_err}')
 
     # Enable keyboard shortcut for GNOME Terminal preferences dialog
-    # gsettings set org.gnome.Terminal.Legacy.Keybindings:/org/gnome/terminal/legacy/keybindings/ preferences '<Control>less'
+    # gsettings set org.gnome.Terminal.Legacy.Keybindings:/org/gnome/terminal/legacy/keybindings/ \
+    # preferences '<Control>comma'
     cmd_path = 'org.gnome.Terminal.Legacy.Keybindings:/org/gnome/terminal/legacy/keybindings/'
     prefs_binding = '<Control>comma'
     cmd_lst = ['gsettings', 'set', cmd_path, 'preferences', prefs_binding]
@@ -2832,47 +2835,6 @@ def apply_tweaks_KDE():
 
         do_kwin_reconfigure()
 
-        # THIS COMMENTED CODE BLOCK WAS REPLACED BY AN EXTERNAL SHELL SCRIPT CALL
-
-        # # Set the LayoutName value to big_icons (shows task switcher with large icons, no previews)
-        # LayoutName_cmd          = [ kwriteconfig_cmd,
-        #                             '--file', 'kwinrc',
-        #                             '--group', 'TabBox',
-        #                             '--key', 'LayoutName', 'big_icons']
-        # subprocess.run(LayoutName_cmd, check=True)
-        # print(f'Set task switcher main style to: "Big Icons"')
-        # LayoutNameAlternative_cmd          = [ kwriteconfig_cmd,
-        #                             '--file', 'kwinrc',
-        #                             '--group', 'TabBoxAlternative',
-        #                             '--key', 'LayoutName', 'thumbnail_grid']
-        # subprocess.run(LayoutNameAlternative_cmd, check=True)
-        # print(f'Set task switcher alternative style to: "Thumbnail Grid"')
-
-        # # Set the HighlightWindows value to false (disables "Show selected window" option)
-        # HighlightWindows_cmd    = [ kwriteconfig_cmd,
-        #                             '--file', 'kwinrc',
-        #                             '--group', 'TabBox',
-        #                             '--key', 'HighlightWindows', 'false']
-        # subprocess.run(HighlightWindows_cmd, check=True)
-        # # Also apply this to the "Alternative" task switcher settings
-        # HighlightWindowsAlternative_cmd    = [ kwriteconfig_cmd,
-        #                             '--file', 'kwinrc',
-        #                             '--group', 'TabBoxAlternative',
-        #                             '--key', 'HighlightWindows', 'false']
-        # subprocess.run(HighlightWindowsAlternative_cmd, check=True)
-        # print(f'Disabled task switcher option: "Show selected window"')
-
-        # # Set the ApplicationsMode value to 1 (enables "Only one window per application" option)
-        # ApplicationsMode_cmd    = [ kwriteconfig_cmd,
-        #                             '--file', 'kwinrc',
-        #                             '--group', 'TabBox',
-        #                             '--key', 'ApplicationsMode', '1']
-        # subprocess.run(ApplicationsMode_cmd, check=True)
-        # print(f'Enabled task switcher option: "Only one window per application"')
-
-        # do_kwin_reconfigure()
-
-
         fix_task_switcher_cmd = ['./scripts/plasma-task-switcher-fixer.sh']
         try:
             subprocess.run(fix_task_switcher_cmd, check=True)
@@ -2888,33 +2850,6 @@ def apply_tweaks_KDE():
                                     '--key', 'SingleClick', 'false']
         subprocess.run(SingleClick_cmd, check=True)
         print('Disabled single-click to open/launch files/folders')
-
-        # Try not restarting Plasma shell anymore. 
-        # if shutil.which(kstart_cmd):
-        #     plasmashell_stopped = False
-        #     # Restart Plasma shell to make the new setting active
-        #     # kquitapp5/6 plasmashell && kstart5/6 plasmashell
-        #     try:
-        #         if shutil.which(kquitapp_cmd):
-        #             print('Stopping Plasma shell... ', flush=True, end='')
-        #             subprocess.run([kquitapp_cmd, 'plasmashell'], check=True,
-        #                             stdout=PIPE, stderr=PIPE)
-        #             print('Plasma shell stopped.')
-        #             plasmashell_stopped = True
-        #         else:
-        #             error(f'The "{kquitapp_cmd}" command is missing. Skipping plasmashell restart.')
-        #     except subprocess.CalledProcessError as proc_err:
-        #         err_output: bytes = proc_err.stderr             # type hint error output
-        #         error(f'\nProblem while stopping Plasma shell:\n\t{err_output.decode()}')
-        #     if plasmashell_stopped:
-        #         print('Starting Plasma shell (backgrounded)... ')
-        #         subprocess.Popen([kstart_cmd, 'plasmashell'], stdout=PIPE, stderr=PIPE)
-        #     else:
-        #         error('Plasma shell was not stopped. Skipping restarting Plasma shell.')
-        #         print('You should probably log out or restart.')
-        # else:
-        #     error(f'The "{kstart_cmd}" command is missing. Skipping restarting Plasma shell.')
-        #     print('You should probably log out or restart.')
 
 
 def remove_tweaks_KDE():
@@ -3452,7 +3387,8 @@ def main(cnfg: InstallerSettings):
             else:
                 print()
                 debug(f"RECOMMENDATION: Install 'AppIndicator' GNOME extension\n"
-                    "Easiest method: 'flatpak install extensionmanager', search for 'appindicator'\n",
+                    "Easiest method: 'flatpak install extensionmanager', "  # No line break here!
+                    "search for 'appindicator'\n",
                     ctx="!!")
 
         if os.path.exists(cnfg.reboot_tmp_file):
@@ -3496,8 +3432,13 @@ def main(cnfg: InstallerSettings):
             if cnfg.SESSION_TYPE == 'wayland' and cnfg.DESKTOP_ENV == 'kde':
                 print(f'Switch to a different window ONCE to get KWin script to start working!')
 
-        if cnfg.remind_extensions or (cnfg.DESKTOP_ENV == 'gnome' and cnfg.SESSION_TYPE == 'wayland'):
+        def print_gnome_extensions_alert():
             print(f'You MUST install GNOME EXTENSIONS if using Wayland+GNOME! See Toshy README.')
+
+        if cnfg.remind_extensions:
+            print_gnome_extensions_alert()
+        elif cnfg.DESKTOP_ENV == 'gnome' and cnfg.SESSION_TYPE == 'wayland':
+            print_gnome_extensions_alert()
 
     safe_shutdown(0)
 
