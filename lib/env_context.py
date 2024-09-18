@@ -61,6 +61,7 @@ class EnvironmentInfo:
         self.DESKTOP_ENV                    = None
         self.DE_MAJ_VER                     = None
         self.WINDOW_MGR                     = None
+        # self.WDW_MGR_VER                    = None        # Just in case we need it later
 
         self.env_info_dct: Dict[str, str]   = {}
         self.release_files: Dict[str, str]  = self.read_release_files()
@@ -77,6 +78,7 @@ class EnvironmentInfo:
         self.get_desktop_environment()
         self.get_desktop_env_version()
         self.get_window_manager()
+        # self.get_window_manager_version()                 # Just in case we need it later
 
         # Collect all info into a dictionary
         self.env_info_dct = {
@@ -87,6 +89,7 @@ class EnvironmentInfo:
             'DESKTOP_ENV':      self.DESKTOP_ENV,
             'DE_MAJ_VER':       self.DE_MAJ_VER,
             'WINDOW_MGR':       self.WINDOW_MGR,
+            # 'WDW_MGR_VER':      self.WDW_MGR_VER,         # Just in case we need it later
         }
         return self.env_info_dct
 
@@ -615,6 +618,21 @@ class EnvironmentInfo:
             # Handle cases where the config file does not exist
             print(f"Could not find LXQt config file at: {config_path}")
 
+####################################################################################################
+##                                                                                                ##
+##    ██     ██ ██████  ██     ██     ███    ███  ██████  ██████      ██    ██ ███████ ██████     ##
+##    ██     ██ ██   ██ ██     ██     ████  ████ ██       ██   ██     ██    ██ ██      ██   ██    ##
+##    ██  █  ██ ██   ██ ██  █  ██     ██ ████ ██ ██   ███ ██████      ██    ██ █████   ██████     ##
+##    ██ ███ ██ ██   ██ ██ ███ ██     ██  ██  ██ ██    ██ ██   ██      ██  ██  ██      ██   ██    ##
+##     ███ ███  ██████   ███ ███      ██      ██  ██████  ██   ██       ████   ███████ ██   ██    ##
+##                                                                                                ##
+####################################################################################################
+
+    def get_window_manager_version(self):
+        """Login to set self.WDW_MGR_VER, if ever necessary"""
+        if not self.WDW_MGR_VER:
+            self.WDW_MGR_VER = 'no_logic_for_wdw_mgr'
+
 
 if __name__ == "__main__":
     env_info_getter = EnvironmentInfo()
@@ -628,4 +646,5 @@ if __name__ == "__main__":
             f'\n\t\t DESKTOP_ENV     = \'{_env_info["DESKTOP_ENV"]}\''
             f'\n\t\t DE_MAJ_VER      = \'{_env_info["DE_MAJ_VER"]}\''
             f'\n\t\t WINDOW_MGR      = \'{_env_info["WINDOW_MGR"]}\''
+            # f'\n\t\t WDW_MGR_VER     = \'{_env_info["WDW_MGR_VER"]}\''
             f'\n', ctx="EV")
