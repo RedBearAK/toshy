@@ -494,6 +494,7 @@ def run_cmd_lst_in_terminal(command_list: List[str]):
     # somewhat intelligently use the "correct" terminal for a DE. 
     terminal_apps_lst_of_tup: List[Tuple[str, List[str], ]] = [
         ('gnome-terminal',      ['--'],     ['gnome', 'unity', 'cinnamon']              ),
+        ('ptyxis',              ['--'],     ['gnome', 'unity', 'cinnamon']              ),
         ('konsole',             ['-e'],     ['kde']                                     ),
         ('xfce4-terminal',      ['-e'],     ['xfce']                                    ),
         ('mate-terminal',       ['-e'],     ['mate']                                    ),
