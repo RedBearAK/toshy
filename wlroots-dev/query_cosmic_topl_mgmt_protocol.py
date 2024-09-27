@@ -20,21 +20,21 @@ import select
 import signal
 import traceback
 
-# # COSMIC-specific protocol module, using their own namespace
-# # XML files downloaded from `cosmic-protocols` GitHub repo, in 'unstable' folder
-# from protocols.cosmic_toplevel_info_unstable_v1.zcosmic_toplevel_info_v1 import (
-#     ZcosmicToplevelInfoV1,
-#     ZcosmicToplevelInfoV1Proxy,
-#     ZcosmicToplevelHandleV1
-# )
-
-# COSMIC protocol update has shifted to involving 'ext_foreign_toplevel_list_v1' interface.
-# Let's see if we can just talk directly to that protocol instead of the zcosmic interface.
-from protocols.ext_foreign_toplevel_list_v1.ext_foreign_toplevel_list_v1 import (
-    ExtForeignToplevelListV1,
-    ExtForeignToplevelListV1Proxy,
-    ExtForeignToplevelHandleV1
+# COSMIC-specific protocol module, using their own namespace
+# XML files downloaded from `cosmic-protocols` GitHub repo, in 'unstable' folder
+from protocols.cosmic_toplevel_info_unstable_v1.zcosmic_toplevel_info_v1 import (
+    ZcosmicToplevelInfoV1,
+    ZcosmicToplevelInfoV1Proxy,
+    ZcosmicToplevelHandleV1
 )
+
+# # COSMIC protocol update has shifted to involving 'ext_foreign_toplevel_list_v1' interface.
+# # Let's see if we can just talk directly to that protocol instead of the zcosmic interface.
+# from protocols.ext_foreign_toplevel_list_v1.ext_foreign_toplevel_list_v1 import (
+#     ExtForeignToplevelListV1,
+#     ExtForeignToplevelListV1Proxy,
+#     ExtForeignToplevelHandleV1
+# )
 
 from pywayland.client import Display
 from time import sleep
@@ -68,12 +68,25 @@ class WaylandClient:
             self.display.disconnect()
             print("Disconnected from Wayland display.")
 
-    def handle_toplevel_event(self, 
-            # toplevel_manager: ZcosmicToplevelInfoV1Proxy, 
-            # toplevel_handle: ZcosmicToplevelHandleV1):
-            toplevel_manager: ExtForeignToplevelListV1Proxy, 
-            toplevel_handle: ExtForeignToplevelHandleV1):
-        """Handle events for new toplevel windows."""
+    def handle_toplevel_event_v1(self, 
+            toplevel_manager: ZcosmicToplevelInfoV1Proxy, 
+            toplevel_handle: ZcosmicToplevelHandleV1):
+            # toplevel_manager: ExtForeignToplevelListV1Proxy, 
+            # toplevel_handle: ExtForeignToplevelHandleV1):
+        """Handle events for new toplevel windows in v1 protocol."""
+        # print(f"New toplevel window created: {toplevel_handle}")
+        # Subscribe to title and app_id changes as well as close event
+        toplevel_handle.dispatcher['title']             = self.handle_title_change
+        toplevel_handle.dispatcher['app_id']            = self.handle_app_id_change
+        toplevel_handle.dispatcher['closed']            = self.handle_window_closed
+        toplevel_handle.dispatcher['state']             = self.handle_state_change
+
+    def handle_get_coscmic_toplevel_event_v2(self,
+            toplevel_manager: ZcosmicToplevelInfoV1Proxy, 
+            toplevel_handle: ZcosmicToplevelHandleV1):
+            # toplevel_manager: ExtForeignToplevelListV1Proxy, 
+            # toplevel_handle: ExtForeignToplevelHandleV1):
+        """Handle events for new toplevel windows in v2 protocol."""
         # print(f"New toplevel window created: {toplevel_handle}")
         # Subscribe to title and app_id changes as well as close event
         toplevel_handle.dispatcher['title']             = self.handle_title_change
@@ -106,8 +119,8 @@ class WaylandClient:
         states = []
         if isinstance(states_bytes, bytes):
             states = list(states_bytes)
-        # if ZcosmicToplevelHandleV1.state.activated.value in states:
-        if ExtForeignToplevelHandleV1.state.activated.value in states:
+        if ZcosmicToplevelHandleV1.state.activated.value in states:
+        # if ExtForeignToplevelHandleV1.state.activated.value in states:
             self.active_app_class = self.wdw_handles_dct[handle]['app_id']
             self.active_wdw_title = self.wdw_handles_dct[handle]['title']
             print()
@@ -131,20 +144,26 @@ class WaylandClient:
         print(f"Registry event: id={id_}, interface={interface_name}, version={version}")
 
         # COSMIC is using their own namespace instead of 'zwlr_foreign_toplevel_manager_v1'
-        # if interface_name == 'zcosmic_toplevel_info_v1':
-
-        if interface_name == 'ext_foreign_toplevel_list_v1':
+        if interface_name == 'zcosmic_toplevel_info_v1':
+        # if interface_name == 'ext_foreign_toplevel_list_v1':
             print()
             print(f"Protocol '{interface_name}' version {version} is _SUPPORTED_.")
-            self.forn_topl_mgr_prot_supported = True
+            self.forn_topl_mgr_prot_supported       = True
+            self.protocol_version                   = version
             print(f"Creating toplevel manager...")
 
-            # self.toplevel_manager = registry.bind(id_, ZcosmicToplevelInfoV1, version)
-            self.toplevel_manager = registry.bind(id_, ExtForeignToplevelListV1, version)
+            self.toplevel_manager = registry.bind(id_, ZcosmicToplevelInfoV1, version)
+            # self.toplevel_manager = registry.bind(id_, ExtForeignToplevelListV1, version)
 
-            print(f"Subscribing to 'toplevel' events from toplevel manager...")
-            self.toplevel_manager.dispatcher['toplevel'] = self.handle_toplevel_event
-            print()
+            if version == 1:
+                print(f"Subscribing to 'toplevel' events from toplevel manager...")
+                self.toplevel_manager.dispatcher['toplevel'] = self.handle_toplevel_event_v1
+                print()
+
+            elif version >= 2:
+                print(f"Subscribing to 'get_cosmic_toplevel' events from toplevel manager...")
+                self.toplevel_manager.dispatcher['get_cosmic_toplevel'] = self.handle_get_coscmic_toplevel_event_v2
+
             self.display.roundtrip()
 
     def run(self):
