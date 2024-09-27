@@ -104,9 +104,11 @@ class WlPointerProxy(Proxy[WlPointer]):
         is always at (x, y) - (hotspot_x, hotspot_y), where (x, y) are the
         coordinates of the pointer location, in surface-local coordinates.
 
-        On surface.attach requests to the pointer surface, hotspot_x and
-        hotspot_y are decremented by the x and y parameters passed to the
-        request. Attach must be confirmed by :func:`WlSurface.commit()
+        On :func:`WlSurface.offset()
+        <pywayland.protocol.wayland.WlSurface.offset>` requests to the pointer
+        surface, hotspot_x and hotspot_y are decremented by the x and y
+        parameters passed to the request. The offset must be applied by
+        :func:`WlSurface.commit()
         <pywayland.protocol.wayland.WlSurface.commit>` as usual.
 
         The hotspot can also be updated by passing the currently set pointer

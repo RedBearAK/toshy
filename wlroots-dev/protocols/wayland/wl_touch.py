@@ -194,6 +194,8 @@ class WlTouchResource(Resource):
         client's surface. The client is responsible for finalizing the touch
         points, future touch points on this surface may reuse the touch point
         ID.
+
+        No frame event is required after the cancel event.
         """
         self._post_event(4)
 

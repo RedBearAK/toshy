@@ -55,7 +55,7 @@ class WlShm(Interface):
     """
 
     name = "wl_shm"
-    version = 1
+    version = 2
 
     class error(enum.IntEnum):
         invalid_format = 0
@@ -171,6 +171,21 @@ class WlShm(Interface):
         xbgr16161616 = 0x38344258
         argb16161616 = 0x38345241
         abgr16161616 = 0x38344241
+        c1 = 0x20203143
+        c2 = 0x20203243
+        c4 = 0x20203443
+        d1 = 0x20203144
+        d2 = 0x20203244
+        d4 = 0x20203444
+        d8 = 0x20203844
+        r1 = 0x20203152
+        r2 = 0x20203252
+        r4 = 0x20203452
+        r10 = 0x20303152
+        r12 = 0x20323152
+        avuy8888 = 0x59555641
+        xvuy8888 = 0x59555658
+        p030 = 0x30333050
 
 
 class WlShmProxy(Proxy[WlShm]):
@@ -203,6 +218,18 @@ class WlShmProxy(Proxy[WlShm]):
         """
         id = self._marshal_constructor(0, WlShmPool, fd, size)
         return id
+
+    @WlShm.request(version=2)
+    def release(self) -> None:
+        """Release the shm object
+
+        Using this request a client can tell the server that it is not going to
+        use the shm object anymore.
+
+        Objects created via this interface remain unaffected.
+        """
+        self._marshal(1)
+        self._destroy()
 
 
 class WlShmResource(Resource):

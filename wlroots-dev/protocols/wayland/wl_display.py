@@ -80,7 +80,8 @@ class WlDisplayProxy(Proxy[WlDisplay]):
         after the callback is fired and as such the client must not attempt to
         use it after that point.
 
-        The callback_data passed in the callback is the event serial.
+        The callback_data passed in the callback is undefined and should be
+        ignored.
 
         :returns:
             :class:`~pywayland.protocol.wayland.WlCallback` -- callback object

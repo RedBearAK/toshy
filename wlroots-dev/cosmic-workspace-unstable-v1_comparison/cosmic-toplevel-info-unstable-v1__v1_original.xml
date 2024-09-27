@@ -3,7 +3,7 @@
   <copyright>
     Copyright © 2018 Ilia Bozhinov
     Copyright © 2020 Isaac Freund
-    Copyright © 2024 Victoria Brekenfeld
+    Copytight © 2022 Victoria Brekenfeld
 
     Permission to use, copy, modify, distribute, and sell this
     software and its documentation for any purpose is hereby granted
@@ -27,24 +27,24 @@
     THIS SOFTWARE.
   </copyright>
 
-  <interface name="zcosmic_toplevel_info_v1" version="2">
+  <interface name="zcosmic_toplevel_info_v1" version="1">
     <description summary="list toplevels and properties thereof">
       The purpose of this protocol is to enable clients such as taskbars
       or docks to access a list of opened applications and basic properties
       thereof.
 
-      It thus extends ext_foreign_toplevel_v1 to provide more information
-      and actions on foreign toplevels.
+      The secondary purpose of this protocol is to provide protocol object
+      handles for toplevels which may be used to address said toplevels in
+      other protocols (e.g. to target a toplevel for screencopy).
+
+      After a client binds the zcosmic_toplevel_info_v1, each opened
+      toplevel window will be sent via the toplevel event
     </description>
 
-    <event name="toplevel" deprecated-since="2">
+    <event name="toplevel">
       <description summary="a toplevel has been created">
-        This event is never emitted for clients binding version 2
-        of this protocol, they should use `get_cosmic_toplevel` instead.
-
-        This event is emitted for clients binding version 1 whenever a
-        new toplevel window is created. It is emitted for all toplevels,
-        regardless of the app that has created them.
+        This event is emitted whenever a new toplevel window is created. It is
+        emitted for all toplevels, regardless of the app that has created them.
 
         All initial properties of the toplevel (title, app_id, states, etc.)
         will be sent immediately after this event via the corresponding
@@ -53,60 +53,30 @@
       <arg name="toplevel" type="new_id" interface="zcosmic_toplevel_handle_v1"/>
     </event>
 
-    <request name="stop" deprecated-since="2">
+    <request name="stop">
       <description summary="stop sending events">
         This request indicates that the client no longer wishes to receive
         events for new toplevels.  However, the compositor may emit further
         toplevel_created events until the finished event is emitted.
 
         The client must not send any more requests after this one.
-
-        Note: This request isn't necessary for clients binding version 2
-        of this protocol and will be ignored.
       </description>
     </request>
 
-    <event name="finished" deprecated-since="2">
+    <event name="finished">
       <description summary="the compositor has finished with the toplevel manager">
         This event indicates that the compositor is done sending events
         to the zcosmic_toplevel_info_v1. The server will destroy the
         object immediately after sending this request, so it will become
         invalid and the client should free any resources associated with it.
-
-        Note: This event is emitted immediately after calling `stop` for
-        clients binding version 2 of this protocol for backwards compatibility.
-      </description>
-    </event>
-
-    <request name="get_cosmic_toplevel" since="2">
-      <description summary="get cosmic toplevel extension object">
-        Request a zcosmic_toplevel_handle_v1 extension object for an existing
-        ext_foreign_toplevel_handle_v1.
-
-        All initial properties of the toplevel (states, etc.)
-        will be sent immediately after this event via the corresponding
-        events in zcosmic_toplevel_handle_v1.
-      </description>
-      <arg name="cosmic_toplevel" type="new_id" interface="zcosmic_toplevel_handle_v1"/>
-      <arg name="foreign_toplevel" type="object" interface="ext_foreign_toplevel_handle_v1"/>
-    </request>
-
-    <event name="done" since="2">
-      <description summary="all information about active toplevels have been sent">
-        This event is sent after all changes for currently active
-        zcosmic_toplevel_handle_v1 have been sent.
-
-        This allows changes to multiple zcosmic_toplevel_handle_v1 handles
-        and their properties to be seen as atomic, even if they happen via
-        multiple events.
       </description>
     </event>
   </interface>
 
-  <interface name="zcosmic_toplevel_handle_v1" version="2">
+  <interface name="zcosmic_toplevel_handle_v1" version="1">
     <description summary="an open toplevel">
       A zcosmic_toplevel_handle_v1 object represents an open toplevel
-      window. A single app may have multiple open toplevels.
+      window.  A single app may have multiple open toplevels.
 
       Each toplevel has a list of outputs it is visible on, exposed to the
       client via the output_enter and output_leave events.
@@ -115,25 +85,22 @@
     <request name="destroy" type="destructor">
       <description summary="destroy the zcosmic_toplevel_handle_v1 object">
         This request should be called either when the client will no longer
-        use the zcosmic_toplevel_handle_v1.
+        use the zcosmic_toplevel_handle_v1 or after the closed event
+        has been received to allow destruction of the object.
       </description>
     </request>
 
-    <event name="closed" deprecated-since="2">
+    <event name="closed">
       <description summary="the toplevel has been closed">
         The server will emit no further events on the
         zcosmic_toplevel_handle_v1 after this event. Any requests received
         aside from the destroy request will be ignored. Upon receiving this
         event, the client should make the destroy request to allow freeing
         of resources.
-
-        Note: This event will not be emitted for clients binding version 2
-        of this protocol, as `ext_foreign_toplevel_handle_v1.closed` is
-        equivalent.
       </description>
     </event>
 
-    <event name="done" deprecated-since="2">
+    <event name="done">
       <description summary="all information about the toplevel has been sent">
         This event is sent after all changes in the toplevel state have
         been sent.
@@ -142,31 +109,19 @@
         to be seen as atomic, even if they happen via multiple events.
 
         Note: this is is not sent after the closed event.
-
-        Note: This event will not be emitted for clients binding version 2
-        of this protocol, as `ext_foreign_toplevel_handle_v1.done` is
-        equivalent.
       </description>
     </event>
 
-    <event name="title" deprecated-since="2">
+    <event name="title">
       <description summary="title change">
         This event is emitted whenever the title of the toplevel changes.
-
-        Note: This event will not be emitted for clients binding version 2
-        of this protocol, as `ext_foreign_toplevel_handle_v1.title` is
-        equivalent.
       </description>
       <arg name="title" type="string"/>
     </event>
 
-    <event name="app_id" deprecated-since="2">
+    <event name="app_id">
       <description summary="app_id change">
         This event is emitted whenever the app_id of the toplevel changes.
-
-        Note: This event will not be emitted for clients binding version 2
-        of this protocol, as `ext_foreign_toplevel_handle_v1.app_id` is
-        equivalent.
       </description>
       <arg name="app_id" type="string"/>
     </event>
@@ -210,11 +165,10 @@
         The different states that a toplevel may have. These have the same
         meaning as the states with the same names defined in xdg-toplevel
       </description>
-      <entry name="maximized"  value="0" summary="the toplevel is maximized"  />
-      <entry name="minimized"  value="1" summary="the toplevel is minimized"  />
-      <entry name="activated"  value="2" summary="the toplevel is active"     />
-      <entry name="fullscreen" value="3" summary="the toplevel is fullscreen" />
-      <entry name="sticky"     value="4" summary="the toplevel is sticky"     since="2" />
+      <entry name="maximized"  value="0" summary="the toplevel is maximized"/>
+      <entry name="minimized"  value="1" summary="the toplevel is minimized"/>
+      <entry name="activated"  value="2" summary="the toplevel is active"/>
+      <entry name="fullscreen" value="3" summary="the toplevel is fullscreen"/>
     </enum>
 
     <event name="state">
@@ -224,22 +178,6 @@
         toplevel changes.
       </description>
       <arg name="state" type="array"/>
-    </event>
-
-    <event name="geometry" since="2">
-      <description summary="the toplevel's position and/or size has changed">
-        Emitted when the geometry of a toplevel (it's position and/or size)
-        relative to the provided output has changed.
-
-        This event is emitted once on creation of the
-        zcosmic_toplevel_handle_v1 for every entered output and again
-        whenever the geometry of the toplevel changes relative to any output.
-      </description>
-      <arg name="output" type="object" interface="wl_output"/>
-      <arg name="x" type="int" summary="x coordinate of the upper-left corner"/>
-      <arg name="y" type="int" summary="y coordinate of the upper-left corner"/>
-      <arg name="width" type="int" summary="width of the toplevel"/>
-      <arg name="height" type="int" summary="height of the toplevel"/>
     </event>
   </interface>
 </protocol>

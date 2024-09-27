@@ -2,7 +2,7 @@
 
 # Copyright © 2018 Ilia Bozhinov
 # Copyright © 2020 Isaac Freund
-# Copytight © 2022 Victoria Brekenfeld
+# Copyright © 2024 Victoria Brekenfeld
 #
 # Permission to use, copy, modify, distribute, and sell this
 # software and its documentation for any purpose is hereby granted
@@ -46,20 +46,21 @@ class ZcosmicToplevelHandleV1(Interface):
     """An open toplevel
 
     A :class:`ZcosmicToplevelHandleV1` object represents an open toplevel
-    window.  A single app may have multiple open toplevels.
+    window. A single app may have multiple open toplevels.
 
     Each toplevel has a list of outputs it is visible on, exposed to the client
     via the output_enter and output_leave events.
     """
 
     name = "zcosmic_toplevel_handle_v1"
-    version = 1
+    version = 2
 
     class state(enum.IntEnum):
         maximized = 0
         minimized = 1
         activated = 2
         fullscreen = 3
+        sticky = 4
 
 
 class ZcosmicToplevelHandleV1Proxy(Proxy[ZcosmicToplevelHandleV1]):
@@ -70,8 +71,7 @@ class ZcosmicToplevelHandleV1Proxy(Proxy[ZcosmicToplevelHandleV1]):
         """Destroy the :class:`ZcosmicToplevelHandleV1` object
 
         This request should be called either when the client will no longer use
-        the :class:`ZcosmicToplevelHandleV1` or after the closed event has been
-        received to allow destruction of the object.
+        the :class:`ZcosmicToplevelHandleV1`.
         """
         self._marshal(0)
         self._destroy()
@@ -89,6 +89,11 @@ class ZcosmicToplevelHandleV1Resource(Resource):
         received aside from the destroy request will be ignored. Upon receiving
         this event, the client should make the destroy request to allow freeing
         of resources.
+
+        Note: This event will not be emitted for clients binding version 2 of
+        this protocol, as `:func:`ExtForeignToplevelHandleV1.closed()
+        <pywayland.protocol.ext_foreign_toplevel_list_v1.ExtForeignToplevelHandleV1.closed>``
+        is equivalent.
         """
         self._post_event(0)
 
@@ -103,6 +108,11 @@ class ZcosmicToplevelHandleV1Resource(Resource):
         to be seen as atomic, even if they happen via multiple events.
 
         Note: this is is not sent after the closed event.
+
+        Note: This event will not be emitted for clients binding version 2 of
+        this protocol, as `:func:`ExtForeignToplevelHandleV1.done()
+        <pywayland.protocol.ext_foreign_toplevel_list_v1.ExtForeignToplevelHandleV1.done>``
+        is equivalent.
         """
         self._post_event(1)
 
@@ -113,6 +123,11 @@ class ZcosmicToplevelHandleV1Resource(Resource):
         """Title change
 
         This event is emitted whenever the title of the toplevel changes.
+
+        Note: This event will not be emitted for clients binding version 2 of
+        this protocol, as `:func:`ExtForeignToplevelHandleV1.title()
+        <pywayland.protocol.ext_foreign_toplevel_list_v1.ExtForeignToplevelHandleV1.title>``
+        is equivalent.
 
         :param title:
         :type title:
@@ -127,6 +142,11 @@ class ZcosmicToplevelHandleV1Resource(Resource):
         """App_id change
 
         This event is emitted whenever the app_id of the toplevel changes.
+
+        Note: This event will not be emitted for clients binding version 2 of
+        this protocol, as `:func:`ExtForeignToplevelHandleV1.app_id()
+        <pywayland.protocol.ext_foreign_toplevel_list_v1.ExtForeignToplevelHandleV1.app_id>``
+        is equivalent.
 
         :param app_id:
         :type app_id:
@@ -211,6 +231,46 @@ class ZcosmicToplevelHandleV1Resource(Resource):
             `ArgumentType.Array`
         """
         self._post_event(8, state)
+
+    @ZcosmicToplevelHandleV1.event(
+        Argument(ArgumentType.Object, interface=WlOutput),
+        Argument(ArgumentType.Int),
+        Argument(ArgumentType.Int),
+        Argument(ArgumentType.Int),
+        Argument(ArgumentType.Int),
+        version=2,
+    )
+    def geometry(self, output: WlOutput, x: int, y: int, width: int, height: int) -> None:
+        """The toplevel's position and/or size has changed
+
+        Emitted when the geometry of a toplevel (it's position and/or size)
+        relative to the provided output has changed.
+
+        This event is emitted once on creation of the
+        :class:`ZcosmicToplevelHandleV1` for every entered output and again
+        whenever the geometry of the toplevel changes relative to any output.
+
+        :param output:
+        :type output:
+            :class:`~pywayland.protocol.wayland.WlOutput`
+        :param x:
+            x coordinate of the upper-left corner
+        :type x:
+            `ArgumentType.Int`
+        :param y:
+            y coordinate of the upper-left corner
+        :type y:
+            `ArgumentType.Int`
+        :param width:
+            width of the toplevel
+        :type width:
+            `ArgumentType.Int`
+        :param height:
+            height of the toplevel
+        :type height:
+            `ArgumentType.Int`
+        """
+        self._post_event(9, output, x, y, width, height)
 
 
 class ZcosmicToplevelHandleV1Global(Global):

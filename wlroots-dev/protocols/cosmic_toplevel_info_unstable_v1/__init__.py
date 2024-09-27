@@ -2,7 +2,7 @@
 
 # Copyright © 2018 Ilia Bozhinov
 # Copyright © 2020 Isaac Freund
-# Copytight © 2022 Victoria Brekenfeld
+# Copyright © 2024 Victoria Brekenfeld
 #
 # Permission to use, copy, modify, distribute, and sell this
 # software and its documentation for any purpose is hereby granted
