@@ -68,25 +68,12 @@ class WaylandClient:
             self.display.disconnect()
             print("Disconnected from Wayland display.")
 
-    def handle_toplevel_event_v1(self, 
+    def handle_toplevel_event(self, 
             toplevel_manager: ZcosmicToplevelInfoV1Proxy, 
             toplevel_handle: ZcosmicToplevelHandleV1):
             # toplevel_manager: ExtForeignToplevelListV1Proxy, 
             # toplevel_handle: ExtForeignToplevelHandleV1):
         """Handle events for new toplevel windows in v1 protocol."""
-        # print(f"New toplevel window created: {toplevel_handle}")
-        # Subscribe to title and app_id changes as well as close event
-        toplevel_handle.dispatcher['title']             = self.handle_title_change
-        toplevel_handle.dispatcher['app_id']            = self.handle_app_id_change
-        toplevel_handle.dispatcher['closed']            = self.handle_window_closed
-        toplevel_handle.dispatcher['state']             = self.handle_state_change
-
-    def handle_get_coscmic_toplevel_event_v2(self,
-            toplevel_manager: ZcosmicToplevelInfoV1Proxy, 
-            toplevel_handle: ZcosmicToplevelHandleV1):
-            # toplevel_manager: ExtForeignToplevelListV1Proxy, 
-            # toplevel_handle: ExtForeignToplevelHandleV1):
-        """Handle events for new toplevel windows in v2 protocol."""
         # print(f"New toplevel window created: {toplevel_handle}")
         # Subscribe to title and app_id changes as well as close event
         toplevel_handle.dispatcher['title']             = self.handle_title_change
@@ -157,12 +144,12 @@ class WaylandClient:
 
             if version == 1:
                 print(f"Subscribing to 'toplevel' events from toplevel manager...")
-                self.toplevel_manager.dispatcher['toplevel'] = self.handle_toplevel_event_v1
+                self.toplevel_manager.dispatcher['toplevel'] = self.handle_toplevel_event
                 print()
 
             elif version >= 2:
                 print(f"Subscribing to 'get_cosmic_toplevel' events from toplevel manager...")
-                self.toplevel_manager.dispatcher['get_cosmic_toplevel'] = self.handle_get_coscmic_toplevel_event_v2
+                self.toplevel_manager.dispatcher['get_cosmic_toplevel'] = self.handle_toplevel_event
 
             self.display.roundtrip()
 
