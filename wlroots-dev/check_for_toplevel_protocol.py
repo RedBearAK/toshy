@@ -18,20 +18,24 @@ class WaylandClient:
         self.topl_mgmt_prot_ver = None
 
     def registry_handler(self, registry, name, interface, version):
+
         print(f"Registry event: name={name}, interface={interface}, version={version}")
-        # if 'wlr' in interface:
-        #     print('                             #### wlr protocol detected')
-        #     print()
-        forn_topl_prot_names = [
-            'zwlr_foreign_toplevel_manager_v1',
-            # 'wlr_foreign_toplevel_manager_v1',
+
+        wanted_interfaces = [
+            'zwlr_foreign_toplevel_manager_v1',     # wlroots compositors should have this?
+            'zcosmic_toplevel_info_v1',             # COSMIC desktop environment
+            'ext_foreign_toplevel_list_v1',         # newer Wayland compositors may have this?
         ]
-        if interface in forn_topl_prot_names:
+
+        if interface in wanted_interfaces:
+            print()
+            print(f"\tProtocol '{interface}' version '{version}' is SUPPORTED.")
+            print()
+
+        if interface == 'zwlr_foreign_toplevel_manager_v1':
             self.topl_mgmt_prot_supported = True
             self.topl_mgmt_prot_name = interface
             self.topl_mgmt_prot_ver = version
-            print(f"Protocol '{interface}' version '{version}' is SUPPORTED.")
-            print()
 
     def run(self):
         try:
@@ -55,12 +59,12 @@ class WaylandClient:
             print("Running roundtrip to process registry events...")
             self.display.roundtrip()
 
-            print()
-            if self.topl_mgmt_prot_supported:
-                print(f"Protocol '{self.topl_mgmt_prot_name}' "
-                        f"version '{self.topl_mgmt_prot_ver}' is SUPPORTED.")
-            else:
-                print("Protocol 'zwlr_foreign_toplevel_manager_v1' is NOT supported.")
+            # print()
+            # if self.topl_mgmt_prot_supported:
+            #     print(f"Protocol '{self.topl_mgmt_prot_name}' "
+            #             f"version '{self.topl_mgmt_prot_ver}' is SUPPORTED.")
+            # else:
+            #     print("Protocol 'zwlr_foreign_toplevel_manager_v1' is NOT supported.")
 
         except Exception as e:
             print("An error occurred:")
