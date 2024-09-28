@@ -28,7 +28,7 @@ class WaylandClient:
         if interface in wanted_interfaces:
             print()
             print(f"Protocol '{interface}' version '{version}' is SUPPORTED:")
-            print(f"    Registry event: name={name}, interface={interface}, version={version}")
+            print(f"  Registry event: name={name}, interface={interface}, version={version}")
             print()
         else:
             print(f"Registry event: name={name}, interface={interface}, version={version}")
@@ -78,10 +78,10 @@ class WaylandClient:
                 print("Disconnecting from Wayland display")
                 self.display.disconnect()
                 print("Disconnected from Wayland display")
-                print()
 
 if __name__ == '__main__':
     print("Starting Wayland client...")
     client = WaylandClient()
     client.run()
     print("Wayland client finished")
+    print()
