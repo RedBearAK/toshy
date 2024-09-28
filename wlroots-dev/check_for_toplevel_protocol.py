@@ -19,8 +19,6 @@ class WaylandClient:
 
     def registry_handler(self, registry, name, interface, version):
 
-        print(f"Registry event: name={name}, interface={interface}, version={version}")
-
         wanted_interfaces = [
             'zwlr_foreign_toplevel_manager_v1',     # wlroots compositors should have this?
             'zcosmic_toplevel_info_v1',             # COSMIC desktop environment
@@ -29,8 +27,11 @@ class WaylandClient:
 
         if interface in wanted_interfaces:
             print()
-            print(f"\tProtocol '{interface}' version '{version}' is SUPPORTED.")
+            print(f"Protocol '{interface}' version '{version}' is SUPPORTED:")
+            print(f"    Registry event: name={name}, interface={interface}, version={version}")
             print()
+        else:
+            print(f"Registry event: name={name}, interface={interface}, version={version}")
 
         if interface == 'zwlr_foreign_toplevel_manager_v1':
             self.topl_mgmt_prot_supported = True
@@ -57,6 +58,7 @@ class WaylandClient:
             print("Registry obtained")
 
             print("Running roundtrip to process registry events...")
+            print()
             self.display.roundtrip()
 
             # print()
@@ -72,9 +74,11 @@ class WaylandClient:
         finally:
             # This 'finally' is to avoid a segmentation fault when script ends.
             if self.display is not None:
+                print()
                 print("Disconnecting from Wayland display")
                 self.display.disconnect()
                 print("Disconnected from Wayland display")
+                print()
 
 if __name__ == '__main__':
     print("Starting Wayland client...")
