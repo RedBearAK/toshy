@@ -158,6 +158,8 @@ class WaylandClient:
             self.foreign_toplvl_mgr = registry.bind(id_, ExtForeignToplevelListV1, version)
             self.foreign_toplvl_mgr.dispatcher['toplevel'] = self.handle_toplevel_event_v2
 
+            self.display.roundtrip()
+
         # COSMIC is using their own namespace instead of 'zwlr_foreign_toplevel_manager_v1'
         if interface_name == 'zcosmic_toplevel_info_v1':
             print()
