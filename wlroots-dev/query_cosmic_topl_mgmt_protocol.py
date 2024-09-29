@@ -127,21 +127,24 @@ class WaylandClient:
         toplevel_handle.dispatcher['state']             = self.handle_state_change
 
     def handle_toplevel_event_v2(self,
-                foreign_toplevel_manager: ExtForeignToplevelListV1Proxy,
-                foreign_toplevel_handle: ExtForeignToplevelHandleV1):
+                foreign_toplvl_mgr: ExtForeignToplevelListV1Proxy,
+                foreign_toplvl_handle: ExtForeignToplevelHandleV1):
         """Send a request to get a cosmic toplevel handle from a foreign toplevel handle."""
         try:
-            # Assuming `toplevel_manager` is where you can issue the request
-            # You need to create a new ID for the cosmic_toplevel
-            cosmic_toplevel_id = self.display.create_resource_id(ZcosmicToplevelHandleV1)
-            cosmic_toplevel_handle = self.cosmic_toplvl_mgr.get_cosmic_toplevel(
-                                            cosmic_toplevel_id, foreign_toplevel_handle)
+
+            # # Need to create a new ID for the cosmic_toplevel?
+            # # This causes an AttributeError for 'display' not having this attribute:
+            # cosmic_toplevel_id = self.display.create_resource_id(ZcosmicToplevelHandleV1)
+
+            # cosmic_toplevel_handle = self.cosmic_toplvl_mgr.get_cosmic_toplevel(
+            #                                 cosmic_toplevel_id, foreign_toplevel_handle)
+            cosmic_toplvl_handle = self.cosmic_toplvl_mgr.get_cosmic_toplevel(foreign_toplvl_handle)
 
             # Set up event listeners for the new cosmic_toplevel_handle
-            cosmic_toplevel_handle.dispatcher['title']      = self.handle_title_change
-            cosmic_toplevel_handle.dispatcher['app_id']     = self.handle_app_id_change
-            cosmic_toplevel_handle.dispatcher['closed']     = self.handle_window_closed
-            cosmic_toplevel_handle.dispatcher['state']      = self.handle_state_change
+            cosmic_toplvl_handle.dispatcher['title']      = self.handle_title_change
+            cosmic_toplvl_handle.dispatcher['app_id']     = self.handle_app_id_change
+            cosmic_toplvl_handle.dispatcher['closed']     = self.handle_window_closed
+            cosmic_toplvl_handle.dispatcher['state']      = self.handle_state_change
 
             # # Keep track of this handle
             # self.wdw_handles_dct[cosmic_toplevel_handle] = {}
@@ -158,7 +161,8 @@ class WaylandClient:
             self.foreign_toplvl_mgr = registry.bind(id_, ExtForeignToplevelListV1, version)
             self.foreign_toplvl_mgr.dispatcher['toplevel'] = self.handle_toplevel_event_v2
 
-            self.display.roundtrip()
+            # Maybe shouldn't do this here, only do when zcosmic interface is bound
+            # self.display.roundtrip()
 
         # COSMIC is using their own namespace instead of 'zwlr_foreign_toplevel_manager_v1'
         if interface_name == 'zcosmic_toplevel_info_v1':
