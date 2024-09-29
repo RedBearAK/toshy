@@ -153,6 +153,11 @@ class WaylandClient:
         """Handle registry events."""
         print(f"Registry event: id={id_}, interface={interface_name}, version={version}")
 
+        if interface_name == 'ext_foreign_toplevel_list_v1':
+            print(f"Subscribing to 'toplevel' events from foreign toplevel manager...")
+            self.foreign_toplvl_mgr = registry.bind(id_, ExtForeignToplevelListV1, version)
+            self.foreign_toplvl_mgr.dispatcher['toplevel'] = self.handle_toplevel_event_v2
+
         # COSMIC is using their own namespace instead of 'zwlr_foreign_toplevel_manager_v1'
         if interface_name == 'zcosmic_toplevel_info_v1':
             print()
@@ -169,9 +174,10 @@ class WaylandClient:
                 print()
 
             elif version >= 2:
-                print(f"Subscribing to 'toplevel' events from foreign toplevel manager...")
-                self.foreign_toplvl_mgr = registry.bind(id_, ExtForeignToplevelListV1, version)
-                self.foreign_toplvl_mgr.dispatcher['toplevel'] = self.handle_toplevel_event_v2
+                pass
+                # print(f"Subscribing to 'toplevel' events from foreign toplevel manager...")
+                # self.foreign_toplvl_mgr = registry.bind(id_, ExtForeignToplevelListV1, version)
+                # self.foreign_toplvl_mgr.dispatcher['toplevel'] = self.handle_toplevel_event_v2
 
             self.display.roundtrip()
 
