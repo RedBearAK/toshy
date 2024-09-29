@@ -113,9 +113,6 @@ class WaylandClient:
             print(f"{app_id:<30} {title:<50}")
         print()
 
-    def handle_get_cosmic_toplevel_event(self):
-        """Handle 'get_cosmic_toplevel' events."""
-
     def handle_toplevel_event_v1(self, 
             toplevel_manager: ZcosmicToplevelInfoV1Proxy, 
             toplevel_handle: ZcosmicToplevelHandleV1):
@@ -129,7 +126,9 @@ class WaylandClient:
         toplevel_handle.dispatcher['closed']            = self.handle_window_closed
         toplevel_handle.dispatcher['state']             = self.handle_state_change
 
-    def handle_toplevel_event_v2(self, foreign_toplevel_handle):
+    def handle_toplevel_event_v2(self,
+                foreign_toplevel_manager: ExtForeignToplevelListV1Proxy,
+                foreign_toplevel_handle: ExtForeignToplevelHandleV1):
         """Send a request to get a cosmic toplevel handle from a foreign toplevel handle."""
         try:
             # Assuming `toplevel_manager` is where you can issue the request
@@ -144,8 +143,8 @@ class WaylandClient:
             cosmic_toplevel_handle.dispatcher['closed']     = self.handle_window_closed
             cosmic_toplevel_handle.dispatcher['state']      = self.handle_state_change
 
-            # Keep track of this handle
-            self.wdw_handles_dct[cosmic_toplevel_handle] = {}
+            # # Keep track of this handle
+            # self.wdw_handles_dct[cosmic_toplevel_handle] = {}
 
         except KeyError as e:
             print(f"Error sending get_cosmic_toplevel request: {e}")
@@ -170,7 +169,7 @@ class WaylandClient:
                 print()
 
             elif version >= 2:
-                print(f"Subscribing to 'get_cosmic_toplevel' events from foreign toplevel manager...")
+                print(f"Subscribing to 'toplevel' events from foreign toplevel manager...")
                 self.foreign_toplvl_mgr = registry.bind(id_, ExtForeignToplevelListV1, version)
                 self.foreign_toplvl_mgr.dispatcher['toplevel'] = self.handle_toplevel_event_v2
 
