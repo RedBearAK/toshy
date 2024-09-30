@@ -11,6 +11,9 @@
 # https://github.com/pop-os/cosmic-protocols/blob/main/unstable/cosmic-toplevel-info-unstable-v1.xml
 # https://github.com/pop-os/cosmic-protocols/blob/main/unstable/cosmic-workspace-unstable-v1.xml
 
+# Needed for COSMIC protocol version 2:
+# https://gitlab.freedesktop.org/wayland/wayland-protocols/-/raw/main/staging/ext-foreign-toplevel-list/ext-foreign-toplevel-list-v1.xml
+
 # pywayland method had a NotImplementedError for NewId argument,
 # but PR #64 was merged. 
 
@@ -40,6 +43,16 @@ from time import sleep
 
 ERR_NO_WLR_APP_CLASS = "ERR_no_cosmic_app_class"
 ERR_NO_WLR_WDW_TITLE = "ERR_no_cosmic_wdw_title"
+
+# Create a mapping of state values to their names
+STATE_MAP = {
+    0: "maximized",
+    1: "minimized",
+    2: "activated",
+    3: "fullscreen",
+    4: "sticky"  # Since version 2
+}
+
 
 class WaylandClient:
     def __init__(self):
@@ -77,7 +90,7 @@ class WaylandClient:
         for handle, info in self.wdw_handles_dct.items():
             app_id: str = info.get('app_id', ERR_NO_WLR_APP_CLASS)
             title: str  = info.get('title', ERR_NO_WLR_WDW_TITLE)
-            print(f"{handle}")
+            # print(f"{handle}")
             print(f"{app_id:<30} {title:<50}")
         print()
 
@@ -122,6 +135,13 @@ class WaylandClient:
         states = []
         if isinstance(states_bytes, bytes):
             states = list(states_bytes)
+
+        print(f"State change event (values): {states}")
+
+        # Convert state values to their corresponding names
+        state_names = [STATE_MAP.get(state, f"Unknown state: {state}") for state in states]
+
+        print(f"State change event (names): {state_names}")
 
         if ZcosmicToplevelHandleV1.state.activated.value in states:
 
@@ -246,7 +266,7 @@ class WaylandClient:
                 # protocol is supported, and have a toplevel_manager object.
                 if self.forn_topl_mgr_prot_supported and self.cosmic_toplvl_mgr:
                     print()
-                    print("Protocol 'zcosmic_toplevel_info_v1' is supported, starting dispatch loop...")
+                    print("Protocol 'zcosmic_toplevel_info_v1' is supported, starting monitoring...")
 
                     # # Can't get this to stop pegging a core (or thread) without sleep()
                     # # It is as if dispatch() does not block at all
