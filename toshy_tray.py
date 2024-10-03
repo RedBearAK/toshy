@@ -925,6 +925,14 @@ def main():
     env_info_dct   = env_ctxt_getter.get_env_info()
     DESKTOP_ENV = str(env_info_dct.get('DESKTOP_ENV', None)).casefold()
 
+    # COSMIC desktop environment messes with tray icon, so use 'grayscale' icon
+    if DESKTOP_ENV == 'cosmic':
+        # Use 'global' keyword since we need to change the global values here
+        global icon_file_active
+        global icon_file_inverse
+        icon_file_active = icon_file_grayscale
+        icon_file_inverse = icon_file_grayscale
+
     if shutil.which('systemctl') and is_init_systemd():
         # help out the config file user service
         cmd_lst = [
