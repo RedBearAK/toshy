@@ -164,8 +164,8 @@ class WaylandClient:
 
             print()
             print("#" * 80)
-            print(f"{'Active app class:'<30}", f"'{self.active_app_class}'")
-            print(f"{'Active window title:'<30}", f"'{self.active_wdw_title}'")
+            print(f"{'Active app class:':<30}", f"'{self.active_app_class}'")
+            print(f"{'Active window title:':<30}", f"'{self.active_wdw_title}'")
             print("#" * 80)
             self.print_running_applications()  # Print the list of running applications
 
