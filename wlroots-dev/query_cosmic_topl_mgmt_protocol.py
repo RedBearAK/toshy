@@ -129,13 +129,10 @@ class WaylandClient:
         """Track active window app class and title based on state changes."""
 
         # Filter out empty state updates (why do these even happen?)
-        if not states_bytes:
-            print("Empty states bytes value event, ignoring.")
-            return
-
         # Filter out the all-zeroes state (reset event?) before converting
-        if states_bytes == b'\x00\x00\x00\x00':
-            print("State reset event (all-zeroes), ignoring.")
+        if not states_bytes or states_bytes == b'\x00\x00\x00\x00':
+            print()
+            print("Received empty bytes value or all-zeroes 4-byte state event, ignoring.")
             return
 
         # Process states_bytes as an array of 4-byte (32-bit) integers
