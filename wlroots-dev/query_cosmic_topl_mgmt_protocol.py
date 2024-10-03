@@ -126,11 +126,9 @@ class WaylandClient:
 
     def handle_state_change(self, handle, states_bytes):
         """Track active window based on state changes."""
-        foreign_handle: ExtForeignToplevelHandleV1 = None
 
-        if self.cosmic_protocol_ver >= 2:
-            if handle in self.cosmic_to_foreign_map:
-                foreign_handle = self.cosmic_to_foreign_map[handle]
+        # Filter out empty state updates (why do these even happen?)
+        if not states_bytes: return
 
         states = []
         if isinstance(states_bytes, bytes):
@@ -143,6 +141,12 @@ class WaylandClient:
 
         print(f"State change event (names): {state_names}")
 
+        foreign_handle: ExtForeignToplevelHandleV1 = None
+
+        if self.cosmic_protocol_ver >= 2:
+            if handle in self.cosmic_to_foreign_map:
+                foreign_handle = self.cosmic_to_foreign_map[handle]
+
         if ZcosmicToplevelHandleV1.state.activated.value in states:
 
             if self.cosmic_protocol_ver >= 2:
@@ -154,15 +158,15 @@ class WaylandClient:
                 self.active_wdw_title = self.wdw_handles_dct[handle]['title']
 
             print()
+            print("#" * 80)
             print(f"Active app class: '{self.active_app_class}'")
             print(f"Active window title: '{self.active_wdw_title}'")
+            print("#" * 80)
             self.print_running_applications()  # Print the list of running applications
 
     def handle_toplevel_event_v1(self, 
             toplevel_manager: ZcosmicToplevelInfoV1Proxy, 
             toplevel_handle: ZcosmicToplevelHandleV1):
-            # toplevel_manager: ExtForeignToplevelListV1Proxy, 
-            # toplevel_handle: ExtForeignToplevelHandleV1):
         """Handle events for new toplevel windows in v1 COSMIC toplevel info protocol."""
         # print(f"New toplevel window created: {toplevel_handle}")
         # Subscribe to title and app_id changes as well as close event
