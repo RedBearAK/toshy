@@ -129,7 +129,14 @@ class WaylandClient:
         """Track active window app class and title based on state changes."""
 
         # Filter out empty state updates (why do these even happen?)
-        if not states_bytes: return
+        if not states_bytes:
+            print("Empty states bytes value event, ignoring.")
+            return
+
+        # Filter out the all-zeroes state (reset event?) before converting
+        if states_bytes == b'\x00\x00\x00\x00':
+            print("State reset event (all-zeroes), ignoring.")
+            return
 
         # Process states_bytes as an array of 4-byte (32-bit) integers
         # Interpret 4 bytes as an integer (little-endian arrays?)
@@ -139,6 +146,7 @@ class WaylandClient:
         # Convert state values to their corresponding names
         state_names = [STATE_MAP.get(state, f"Unknown state: {state}") for state in state_values]
 
+        print()
         print(f"{'State change event (bytes):':<30}",   f"{states_bytes}")
         print(f"{'State change event (values):':<30}",  f"{state_values}")
         print(f"{'State change event (names):':<30}",   f"{state_names}")
@@ -162,12 +170,12 @@ class WaylandClient:
                 self.active_app_class = self.wdw_handles_dct[handle]['app_id']
                 self.active_wdw_title = self.wdw_handles_dct[handle]['title']
 
+            self.print_running_applications()  # Print the list of running applications
             print()
             print("#" * 80)
             print(f"{'Active app class:':<30}", f"'{self.active_app_class}'")
             print(f"{'Active window title:':<30}", f"'{self.active_wdw_title}'")
             print("#" * 80)
-            self.print_running_applications()  # Print the list of running applications
 
     def handle_toplevel_event_v1(self, 
             toplevel_manager: ZcosmicToplevelInfoV1Proxy, 
