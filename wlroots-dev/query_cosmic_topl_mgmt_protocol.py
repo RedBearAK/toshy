@@ -21,6 +21,7 @@
 import sys
 import select
 import signal
+import struct
 import traceback
 
 # COSMIC-specific protocol module, using their own namespace
@@ -84,7 +85,7 @@ class WaylandClient:
 
     def print_running_applications(self):
         """Print a complete list of running applications."""
-        print("\nList of running applications:")
+        print("\nFull list of running application classes (not windows):")
         print(f"{'App ID':<30} {'Title':<50}")
         print("-" * 80)
         for handle, info in self.wdw_handles_dct.items():
@@ -125,29 +126,33 @@ class WaylandClient:
                 print(f"Window {handle} has been closed.")
 
     def handle_state_change(self, handle, states_bytes):
-        """Track active window based on state changes."""
+        """Track active window app class and title based on state changes."""
 
         # Filter out empty state updates (why do these even happen?)
         if not states_bytes: return
 
-        states = []
+        # Process states_bytes as an array of 4-byte (32-bit) integers
+        # Interpret 4 bytes as an integer (little-endian arrays?)
         if isinstance(states_bytes, bytes):
-            states = list(states_bytes)
-
-        print(f"State change event (values): {states}")
+            state_values = list(struct.unpack(f'{len(states_bytes)//4}I', states_bytes))
 
         # Convert state values to their corresponding names
-        state_names = [STATE_MAP.get(state, f"Unknown state: {state}") for state in states]
+        state_names = [STATE_MAP.get(state, f"Unknown state: {state}") for state in state_values]
 
-        print(f"State change event (names): {state_names}")
+        print(f"{'State change event (bytes):':<30}",   f"{states_bytes}")
+        print(f"{'State change event (values):':<30}",  f"{state_values}")
+        print(f"{'State change event (names):':<30}",   f"{state_names}")
 
         foreign_handle: ExtForeignToplevelHandleV1 = None
 
         if self.cosmic_protocol_ver >= 2:
             if handle in self.cosmic_to_foreign_map:
                 foreign_handle = self.cosmic_to_foreign_map[handle]
+        else:
+            print("Error: Foreign handle not found for the cosmic toplevel.")
+            return
 
-        if ZcosmicToplevelHandleV1.state.activated.value in states:
+        if ZcosmicToplevelHandleV1.state.activated.value in state_values:
 
             if self.cosmic_protocol_ver >= 2:
                 self.active_app_class = self.wdw_handles_dct[foreign_handle]['app_id']
@@ -159,8 +164,8 @@ class WaylandClient:
 
             print()
             print("#" * 80)
-            print(f"Active app class: '{self.active_app_class}'")
-            print(f"Active window title: '{self.active_wdw_title}'")
+            print(f"{'Active app class:'<30}", f"'{self.active_app_class}'")
+            print(f"{'Active window title:'<30}", f"'{self.active_wdw_title}'")
             print("#" * 80)
             self.print_running_applications()  # Print the list of running applications
 
