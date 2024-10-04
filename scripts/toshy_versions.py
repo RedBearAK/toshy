@@ -100,4 +100,4 @@ for path in file_paths:
     else:
         print(f"{file_name.ljust(max_file_name_length + 4)}No version found or error reading file.")
 
-print()         # Blank line to separate from temrinal prompt
+print()         # Blank line to separate from terminal prompt
