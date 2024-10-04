@@ -39,8 +39,13 @@ sys.path.insert(0, lib_dir_path)
 # ~/.config/toshy/lib/notification_manager.py
 # ~/.config/toshy/lib/settings_class.py
 
+# ~/.config/toshy/cosmic-dbus-service/toshy_cosmic_dbus_service.py
+# ~/.config/toshy/kde-kwin-dbus-service/toshy_kde_dbus_service.py
+# ~/.config/toshy/wlroots-dbus-service/toshy_wlroots_dbus_service.py
+
 
 file_paths = [
+
     os.path.join(toshy_dir_path, 'toshy_config.py'),
     os.path.join(toshy_dir_path, 'toshy_gui.py'),
     os.path.join(toshy_dir_path, 'toshy_tray.py'),
@@ -48,6 +53,11 @@ file_paths = [
     os.path.join(lib_dir_path, 'env_context.py'),
     os.path.join(lib_dir_path, 'notification_manager.py'),
     os.path.join(lib_dir_path, 'settings_class.py'),
+
+    os.path.join(toshy_dir_path, 'cosmic-dbus-service', 'toshy_cosmic_dbus_service.py'),
+    os.path.join(toshy_dir_path, 'kde-kwin-dbus-service', 'toshy_kde_dbus_service.py'),
+    os.path.join(toshy_dir_path, 'wlroots-dbus-service', 'toshy_wlroots_dbus_service.py'),
+
 ]
 
 
