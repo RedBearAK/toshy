@@ -22,6 +22,7 @@ import sys
 import dbus
 import time
 import signal
+import struct
 import platform
 import dbus.service
 import dbus.mainloop.glib
@@ -31,7 +32,7 @@ from pywayland.client import Display
 from gi.repository import GLib
 from dbus.exceptions import DBusException
 from subprocess import DEVNULL
-from typing import Dict
+from typing import Dict, List
 from xwaykeyz.lib.logger import debug, error
 
 xwaykeyz.lib.logger.VERBOSE = True
@@ -63,6 +64,13 @@ from protocols.cosmic_toplevel_info_unstable_v1.zcosmic_toplevel_info_v1 import 
     ZcosmicToplevelInfoV1,
     ZcosmicToplevelInfoV1Proxy,
     ZcosmicToplevelHandleV1
+)
+
+# COSMIC protocol update has shifted to involving 'ext_foreign_toplevel_list_v1' interface.
+from protocols.ext_foreign_toplevel_list_v1.ext_foreign_toplevel_list_v1 import (
+    ExtForeignToplevelListV1,
+    ExtForeignToplevelListV1Proxy,
+    ExtForeignToplevelHandleV1
 )
 
 if os.name == 'posix' and os.geteuid() == 0:
@@ -154,16 +162,42 @@ TOSHY_COSMIC_DBUS_SVC_IFACE     = 'org.toshy.Cosmic'
 ERR_NO_COSMIC_APP_CLASS = "ERR_no_cosmic_app_class"
 ERR_NO_COSMIC_WDW_TITLE = "ERR_no_cosmic_wdw_title"
 
+# Create a mapping of state values to their names
+STATE_MAP = {
+    0: "maximized",
+    1: "minimized",
+    2: "activated",
+    3: "fullscreen",
+    4: "sticky"  # Since version 2
+}
+
 
 class WaylandClient:
     def __init__(self):
-        self.display = None
-        self.registry = None
-        self.toplevel_manager = None
-        self.wl_fd = None
-        self.wdw_handles_dct = {}
-        self.active_app_class = ERR_NO_COSMIC_APP_CLASS
-        self.active_wdw_title = ERR_NO_COSMIC_WDW_TITLE
+        self.display                            = None
+        self.wl_fd                              = None
+        self.registry                           = None
+        self.cosmic_protocol_ver                = None
+
+        self.cosmic_toplvl_mgr: ZcosmicToplevelInfoV1Proxy      = None
+        self.foreign_toplvl_mgr: ExtForeignToplevelListV1Proxy  = None
+
+        self.wdw_handles_dct                    = {}
+        self.cosmic_to_foreign_map              = {}
+        self.active_app_class                   = ERR_NO_COSMIC_APP_CLASS
+        self.active_wdw_title                   = ERR_NO_COSMIC_WDW_TITLE
+
+    def print_running_applications(self):
+        """Print a complete list of running applications."""
+        print("\nFull list of running application classes (not windows):")
+        print(f"{'App ID':<30} {'Title':<50}")
+        print("-" * 80)
+        for handle, info in self.wdw_handles_dct.items():
+            app_id = info.get('app_id', ERR_NO_COSMIC_APP_CLASS)
+            title  = info.get('title', ERR_NO_COSMIC_WDW_TITLE)
+            # print(f"{handle}")
+            print(f"{app_id:<30} {title:<50}")
+        print()
 
     def connect(self):
         try:
@@ -171,7 +205,7 @@ class WaylandClient:
             self.display.connect()
             self.wl_fd = self.display.get_fd()
             self.registry = self.display.get_registry()
-            self.registry.dispatcher["global"] = self.handle_registry_global
+            self.registry.dispatcher['global'] = self.handle_registry_global
             self.display.roundtrip()
         except Exception as e:
             debug(f"Failed to connect to the Wayland display: {e}")
@@ -180,16 +214,65 @@ class WaylandClient:
     def handle_registry_global(self, registry, id_, interface_name, version):
         # COSMIC is using their own namespace instead of 'zwlr_foreign_toplevel_manager_v1'
         if interface_name == 'zcosmic_toplevel_info_v1':
-            self.toplevel_manager = registry.bind(id_, ZcosmicToplevelInfoV1, version)
-            self.toplevel_manager.dispatcher["toplevel"] = self.handle_toplevel_event
+            self.cosmic_protocol_ver = version
+            self.cosmic_toplvl_mgr = registry.bind(id_, ZcosmicToplevelInfoV1, version)
+            if version == 1:
+                # Generated protocol modules are no longer compatible with this version
+                self.cosmic_toplvl_mgr.dispatcher["toplevel"] = self.handle_toplevel_event_v1
+            elif version >= 2:
+                # This updated version of the protocol will be handled when the 
+                # 'ext_foreign_toplevel_list_v1' event appears and gets processed. 
+                pass
+        if interface_name == 'ext_foreign_toplevel_list_v1':
+            print(f"Subscribing to 'toplevel' events from foreign toplevel manager...")
+            self.foreign_toplvl_mgr = registry.bind(id_, ExtForeignToplevelListV1, version)
+            self.foreign_toplvl_mgr.dispatcher['toplevel'] = self.handle_toplevel_event_v2
+        self.display.roundtrip()
 
-    def handle_toplevel_event(self,
+    def handle_toplevel_event_v2(self,
+                foreign_toplvl_mgr: ExtForeignToplevelListV1Proxy,
+                foreign_toplvl_handle: ExtForeignToplevelHandleV1):
+        """Request a new v2 cosmic toplevel handle for a foreign toplevel handle."""
+        try:
+            cosmic_toplvl_handle: ZcosmicToplevelHandleV1 = None
+            cosmic_toplvl_handle = self.cosmic_toplvl_mgr.get_cosmic_toplevel(foreign_toplvl_handle)
+
+            # Ensure the dictionary entry is initialized with the foreign handle as the primary key
+            if foreign_toplvl_handle not in self.wdw_handles_dct:
+                self.wdw_handles_dct[foreign_toplvl_handle] = {
+                    'cosmic_handle':    cosmic_toplvl_handle,
+                    'app_id':           None,
+                    'title':            None,
+                    'state':            None,
+                    'ready':            False,  # Mark as false until all properties are received
+                }
+
+            # Store a reverse mapping from COSMIC handle to foreign handle
+            # (We are dealing with two different handles for each toplevel window.)
+            self.cosmic_to_foreign_map[cosmic_toplvl_handle] = foreign_toplvl_handle
+
+            # Event listeners for the foreign toplevel handle
+            # (cosmic toplevel handle will never emit these)
+            foreign_toplvl_handle.dispatcher['title']       = self.handle_title_change
+            foreign_toplvl_handle.dispatcher['app_id']      = self.handle_app_id_change
+
+            # Event listeners for v2 cosmic toplevel handle
+            # (foreign toplevel handle does not have these events)
+            cosmic_toplvl_handle.dispatcher['closed']       = self.handle_window_closed
+            cosmic_toplvl_handle.dispatcher['state']        = self.handle_state_change
+
+            self.display.roundtrip()
+
+        except KeyError as e:
+            print(f"Error sending get_cosmic_toplevel request: {e}")
+
+    def handle_toplevel_event_v1(self,
                                 toplevel_manager: ZcosmicToplevelInfoV1Proxy,
                                 toplevel_handle: ZcosmicToplevelHandleV1):
-        toplevel_handle.dispatcher["app_id"] = self.handle_app_id_change
-        toplevel_handle.dispatcher["title"] = self.handle_title_change
-        toplevel_handle.dispatcher['closed'] = self.handle_window_closed
-        toplevel_handle.dispatcher['state'] = self.handle_state_change
+        toplevel_handle.dispatcher['app_id']    = self.handle_app_id_change
+        toplevel_handle.dispatcher['title']     = self.handle_title_change
+        toplevel_handle.dispatcher['closed']    = self.handle_window_closed
+        toplevel_handle.dispatcher['state']     = self.handle_state_change
 
     def handle_app_id_change(self, handle, app_id):
         if handle not in self.wdw_handles_dct:
@@ -202,39 +285,69 @@ class WaylandClient:
         self.wdw_handles_dct[handle]['title'] = title
 
     def handle_window_closed(self, handle):
-        if handle in self.wdw_handles_dct:
-            del self.wdw_handles_dct[handle]
-        # print(f"Window {handle} has been closed.")
+        """Remove window from local state."""
+        foreign_handle: ExtForeignToplevelHandleV1 = None
+
+        if self.cosmic_protocol_ver >= 2:
+            if handle in self.cosmic_to_foreign_map:
+                foreign_handle = self.cosmic_to_foreign_map.pop(handle, None)
+            if foreign_handle and foreign_handle in self.wdw_handles_dct:
+                del self.wdw_handles_dct[foreign_handle]
+            print(f"Window {foreign_handle} has been closed.")
+
+        elif self.cosmic_protocol_ver == 1:
+            if handle in self.wdw_handles_dct:
+                del self.wdw_handles_dct[handle]
+                print(f"Window {handle} has been closed.")
 
     def handle_state_change(self, handle, states_bytes):
-        states = []
-        if isinstance(states_bytes, bytes):
-            states = list(states_bytes)
-        if ZcosmicToplevelHandleV1.state.activated.value in states:
-            try:
-                self.active_app_class = self.wdw_handles_dct[handle]['app_id']
-            except KeyError as key_err:
-                # error(f"Problem accessing app_id:\n\t{key_err}")
-                self.active_app_class = 'KeyErr_accessing_app_id'
-            try:
-                self.active_wdw_title = self.wdw_handles_dct[handle]['title']
-            except KeyError as key_err:
-                # error(f"Problem accessing title:\n\t{key_err}")
-                self.active_wdw_title = 'KeyErr_accessing_wdw_title'
-            # print()
-            # print(f"Active app class: '{self.active_app_class}'")
-            # print(f"Active window title: '{self.active_wdw_title}'")
-            # self.print_running_applications()
+        """Track active window app class and title based on state changes."""
 
-    def print_running_applications(self):
-        print("\nList of running applications:")
-        print(f"{'App ID':<30} {'Title':<50}")
-        print("-" * 80)
-        for handle, info in self.wdw_handles_dct.items():
-            app_id = info.get('app_id', ERR_NO_COSMIC_APP_CLASS)
-            title = info.get('title', ERR_NO_COSMIC_WDW_TITLE)
-            print(f"{app_id:<30} {title:<50}")
-        print()
+        # Filter out empty state updates (why do these even happen?)
+        # Filter out the all-zeroes state (reset event?) before converting
+        if not states_bytes or states_bytes == b'\x00\x00\x00\x00':
+            # print()
+            # print("Received empty bytes value or all-zeroes 4-byte state event, ignoring.")
+            return
+
+        # Process states_bytes as an array of 4-byte (32-bit) integers
+        # Interpret 4 bytes as an integer (little-endian arrays?)
+        if isinstance(states_bytes, bytes):
+            state_values = list(struct.unpack(f'{len(states_bytes)//4}I', states_bytes))
+
+        # Convert state values to their corresponding names
+        state_names = [STATE_MAP.get(state, f"Unknown state: {state}") for state in state_values]
+
+        # print()
+        # print(f"{'State change event (bytes):':<30}",   f"{states_bytes}")
+        # print(f"{'State change event (values):':<30}",  f"{state_values}")
+        # print(f"{'State change event (names):':<30}",   f"{state_names}")
+
+        foreign_handle: ExtForeignToplevelHandleV1 = None
+
+        if self.cosmic_protocol_ver >= 2:
+            if handle in self.cosmic_to_foreign_map:
+                foreign_handle = self.cosmic_to_foreign_map[handle]
+        else:
+            # print("Error: Foreign handle not found for the cosmic toplevel.")
+            return
+
+        if ZcosmicToplevelHandleV1.state.activated.value in state_values:
+
+            if self.cosmic_protocol_ver >= 2:
+                self.active_app_class = self.wdw_handles_dct[foreign_handle]['app_id']
+                self.active_wdw_title = self.wdw_handles_dct[foreign_handle]['title']
+
+            elif self.cosmic_protocol_ver == 1:
+                self.active_app_class = self.wdw_handles_dct[handle]['app_id']
+                self.active_wdw_title = self.wdw_handles_dct[handle]['title']
+
+            # self.print_running_applications()  # Print the list of running applications
+            # print()
+            # print("#" * 80)
+            # print(f"{'Active app class:':<30}", f"'{self.active_app_class}'")
+            # print(f"{'Active window title:':<30}", f"'{self.active_wdw_title}'")
+            # print("#" * 80)
 
 
 class DBUS_Object(dbus.service.Object):

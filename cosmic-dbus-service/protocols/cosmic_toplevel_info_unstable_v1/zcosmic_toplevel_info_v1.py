@@ -2,7 +2,7 @@
 
 # Copyright © 2018 Ilia Bozhinov
 # Copyright © 2020 Isaac Freund
-# Copytight © 2022 Victoria Brekenfeld
+# Copyright © 2024 Victoria Brekenfeld
 #
 # Permission to use, copy, modify, distribute, and sell this
 # software and its documentation for any purpose is hereby granted
@@ -36,6 +36,7 @@ from pywayland.protocol_core import (
     Resource,
 )
 
+from ..ext_foreign_toplevel_list_v1 import ExtForeignToplevelHandleV1
 from .zcosmic_toplevel_handle_v1 import ZcosmicToplevelHandleV1
 
 
@@ -45,16 +46,12 @@ class ZcosmicToplevelInfoV1(Interface):
     The purpose of this protocol is to enable clients such as taskbars or docks
     to access a list of opened applications and basic properties thereof.
 
-    The secondary purpose of this protocol is to provide protocol object
-    handles for toplevels which may be used to address said toplevels in other
-    protocols (e.g. to target a toplevel for screencopy).
-
-    After a client binds the :class:`ZcosmicToplevelInfoV1`, each opened
-    toplevel window will be sent via the toplevel event
+    It thus extends ext_foreign_toplevel_v1 to provide more information and
+    actions on foreign toplevels.
     """
 
     name = "zcosmic_toplevel_info_v1"
-    version = 1
+    version = 2
 
 
 class ZcosmicToplevelInfoV1Proxy(Proxy[ZcosmicToplevelInfoV1]):
@@ -69,8 +66,37 @@ class ZcosmicToplevelInfoV1Proxy(Proxy[ZcosmicToplevelInfoV1]):
         toplevel_created events until the finished event is emitted.
 
         The client must not send any more requests after this one.
+
+        Note: This request isn't necessary for clients binding version 2 of
+        this protocol and will be ignored.
         """
         self._marshal(0)
+
+    @ZcosmicToplevelInfoV1.request(
+        Argument(ArgumentType.NewId, interface=ZcosmicToplevelHandleV1),
+        Argument(ArgumentType.Object, interface=ExtForeignToplevelHandleV1),
+        version=2,
+    )
+    def get_cosmic_toplevel(self, foreign_toplevel: ExtForeignToplevelHandleV1) -> Proxy[ZcosmicToplevelHandleV1]:
+        """Get cosmic toplevel extension object
+
+        Request a
+        :class:`~pywayland.protocol.cosmic_toplevel_info_unstable_v1.ZcosmicToplevelHandleV1`
+        extension object for an existing
+        :class:`~pywayland.protocol.ext_foreign_toplevel_list_v1.ExtForeignToplevelHandleV1`.
+
+        All initial properties of the toplevel (states, etc.) will be sent
+        immediately after this event via the corresponding events in
+        :class:`~pywayland.protocol.cosmic_toplevel_info_unstable_v1.ZcosmicToplevelHandleV1`.
+
+        :param foreign_toplevel:
+        :type foreign_toplevel:
+            :class:`~pywayland.protocol.ext_foreign_toplevel_list_v1.ExtForeignToplevelHandleV1`
+        :returns:
+            :class:`~pywayland.protocol.cosmic_toplevel_info_unstable_v1.ZcosmicToplevelHandleV1`
+        """
+        cosmic_toplevel = self._marshal_constructor(1, ZcosmicToplevelHandleV1, foreign_toplevel)
+        return cosmic_toplevel
 
 
 class ZcosmicToplevelInfoV1Resource(Resource):
@@ -82,8 +108,12 @@ class ZcosmicToplevelInfoV1Resource(Resource):
     def toplevel(self, toplevel: ZcosmicToplevelHandleV1) -> None:
         """A toplevel has been created
 
-        This event is emitted whenever a new toplevel window is created. It is
-        emitted for all toplevels, regardless of the app that has created them.
+        This event is never emitted for clients binding version 2 of this
+        protocol, they should use `get_cosmic_toplevel` instead.
+
+        This event is emitted for clients binding version 1 whenever a new
+        toplevel window is created. It is emitted for all toplevels, regardless
+        of the app that has created them.
 
         All initial properties of the toplevel (title, app_id, states, etc.)
         will be sent immediately after this event via the corresponding events
@@ -104,8 +134,26 @@ class ZcosmicToplevelInfoV1Resource(Resource):
         :class:`ZcosmicToplevelInfoV1`. The server will destroy the object
         immediately after sending this request, so it will become invalid and
         the client should free any resources associated with it.
+
+        Note: This event is emitted immediately after calling `stop` for
+        clients binding version 2 of this protocol for backwards compatibility.
         """
         self._post_event(1)
+
+    @ZcosmicToplevelInfoV1.event(version=2)
+    def done(self) -> None:
+        """All information about active toplevels have been sent
+
+        This event is sent after all changes for currently active
+        :class:`~pywayland.protocol.cosmic_toplevel_info_unstable_v1.ZcosmicToplevelHandleV1`
+        have been sent.
+
+        This allows changes to multiple
+        :class:`~pywayland.protocol.cosmic_toplevel_info_unstable_v1.ZcosmicToplevelHandleV1`
+        handles and their properties to be seen as atomic, even if they happen
+        via multiple events.
+        """
+        self._post_event(2)
 
 
 class ZcosmicToplevelInfoV1Global(Global):

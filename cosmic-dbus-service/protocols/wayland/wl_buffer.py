@@ -42,9 +42,11 @@ class WlBuffer(Interface):
     a client provides and updates the contents is defined by the buffer factory
     interface.
 
-    If the buffer uses a format that has an alpha channel, the alpha channel is
-    assumed to be premultiplied in the color channels unless otherwise
-    specified.
+    Color channels are assumed to be electrical rather than optical (in other
+    words, encoded with a transfer function) unless otherwise specified. If the
+    buffer uses a format that has an alpha channel, the alpha channel is
+    assumed to be premultiplied into the electrical color channel values (after
+    transfer function encoding) unless otherwise specified.
 
     Note, because :class:`WlBuffer` objects are created from multiple
     independent factory interfaces, the :class:`WlBuffer` interface is frozen

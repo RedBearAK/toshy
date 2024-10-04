@@ -116,6 +116,11 @@ class WlOutputResource(Resource):
         The geometry event will be followed by a done event (starting from
         version 2).
 
+        Clients should use :func:`WlSurface.preferred_buffer_transform()
+        <pywayland.protocol.wayland.WlSurface.preferred_buffer_transform>`
+        instead of the transform advertised by this event to find the preferred
+        buffer transform to use for a surface.
+
         Note: :class:`WlOutput` only advertises partial information about the
         output position and identification. Some compositors, for instance
         those not implementing a desktop-style output layout or those exposing
@@ -152,7 +157,8 @@ class WlOutputResource(Resource):
         :type model:
             `ArgumentType.String`
         :param transform:
-            transform that maps framebuffer to output
+            additional transformation applied to buffer contents during
+            presentation
         :type transform:
             `ArgumentType.Int`
         """
@@ -241,20 +247,18 @@ class WlOutputResource(Resource):
 
         This event contains scaling geometry information that is not in the
         geometry event. It may be sent after binding the output object or if
-        the output scale changes later. If it is not sent, the client should
-        assume a scale of 1.
+        the output scale changes later. The compositor will emit a non-zero,
+        positive value for scale. If it is not sent, the client should assume a
+        scale of 1.
 
         A scale larger than 1 means that the compositor will automatically
         scale surface buffers by this amount when rendering. This is used for
         very high resolution displays where applications rendering at the
         native resolution would be too small to be legible.
 
-        It is intended that scaling aware clients track the current output of a
-        surface, and if it is on a scaled output it should use
-        :func:`WlSurface.set_buffer_scale()
-        <pywayland.protocol.wayland.WlSurface.set_buffer_scale>` with the scale
-        of the output. That way the compositor can avoid scaling the surface,
-        and the client can supply a higher detail image.
+        Clients should use :func:`WlSurface.preferred_buffer_scale()
+        <pywayland.protocol.wayland.WlSurface.preferred_buffer_scale>` instead
+        of this event to find the preferred buffer scale to use for a surface.
 
         The scale event will be followed by a done event.
 

@@ -96,6 +96,12 @@ class WlSubsurface(Interface):
 
     If the parent :class:`~pywayland.protocol.wayland.WlSurface` object is
     destroyed, the sub-surface is unmapped.
+
+    A sub-surface never has the keyboard focus of any seat.
+
+    The :func:`WlSurface.offset()
+    <pywayland.protocol.wayland.WlSurface.offset>` request is ignored: clients
+    must use set_position instead to move the sub-surface.
     """
 
     name = "wl_subsurface"
@@ -136,10 +142,7 @@ class WlSubsurfaceProxy(Proxy[WlSubsurface]):
         allowed.
 
         The scheduled coordinates will take effect whenever the state of the
-        parent surface is applied. When this happens depends on whether the
-        parent surface is in synchronized mode or not. See
-        :func:`WlSubsurface.set_sync()` and :func:`WlSubsurface.set_desync()`
-        for details.
+        parent surface is applied.
 
         If more than one set_position request is invoked by the client before
         the commit of the parent surface, the position of a new request always
@@ -173,10 +176,7 @@ class WlSubsurfaceProxy(Proxy[WlSubsurface]):
         The z-order is double-buffered. Requests are handled in order and
         applied immediately to a pending state. The final pending state is
         copied to the active state the next time the state of the parent
-        surface is applied. When this happens depends on whether the parent
-        surface is in synchronized mode or not. See
-        :func:`WlSubsurface.set_sync()` and :func:`WlSubsurface.set_desync()`
-        for details.
+        surface is applied.
 
         A new sub-surface is initially added as the top-most in the stack of
         its siblings and parent.
