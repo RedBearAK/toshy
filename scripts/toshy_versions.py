@@ -45,19 +45,17 @@ sys.path.insert(0, lib_dir_path)
 
 
 file_paths = [
-
     os.path.join(toshy_dir_path, 'toshy_config.py'),
     os.path.join(toshy_dir_path, 'toshy_gui.py'),
     os.path.join(toshy_dir_path, 'toshy_tray.py'),
-
+    None,
     os.path.join(lib_dir_path, 'env_context.py'),
     os.path.join(lib_dir_path, 'notification_manager.py'),
     os.path.join(lib_dir_path, 'settings_class.py'),
-
+    None,
     os.path.join(toshy_dir_path, 'cosmic-dbus-service', 'toshy_cosmic_dbus_service.py'),
     os.path.join(toshy_dir_path, 'kde-kwin-dbus-service', 'toshy_kde_dbus_service.py'),
     os.path.join(toshy_dir_path, 'wlroots-dbus-service', 'toshy_wlroots_dbus_service.py'),
-
 ]
 
 
@@ -67,7 +65,13 @@ def extract_version(file_path):
         with open(file_path, 'r') as file:
             for line in file:
                 if line.startswith('__version__'):
-                    return line.split('=')[1].strip().strip('"').strip("'")
+                    version_raw = line.split('=')[1].strip().strip('"').strip("'")
+                    # Check if the version is all digits, has no dots, and starts with a year in a rational range
+                    if version_raw.isdigit() and '.' not in version_raw and 2020 <= int(version_raw[:4]) <= 2038:
+                        # Format the version string
+                        return f"{version_raw[:4]}.{version_raw[4:6]}.{version_raw[6:]}"
+                    else:
+                        return version_raw  # Return the raw version if it doesn't meet the criteria
     except Exception as e:
         return f"Error reading file: {str(e)}"
 
@@ -81,6 +85,9 @@ print('-' * (max_file_name_length + 14))
 
 # Print version information
 for path in file_paths:
+    if path is None:
+        print()     # Separate groupings in the list with a blank line
+        continue
     file_name = os.path.basename(path)
     version = extract_version(path)
     if version:
