@@ -42,8 +42,8 @@ from protocols.ext_foreign_toplevel_list_v1.ext_foreign_toplevel_list_v1 import 
 from pywayland.client import Display
 from time import sleep
 
-ERR_NO_WLR_APP_CLASS = "ERR_no_cosmic_app_class"
-ERR_NO_WLR_WDW_TITLE = "ERR_no_cosmic_wdw_title"
+ERR_NO_COSMIC_APP_CLASS = "ERR_no_cosmic_app_class"
+ERR_NO_COSMIC_WDW_TITLE = "ERR_no_cosmic_wdw_title"
 
 # Create a mapping of state values to their names
 STATE_MAP = {
@@ -63,14 +63,15 @@ class WaylandClient:
         self.wl_fd                              = None
         self.registry                           = None
         self.forn_topl_mgr_prot_supported       = False
-        self.cosmic_protocol_ver                   = None
-        self.cosmic_toplvl_mgr                  = None
-        self.foreign_toplvl_mgr                 = None
+        self.cosmic_protocol_ver                = None
+
+        self.cosmic_toplvl_mgr: ZcosmicToplevelInfoV1Proxy      = None
+        self.foreign_toplvl_mgr: ExtForeignToplevelListV1Proxy  = None
 
         self.wdw_handles_dct                    = {}
         self.cosmic_to_foreign_map              = {}
-        self.active_app_class                   = ERR_NO_WLR_APP_CLASS
-        self.active_wdw_title                   = ERR_NO_WLR_WDW_TITLE
+        self.active_app_class                   = ERR_NO_COSMIC_APP_CLASS
+        self.active_wdw_title                   = ERR_NO_COSMIC_WDW_TITLE
 
     def signal_handler(self, signal, frame):
         print(f"\nSignal {signal} received, shutting down.")
@@ -89,8 +90,8 @@ class WaylandClient:
         print(f"{'App ID':<30} {'Title':<50}")
         print("-" * 80)
         for handle, info in self.wdw_handles_dct.items():
-            app_id: str = info.get('app_id', ERR_NO_WLR_APP_CLASS)
-            title: str  = info.get('title', ERR_NO_WLR_WDW_TITLE)
+            app_id = info.get('app_id', ERR_NO_COSMIC_APP_CLASS)
+            title  = info.get('title', ERR_NO_COSMIC_WDW_TITLE)
             # print(f"{handle}")
             print(f"{app_id:<30} {title:<50}")
         print()
@@ -222,7 +223,7 @@ class WaylandClient:
         except KeyError as e:
             print(f"Error sending get_cosmic_toplevel request: {e}")
 
-    def registry_global_handler(self, registry, id_, interface_name, version):
+    def handle_registry_global(self, registry, id_, interface_name, version):
         """Handle registry events."""
         print(f"Registry event: id={id_}, interface={interface_name}, version={version}")
 
@@ -249,7 +250,7 @@ class WaylandClient:
                 print()
 
             elif version >= 2:
-                # This update version of the protocol will be handled when the 
+                # This updated version of the protocol will be handled when the 
                 # 'ext_foreign_toplevel_list_v1' event appears and gets processed. 
                 pass
 
@@ -271,7 +272,7 @@ class WaylandClient:
                 print("Registry obtained")
 
                 print("Subscribing to 'global' events from registry")
-                self.registry.dispatcher["global"] = self.registry_global_handler
+                self.registry.dispatcher["global"] = self.handle_registry_global
 
                 print("Running roundtrip to process registry events...")
                 self.display.roundtrip()
