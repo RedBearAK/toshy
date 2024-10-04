@@ -84,7 +84,7 @@ def extract_version(file_path):
 max_file_name_length = max(len(os.path.basename(path)) for path in file_paths if path is not None)
 
 # Print header
-print()         # Blank line to start output
+print()             # Blank line to start output
 print(f"{'File Name'.ljust(max_file_name_length + 4)}Version")
 print('-' * (max_file_name_length + 14))
 
@@ -100,4 +100,4 @@ for path in file_paths:
     else:
         print(f"{file_name.ljust(max_file_name_length + 4)}No version found or error reading file.")
 
-print()         # Blank line to separate from terminal prompt
+print()             # Blank line to separate from terminal prompt
