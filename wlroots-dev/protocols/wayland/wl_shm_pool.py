@@ -52,7 +52,7 @@ class WlShmPool(Interface):
     """
 
     name = "wl_shm_pool"
-    version = 1
+    version = 2
 
 
 class WlShmPoolProxy(Proxy[WlShmPool]):

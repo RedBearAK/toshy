@@ -46,6 +46,19 @@ class WlKeyboard(Interface):
 
     The :class:`WlKeyboard` interface represents one or more keyboards
     associated with a seat.
+
+    Each :class:`WlKeyboard` has the following logical state:
+
+    - an active surface (possibly null),
+
+    - the keys currently logically down,
+
+    - the active modifiers,
+
+    - the active group.
+
+    By default, the active surface is null, the keys currently logically down
+    are empty, the active modifiers and the active group are 0.
     """
 
     name = "wl_keyboard"
@@ -117,6 +130,12 @@ class WlKeyboardResource(Resource):
         The compositor must send the :func:`WlKeyboard.modifiers()` event after
         this event.
 
+        In the :class:`WlKeyboard` logical state, this event sets the active
+        surface to the surface argument and the keys currently logically down
+        to the keys in the keys argument. The compositor must not send this
+        event if the :class:`WlKeyboard` already had an active surface
+        immediately before this event.
+
         :param serial:
             serial number of the enter event
         :type serial:
@@ -126,7 +145,7 @@ class WlKeyboardResource(Resource):
         :type surface:
             :class:`~pywayland.protocol.wayland.WlSurface`
         :param keys:
-            the currently pressed keys
+            the keys currently logically down
         :type keys:
             `ArgumentType.Array`
         """
@@ -145,9 +164,10 @@ class WlKeyboardResource(Resource):
         The leave notification is sent before the enter notification for the
         new focus.
 
-        After this event client must assume that all keys, including modifiers,
-        are lifted and also it must stop key repeating if there's some going
-        on.
+        In the :class:`WlKeyboard` logical state, this event resets all values
+        to their defaults. The compositor must not send this event if the
+        active surface of the :class:`WlKeyboard` was not equal to the surface
+        argument immediately before this event.
 
         :param serial:
             serial number of the leave event
@@ -177,6 +197,15 @@ class WlKeyboardResource(Resource):
 
         If this event produces a change in modifiers, then the resulting
         :func:`WlKeyboard.modifiers()` event must be sent after this event.
+
+        In the :class:`WlKeyboard` logical state, this event adds the key to
+        the keys currently logically down (if the state argument is pressed) or
+        removes the key from the keys currently logically down (if the state
+        argument is released). The compositor must not send this event if the
+        :class:`WlKeyboard` did not have an active surface immediately before
+        this event. The compositor must not send this event if state is pressed
+        (resp. released) and the key was already logically down (resp. was not
+        logically down) immediately before this event.
 
         :param serial:
             serial number of the key event
@@ -209,6 +238,18 @@ class WlKeyboardResource(Resource):
 
         Notifies clients that the modifier and/or group state has changed, and
         it should update its local state.
+
+        The compositor may send this event without a surface of the client
+        having keyboard focus, for example to tie modifier information to
+        pointer focus instead. If a modifier event with pressed modifiers is
+        sent without a prior enter event, the client can assume the modifier
+        state is valid until it receives the next
+        :func:`WlKeyboard.modifiers()` event. In order to reset the modifier
+        state again, the compositor can send a :func:`WlKeyboard.modifiers()`
+        event with no pressed modifiers.
+
+        In the :class:`WlKeyboard` logical state, this event updates the
+        modifiers and group.
 
         :param serial:
             serial number of the modifiers event

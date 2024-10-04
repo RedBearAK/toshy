@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+__version__ = '20240904'
 
 import os
 import sys

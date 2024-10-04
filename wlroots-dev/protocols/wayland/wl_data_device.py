@@ -58,6 +58,7 @@ class WlDataDevice(Interface):
 
     class error(enum.IntEnum):
         role = 0
+        used_source = 1
 
 
 class WlDataDeviceProxy(Proxy[WlDataDevice]):
@@ -87,8 +88,8 @@ class WlDataDeviceProxy(Proxy[WlDataDevice]):
         The icon surface is an optional (can be NULL) surface that provides an
         icon to be moved around with the cursor.  Initially, the top-left
         corner of the icon surface is placed at the cursor hotspot, but
-        subsequent :func:`WlSurface.attach()
-        <pywayland.protocol.wayland.WlSurface.attach>` request can move the
+        subsequent :func:`WlSurface.offset()
+        <pywayland.protocol.wayland.WlSurface.offset>` requests can move the
         relative position. Attach requests must be confirmed with
         :func:`WlSurface.commit()
         <pywayland.protocol.wayland.WlSurface.commit>` as usual. The icon
@@ -97,6 +98,10 @@ class WlDataDeviceProxy(Proxy[WlDataDevice]):
 
         The input region is ignored for wl_surfaces with the role of a drag-
         and-drop icon.
+
+        The given source may not be used in any further set_selection or
+        start_drag requests. Attempting to reuse a previously-used source may
+        send a used_source error.
 
         :param source:
             data source for the eventual transfer
@@ -128,6 +133,10 @@ class WlDataDeviceProxy(Proxy[WlDataDevice]):
         the source on behalf of the client.
 
         To unset the selection, set the source to NULL.
+
+        The given source may not be used in any further set_selection or
+        start_drag requests. Attempting to reuse a previously-used source may
+        send a used_source error.
 
         :param source:
             data source for the selection

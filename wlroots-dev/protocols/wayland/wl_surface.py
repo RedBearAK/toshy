@@ -206,6 +206,14 @@ class WlSurfaceProxy(Proxy[WlSurface]):
         :class:`~pywayland.protocol.wayland.WlBuffer`, the following
         :func:`WlSurface.commit()` will remove the surface content.
 
+        If a pending :class:`~pywayland.protocol.wayland.WlBuffer` has been
+        destroyed, the result is not specified. Many compositors are known to
+        remove the surface content on the following :func:`WlSurface.commit()`,
+        but this behaviour is not universal. Clients seeking to maximise
+        compatibility should not destroy pending buffers and should ensure that
+        they explicitly remove content from surfaces, even after destroying
+        buffers.
+
         :param buffer:
             buffer of surface contents
         :type buffer:
@@ -403,18 +411,20 @@ class WlSurfaceProxy(Proxy[WlSurface]):
 
         Surface state (input, opaque, and damage regions, attached buffers,
         etc.) is double-buffered. Protocol requests modify the pending state,
-        as opposed to the current state in use by the compositor. A commit
-        request atomically applies all pending state, replacing the current
-        state. After commit, the new pending state is as documented for each
-        related request.
+        as opposed to the active state in use by the compositor.
 
-        On commit, a pending :class:`~pywayland.protocol.wayland.WlBuffer` is
-        applied first, and all other state second. This means that all
-        coordinates in double-buffered state are relative to the new
-        :class:`~pywayland.protocol.wayland.WlBuffer` coming into use, except
-        for :func:`WlSurface.attach()` itself. If there is no pending
+        A commit request atomically creates a content update from the pending
+        state, even if the pending state has not been touched. The content
+        update is placed in a queue until it becomes active. After commit, the
+        new pending state is as documented for each related request.
+
+        When the content update is applied, the
+        :class:`~pywayland.protocol.wayland.WlBuffer` is applied before all
+        other state. This means that all coordinates in double-buffered state
+        are relative to the newly attached wl_buffers, except for
+        :func:`WlSurface.attach()` itself. If there is no newly attached
         :class:`~pywayland.protocol.wayland.WlBuffer`, the coordinates are
-        relative to the current surface contents.
+        relative to the previous content update.
 
         All requests that need a commit to become effective are documented to
         affect double-buffered state.
@@ -430,11 +440,13 @@ class WlSurfaceProxy(Proxy[WlSurface]):
     def set_buffer_transform(self, transform: int) -> None:
         """Sets the buffer transformation
 
-        This request sets an optional transformation on how the compositor
-        interprets the contents of the buffer attached to the surface. The
-        accepted values for the transform parameter are the values for
-        :func:`WlOutput.transform()
+        This request sets the transformation that the client has already
+        applied to the content of the buffer. The accepted values for the
+        transform parameter are the values for :func:`WlOutput.transform()
         <pywayland.protocol.wayland.WlOutput.transform>`.
+
+        The compositor applies the inverse of this transformation whenever it
+        uses the buffer contents.
 
         Buffer transform is double-buffered state, see
         :func:`WlSurface.commit()`.
@@ -499,10 +511,11 @@ class WlSurfaceProxy(Proxy[WlSurface]):
         buffer that is larger (by a factor of scale in each dimension) than the
         desired surface size.
 
-        If scale is not positive the invalid_scale protocol error is raised.
+        If scale is not greater than 0 the invalid_scale protocol error is
+        raised.
 
         :param scale:
-            positive scale for interpreting buffer contents
+            scale for interpreting buffer contents
         :type scale:
             `ArgumentType.Int`
         """
@@ -659,10 +672,15 @@ class WlSurfaceResource(Resource):
         This event indicates the preferred buffer scale for this surface. It is
         sent whenever the compositor's preference changes.
 
+        Before receiving this event the preferred buffer scale for this surface
+        is 1.
+
         It is intended that scaling aware clients use this event to scale their
         content and use :func:`WlSurface.set_buffer_scale()` to indicate the
         scale they have rendered with. This allows clients to supply a higher
         detail buffer.
+
+        The compositor shall emit a scale value greater than 0.
 
         :param factor:
             preferred scaling factor
@@ -681,10 +699,12 @@ class WlSurfaceResource(Resource):
         This event indicates the preferred buffer transform for this surface.
         It is sent whenever the compositor's preference changes.
 
-        It is intended that transform aware clients use this event to apply the
-        transform to their content and use
-        :func:`WlSurface.set_buffer_transform()` to indicate the transform they
-        have rendered with.
+        Before receiving this event the preferred buffer transform for this
+        surface is normal.
+
+        Applying this transformation to the surface buffer contents and using
+        :func:`WlSurface.set_buffer_transform()` might allow the compositor to
+        use the surface buffer more efficiently.
 
         :param transform:
             preferred transform
