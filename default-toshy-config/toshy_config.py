@@ -3418,6 +3418,7 @@ dlgs_Dolphin_Enter_is_Enter = [
     "Edit Places Entry.*",
     "Create New File.*",
     "Folder Already Exists.*",
+    "File Already Exists.*",
 ]
 # Convert list to regex pattern string
 dlgs_Dolphin_Enter_is_Enter_Str = toRgxStr(dlgs_Dolphin_Enter_is_Enter)
@@ -4208,9 +4209,10 @@ keymap("Alacritty terminal", {
 }, when = matchProps(clas="^alacritty$"))
 
 
-# keymap("COSMIC Terminal overrides", {
-#     # Not sure what to put here yet. There are tab nav fixes in the usual place.
-# }, when = matchProps(clas="^com.system76.CosmicTerm$"))
+keymap("COSMIC Terminal overrides", {
+    # There are already tab nav fixes in the usual place.
+    C("RC-equal"):              C("C-equal"),                   # Increase font size (override general terminals remap)
+}, when = matchProps(clas="^com.system76.CosmicTerm$"))
 
 
 keymap("Deepin Terminal overrides", {
