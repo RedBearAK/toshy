@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20241003'
+__version__ = '20241005'
 
 # Reference for generating the protocol modules with pywayland scanner:
 # https://github.com/flacjacket/pywayland/issues/8#issuecomment-987040284
@@ -252,16 +252,16 @@ class WaylandClient:
             self.cosmic_to_foreign_map[cosmic_toplvl_handle] = foreign_toplvl_handle
 
             # Event listeners for the foreign toplevel handle
-            # (cosmic toplevel handle will never emit these)
+            # (cosmic toplevel handle will never emit these events now, they are deprecated since v2)
             foreign_toplvl_handle.dispatcher['title']       = self.handle_title_change
             foreign_toplvl_handle.dispatcher['app_id']      = self.handle_app_id_change
+            foreign_toplvl_handle.dispatcher['closed']      = self.handle_window_closed
 
             # Event listeners for v2 cosmic toplevel handle
-            # (foreign toplevel handle does not have these events)
-            cosmic_toplvl_handle.dispatcher['closed']       = self.handle_window_closed
+            # (foreign toplevel handle does not have the state events)
             cosmic_toplvl_handle.dispatcher['state']        = self.handle_state_change
 
-            self.display.roundtrip()
+            # self.display.roundtrip()      # Not sure if this is necessary or helpful here
 
         except KeyError as e:
             print(f"Error sending get_cosmic_toplevel request: {e}")
@@ -286,19 +286,24 @@ class WaylandClient:
 
     def handle_window_closed(self, handle):
         """Remove window from local state."""
-        foreign_handle: ExtForeignToplevelHandleV1 = None
 
         if self.cosmic_protocol_ver >= 2:
-            if handle in self.cosmic_to_foreign_map:
-                foreign_handle = self.cosmic_to_foreign_map.pop(handle, None)
-            if foreign_handle and foreign_handle in self.wdw_handles_dct:
-                del self.wdw_handles_dct[foreign_handle]
-            print(f"Window {foreign_handle} has been closed.")
+            # Using list() as a wrapper creates a copy of dictionary.items() (which 
+            # produces a dynamic "view object") to iterate over without risking an 
+            # iteration error from modifying the dictionary underlying the items() 
+            # view object.
+            for cosmic_handle, foreign_handle in list(self.cosmic_to_foreign_map.items()):
+                if foreign_handle is handle:
+                    del self.cosmic_to_foreign_map[cosmic_handle]
+                    break
+            if handle and handle in self.wdw_handles_dct:
+                del self.wdw_handles_dct[handle]
+                print(f"Window has been closed:\n  {handle}")
 
         elif self.cosmic_protocol_ver == 1:
-            if handle in self.wdw_handles_dct:
+            if handle and handle in self.wdw_handles_dct:
                 del self.wdw_handles_dct[handle]
-                print(f"Window {handle} has been closed.")
+                print(f"Window has been closed:\n  {handle}")
 
     def handle_state_change(self, handle, states_bytes):
         """Track active window app class and title based on state changes."""
