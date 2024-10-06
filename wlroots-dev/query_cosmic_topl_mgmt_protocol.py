@@ -138,11 +138,11 @@ class WaylandClient:
         # Filter out the all-zeroes state (reset event?) before converting
         if states_bytes == b'':
             print()
-            print(f"Received empty bytes value state event, ignoring: {states_bytes}")
+            print(f">>>>  Received empty bytes value state event, ignoring: {states_bytes}")
             return
         elif states_bytes == b'\x00\x00\x00\x00':
             print()
-            print(f"Received all-zeroes 4-byte state event, ignoring: {states_bytes}")
+            print(f">>>>  Received all-zeroes 4-byte state event, ignoring: {states_bytes}")
             return
 
         # Process states_bytes as an array of 4-byte (32-bit) integers
