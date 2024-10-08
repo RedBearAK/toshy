@@ -642,7 +642,7 @@ distro_groups_map: Dict[str, List[str]] = {
 
     # separate references for Tumbleweed types, Leap types, MicroOS types
     'tumbleweed-based':         ["opensuse-tumbleweed"],
-    'leap-based':               ["opensuse-leap"],
+    'leap-based':               ["opensuse-leap", "leap"],      # Leap 16 dropped "openSUSE"
     'microos-based':            ["opensuse-aeon", "opensuse-kalpa", "opensuse-microos"],
 
     'mandriva-based':           ["openmandriva"],
