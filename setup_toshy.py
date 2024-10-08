@@ -641,8 +641,8 @@ distro_groups_map: Dict[str, List[str]] = {
     'fedora-immutables':        ["kinoite", "silverblue"],
 
     # separate references for Tumbleweed types, Leap types, MicroOS types
-    'tumbleweed-based':         ["opensuse-tumbleweed"],
-    'leap-based':               ["opensuse-leap", "leap"],      # Leap 16 dropped "openSUSE"
+    'tumbleweed-based':         ["opensuse-tumbleweed", "tumbleweed"],
+    'leap-based':               ["leap", "opensuse-leap"],
     'microos-based':            ["opensuse-aeon", "opensuse-kalpa", "opensuse-microos"],
 
     'mandriva-based':           ["openmandriva"],
