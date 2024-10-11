@@ -4302,6 +4302,14 @@ if DESKTOP_ENV == 'budgie':
         matchProps(clas=termStr)(ctx)
     )
 
+if DESKTOP_ENV == 'cosmic':
+    keymap("GenTerms overrides: COSMIC", {
+        C("LC-RC-F"):               C("Super-M"),                   # Maximize window toggle (overrides General terminals)
+    }, when = lambda ctx:
+        cnfg.screen_has_focus and
+        matchProps(clas=termStr)(ctx)
+    )
+
 if DESKTOP_ENV == 'gnome':
     keymap("GenTerms overrides: GNOME", {
         ### Keyboard input source (language/layout) switching in GNOME
@@ -4588,6 +4596,7 @@ if DESKTOP_ENV == 'cosmic':
         # so we can't "fix" this during Toshy install to not use the Meta/Super key.
         C("RC-Space"):             [Key.LEFT_META,iEF2NT()],        # Launcher or Workspaces or Applications (user choice)
         C("RC-Q"):                  C("Super-Q"),                   # Close window/Quit (overrides Alt+F4 from General GUI)
+        C("Super-RC-F"):            C("Super-M"),                   # Maximize window toggle (overrides General GUI)
     }, when = lambda ctx:
         cnfg.screen_has_focus and
         matchProps(not_clas=remoteStr)(ctx)
