@@ -561,6 +561,7 @@ class EnvironmentInfo:
             ],
 
             'awesome':          'awesome',
+            'cosmic':           'cosmic-comp',
             'dwm':              'dwm',
             'i3':               'i3',
             'i3-gaps':          'i3',
