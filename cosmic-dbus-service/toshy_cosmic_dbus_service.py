@@ -137,11 +137,11 @@ def check_environment():
 
 check_environment()
 
-# TODO: Get this script to stop if not in COSMIC
+
 if SESSION_TYPE == 'wayland' and DESKTOP_ENV in ['cosmic']:
     pass
 else:
-    debug(f'{LOG_PFX}: Probably not COSMIC environment. Exiting.')
+    debug(f'{LOG_PFX}: Probably not COSMIC desktop environment. Exiting.')
     time.sleep(2)
     sys.exit(0)
 
