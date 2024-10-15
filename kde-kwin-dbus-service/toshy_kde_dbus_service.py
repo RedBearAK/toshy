@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 __version__ = '20240904'
 
+print("(--) Starting Toshy D-Bus service to receive updates from KWin script...")
+
 import os
 import sys
 import dbus
@@ -12,12 +14,16 @@ import platform
 # import subprocess
 import dbus.service
 import dbus.mainloop.glib
+import xwaykeyz.lib.logger
 
 from gi.repository import GLib
 from dbus.exceptions import DBusException
 from subprocess import DEVNULL
 from typing import Dict, List, Union
 from xwaykeyz.lib.logger import debug, error
+
+xwaykeyz.lib.logger.VERBOSE = True
+
 
 # Independent module/script to create a D-Bus window context
 # service in a KDE Plasma environment, which will be notified
@@ -89,7 +95,8 @@ def check_environment():
 
 check_environment()
 
-if DESKTOP_ENV in ['kde', 'plasma'] and SESSION_TYPE == 'wayland':
+
+if SESSION_TYPE == 'wayland' and DESKTOP_ENV in ['kde', 'plasma']:
     pass
 else:
     debug(f'{LOG_PFX}: Not a Wayland+KDE environment. Exiting.')
