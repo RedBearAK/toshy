@@ -97,7 +97,7 @@ check_environment()
 
 
 # Adding 'lxqt' as a possible desktop environment where 'kwin_wayland' might be used.
-# TODO: Must add a way to auto-install the KWin script!!!
+# TODO: Add a way to auto-install the KWin script in LXQt? Or will it already auto-install?
 if SESSION_TYPE == 'wayland' and DESKTOP_ENV in ['kde', 'plasma', 'lxqt']:
     pass
 else:
