@@ -96,7 +96,9 @@ def check_environment():
 check_environment()
 
 
-if SESSION_TYPE == 'wayland' and DESKTOP_ENV in ['kde', 'plasma']:
+# Adding 'lxqt' as a possible desktop environment where 'kwin_wayland' might be used.
+# TODO: Add a way to auto-install the KWin script in LXQt? Or will it already auto-install?
+if SESSION_TYPE == 'wayland' and DESKTOP_ENV in ['kde', 'plasma', 'lxqt']:
     pass
 else:
     debug(f'{LOG_PFX}: Not a Wayland+KDE environment. Exiting.')
@@ -134,19 +136,19 @@ class DBUS_Object(dbus.service.Object):
 
     @dbus.service.method(TOSHY_KDE_DBUS_SVC_IFACE, in_signature='sss')
     def NotifyActiveWindow(self, caption, resource_class, resource_name):
-        debug(f'{LOG_PFX}: NotifyActiveWindow() called...')
+        # debug(f'{LOG_PFX}: NotifyActiveWindow() called...')
         self.caption            = str(caption)
         self.resource_class     = str(resource_class)
         self.resource_name      = str(resource_name)
-        debug(f'{LOG_PFX}: Active window attributes:'
-                f"\n\t caption        = '{self.caption}'"
-                f"\n\t resource_class = '{self.resource_class}'"
-                f"\n\t resource_name  = '{self.resource_name}'"
-        )
+        # debug(f'{LOG_PFX}: Active window attributes:'
+        #         f"\n\t caption        = '{self.caption}'"
+        #         f"\n\t resource_class = '{self.resource_class}'"
+        #         f"\n\t resource_name  = '{self.resource_name}'"
+        # )
 
     @dbus.service.method(TOSHY_KDE_DBUS_SVC_IFACE, out_signature='a{sv}')
     def GetActiveWindow(self):
-        debug(f'{LOG_PFX}: GetActiveWindow() called...')
+        # debug(f'{LOG_PFX}: GetActiveWindow() called...')
         return {    'caption':          self.caption,
                     'resource_class':   self.resource_class,
                     'resource_name':    self.resource_name }
