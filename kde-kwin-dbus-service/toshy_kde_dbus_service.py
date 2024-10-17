@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20241014'
+__version__ = '20241016'
 
 print("(--) Starting Toshy D-Bus service to receive updates from KWin script...")
 
