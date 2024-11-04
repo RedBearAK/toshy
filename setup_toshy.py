@@ -638,7 +638,7 @@ distro_groups_map: Dict[str, List[str]] = {
     'rhel-based':               ["almalinux", "centos", "eurolinux", "oreon", "rhel", "rocky"],
 
     # separate references for Fedora immutables using rpm-ostree
-    'fedora-immutables':        ["kinoite", "silverblue"],
+    'fedora-immutables':        ["bazzite", "kinoite", "silverblue"],
 
     # separate references for Tumbleweed types, Leap types, MicroOS types
     'tumbleweed-based':         ["opensuse-tumbleweed", "tumbleweed"],
@@ -714,6 +714,7 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "libappindicator-gtk3", "libnotify", "libxkbcommon-devel",
                             "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
                             "systemd-devel",
+                            "wayland-devel",
                             "xset",
                             "zenity"],
 
