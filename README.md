@@ -169,7 +169,7 @@ If the app is not found you may need to enable the Flathub repo on your machine.
 
 When you get it installed, you can just use the "Browse" tab in this application to search for the extensions by name and quickly install them.  
 
-There is no risk of any kind of conflict when installing more than one of the compatible shell extensions. Which might be advisable, to reduce the risk of not having a working extension for a while the next time you upgrade your system in-place and wind up with a newer version of GNOME that one or two of the extensions hasn't been updated to support. I expect at least one of the (now three) extensions will always be updated quickly to support the latest GNOME. 
+There is no risk of any kind of conflict when installing more than one of the compatible shell extensions that provide window context info over D-Bus. Which might be advisable, to reduce the risk of not having a working extension for a while the next time you upgrade your system in-place and wind up with a newer version of GNOME that one or two of the extensions hasn't been updated to support. I expect at least one of the (now three) extensions will always be updated quickly to support the latest GNOME. 
 
 The window context module of the keymapper installed by Toshy will seamlessly jump to trying the other compatible extensions in case one fails or is disabled/uninstalled for any reason. You just need to have at least one from the list installed and enabled, and when it responds over D-Bus to the query from the keymapper it will be marked as the "good" one and used from then on, unless it stops responding. Lather, rinse, repeat.  
 
