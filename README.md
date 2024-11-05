@@ -148,7 +148,7 @@ On some Wayland environments it takes extra steps to get the per-app or per-app-
 
 It's very easy to search for and install GNOME Shell extensions now, if you install the "Extension Manager" Flatpak application from Flathub. No need to mess around with downloading a zip file from `extensions.gnome.org` and manually installing/enabling in the terminal, or trying to get the link between a native package and a browser extension working in a web browser. (Certain browsers and distros often make this a painful process.)  
 
-Many distros with GNOME will need the `AppIndicator and KStatusNotifierItem` extension (or some other extension that enables indicator tray icons) to make the tray icon appear in the top bar, and if you want to use Wayland you'll need one of the extensions from the list above.  
+Many distro variants that come with GNOME may need the `AppIndicator and KStatusNotifierItem` extension (or some other extension that enables what GNOME calls "legacy" indicator tray icons) to make the tray icon appear in the top bar, and if you want to use Wayland you'll need one of the extensions from the list above. Ubuntu usually has that exact extension for tray icons already installed and enabled. You will only need the suggested extension (or something similar) if you see nothing in the tray for Toshy after installing and rebooting for the first time after the Toshy install. The Toshy icon will usually look like a rainbow-colored rounded square, with a slighly tilted Command-key "flower" symbol inside it.  
 
 Here's how to install "Extension Manager":  
 
@@ -162,7 +162,7 @@ flatpak install com.mattjakeman.ExtensionManager
 flatpak install extensionmanager
 ```
 
-If it's not found you may need to enable the Flathub repo on your machine. Go to https://flathub.org/setup for instructions for your distro.  
+If the app is not found you may need to enable the Flathub repo on your machine. Go to https://flathub.org/setup for instructions for your distro. (If your distro doesn't even have the "flatpak" command pre-installed, you should reboot after installing the command and enabling the Flathub repo, to activate some necessary environment variables/paths.)  
 
 > [!NOTE]
 > The "Extension Manager" Flatpak app is NOT the same thing as the "Extensions" app that sometimes comes pre-installed on GNOME distros. That is a simpler app with no ability to browse the available extensions.  
