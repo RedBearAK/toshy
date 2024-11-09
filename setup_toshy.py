@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20240915'                        # TODO: Add CLI option to print this out?
+__version__ = '20241108'                        # CLI option "--version" will print this out.
 
 import os
 os.environ['PYTHONDONTWRITEBYTECODE'] = '1'     # prevent this script from creating cache files
@@ -3164,6 +3164,13 @@ def handle_cli_arguments():
         description='Toshy Installer - commands are mutually exclusive',
         epilog=f'Check install options with "./{this_file_name} install --help"',
         allow_abbrev=False
+    )
+
+    parser.add_argument(
+        '--version',
+        action='version',
+        version=f'%(prog)s version: {__version__}',
+        help='Show the version of the installer and exit'
     )
 
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
