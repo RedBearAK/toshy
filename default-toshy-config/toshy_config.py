@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = '20240915'
+__version__ = '20241112'
 ###############################################################################
 ############################   Welcome to Toshy!   ############################
 ###  
@@ -450,9 +450,10 @@ terminals_lod = create_list_of_dicts(terminals)
 
 vscodes = [
     "code",
-    "vscodium",
     "code - oss",
     "code-oss",
+    "cursor",           # New VSCode variant with A.I. 
+    "vscodium",
 ]
 vscodes                         = [x.casefold() for x in vscodes]
 vscodeStr                       = toRgxStr(vscodes)
