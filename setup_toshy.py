@@ -2279,7 +2279,7 @@ def install_desktop_apps():
 def do_kwin_reconfigure():
     """Utility function to run the KWin reconfigure command"""
 
-    commands = ['dbus-send', 'gdbus', cnfg.qdbus]
+    commands = ['gdbus', 'dbus-send', cnfg.qdbus]
 
     for cmd in commands:
         if shutil.which(cmd):
@@ -2288,16 +2288,7 @@ def do_kwin_reconfigure():
         error(f'No expected D-Bus command available. Cannot do KWin reconfigure.')
         return
 
-    if shutil.which('dbus-send'):
-        try:
-            cmd_lst = [ 'dbus-send', '--type=method_call',
-                        '--dest=org.kde.KWin', '/KWin',
-                        'org.kde.KWin.reconfigure']
-            subprocess.run(cmd_lst, check=True, stderr=DEVNULL, stdout=DEVNULL)
-            return
-        except subprocess.CalledProcessError as proc_err:
-            error(f'Problem using "dbus-send" to do KWin reconfigure.\n\t{proc_err}')
-
+    # gdbus call --session --dest org.kde.KWin --object-path /KWin --method org.kde.KWin.reconfigure
     if shutil.which('gdbus'):
         try:
             cmd_lst = [ 'gdbus', 'call', '--session', 
@@ -2309,6 +2300,18 @@ def do_kwin_reconfigure():
         except subprocess.CalledProcessError as proc_err:
             error(f'Problem using "gdbus" to do KWin reconfigure.\n\t{proc_err}')
 
+    # dbus-send --type=method_call --dest=org.kde.KWin /KWin org.kde.KWin.reconfigure
+    if shutil.which('dbus-send'):
+        try:
+            cmd_lst = [ 'dbus-send', '--type=method_call',
+                        '--dest=org.kde.KWin', '/KWin',
+                        'org.kde.KWin.reconfigure']
+            subprocess.run(cmd_lst, check=True, stderr=DEVNULL, stdout=DEVNULL)
+            return
+        except subprocess.CalledProcessError as proc_err:
+            error(f'Problem using "dbus-send" to do KWin reconfigure.\n\t{proc_err}')
+
+    # qdbus org.kde.KWin /KWin reconfigure
     if shutil.which(cnfg.qdbus):
         try:
             cmd_lst = [cnfg.qdbus, 'org.kde.KWin', '/KWin', 'reconfigure']
