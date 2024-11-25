@@ -61,6 +61,17 @@ devices_api(
     ]
 )
 
+###########################################################
+# If you need to use something like the wordwise 'emacs' 
+# style shortcuts, and want them to be repeatable, use
+# the API call below to stop the keymapper from ignoring
+# "repeat" key events. This will use a bit more CPU while
+# holding any key down, especially while holding a key combo
+# that is getting remapped onto something else in the config.
+###########################################################
+# ignore_repeating_keys(False)
+
+
 ###  SLICE_MARK_END: keymapper_api  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 ###################################################################################################
 
@@ -4281,7 +4292,7 @@ if DISTRO_ID == 'pop':
         matchProps(clas=termStr)(ctx)
     )
 
-if DISTRO_ID in ['ubuntu', 'fedora']:
+if DISTRO_ID in ['ubuntu', 'fedora'] and DESKTOP_ENV == 'gnome':
     keymap("GenTerms overrides: Ubuntu/Fedora", {
         C("LC-RC-Q"):               C("Super-L"),                   # Lock screen (ubuntu/fedora)
         C("LC-Right"):              [bind,C("Super-Page_Up")],      # SL - Change workspace (ubuntu/fedora)
@@ -4331,6 +4342,11 @@ if DESKTOP_ENV == 'kde':
         # F10 key was designated an accessibility key for opening the window/app menu in KDE.
         # The shortcut for toggling window maximization state is now Meta+PgUp (so, Super-Page_Up).
         C("LC-RC-f"):               C("Super-Page_Up"),             # Toggle window maximized state
+
+        # Workspace (virtual desktop) navigation
+        C("LC-Left"):               C("C-Super-Left"),              # Switch one desktop to the left
+        C("LC-Right"):              C("C-Super-Right"),             # Switch one desktop to the right
+
     }, when = lambda ctx:
         cnfg.screen_has_focus and
         matchProps(clas=termStr)(ctx)
@@ -4681,6 +4697,10 @@ if DESKTOP_ENV == 'kde':
 
         C("RC-F3"):                 C("Super-d"),                   # Show Desktop (gnome/kde,elementary)
         C("RC-H"):                  C("Super-Page_Down"),           # Minimize app (KDE Plasma)
+
+        # Workspace (virtual desktop) navigation
+        C("Super-Left"):            C("C-Super-Left"),              # Switch one desktop to the left
+        C("Super-Right"):           C("C-Super-Right"),             # Switch one desktop to the right
 
         # C("Super-RC-f"):               C("Alt-F10"),                   # Toggle window maximized state (pre-Plasma 6)
         # F10 key was designated an accessibility key for opening the window/app menu in KDE.
