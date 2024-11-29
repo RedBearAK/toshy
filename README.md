@@ -1,5 +1,7 @@
 # Current status: Stable Beta (Please Read)
 
+**2024-11-28 UPDATE**: Added support for Pantheon's Wayland session (elementary OS desktop environment). 
+
 **2024-10-03 UPDATE**: Fixed the broken COSMIC desktop environment support to work with COSMIC Alpha 2 or later (unless they change the relevant Wayland protocol again). 
 
 **2024-07-28 UPDATE**: Some basic `wlroots` based Wayland compositor support has been added. See the [Wiki article](https://github.com/RedBearAK/toshy/wiki/Wlroots-Based-Wayland-Compositors).
@@ -357,6 +359,7 @@ You will find these distro groupings in the Wiki article:
     - **Hyprland** - _[currently uses `hyprpy` Python module]_
     - **MiracleWM** - _[via `wlroots` method]_
     - **Niri** - _[via `wlroots` method]_
+    - **Pantheon** - [via D-Bus queries to Gala WM]
     - **Plasma 5 (KDE)** - _[uses custom KWin script and D-Bus service]_
     - **Plasma 6 (KDE)** - _[uses custom KWin script and D-Bus service]_
     - **Qtile** - _[via `wlroots` method]_
