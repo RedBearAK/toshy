@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# Works, but the signals are not useful for tracking the active app class and window title. 
+
+
 from gi.repository import GLib
 import dbus
 import dbus.mainloop.glib
@@ -11,9 +14,11 @@ class GalaMonitor:
 
     def connect_to_gala(self):
         try:
+            # Ensure the main loop is set before creating the session bus
+            dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
             self.bus = dbus.SessionBus()
             self.gala_interface = self.bus.get_object(
-                "org.pantheon.gala.DesktopIntegration",
+                "org.pantheon.gala",
                 "/org/pantheon/gala/DesktopInterface"
             )
             print("Connected to Gala D-Bus interface.")
@@ -52,7 +57,6 @@ class GalaMonitor:
         if not self.connect_to_gala():
             return
         self.subscribe_signals()
-        dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
         loop = GLib.MainLoop()
         print("Listening for signals... Press Ctrl+C to exit.")
         try:
