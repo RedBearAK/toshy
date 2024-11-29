@@ -567,6 +567,7 @@ class EnvironmentInfo:
             'i3-gaps':          'i3',
             'miracle-wm':       'miracle-wm',
             'openbox':          'openbox',
+            'pantheon':         'gala',
             'sway':             'sway',
             'xfce':             'xfwm4',
 
