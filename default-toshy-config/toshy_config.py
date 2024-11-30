@@ -4266,15 +4266,6 @@ keymap("Xfce4 terminal", {
 
 # Overrides to General Terminals shortcuts for specific distros (or are they really just desktop environments?)
 
-if DISTRO_ID == 'elementary':
-    keymap("GenTerms overrides: elementary OS", {
-        C("LC-Right"):              [bind,C("Super-Right")],        # SL - Change workspace (elementary)
-        C("LC-Left"):               [bind,C("Super-Left")],         # SL - Change workspace (elementary)
-    }, when = lambda ctx:
-        cnfg.screen_has_focus and
-        matchProps(clas=termStr)(ctx)
-    )
-
 if DISTRO_ID in ['fedora', 'almalinux'] and DESKTOP_ENV == 'gnome':
     keymap("GenTerms overrides: Fedora GNOME", {
         C("RC-H"):                  C("Super-h"),                   # Hide Window/Minimize app (gnome/fedora)
@@ -4347,6 +4338,15 @@ if DESKTOP_ENV == 'kde':
         C("LC-Left"):               C("C-Super-Left"),              # Switch one desktop to the left
         C("LC-Right"):              C("C-Super-Right"),             # Switch one desktop to the right
 
+    }, when = lambda ctx:
+        cnfg.screen_has_focus and
+        matchProps(clas=termStr)(ctx)
+    )
+
+if DESKTOP_ENV == 'pantheon':
+    keymap("GenTerms overrides: elementary OS", {
+        C("LC-Right"):              [bind,C("Super-Right")],        # SL - Change workspace (elementary)
+        C("LC-Left"):               [bind,C("Super-Left")],         # SL - Change workspace (elementary)
     }, when = lambda ctx:
         cnfg.screen_has_focus and
         matchProps(clas=termStr)(ctx)
