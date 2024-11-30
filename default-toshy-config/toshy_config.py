@@ -4266,15 +4266,6 @@ keymap("Xfce4 terminal", {
 
 # Overrides to General Terminals shortcuts for specific distros (or are they really just desktop environments?)
 
-if DISTRO_ID == 'elementary':
-    keymap("GenTerms overrides: elementary OS", {
-        C("LC-Right"):              [bind,C("Super-Right")],        # SL - Change workspace (elementary)
-        C("LC-Left"):               [bind,C("Super-Left")],         # SL - Change workspace (elementary)
-    }, when = lambda ctx:
-        cnfg.screen_has_focus and
-        matchProps(clas=termStr)(ctx)
-    )
-
 if DISTRO_ID in ['fedora', 'almalinux'] and DESKTOP_ENV == 'gnome':
     keymap("GenTerms overrides: Fedora GNOME", {
         C("RC-H"):                  C("Super-h"),                   # Hide Window/Minimize app (gnome/fedora)
@@ -4347,6 +4338,15 @@ if DESKTOP_ENV == 'kde':
         C("LC-Left"):               C("C-Super-Left"),              # Switch one desktop to the left
         C("LC-Right"):              C("C-Super-Right"),             # Switch one desktop to the right
 
+    }, when = lambda ctx:
+        cnfg.screen_has_focus and
+        matchProps(clas=termStr)(ctx)
+    )
+
+if DESKTOP_ENV == 'pantheon':
+    keymap("GenTerms overrides: elementary OS", {
+        C("LC-Right"):              [bind,C("Super-Right")],        # SL - Change workspace (elementary)
+        C("LC-Left"):               [bind,C("Super-Left")],         # SL - Change workspace (elementary)
     }, when = lambda ctx:
         cnfg.screen_has_focus and
         matchProps(clas=termStr)(ctx)
@@ -4492,16 +4492,6 @@ keymap("GenGUI overrides: not Chromebook", {
 if DISTRO_ID == 'debian' and DESKTOP_ENV == 'xfce':
     keymap("GenGUI overrides: Debian Xfce4", {
         C("RC-Space"):             [iEF2NT(),C("Alt-F1")],     # Launch Application Menu xfce4 (Debian)
-    }, when = lambda ctx:
-        cnfg.screen_has_focus and
-        matchProps(not_clas=remoteStr)(ctx)
-    )
-
-if DISTRO_ID == 'elementary':
-    keymap("GenGUI overrides: elementary OS", {
-        C("RC-F3"):                 C("Super-d"),                   # Default SL - Show Desktop (gnome/kde,elementary)
-        C("RC-Space"):             [iEF2NT(),C("Super-Space")],     # SL - Launch Application Menu (elementary)
-        C("RC-LC-f"):               C("Super-Up"),                  # SL- Maximize app elementary
     }, when = lambda ctx:
         cnfg.screen_has_focus and
         matchProps(not_clas=remoteStr)(ctx)
@@ -4734,6 +4724,17 @@ if DESKTOP_ENV == 'miracle-wm':
     keymap("GenGUI overrides: MiracleWM", {
         # C("RC-Space"):             [iEF2NT(),Key.LEFT_META],        # Open Launcher with Cmd+Space
         C("RC-Space"):             [C("Super-d"), iEF2NT()],        # Open Launcher with Cmd+Space
+    }, when = lambda ctx:
+        cnfg.screen_has_focus and
+        matchProps(not_clas=remoteStr)(ctx)
+    )
+
+if DESKTOP_ENV == 'pantheon':
+    keymap("GenGUI overrides: Pantheon", {
+        C("RC-F3"):                 C("Super-d"),                   # Show Desktop (gnome/kde,elementary)
+        # C("RC-Space"):             [iEF2NT(),C("Super-Space")],     # Launch Application Menu (elementary)
+        C("RC-Space"):             [iEF2NT(),C("Alt-F2")],          # Launch Application Menu (elementary OS 8)
+        C("RC-LC-f"):               C("Super-Up"),                  # Maximize app elementary
     }, when = lambda ctx:
         cnfg.screen_has_focus and
         matchProps(not_clas=remoteStr)(ctx)
