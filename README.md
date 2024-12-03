@@ -275,7 +275,9 @@ Note that any or all of the "--options" for the `install` command can be combine
 ./setup_toshy.py install --override-distro distro-name --skip-native --barebones-config --fancy-pants
 ```
 
-Here are some other things besides installing that the setup script can do. These commands are mutually exclusive, just like the `install` command.  
+### Other commands in the setup script
+
+Here are some other things (commands) that are available in the setup script, besides the primary `install` command. These commands are mutually exclusive, just like the `install` command.  
 
 ```sh
 ./setup_toshy.py list-distros
