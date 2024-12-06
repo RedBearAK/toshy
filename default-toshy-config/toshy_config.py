@@ -435,6 +435,8 @@ terminals = [
     "org.kde.konsole",
     "org.kde.yakuake",
     "org.wezfurlong.wezterm",
+    "wezterm",
+    "wezterm-gui",
     "roxterm",
     "qterminal",
     "st",
@@ -590,6 +592,11 @@ browsers_firefox = [
     "Navigator",
     "org.mozilla.firefox",
     "Waterfox",
+    "zen-browser",
+    "zen",
+    "zen-bin",
+    "zen-alpha",
+    "zen-twilight",
 ]
 browsers_firefox        = [x.casefold() for x in browsers_firefox]
 browsers_firefoxStr     = "|".join('^'+x+'$' for x in browsers_firefox)
@@ -3569,7 +3576,7 @@ keymap("Overrides for Thunar - Finder Mods", {
 # Keybindings overrides for GNOME XDG "Save As" and "Open File" dialogs
 file_open_save_dialogs = [
     {
-        clas: "^xdg-desktop-portal-gnome$|^Firefox.*$|^LibreWolf$|^Waterfox$", 
+        clas: "^xdg-desktop-portal-gnome$|^Firefox.*$|^LibreWolf$|^Waterfox$|^zen.*$", 
         name: "^Open File$|^Save As$"
     },
 ]
