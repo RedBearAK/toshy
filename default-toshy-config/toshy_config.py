@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = '20241124'
+__version__ = '20241206'
 ###############################################################################
 ############################   Welcome to Toshy!   ############################
 ###  
@@ -12,7 +12,7 @@ __version__ = '20241124'
 ###  
 ###  Much assistance was provided by Josh Goebel, the developer of the
 ###  `xkeysnail` fork `keyszer`, which is now forked into `xwaykeyz` to
-###  provide support for some Wayland environments.
+###  provide support for some (most?) Wayland environments.
 ###      (http://github.com/joshgoebel/keyszer)
 ###  
 ###############################################################################
