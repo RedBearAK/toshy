@@ -432,6 +432,7 @@ terminals = [
     "org.codeberg.dnkl.foot.desktop",
     "org.gnome.Console",
     "org.gnome.Ptyxis.*",
+    "org.gnome.Terminal",
     "org.kde.konsole",
     "org.kde.yakuake",
     "org.wezfurlong.wezterm",
