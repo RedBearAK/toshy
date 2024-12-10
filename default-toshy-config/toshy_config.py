@@ -25,8 +25,8 @@ import shutil
 import inspect
 import subprocess
 
-from typing import Callable, List, Dict, Union
 from subprocess import DEVNULL
+from typing import Callable, List, Dict, Tuple, Union
 
 from xwaykeyz.config_api import *
 from xwaykeyz.lib.key_context import KeyContext
