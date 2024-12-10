@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = '20240915'
+__version__ = '20241210'
 ###############################################################################
 ############################   Welcome to Toshy!   ############################
 ###  
@@ -12,7 +12,7 @@ __version__ = '20240915'
 ###  
 ###  Much assistance was provided by Josh Goebel, the developer of the
 ###  `xkeysnail` fork `keyszer`, which is now forked into `xwaykeyz` to
-###  provide support for some Wayland environments.
+###  provide support for some (most?) Wayland environments.
 ###      (http://github.com/joshgoebel/keyszer)
 ###  
 ###############################################################################
@@ -25,8 +25,8 @@ import shutil
 import inspect
 import subprocess
 
-from typing import Callable, List, Dict, Union
 from subprocess import DEVNULL
+from typing import Callable, List, Dict, Tuple, Union
 
 from xwaykeyz.config_api import *
 from xwaykeyz.lib.key_context import KeyContext
@@ -43,7 +43,7 @@ emergency_eject_key(Key.F16)    # default key: F16
 
 timeouts(
     multipurpose        = 1,        # default: 1 sec
-    suspend             = 1,        # default: 1 sec, try 0.1 sec for touchpads
+    suspend             = 1,        # default: 1 sec, try 0.1 sec for touchpads/trackpads
 )
 
 # Delays often needed for Wayland and/or virtual machines or slow systems
@@ -182,14 +182,20 @@ debug(  f'Toshy (barebones) config sees this environment:'
 # the keymapper. 
 known_wlroots_compositors = [
     'hyprland',
+    'labwc',        # untested but should work
+    'miracle-wm',
     'niri',
     'qtile',
+    'river',        # untested but should work
     'sway',
+    'wayfire',      # untested but should work
 ]
 
 # Make sure the 'wlroots_compositors' list variable exists before checking it.
 # Older config files won't have it in the 'env_overrides' slice. 
 wlroots_compositors = locals().get('wlroots_compositors', [])
+
+all_wlroots_compositors = known_wlroots_compositors + wlroots_compositors
 
 # Direct the keymapper to try to use `wlroots` window context for
 # all DEs/WMs in user list, if list is not empty.
@@ -199,6 +205,13 @@ if wlroots_compositors and DESKTOP_ENV in wlroots_compositors:
     _desktop_env = 'wlroots'
 elif DESKTOP_ENV in known_wlroots_compositors:
     debug(f"DE/WM '{DESKTOP_ENV}' is in known 'wlroots' compositor list.", ctx="CG")
+    _desktop_env = 'wlroots'
+elif (SESSION_TYPE, DESKTOP_ENV) == ('wayland', 'lxqt') and WINDOW_MGR == 'kwin_wayland':
+    # The Toshy KWin script must be installed in the LXQt/KWin environment for this to work!
+    debug(f"DE is LXQt, WM is '{WINDOW_MGR}', using 'kde' window context method.", ctx="CG")
+    _desktop_env = 'kde'
+elif (SESSION_TYPE, DESKTOP_ENV) == ('wayland', 'lxqt') and WINDOW_MGR in all_wlroots_compositors:
+    debug(f"DE is LXQt, WM is '{WINDOW_MGR}', using 'wlroots' window context method.", ctx="CG")
     _desktop_env = 'wlroots'
 else:
     _desktop_env = DESKTOP_ENV
