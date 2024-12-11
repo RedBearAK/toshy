@@ -597,6 +597,7 @@ browsers_firefox = [
     "zen",
     "zen-bin",
     "zen-alpha",
+    "zen-beta",
     "zen-twilight",
 ]
 browsers_firefox        = [x.casefold() for x in browsers_firefox]
