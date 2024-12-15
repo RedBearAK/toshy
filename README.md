@@ -207,7 +207,7 @@ If you didn't open the terminal by right-clicking on the folder that was created
 cd ~/Downloads/toshy[hit Tab to autocomplete the folder name, and Enter]
 ```
 
-You should now be in a folder called something like `toshy-main` or `toshy-dev_beta`, depending on which branch you downloaded the zip archive from.  
+You should now be in a folder called something like `toshy-main` or `toshy-dev_beta`, depending on which branch you downloaded the zip archive from, and you should be able to run the installation command from earlier (`./setup_toshy.py install`).  
 
 Check out the `--options` in the next section if the basic install doesn't work. If you are on KDE Plasma and want a more Mac-like task switching experience, take a look at the `--fancy-pants` option in particular.  
 
