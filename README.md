@@ -194,12 +194,20 @@ There is a weird bug with searching for extensions by name sometimes, where you 
 0. Verify that your specific distro or basic distro type is [supported](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros)
 1. Click the big green **`  <> Code  ▼  `** button near the top of the page.
 1. Download the latest zip file from the drop-down. ("Releases" are older.)  
-1. Unzip the archive, and open a terminal in the resulting folder.  
+1. Unzip the archive, and open a terminal **_in the resulting folder_**.  
 1. Run the Toshy installer script command in the terminal, like this:  
 
 ```sh
 ./setup_toshy.py install
 ```
+
+If you didn't open the terminal by right-clicking on the folder that was created when the archive was unzipped, you may have to do something like this first:  
+
+```sh
+cd ~/Downloads/toshy[hit Tab to autocomplete the folder name, and Enter]
+```
+
+You should now be in a folder called something like `toshy-main` or `toshy-dev_beta`, depending on which branch you downloaded the zip archive from.  
 
 Check out the `--options` in the next section if the basic install doesn't work. If you are on KDE Plasma and want a more Mac-like task switching experience, take a look at the `--fancy-pants` option in particular.  
 
