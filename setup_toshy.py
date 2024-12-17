@@ -1432,7 +1432,11 @@ def install_distro_pkgs():
             if cnfg.distro_mjr_ver in ['10']:
                 quirks_handler.handle_quirks_RHEL_10()
 
-            cmd_lst = ['sudo', 'dnf', 'install', '-y']
+            # Package version repo conflict issues on CentOS 10 made installing difficult
+            if cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '10':
+                cmd_lst = ['sudo', 'dnf', 'install', '-y', '--nobest']
+            else:
+                cmd_lst = ['sudo', 'dnf', 'install', '-y']
             native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
         def install_on_fedora_based():
