@@ -1076,8 +1076,8 @@ class DistroQuirksHandler:
                     f'\n\t{proc_err}')
             safe_shutdown(1)
 
-    def handle_quirks_RHEL(self):
-        print('Doing prep/checks for RHEL-type distro...')
+    def handle_quirks_RHEL_8_9(self):
+        print('Doing prep/checks for RHEL 8/9 type distro...')
 
         # for libappindicator-gtk3: sudo dnf install -y epel-release
         try:
@@ -1092,7 +1092,7 @@ class DistroQuirksHandler:
             safe_shutdown(1)
 
         def get_newest_python_version():
-            """Utility function to find the latest Python available on RHEL distro types"""
+            """Utility function to find the latest Python available on RHEL 8 and 9 distro types"""
             # TODO: Add higher version if ever necessary (keep minimum 3.8)
             potential_versions = ['3.15', '3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
 
@@ -1155,7 +1155,7 @@ class DistroQuirksHandler:
         if cnfg.distro_mjr_ver in ['9']:
             #
             # enable "CodeReady Builder" repo for 'gobject-introspection-devel' only on 
-            # RHEL 9.x and CentOS Stream 9 (TODO: Add v10 if it uses the same command?):
+            # RHEL 9.x and CentOS Stream 9:
             # sudo dnf config-manager --set-enabled crb
             cmd_lst = ['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb']
             try:
@@ -1169,13 +1169,59 @@ class DistroQuirksHandler:
             # CentOS Stream 9, RHEL 9 and clones
             get_newest_python_version()
 
+    def handle_quirks_RHEL_10(self):
+        print('Doing prep/checks for RHEL 10 type distro...')
+
+        def is_crb_repo_enabled():
+            """
+            Checks if the CRB (CodeReady Builder) repository is present and enabled.
+            """
+            try:
+                native_pkg_installer.check_for_pkg_mgr_cmd('dnf')
+                cmd_lst = ["dnf", "repolist", "enabled"]
+                result = subprocess.run(cmd_lst, capture_output=True, text=True, check=True)
+                return "crb" in result.stdout.casefold()
+            except subprocess.CalledProcessError as proc_err:
+                error(f"There was a problem checking if CRB repo is enabled:\n{proc_err}")
+                safe_shutdown(1)
+
+        if not is_crb_repo_enabled():
+            try:
+                cmd_lst = ['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb']
+                print("Enabling CRB (CodeReady Builder) repo...")
+                subprocess.run(cmd_lst, check=True)
+            except subprocess.CalledProcessError as proc_err:
+                print()
+                error(f'ERROR: Problem while enabling CRB repo:\n\t{proc_err}')
+                safe_shutdown(1)
+        else:
+            print(f"CRB (CodeReady Builder) repo is already enabled. Continuing...")
+        
+        # Command to install EPEL release package:
+        # sudo dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm
+
+        epel_10_rpm_url = 'https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm'
+        try:
+            cmd_lst = ['sudo', 'dnf', 'install', '-y', epel_10_rpm_url]
+            print("Installing EPEL 10 release package...")
+            subprocess.run(cmd_lst, check=True)
+        except subprocess.CalledProcessError as proc_err:
+            error(f"Problem installing the EPEL 10 release package:\n{proc_err}")
+            safe_shutdown(1)
+
+        # The 'xset' command does not appear to be provided by any available
+        # package in RHEL 10 distro types (e.g. AlmaLinux 10):
+        pkgs_to_remove = ["xset"]
+        cnfg.pkgs_for_distro = [pkg for pkg in cnfg.pkgs_for_distro if pkg not in pkgs_to_remove]
+
+
 
 class NativePackageInstaller:
     """Object to handle tasks related to installing native packages"""
     def __init__(self) -> None:
         pass
 
-    def check_for_pkg_mgr_cmd(self, pkg_mgr_cmd):
+    def check_for_pkg_mgr_cmd(self, pkg_mgr_cmd: str):
         """Make sure native package installer command exists before using it, or exit"""
         call_attn_to_pwd_prompt_if_sudo_tkt_exp()
         if not shutil.which(pkg_mgr_cmd):
@@ -1381,7 +1427,11 @@ def install_distro_pkgs():
                 quirks_handler.handle_quirks_CentOS_7()
             if cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '8':
                 quirks_handler.handle_quirks_CentOS_Stream_8()
-            quirks_handler.handle_quirks_RHEL()
+            if cnfg.distro_mjr_ver in ['8', '9']:
+                quirks_handler.handle_quirks_RHEL_8_9()
+            if cnfg.distro_mjr_ver in ['10']:
+                quirks_handler.handle_quirks_RHEL_10()
+
             cmd_lst = ['sudo', 'dnf', 'install', '-y']
             native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
