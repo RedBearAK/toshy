@@ -534,6 +534,12 @@ toshy-devices               (show the keymapper's list of evdev devices)
 toshy-versions              (show versions of some major Toshy components)
 ```
 
+To see a unique identifier that can be used to limit a keymap (or modmap) to only existing (if you use an `if` statement) or only being active on a single machine (if you use it in the `when` conditional of the keymap/modmap), use the `toshy-machine-id` command below. The machine ID that will be shown is a shortened (truncated) hash of the machine ID used by DBus and/or `systemd`. This may be useful if you want to sync a single config file between multiple machines, and one of them has a peculiar keyboard or some hardware/media keys that need to be remapped differently from other machines. This would mostly apply to laptop keyboards. The ID may change if you reinstall Linux on the same machine.  
+
+```
+toshy-machine-id            (show ID that can be used to limit a keymap/modmap)
+```
+
 For changing the function keys mode of a keyboard device that uses the `hid_apple` device driver/kernel module, use this command:  
 
 ```
