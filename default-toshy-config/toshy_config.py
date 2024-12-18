@@ -459,6 +459,7 @@ terminals = [
     "tilda",
     "tilix",
     "urxvt",
+    "Wave",
     "xfce4-terminal",
     "xterm",
     "yakuake",
