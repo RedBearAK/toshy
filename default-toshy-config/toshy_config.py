@@ -461,7 +461,7 @@ terminals = [
     "urxvt",
     "xfce4-terminal",
     "xterm",
-    "yakuake"
+    "yakuake",
 ]
 terminals                       = [x.casefold() for x in terminals]
 termStr                         = toRgxStr(terminals)
