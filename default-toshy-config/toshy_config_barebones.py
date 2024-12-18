@@ -224,6 +224,14 @@ except NameError:
     pass
 
 
+# Global variable to store the local machine ID at runtime, for machine-specific keymaps.
+# Allows syncing a single config file between different machines without overlapping the
+# hardware/media key overrides, or any other machine-specific customization.
+# Get the ID for each machine with the `toshy-machine-id` command, for use in `if` conditions.
+from lib.machine_context import get_machine_id_hash
+MACHINE_ID = get_machine_id_hash()
+
+
 
 #################  VARIABLES  ####################
 ###                                            ###
@@ -953,41 +961,6 @@ def notify_context():
         # Optionally, also send a system notification:
         # ntfy.send_notification(message)
     return _notify_context
-
-
-# Global variable to store the local machine ID at runtime, for machine-specific keymaps.
-# Allows syncing a single config file between different machines without overlapping the
-# hardware/media key overrides, or any other machine-specific customization.
-# Get the ID for each machine from /var/lib/dbus/machine-id for use in `if` conditions.
-MACHINE_ID = None
-
-
-def read_machine_id():
-    """Reads the machine ID from the D-Bus or systemd file and stores it in a global variable."""
-    global MACHINE_ID
-    paths = ["/var/lib/dbus/machine-id", "/etc/machine-id"]
-
-    for path in paths:
-        try:
-            with open(path, "r") as f:
-                MACHINE_ID = f.read().strip()
-                obfuscated_ID = f"{MACHINE_ID[:5]} ... {MACHINE_ID[-5:]}"
-                debug(f"Machine ID successfully read from {path} (obfuscated): '{obfuscated_ID}'")
-                return  # Exit after successfully reading the ID
-        except FileNotFoundError:
-            continue  # Try the next file if this one is missing
-        except PermissionError:
-            error(f"Permission denied when trying to read {path}.")
-            return
-        except Exception as e:
-            error(f"Unexpected error occurred while reading {path}: {e}")
-            return
-
-    # If no valid machine ID is found
-    error("Error: Could not retrieve a valid machine ID from known paths.")
-
-
-read_machine_id()
 
 
 
