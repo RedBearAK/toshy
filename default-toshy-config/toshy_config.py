@@ -4279,6 +4279,14 @@ keymap("Terminology terminal", {
     C("RC-Equal"):              C("C-Alt-Equal"),               # Increase font size
 }, when = matchProps(clas="^terminology$"))
 
+keymap("Wave terminal", {
+    C("RC-t"):                  C("Alt-t"),                     # Open a new tab
+    C("RC-n"):                  C("Alt-n"),                     # Open a new terminal block
+    C("Shift-RC-n"):            C("Shift-Alt-n"),               # Open a new window
+    C("RC-w"):                  C("Alt-w"),                     # Close the current block
+    C("Shift-RC-w"):            C("Shift-Alt-w"),               # Close the current tab
+}, when = matchProps(clas="^Wave$"))
+
 keymap("Xfce4 terminal", {
     C("RC-comma"):      [C("Alt-e"), sleep(0.1), C("e")],       # Open Preferences dialog
 }, when = matchProps(clas="^xfce4-terminal$"))
