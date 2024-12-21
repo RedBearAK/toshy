@@ -1552,7 +1552,7 @@ def install_distro_pkgs():
     ###########################################################################
     ###  PACKAGE MANAGER DISPATCHER  ##########################################
     ###########################################################################
-    # map installer sub-functions to each pkg mgr distro list
+    # map installer dispatcher class static methods to each pkg mgr distro list
     pkg_mgr_dispatch_map = {
         tuple(transupd_distros):        PackageInstallerDispatcher.install_on_transupd_distro,
         tuple(rpmostree_distros):       PackageInstallerDispatcher.install_on_rpmostree_distro,
