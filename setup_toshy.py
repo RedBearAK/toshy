@@ -881,7 +881,17 @@ pip_pkgs   = [
 ]
 
 
-def get_supported_distro_ids() -> str:
+def get_supported_distro_ids_lst() -> List[str]:
+    """Helper function to return the full list of distro IDs."""
+    distro_list: List[str] = []
+
+    for group in distro_groups_map.values():
+        distro_list.extend(group)
+
+    return sorted(distro_list)
+
+
+def get_supported_distro_ids_idx() -> str:
     """Utility function to return list of available distro names (IDs)"""
     distro_list: List[str] = []
 
@@ -913,6 +923,11 @@ def get_supported_distro_ids() -> str:
     return distro_index[:-2]  # remove the last comma and space
 
 
+def get_supported_distro_ids_cnt() -> int:
+    """Utility function to return the total count of supported distro IDs."""
+    return len(get_supported_distro_ids_lst())
+
+
 def exit_with_invalid_distro_error(pkg_mgr_err=None):
     """Utility function to show error message and exit when distro is not valid"""
     print()
@@ -922,7 +937,10 @@ def exit_with_invalid_distro_error(pkg_mgr_err=None):
     # print()
     # print(f'Try some options in "./{this_file_name} --help".')
     print()
-    print(f'Try one of these with "--override-distro" option:\n\n\t{get_supported_distro_ids()}')
+    print(
+        f'Try one of these with "--override-distro" option:'
+        f'\n\n\t{get_supported_distro_ids_idx()}'
+    )
     safe_shutdown(1)
 
 
@@ -3347,8 +3365,12 @@ def handle_cli_arguments():
         safe_shutdown(0)    # redundant, but that's OK
 
     if args.command == 'list-distros':
-        print(  f'Distros known to the Toshy installer (use with "--override-distro" arg):'
-                f'\n\n\t{get_supported_distro_ids()}')
+        print(
+            f'Index of distro IDs known to the Toshy installer:'
+            f'\n\n(These can be tried with the "--override-distro" flag on unknown variants.)'
+            f'\n\n\t{get_supported_distro_ids_idx()}'
+            f'\n\n Number of currently supported distro IDs: {get_supported_distro_ids_cnt()}'
+        )
         safe_shutdown(0)
 
     if args.command == 'show-env':
@@ -3394,7 +3416,7 @@ def main(cnfg: InstallerSettings):
 
     get_environment_info()
 
-    if cnfg.DISTRO_ID not in get_supported_distro_ids():
+    if cnfg.DISTRO_ID not in get_supported_distro_ids_lst():
         exit_with_invalid_distro_error()
 
     elevate_privileges()
