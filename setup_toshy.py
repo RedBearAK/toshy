@@ -1284,9 +1284,10 @@ class NativePackageInstaller:
 
 class PackageInstallerDispatcher:
     """
-    Utility class to hold the static methods to prep for and finally invoke 
-    any necessary distro quirks handling, and then proceed to invoke the 
-    correct NativePackageInstaller method for the detected Linux distro.
+    Utility class to hold the static methods that will optionally invoke any necessary 
+    distro quirks handling, and then proceed to prep for and finally invoke the correct 
+    NativePackageInstaller command to install the appropriate support package list for 
+    the detected Linux distro.
     """
 
     ###########################################################################
