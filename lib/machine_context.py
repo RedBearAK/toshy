@@ -8,7 +8,6 @@ import xwaykeyz.lib.logger
 from signal import signal, SIGINT
 from xwaykeyz.lib.logger import debug, error
 
-xwaykeyz.lib.logger.VERBOSE = True
 
 def handle_sigint(signum, frame):
     print("\nSIGINT received. Exiting gracefully.\n")
