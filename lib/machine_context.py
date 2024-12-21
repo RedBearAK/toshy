@@ -3,7 +3,6 @@ __version__ = '20241214'
 
 import sys
 import hashlib
-import xwaykeyz.lib.logger
 
 from signal import signal, SIGINT
 from xwaykeyz.lib.logger import debug, error
@@ -28,7 +27,7 @@ def hash_value(value: str):
 
 def print_hashed_value(value):
     """Print out the hashed value."""
-    debug(f"Hashed value for this machine, for use in your config file: '{value}'")
+    print(f"(ID) Hashed value for this machine, for use in your config file: '{value}'")
 
 
 def get_machine_id_hash():
@@ -41,7 +40,7 @@ def get_machine_id_hash():
             with open(path, "r") as f:
                 MACHINE_ID = f.read().strip()
                 obfuscated_ID = f"{MACHINE_ID[:5]} ... {MACHINE_ID[-5:]}"
-                debug(f"Machine ID read from {path} (obfuscated): '{obfuscated_ID}'")
+                print(f"(ID) Machine ID read from {path} (obfuscated): '{obfuscated_ID}'")
                 MACHINE_ID_HASH = hash_value(MACHINE_ID)
                 print_hashed_value(MACHINE_ID_HASH)
                 return MACHINE_ID_HASH
