@@ -36,6 +36,7 @@ sys.path.insert(0, lib_dir_path)
 # ~/.config/toshy/toshy_tray.py
 
 # ~/.config/toshy/lib/env_context.py
+# ~/.config/toshy/lib/machine_context.py
 # ~/.config/toshy/lib/notification_manager.py
 # ~/.config/toshy/lib/settings_class.py
 
