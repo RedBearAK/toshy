@@ -51,6 +51,7 @@ file_paths = [
     os.path.join(toshy_dir_path, 'toshy_tray.py'),
     None,
     os.path.join(lib_dir_path, 'env_context.py'),
+    os.path.join(lib_dir_path, 'machine_context.py'),
     os.path.join(lib_dir_path, 'notification_manager.py'),
     os.path.join(lib_dir_path, 'settings_class.py'),
     None,

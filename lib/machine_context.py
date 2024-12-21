@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20241214'
+__version__ = '20241221'
 
 import sys
 import hashlib
