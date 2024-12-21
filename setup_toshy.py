@@ -1344,9 +1344,6 @@ def install_distro_pkgs():
         error(f'Problem setting up package manager distro lists:\n\t{key_err}')
         safe_shutdown(1)
 
-    # create the quirks handler object
-    quirks_handler              = DistroQuirksHandler()
-
     ###########################################################################
     ###  TRANSACTIONAL-UPDATE DISTROS  ########################################
     ###########################################################################
@@ -1424,13 +1421,13 @@ def install_distro_pkgs():
 
         def install_on_rhel_based():
             if cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '7':
-                quirks_handler.handle_quirks_CentOS_7()
+                distro_quirks_handler.handle_quirks_CentOS_7()
             if cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '8':
-                quirks_handler.handle_quirks_CentOS_Stream_8()
+                distro_quirks_handler.handle_quirks_CentOS_Stream_8()
             if cnfg.distro_mjr_ver in ['8', '9']:
-                quirks_handler.handle_quirks_RHEL_8_9()
+                distro_quirks_handler.handle_quirks_RHEL_8_9()
             if cnfg.distro_mjr_ver in ['10']:
-                quirks_handler.handle_quirks_RHEL_10()
+                distro_quirks_handler.handle_quirks_RHEL_10()
 
             # Package version repo conflict issues on CentOS 10 made installing difficult
             if cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '10':
@@ -3521,6 +3518,9 @@ if __name__ == '__main__':
 
     # create the configuration settings class instance
     cnfg                        = InstallerSettings()
+
+    # create the distro quirks handler object
+    distro_quirks_handler       = DistroQuirksHandler()
 
     # create the native package installer class instance
     native_pkg_installer        = NativePackageInstaller()
