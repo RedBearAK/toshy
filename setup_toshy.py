@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20241108'                        # CLI option "--version" will print this out.
+__version__ = '20241221'                        # CLI option "--version" will print this out.
 
 import os
 os.environ['PYTHONDONTWRITEBYTECODE'] = '1'     # prevent this script from creating cache files
@@ -203,6 +203,7 @@ class InstallerSettings:
         self.existing_cfg_data      = None
         self.existing_cfg_slices    = None
         self.venv_path              = os.path.join(self.toshy_dir_path, '.venv')
+        self.venv_cmd_lst           = [self.py_interp_path, '-m', 'venv', self.venv_path]
 
         self.keymapper_tmp_path     = os.path.join(this_file_dir, 'keymapper-temp')
 
@@ -926,13 +927,13 @@ def exit_with_invalid_distro_error(pkg_mgr_err=None):
 
 
 class DistroQuirksHandler:
-    """Object to contain methods for prepping specific distro variants that
-        need some extra prep work before installing the native package list"""
+    """
+    Utility class to contain static methods for prepping specific distro variants that
+    need some additional prep work before invoking the native package installer.
+    """
 
-    def __init__(self) -> None:
-        self.venv_cmd_lst = [cnfg.py_interp_path, '-m', 'venv', cnfg.venv_path]
-
-    def update_centos_repos_to_vault(self):
+    @staticmethod
+    def update_centos_repos_to_vault():
         """
         CentOS 7 was end of life on June 30, 2024
         Centos Stream 8 was end of builds on May 31, 2024
@@ -995,7 +996,8 @@ class DistroQuirksHandler:
                 error(f"Failed to refresh dnf cache: \n\t{e}")
                 safe_shutdown(1)
 
-    def handle_quirks_CentOS_7(self):
+    @staticmethod
+    def handle_quirks_CentOS_7():
         print('Doing prep/checks for CentOS 7...')
 
         native_pkg_installer.check_for_pkg_mgr_cmd('yum')
@@ -1014,7 +1016,7 @@ class DistroQuirksHandler:
                     # This will install repo files that need to be fixed post-CentOS 7 EOL
                     scl_repo = ['centos-release-scl']
                     subprocess.run(yum_cmd_lst + scl_repo, check=True)
-                    self.update_centos_repos_to_vault()
+                    DistroQuirksHandler.update_centos_repos_to_vault()
                 except subprocess.CalledProcessError as proc_err:
                     error(f'ERROR: (CentOS 7-specific) Problem installing SCL repo.\n\t')
                     safe_shutdown(1)
@@ -1044,7 +1046,8 @@ class DistroQuirksHandler:
             error(f'ERROR: Failed to install DNF package manager.\n\t{proc_err}')
             safe_shutdown(1)
 
-    def handle_quirks_CentOS_Stream_8(self):
+    @staticmethod
+    def handle_quirks_CentOS_Stream_8():
         print('Doing prep/checks for CentOS Stream 8...')
 
         # Tell user to handle this with external script
@@ -1076,7 +1079,8 @@ class DistroQuirksHandler:
                     f'\n\t{proc_err}')
             safe_shutdown(1)
 
-    def handle_quirks_RHEL_8_9(self):
+    @staticmethod
+    def handle_quirks_RHEL_8_9():
         print('Doing prep/checks for RHEL 8/9 type distro...')
 
         # for libappindicator-gtk3: sudo dnf install -y epel-release
@@ -1169,7 +1173,8 @@ class DistroQuirksHandler:
             # CentOS Stream 9, RHEL 9 and clones
             get_newest_python_version()
 
-    def handle_quirks_RHEL_10(self):
+    @staticmethod
+    def handle_quirks_RHEL_10():
         print('Doing prep/checks for RHEL 10 type distro...')
 
         def is_crb_repo_enabled():
@@ -1215,7 +1220,6 @@ class DistroQuirksHandler:
         cnfg.pkgs_for_distro = [pkg for pkg in cnfg.pkgs_for_distro if pkg not in pkgs_to_remove]
 
 
-
 class NativePackageInstaller:
     """Object to handle tasks related to installing native packages"""
     def __init__(self) -> None:
@@ -1258,6 +1262,188 @@ class NativePackageInstaller:
             # self.show_pkg_install_success_msg()
         except subprocess.CalledProcessError as proc_err:
             self.exit_with_pkg_install_error(proc_err)
+
+
+class PackageInstallerDispatcher:
+    """
+    Utility class to hold the static methods to prep for and finally invoke 
+    any necessary distro quirks handling, and then proceed to invoke the 
+    correct NativePackageInstaller method for the detected Linux distro.
+    """
+
+    ###########################################################################
+    ###  TRANSACTIONAL-UPDATE DISTROS  ########################################
+    ###########################################################################
+    @staticmethod
+    def install_on_transupd_distro():
+        """utility function that gets dispatched for distros that use Transactional-Update"""
+
+        def print_incomplete_setup_warning():
+            """utility function to print the warning about rebooting and running setup again"""
+            print()
+            print('###############################################################################')
+            print('############       WARNING: Toshy setup is NOT yet complete!       ############')
+            print('###########      This distro type uses "transactional-update".      ###########')
+            print('##########   You MUST reboot now to make native packages available.  ##########')
+            print('#########  After REBOOTING, run the Toshy setup script a second time. #########')
+            print('###############################################################################')
+
+        if cnfg.DISTRO_ID in distro_groups_map['microos-based']:
+            print('Distro is openSUSE MicroOS/Aeon/Kalpa immutable. Using "transactional-update".')
+
+            # Filter out packages that are already installed
+            filtered_pkg_lst = []
+            for pkg in cnfg.pkgs_for_distro:
+                result = subprocess.run(["rpm", "-q", pkg], stdout=PIPE, stderr=PIPE)
+                if result.returncode != 0:
+                    filtered_pkg_lst.append(pkg)
+                else:
+                    print(fancy_str(f"Package '{pkg}' is already installed. Skipping.", "green"))
+
+            if filtered_pkg_lst:
+                print(f'Packages left to install:\n{filtered_pkg_lst}')
+                cmd_lst = ['sudo', 'transactional-update', '--non-interactive', 'pkg', 'in']
+                native_pkg_installer.install_pkg_list(cmd_lst, filtered_pkg_lst)
+                # might as well take care of user group and udev here, if rebooting is necessary. 
+                verify_user_groups()
+                install_udev_rules()
+                show_reboot_prompt()
+                print_incomplete_setup_warning()
+                safe_shutdown(0)
+            else:
+                print('All needed packages are already available. Continuing setup...')
+
+    ###########################################################################
+    ###  RPM-OSTREE DISTROS  ##################################################
+    ###########################################################################
+    @staticmethod
+    def install_on_rpmostree_distro():
+        """utility function that gets dispatched for distros that use RPM-OSTree"""
+        if cnfg.DISTRO_ID in distro_groups_map['fedora-immutables']:
+            print('Distro is Fedora-type immutable. Using "rpm-ostree" instead of DNF.')
+
+            # Filter out packages that are already installed
+            filtered_pkg_lst = []
+            for pkg in cnfg.pkgs_for_distro:
+                result = subprocess.run(["rpm", "-q", pkg], stdout=PIPE, stderr=PIPE)
+                if result.returncode != 0:
+                    filtered_pkg_lst.append(pkg)
+                else:
+                    print(fancy_str(f"Package '{pkg}' is already installed. Skipping.", "green"))
+
+            if filtered_pkg_lst:
+                cmd_lst = ['sudo', 'rpm-ostree', 'install', '--idempotent',
+                            '--allow-inactive', '--apply-live', '-y']
+                native_pkg_installer.install_pkg_list(cmd_lst, filtered_pkg_lst)
+
+    ###########################################################################
+    ###  DNF DISTROS  #########################################################
+    ###########################################################################
+    @staticmethod
+    def install_on_dnf_distro():
+        """Utility function that gets dispatched for distros that use DNF package manager."""
+        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+
+        # Define helper functions for specific distro installations
+        def install_on_mandriva_based():
+            cmd_lst = ['sudo', 'dnf', 'install', '-y']
+            native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+
+        def install_on_rhel_based():
+            if cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '7':
+                DistroQuirksHandler.handle_quirks_CentOS_7()
+            if cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '8':
+                DistroQuirksHandler.handle_quirks_CentOS_Stream_8()
+            if cnfg.distro_mjr_ver in ['8', '9']:
+                DistroQuirksHandler.handle_quirks_RHEL_8_9()
+            if cnfg.distro_mjr_ver in ['10']:
+                DistroQuirksHandler.handle_quirks_RHEL_10()
+
+            # Package version repo conflict issues on CentOS 10 made installing difficult
+            if cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '10':
+                cmd_lst = ['sudo', 'dnf', 'install', '-y', '--nobest']
+            else:
+                cmd_lst = ['sudo', 'dnf', 'install', '-y']
+            native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+
+        def install_on_fedora_based():
+            # TODO: insert check to see if Fedora distro is actually immutable/atomic (rpm-ostree)
+            cmd_lst = ['sudo', 'dnf', 'install', '-y']
+            native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+
+        # Dispatch installation sub-function based on DNF distro type
+        if cnfg.DISTRO_ID in distro_groups_map['mandriva-based']:
+            install_on_mandriva_based()
+        elif cnfg.DISTRO_ID in distro_groups_map['rhel-based']:
+            install_on_rhel_based()
+        elif cnfg.DISTRO_ID in distro_groups_map['fedora-based']:
+            install_on_fedora_based()
+        else:
+            error(f"Distro {cnfg.DISTRO_ID} is not supported by this installation script.")
+            safe_shutdown(1)
+
+    ###########################################################################
+    ###  ZYPPER DISTROS  ######################################################
+    ###########################################################################
+    @staticmethod
+    def install_on_zypper_distro():
+        """utility function that gets dispatched for distros that use Zypper package manager"""
+        cmd_lst = ['sudo', 'zypper', '--non-interactive', 'install']
+        native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+
+    ###########################################################################
+    ###  APT DISTROS  #########################################################
+    ###########################################################################
+    @staticmethod
+    def install_on_apt_distro():
+        """utility function that gets dispatched for distros that use APT package manager"""
+        cmd_lst = ['sudo', 'apt', 'install', '-y']
+        native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+
+    ###########################################################################
+    ###  PACMAN DISTROS  ######################################################
+    ###########################################################################
+    @staticmethod
+    def install_on_pacman_distro():
+        """utility function that gets dispatched for distros that use Pacman package manager"""
+        native_pkg_installer.check_for_pkg_mgr_cmd('pacman')
+
+        def is_pkg_installed_pacman(package):
+            """utility function to help avoid 'reinstalling' existing packages on Arch"""
+            result = subprocess.run(['pacman', '-Q', package], stdout=DEVNULL, stderr=DEVNULL)
+            return result.returncode == 0
+
+        pkgs_to_install = []
+        for pkg in cnfg.pkgs_for_distro:
+            if not is_pkg_installed_pacman(pkg):
+                pkgs_to_install.append(pkg)
+            else:
+                print(fancy_str(f"Package '{pkg}' is already installed. Skipping.", "green"))
+
+        if pkgs_to_install:
+            cmd_lst = ['sudo', 'pacman', '-S', '--noconfirm']
+            native_pkg_installer.install_pkg_list(cmd_lst, pkgs_to_install)
+
+    ###########################################################################
+    ###  EOPKG DISTROS  #######################################################
+    ###########################################################################
+    @staticmethod
+    def install_on_eopkg_distro():
+        """utility function that gets dispatched for distros that use Eopkg package manager"""
+        dev_cmd_lst = ['sudo', 'eopkg', 'install', '-y', '-c']
+        dev_pkg_lst = ['system.devel']
+        native_pkg_installer.install_pkg_list(dev_cmd_lst, dev_pkg_lst)
+        cmd_lst = ['sudo', 'eopkg', 'install', '-y']
+        native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+
+    ###########################################################################
+    ###  XBPS DISTROS  ########################################################
+    ###########################################################################
+    @staticmethod
+    def install_on_xbps_distro():
+        """utility function that gets dispatched for distros that use xbps-install package manager"""
+        cmd_lst = ['sudo', 'xbps-install', '-Sy']
+        native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
 
 def install_distro_pkgs():
@@ -1345,184 +1531,18 @@ def install_distro_pkgs():
         safe_shutdown(1)
 
     ###########################################################################
-    ###  TRANSACTIONAL-UPDATE DISTROS  ########################################
-    ###########################################################################
-    def install_on_transupd_distro():
-        """utility function that gets dispatched for distros that use Transactional-Update"""
-
-        def print_incomplete_setup_warning():
-            """utility function to print the warning about rebooting and running setup again"""
-            print()
-            print('###############################################################################')
-            print('############       WARNING: Toshy setup is NOT yet complete!       ############')
-            print('###########      This distro type uses "transactional-update".      ###########')
-            print('##########   You MUST reboot now to make native packages available.  ##########')
-            print('#########  After REBOOTING, run the Toshy setup script a second time. #########')
-            print('###############################################################################')
-
-        if cnfg.DISTRO_ID in distro_groups_map['microos-based']:
-            print('Distro is openSUSE MicroOS/Aeon/Kalpa immutable. Using "transactional-update".')
-
-            # Filter out packages that are already installed
-            filtered_pkg_lst = []
-            for pkg in cnfg.pkgs_for_distro:
-                result = subprocess.run(["rpm", "-q", pkg], stdout=PIPE, stderr=PIPE)
-                if result.returncode != 0:
-                    filtered_pkg_lst.append(pkg)
-                else:
-                    print(fancy_str(f"Package '{pkg}' is already installed. Skipping.", "green"))
-
-            if filtered_pkg_lst:
-                print(f'Packages left to install:\n{filtered_pkg_lst}')
-                cmd_lst = ['sudo', 'transactional-update', '--non-interactive', 'pkg', 'in']
-                native_pkg_installer.install_pkg_list(cmd_lst, filtered_pkg_lst)
-                # might as well take care of user group and udev here, if rebooting is necessary. 
-                verify_user_groups()
-                install_udev_rules()
-                show_reboot_prompt()
-                print_incomplete_setup_warning()
-                safe_shutdown(0)
-            else:
-                print('All needed packages are already available. Continuing setup...')
-
-    ###########################################################################
-    ###  RPM-OSTREE DISTROS  ##################################################
-    ###########################################################################
-    def install_on_rpmostree_distro():
-        """utility function that gets dispatched for distros that use RPM-OSTree"""
-        if cnfg.DISTRO_ID in distro_groups_map['fedora-immutables']:
-            print('Distro is Fedora-type immutable. Using "rpm-ostree" instead of DNF.')
-
-            # Filter out packages that are already installed
-            filtered_pkg_lst = []
-            for pkg in cnfg.pkgs_for_distro:
-                result = subprocess.run(["rpm", "-q", pkg], stdout=PIPE, stderr=PIPE)
-                if result.returncode != 0:
-                    filtered_pkg_lst.append(pkg)
-                else:
-                    print(fancy_str(f"Package '{pkg}' is already installed. Skipping.", "green"))
-
-            if filtered_pkg_lst:
-                cmd_lst = ['sudo', 'rpm-ostree', 'install', '--idempotent',
-                            '--allow-inactive', '--apply-live', '-y']
-                native_pkg_installer.install_pkg_list(cmd_lst, filtered_pkg_lst)
-
-    ###########################################################################
-    ###  DNF DISTROS  #########################################################
-    ###########################################################################
-    def install_on_dnf_distro():
-        """Utility function that gets dispatched for distros that use DNF package manager."""
-        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
-
-        # Define helper functions for specific distro installations
-        def install_on_mandriva_based():
-            cmd_lst = ['sudo', 'dnf', 'install', '-y']
-            native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
-
-        def install_on_rhel_based():
-            if cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '7':
-                distro_quirks_handler.handle_quirks_CentOS_7()
-            if cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '8':
-                distro_quirks_handler.handle_quirks_CentOS_Stream_8()
-            if cnfg.distro_mjr_ver in ['8', '9']:
-                distro_quirks_handler.handle_quirks_RHEL_8_9()
-            if cnfg.distro_mjr_ver in ['10']:
-                distro_quirks_handler.handle_quirks_RHEL_10()
-
-            # Package version repo conflict issues on CentOS 10 made installing difficult
-            if cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '10':
-                cmd_lst = ['sudo', 'dnf', 'install', '-y', '--nobest']
-            else:
-                cmd_lst = ['sudo', 'dnf', 'install', '-y']
-            native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
-
-        def install_on_fedora_based():
-            # TODO: insert check to see if Fedora distro is actually immutable/atomic (rpm-ostree)
-            cmd_lst = ['sudo', 'dnf', 'install', '-y']
-            native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
-
-        # Dispatch installation sub-function based on DNF distro type
-        if cnfg.DISTRO_ID in distro_groups_map['mandriva-based']:
-            install_on_mandriva_based()
-        elif cnfg.DISTRO_ID in distro_groups_map['rhel-based']:
-            install_on_rhel_based()
-        elif cnfg.DISTRO_ID in distro_groups_map['fedora-based']:
-            install_on_fedora_based()
-        else:
-            error(f"Distro {cnfg.DISTRO_ID} is not supported by this installation script.")
-            safe_shutdown(1)
-
-    ###########################################################################
-    ###  ZYPPER DISTROS  ######################################################
-    ###########################################################################
-    def install_on_zypper_distro():
-        """utility function that gets dispatched for distros that use Zypper package manager"""
-        cmd_lst = ['sudo', 'zypper', '--non-interactive', 'install']
-        native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
-
-    ###########################################################################
-    ###  APT DISTROS  #########################################################
-    ###########################################################################
-    def install_on_apt_distro():
-        """utility function that gets dispatched for distros that use APT package manager"""
-        cmd_lst = ['sudo', 'apt', 'install', '-y']
-        native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
-
-    ###########################################################################
-    ###  PACMAN DISTROS  ######################################################
-    ###########################################################################
-    def install_on_pacman_distro():
-        """utility function that gets dispatched for distros that use Pacman package manager"""
-        native_pkg_installer.check_for_pkg_mgr_cmd('pacman')
-
-        def is_pkg_installed_pacman(package):
-            """utility function to help avoid 'reinstalling' existing packages on Arch"""
-            result = subprocess.run(['pacman', '-Q', package], stdout=DEVNULL, stderr=DEVNULL)
-            return result.returncode == 0
-
-        pkgs_to_install = []
-        for pkg in cnfg.pkgs_for_distro:
-            if not is_pkg_installed_pacman(pkg):
-                pkgs_to_install.append(pkg)
-            else:
-                print(fancy_str(f"Package '{pkg}' is already installed. Skipping.", "green"))
-
-        if pkgs_to_install:
-            cmd_lst = ['sudo', 'pacman', '-S', '--noconfirm']
-            native_pkg_installer.install_pkg_list(cmd_lst, pkgs_to_install)
-
-    ###########################################################################
-    ###  EOPKG DISTROS  #######################################################
-    ###########################################################################
-    def install_on_eopkg_distro():
-        """utility function that gets dispatched for distros that use Eopkg package manager"""
-        dev_cmd_lst = ['sudo', 'eopkg', 'install', '-y', '-c']
-        dev_pkg_lst = ['system.devel']
-        native_pkg_installer.install_pkg_list(dev_cmd_lst, dev_pkg_lst)
-        cmd_lst = ['sudo', 'eopkg', 'install', '-y']
-        native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
-
-    ###########################################################################
-    ###  XBPS DISTROS  ########################################################
-    ###########################################################################
-    def install_on_xbps_distro():
-        """utility function that gets dispatched for distros that use xbps-install package manager"""
-        cmd_lst = ['sudo', 'xbps-install', '-Sy']
-        native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
-
-    ###########################################################################
     ###  PACKAGE MANAGER DISPATCHER  ##########################################
     ###########################################################################
     # map installer sub-functions to each pkg mgr distro list
     pkg_mgr_dispatch_map = {
-        tuple(transupd_distros):        install_on_transupd_distro,
-        tuple(rpmostree_distros):       install_on_rpmostree_distro,
-        tuple(dnf_distros):             install_on_dnf_distro,
-        tuple(zypper_distros):          install_on_zypper_distro,
-        tuple(apt_distros):             install_on_apt_distro,
-        tuple(pacman_distros):          install_on_pacman_distro,
-        tuple(eopkg_distros):           install_on_eopkg_distro,
-        tuple(xbps_distros):            install_on_xbps_distro,
+        tuple(transupd_distros):        PackageInstallerDispatcher.install_on_transupd_distro,
+        tuple(rpmostree_distros):       PackageInstallerDispatcher.install_on_rpmostree_distro,
+        tuple(dnf_distros):             PackageInstallerDispatcher.install_on_dnf_distro,
+        tuple(zypper_distros):          PackageInstallerDispatcher.install_on_zypper_distro,
+        tuple(apt_distros):             PackageInstallerDispatcher.install_on_apt_distro,
+        tuple(pacman_distros):          PackageInstallerDispatcher.install_on_pacman_distro,
+        tuple(eopkg_distros):           PackageInstallerDispatcher.install_on_eopkg_distro,
+        tuple(xbps_distros):            PackageInstallerDispatcher.install_on_xbps_distro,
         # add any new package manager distro lists...
     }
 
@@ -2082,9 +2102,6 @@ class PythonVenvQuirksHandler():
     """Object to contain methods for prepping specific distro variants that
         need some extra work while installing the Python virtual environment"""
 
-    def __init__(self) -> None:
-        pass
-
     def update_C_INCLUDE_PATH(self):
         # Needed to make a symlink to get `xkbcommon` to install in the venv:
         # sudo ln -s /usr/include/libxkbcommon/xkbcommon /usr/include/
@@ -2147,20 +2164,18 @@ class PythonVenvQuirksHandler():
         if shutil.which(f'python{cnfg.curr_py_rel_ver_str}'):
             cnfg.py_interp_path = shutil.which(f'python{cnfg.curr_py_rel_ver_str}')
             cnfg.py_interp_ver_str = cnfg.curr_py_rel_ver_str
-
             self.update_C_INCLUDE_PATH()
-
         else:
             print(  f'Current stable Python release version '
                     f'({cnfg.curr_py_rel_ver_str}) not found. ')
             safe_shutdown(1)
 
-    def handle_venv_quirks_OpenMandriva(self, venv_cmd_lst):
+    def handle_venv_quirks_OpenMandriva(self):
         print('Handling Python virtual environment quirks in OpenMandriva...')
         # We need to run the exact same command twice on OpenMandriva, for unknown reasons.
         # So this instance of the command is just "prep" for the seemingly duplicate
         # command that follows it in setup_python_vir_env(). 
-        subprocess.run(venv_cmd_lst, check=True)
+        subprocess.run(cnfg.venv_cmd_lst, check=True)
 
     def handle_venv_quirks_RHEL(self):
         print('Handling Python virtual environment quirks in RHEL-type distros...')
@@ -2175,7 +2190,6 @@ class PythonVenvQuirksHandler():
 
     def handle_venv_quirks_Tumbleweed(self):
         print('Handling Python virtual environment quirks in Tumbleweed...')
-
         self.update_C_INCLUDE_PATH()
 
 def setup_python_vir_env():
@@ -2196,10 +2210,9 @@ def setup_python_vir_env():
             venv_quirks_handler.handle_venv_quirks_RHEL()
         try:
             print(f'Using Python version {cnfg.py_interp_ver_str}.')
-            venv_cmd_lst = [cnfg.py_interp_path, '-m', 'venv', cnfg.venv_path]
-            subprocess.run(venv_cmd_lst, check=True)
+            subprocess.run(cnfg.venv_cmd_lst, check=True)
             if cnfg.DISTRO_ID in ['openmandriva']:
-                venv_quirks_handler.handle_venv_quirks_OpenMandriva(venv_cmd_lst)
+                venv_quirks_handler.handle_venv_quirks_OpenMandriva(cnfg.venv_cmd_lst)
         except subprocess.CalledProcessError as proc_err:
             error(f'ERROR: Problem creating the Python virtual environment:\n\t{proc_err}')
             safe_shutdown(1)
@@ -3518,9 +3531,6 @@ if __name__ == '__main__':
 
     # create the configuration settings class instance
     cnfg                        = InstallerSettings()
-
-    # create the distro quirks handler object
-    distro_quirks_handler       = DistroQuirksHandler()
 
     # create the native package installer class instance
     native_pkg_installer        = NativePackageInstaller()
