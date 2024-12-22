@@ -1512,37 +1512,37 @@ def install_distro_pkgs():
         if cnfg.systemctl_present or 'systemd' not in pkg
     ]
 
-    transupd_distros            = []    # 'transactional-update': openSUSE MicroOS/Aeon/Kalpa
-    rpmostree_distros           = []    # 'rpm-ostree': Fedora atomic/immutables
-    dnf_distros                 = []    # 'dnf': Fedora/RHEL/OpenMandriva
-    zypper_distros              = []    # 'zypper': openSUSE Tumbleweed/Leap
     apt_distros                 = []    # 'apt': Debian/Ubuntu
-    pacman_distros              = []    # 'pacman': Arch, BTW
+    dnf_distros                 = []    # 'dnf': Fedora/RHEL/OpenMandriva
     eopkg_distros               = []    # 'eopkg': Solus
+    pacman_distros              = []    # 'pacman': Arch, BTW
+    rpmostree_distros           = []    # 'rpm-ostree': Fedora atomic/immutables
+    transupd_distros            = []    # 'transactional-update': openSUSE MicroOS/Aeon/Kalpa
     xbps_distros                = []    # 'xbps-install': Void
+    zypper_distros              = []    # 'zypper': openSUSE Tumbleweed/Leap
 
     # assemble specific pkg mgr distro lists
 
     try:
-        transupd_distros        += distro_groups_map['microos-based']
-
-        rpmostree_distros       += distro_groups_map['fedora-immutables']
+        apt_distros             += distro_groups_map['ubuntu-based']
+        apt_distros             += distro_groups_map['debian-based']
 
         dnf_distros             += distro_groups_map['fedora-based']
         dnf_distros             += distro_groups_map['rhel-based']
         dnf_distros             += distro_groups_map['mandriva-based']
 
-        zypper_distros          += distro_groups_map['tumbleweed-based']
-        zypper_distros          += distro_groups_map['leap-based']
-
-        apt_distros             += distro_groups_map['ubuntu-based']
-        apt_distros             += distro_groups_map['debian-based']
+        eopkg_distros           += distro_groups_map['solus-based']
 
         pacman_distros          += distro_groups_map['arch-based']
 
-        eopkg_distros           += distro_groups_map['solus-based']
+        rpmostree_distros       += distro_groups_map['fedora-immutables']
+
+        transupd_distros        += distro_groups_map['microos-based']
 
         xbps_distros            += distro_groups_map['void-based']
+
+        zypper_distros          += distro_groups_map['tumbleweed-based']
+        zypper_distros          += distro_groups_map['leap-based']
 
     except (KeyError, TypeError) as key_err:
         print()
