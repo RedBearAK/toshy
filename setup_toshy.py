@@ -1549,28 +1549,38 @@ def install_distro_pkgs():
         error(f'Problem setting up package manager distro lists:\n\t{key_err}')
         safe_shutdown(1)
 
+    def call_installer_method(installer_method):
+        """Utility function to call the installer function and handle post-call tasks."""
+        if callable(installer_method):  # Ensure the passed method is callable
+            print(f"Calling installer dispatcher method:\n {installer_method.__name__}")
+            installer_method()  # Call the function
+            native_pkg_installer.show_pkg_install_success_msg()
+            show_task_completed_msg()
+        else:
+            obj_name = getattr(installer_method, "__name__", str(installer_method))
+            error(f"The provided installer_method argument is not a callable:\n {obj_name}")
+            safe_shutdown(1)
+
     ###########################################################################
     ###  PACKAGE MANAGER DISPATCHER  ##########################################
     ###########################################################################
     # map installer dispatcher class static methods to each pkg mgr distro list
     pkg_mgr_dispatch_map = {
-        tuple(transupd_distros):        PackageInstallerDispatcher.install_on_transupd_distro,
-        tuple(rpmostree_distros):       PackageInstallerDispatcher.install_on_rpmostree_distro,
-        tuple(dnf_distros):             PackageInstallerDispatcher.install_on_dnf_distro,
-        tuple(zypper_distros):          PackageInstallerDispatcher.install_on_zypper_distro,
         tuple(apt_distros):             PackageInstallerDispatcher.install_on_apt_distro,
-        tuple(pacman_distros):          PackageInstallerDispatcher.install_on_pacman_distro,
+        tuple(dnf_distros):             PackageInstallerDispatcher.install_on_dnf_distro,
         tuple(eopkg_distros):           PackageInstallerDispatcher.install_on_eopkg_distro,
+        tuple(pacman_distros):          PackageInstallerDispatcher.install_on_pacman_distro,
+        tuple(rpmostree_distros):       PackageInstallerDispatcher.install_on_rpmostree_distro,
+        tuple(transupd_distros):        PackageInstallerDispatcher.install_on_transupd_distro,
         tuple(xbps_distros):            PackageInstallerDispatcher.install_on_xbps_distro,
+        tuple(zypper_distros):          PackageInstallerDispatcher.install_on_zypper_distro,
         # add any new package manager distro lists...
     }
 
-    # Determine the correct installation function
-    for distro_list, installer_function in pkg_mgr_dispatch_map.items():
+    # Determine the correct installation class method
+    for distro_list, installer_method in pkg_mgr_dispatch_map.items():
         if cnfg.DISTRO_ID in distro_list:
-            installer_function()
-            native_pkg_installer.show_pkg_install_success_msg()
-            show_task_completed_msg()
+            call_installer_method(installer_method)
             return
     # exit message in case there is no package manager distro list with distro name inside
     exit_with_invalid_distro_error(pkg_mgr_err=True)
