@@ -78,8 +78,9 @@ sys.path.insert(0, current_folder_path)
 import lib.env
 
 from lib.env_context import EnvironmentInfo
-from lib.settings_class import Settings
+from lib.machine_context import get_machine_id_hash
 from lib.notification_manager import NotificationManager
+from lib.settings_class import Settings
 
 assets_path         = os.path.join(current_folder_path, 'assets')
 icon_file_active    = os.path.join(assets_path, "toshy_app_icon_rainbow.svg")
@@ -228,7 +229,6 @@ except NameError:
 # Allows syncing a single config file between different machines without overlapping the
 # hardware/media key overrides, or any other machine-specific customization.
 # Get the ID for each machine with the `toshy-machine-id` command, for use in `if` conditions.
-from lib.machine_context import get_machine_id_hash
 MACHINE_ID = get_machine_id_hash()
 
 
