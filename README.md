@@ -365,7 +365,7 @@ You will find these distro groupings in the Wiki article:
 
     - **Cinnamon 6.0 or later** - _[uses custom shell extension]_
     - **COSMIC desktop environment** - _[uses D-Bus service]_
-    - **GNOME 3.38 or later** - _[needs shell extension, see [**Requirements**](#requirements)]_
+    - **GNOME 3.38, and 40 or later** - _[needs shell extension, see [**Requirements**](#requirements)]_
     - **Hyprland** - _[currently uses `hyprpy` Python module]_
     - **MiracleWM** - _[via `wlroots` method]_
     - **Niri** - _[via `wlroots` method]_
