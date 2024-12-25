@@ -369,7 +369,7 @@ You will find these distro groupings in the Wiki article:
     - **Hyprland** - _[currently uses `hyprpy` Python module]_
     - **MiracleWM** - _[via `wlroots` method]_
     - **Niri** - _[via `wlroots` method]_
-    - **Pantheon** - [via D-Bus queries to Gala WM]
+    - **Pantheon** - _[uses D-Bus queries to Gala WM]_
     - **Plasma 5 (KDE)** - _[uses custom KWin script and D-Bus service]_
     - **Plasma 6 (KDE)** - _[uses custom KWin script and D-Bus service]_
     - **Qtile** - _[via `wlroots` method]_
