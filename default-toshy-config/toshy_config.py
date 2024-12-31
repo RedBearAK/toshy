@@ -418,6 +418,7 @@ def create_list_of_dicts(lst: List[str]):
 
 terminals = [
     "alacritty",
+    "com.mitchellh.ghostty",
     "com.raggesilver.BlackBox",
     "com.system76.CosmicTerm",
     "contour",
