@@ -426,6 +426,8 @@ terminals = [
     "deepin-terminal",
     "dev.warp.Warp",
     "eterm",
+    "ghostty",
+    "ghostty-debug",
     "gnome-terminal",
     "gnome-terminal-server",
     "guake",
