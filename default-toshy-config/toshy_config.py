@@ -4466,6 +4466,15 @@ keymap("General Terminals", {
     # C("RC-SLASH"):              C("C-Shift-SLASH"),             # No function - RE-ENABLE IF SOMEONE REPORTS
     # C("RC-KPASTERISK"):         C("C-Shift-KPASTERISK"),        # No function - RE-ENABLE IF SOMEONE REPORTS
 
+    # Allow access to Linux TTY virtual consoles with the usual physical key locations (General Terminals)
+    C("LC-RC-F1"):              C("C-Alt-F1"),                  # Go to TTY virtual console 1
+    C("LC-RC-F2"):              C("C-Alt-F2"),                  # Go to TTY virtual console 2
+    C("LC-RC-F3"):              C("C-Alt-F3"),                  # Go to TTY virtual console 3
+    C("LC-RC-F4"):              C("C-Alt-F4"),                  # Go to TTY virtual console 4
+    C("LC-RC-F5"):              C("C-Alt-F5"),                  # Go to TTY virtual console 5
+    C("LC-RC-F6"):              C("C-Alt-F6"),                  # Go to TTY virtual console 6
+    C("LC-RC-F7"):              C("C-Alt-F7"),                  # Go to TTY virtual console 7
+
 }, when = lambda ctx:
     cnfg.screen_has_focus and
     matchProps(clas=termStr)(ctx)
@@ -4867,6 +4876,15 @@ keymap("General GUI", {
     C("Alt-Delete"):            C("C-Delete"),                  # Delete Right Word of Cursor
     C("Shift-Alt-Backspace"):   C("C-Backspace"),               # Delete word left of cursor
     C("Shift-Alt-Delete"):      C("C-Delete"),                  # Delete word right of cursor
+
+    # Allow access to Linux TTY virtual consoles with the usual physical key locations (General GUI)
+    C("Super-RC-F1"):           C("C-Alt-F1"),                  # Go to TTY virtual console 1
+    C("Super-RC-F2"):           C("C-Alt-F2"),                  # Go to TTY virtual console 2
+    C("Super-RC-F3"):           C("C-Alt-F3"),                  # Go to TTY virtual console 3
+    C("Super-RC-F4"):           C("C-Alt-F4"),                  # Go to TTY virtual console 4
+    C("Super-RC-F5"):           C("C-Alt-F5"),                  # Go to TTY virtual console 5
+    C("Super-RC-F6"):           C("C-Alt-F6"),                  # Go to TTY virtual console 6
+    C("Super-RC-F7"):           C("C-Alt-F7"),                  # Go to TTY virtual console 7
 
     # C("RC-Left"):               C("C-LEFT_BRACE"),              # Firefox-nw - Back
     # C("RC-Right"):              C("C-RIGHT_BRACE"),             # Firefox-nw - Forward
