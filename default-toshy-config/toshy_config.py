@@ -4257,6 +4257,10 @@ keymap("Deepin Terminal overrides", {
     C("RC-equal"):              C("C-equal"),                   # Increase font size/zoom in
 }, when = matchProps(clas="^deepin-terminal$"))
 
+keymap("Ghostty terminal overrides", {
+    C("RC-Equal"):              C("C-Equal"),                   # Increase font size [override general terminals remap]
+}, when = matchProps(clas="^ghostty$|^ghostty-debug$|^com.mitchellh.ghostty$"))
+
 keymap("Hyper terminal tab switching", {
     C("RC-Equal"):              C("C-Equal"),                   # Increase font size [override general terminals remap]
     C("Shift-LC-Tab"):          C("Shift-C-Tab"),               # Tab nav: Go to prior tab (left) [override general remap]
