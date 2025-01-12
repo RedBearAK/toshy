@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-__version__ = '20241003'
+__version__ = '20250112'
 
 # Indicator tray icon menu app for Toshy, using pygobject/gi
 TOSHY_PART      = 'tray'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
@@ -493,23 +493,24 @@ def run_cmd_lst_in_terminal(command_list: List[str]):
     # Each terminal app option can be associated with multiple DEs to 
     # somewhat intelligently use the "correct" terminal for a DE. 
     terminal_apps_lst_of_tup: List[Tuple[str, List[str], ]] = [
-        ('gnome-terminal',      ['--'],     ['gnome', 'unity', 'cinnamon']              ),
-        ('ptyxis',              ['--'],     ['gnome', 'unity', 'cinnamon']              ),
-        ('konsole',             ['-e'],     ['kde']                                     ),
-        ('xfce4-terminal',      ['-e'],     ['xfce']                                    ),
-        ('mate-terminal',       ['-e'],     ['mate']                                    ),
-        ('qterminal',           ['-e'],     ['lxqt']                                    ),
-        ('lxterminal',          ['-e'],     ['lxde']                                    ),
-        ('terminology',         ['-e'],     ['enlightenment']                           ),
-        ('cosmic-term',         ['-e'],     ['cosmic']                                  ),
-        ('kitty',               ['-e'],     []                                          ),
-        ('alacritty',           ['-e'],     []                                          ),
-        ('tilix',               ['-e'],     []                                          ),
-        ('terminator',          ['-e'],     []                                          ),
-        ('xterm',               ['-e'],     []                                          ),
-        ('rxvt',                ['-e'],     []                                          ),
-        ('urxvt',               ['-e'],     []                                          ),
-        ('st',                  ['-e'],     []                                          ),
+        ('gnome-terminal',          ['--'],     ['gnome', 'unity', 'cinnamon']              ),
+        ('ptyxis',                  ['--'],     ['gnome', 'unity', 'cinnamon']              ),
+        ('konsole',                 ['-e'],     ['kde']                                     ),
+        ('xfce4-terminal',          ['-e'],     ['xfce']                                    ),
+        ('mate-terminal',           ['-e'],     ['mate']                                    ),
+        ('qterminal',               ['-e'],     ['lxqt']                                    ),
+        ('lxterminal',              ['-e'],     ['lxde']                                    ),
+        ('terminology',             ['-e'],     ['enlightenment']                           ),
+        ('cosmic-term',             ['-e'],     ['cosmic']                                  ),
+        ('io.elementary.terminal',  ['-e'],     ['pantheon']                                ),
+        ('kitty',                   ['-e'],     []                                          ),
+        ('alacritty',               ['-e'],     []                                          ),
+        ('tilix',                   ['-e'],     []                                          ),
+        ('terminator',              ['-e'],     []                                          ),
+        ('xterm',                   ['-e'],     []                                          ),
+        ('rxvt',                    ['-e'],     []                                          ),
+        ('urxvt',                   ['-e'],     []                                          ),
+        ('st',                      ['-e'],     []                                          ),
         # 'kgx' is short for "King's Cross" and represents GNOME Console
         ('kgx',                 ['-e'],     []                                          ),
     ]
