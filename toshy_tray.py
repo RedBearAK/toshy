@@ -545,6 +545,7 @@ def run_cmd_lst_in_terminal(command_list: List[str]):
         if _run_cmd_lst_in_term(term_app_cmd_path, term_app_args_lst, command_list):
             return
 
+    # If we reach this, we failed to find a terminal app to use, so show a notification.
     ntfy_icon_file = icon_file_inverse  # predefined path to icon file
     ntfy_msg = "ERROR: No suitable terminal emulator could be opened."
     ntfy.send_notification(ntfy_msg, ntfy_icon_file)
