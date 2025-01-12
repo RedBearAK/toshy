@@ -512,7 +512,7 @@ def run_cmd_lst_in_terminal(command_list: List[str]):
         ('urxvt',                   ['-e'],     []                                          ),
         ('st',                      ['-e'],     []                                          ),
         # 'kgx' is short for "King's Cross" and represents GNOME Console
-        ('kgx',                 ['-e'],     []                                          ),
+        ('kgx',                     ['-e'],     []                                          ),
     ]
 
     def _run_cmd_lst_in_term(term_app_cmd_path, term_app_args_lst, command_list: List[str]):
