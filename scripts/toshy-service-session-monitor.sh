@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-
 # Monitor whether the user's desktop session is "Active" according to loginctl.
 
 # Should handle the case of user remaining "logged in" but using "switch user"
@@ -8,25 +7,21 @@
 # We don't want the keymapper to interfere with the other user's input or 
 # with their separate usage of this or any other keymapper. 
 
-if command -v loginctl >/dev/null 2>&1; then
-    : # no-op operator
-else
+# Handles edge cases like login screen and session transitions
+
+if ! command -v loginctl >/dev/null 2>&1; then
     echo "The \"loginctl\" command is not available. Toshy session monitor will not work here."
     exit 1
 fi
 
-if command -v systemctl >/dev/null 2>&1; then
-    : # no-op operator
-else
+if ! command -v systemctl >/dev/null 2>&1; then
     echo "The \"systemctl\" command is not available. Toshy session monitor will not work here."
     exit 1
 fi
 
-
 # If XDG_RUNTIME_DIR is not set or is empty
 if [ -z "${XDG_RUNTIME_DIR}" ]; then
     echo "SESSMON_SVC: XDG_RUNTIME_DIR not set. Unable to determine where to store the marker file."
-    # exit 1
 else
     # Full path to the marker file
     MARKER_FILE="${XDG_RUNTIME_DIR}/toshy-service-sessmon.start"
@@ -43,90 +38,101 @@ fi
 USER="$(whoami)"
 STOPPED_BY_ME="false"
 
+# Function to get current session ID safely
+get_session_id() {
+    # First try to get session by user
+    local session_id
+    session_id=$(loginctl list-sessions --no-legend | awk -v user="$USER" '$3 == user {print $1; exit}')
+    
+    # If that fails, try session-status (original method) but handle errors
+    if [ -z "$session_id" ]; then
+        session_id=$(loginctl session-status 2>/dev/null | head -n1 | cut -d' ' -f1)
+    fi
+    
+    echo "$session_id"
+}
+
+# Function to check if session is active
+check_session_active() {
+    local session_id="$1"
+    local is_active="no"
+    
+    if [ -n "$session_id" ]; then
+        is_active=$(loginctl show-session "$session_id" -p Active --value 2>/dev/null || echo "no")
+    fi
+    
+    echo "$is_active"
+}
+
+# Function to stop Toshy services
+stop_toshy_services() {
+    local reason="$1"
+    echo "SESSMON_SVC: Stopping config service because $reason"
+    systemctl --user stop toshy-config.service >/dev/null 2>&1
+    sleep 0.5
+    systemctl --user stop toshy-kde-dbus.service >/dev/null 2>&1
+    systemctl --user stop toshy-cosmic-dbus.service >/dev/null 2>&1
+    systemctl --user stop toshy-wlroots-dbus.service >/dev/null 2>&1
+    STOPPED_BY_ME="true"
+}
+
+# Function to start Toshy services
+start_toshy_services() {
+    if [ "$STOPPED_BY_ME" = "true" ]; then
+        systemctl --user restart toshy-kde-dbus.service >/dev/null 2>&1
+        systemctl --user restart toshy-cosmic-dbus.service >/dev/null 2>&1
+        systemctl --user restart toshy-wlroots-dbus.service >/dev/null 2>&1
+        sleep 0.5
+        systemctl --user restart toshy-config.service >/dev/null 2>&1
+        STOPPED_BY_ME="false"
+    fi
+}
 
 # give the session info and config service a bit of time to stabilize
 sleep 2
 
-# check that loginctl is actually going to work right now
-retry=0
 while true; do
-    # suppress all output of command, then check exit status
-    loginctl session-status >/dev/null 2>&1
-    status=$?
-    if [[ $status -eq 0 ]]; then
-        # The command succeeded, so break out of the loop
-        break
+    sleep 2
+
+    # Get session count and handle complete logout
+    SESSION_COUNT=$(loginctl list-sessions -p UserName 2>/dev/null | grep -c "${USER}" || echo "0")
+    
+    if [ "$SESSION_COUNT" -eq 0 ]; then
+        systemctl --user stop toshy-config.service
+        systemctl --user stop toshy-kde-dbus.service
+        systemctl --user stop toshy-cosmic-dbus.service
+        systemctl --user stop toshy-wlroots-dbus.service
+        # User is logged out entirely if there are no sessions, 
+        # so in this case stop the session monitor too:
+        systemctl --user stop toshy-session-monitor.service
+        continue
+    fi
+
+    # Get current session ID
+    SESSION_ID=$(get_session_id)
+    
+    # Check service status
+    CFG_SERVICE_STATUS=$(systemctl --user is-active toshy-config.service)
+
+    if [[ -n "$SESSION_ID" ]]; then
+        # We have a valid session ID
+        SESSION_IS_ACTIVE=$(check_session_active "$SESSION_ID")
+        
+        if [[ "$SESSION_IS_ACTIVE" == "yes" ]]; then
+            # Session is active, start services if they were stopped by us
+            if [[ "$CFG_SERVICE_STATUS" == "inactive" ]]; then
+                start_toshy_services
+            fi
+        else
+            # Session exists but is not active
+            if [[ "$CFG_SERVICE_STATUS" == "active" ]]; then
+                stop_toshy_services "session is inactive"
+            fi
+        fi
     else
-        # The command failed, so wait for a bit and then try again
-        sleep 2
-        ((retry++))
-        if [[ $retry -gt 10 ]]; then
-            echo "SESSMON_SVC: Attempt to use loginctl failed after 10 attempts. Exiting."
-            exit 1
+        # No valid session ID (likely at login screen)
+        if [[ "$CFG_SERVICE_STATUS" == "active" ]]; then
+            stop_toshy_services "no valid session found (login screen?)"
         fi
     fi
-done
-
-
-while true
-    do
-
-        sleep 2
-
-        # Get a count of all sessions for the user.
-        # We are trying to check whether user is completely logged out.
-        # Systemd user services don't automatically stop when user logs out!
-        SESSION_COUNT=$(loginctl list-sessions -p UserName | grep -c "${USER}")
-
-        # If no sessions are found, stop all the Toshy user services
-        if [ "$SESSION_COUNT" -eq 0 ]
-            then
-                systemctl --user stop toshy-config.service
-                systemctl --user stop toshy-kde-dbus.service
-                # User is logged out entirely if there are no sessions, 
-                # so stop session monitor too:
-                systemctl --user stop toshy-session-monitor.service
-        fi
-
-        # get the current session ID (number)
-        SESSION_ID="$(loginctl session-status | head -n1 | cut -d' ' -f1)"
-
-        # check the loginctl show-session metadata to see if it's "Active" (yes/no)
-        SESSION_IS_ACTIVE="$(loginctl show-session "$SESSION_ID" -p Active --value)"
-
-        # check the status of Toshy Config service
-        SERVICE_STATUS="$(systemctl --user is-active toshy-config.service)"
-
-        # if session is active, try to start Toshy Config service (only if inactive)
-        if [[ "$SESSION_IS_ACTIVE" == "yes" ]]
-            then
-                # echo "Session for user $USER is active right now. $(date +%F_%H%M%S)" | tee -a /tmp/user-$USER.txt
-                if [[ "$SERVICE_STATUS" == "inactive" ]]
-                    then
-                        # only start Toshy Config service if we stopped it due to inactive session (below)
-                        if [[ "$STOPPED_BY_ME" == "true" ]]
-                            then
-                                # start/restart KDE D-Bus service (adapt to switching DEs w/out reboot)
-                                systemctl --user restart toshy-kde-dbus.service > /dev/null 2>&1
-                                sleep 0.5
-                                systemctl --user restart toshy-config.service > /dev/null 2>&1
-                                STOPPED_BY_ME="false"
-                        fi
-                fi
-        fi
-
-        # if session is NOT active, try to stop Toshy Config service (only if active)
-        if [[ "$SESSION_IS_ACTIVE" == "no" ]]
-            then
-                # echo "Session for user $USER is NOT active right now. $(date +%F_%H%M%S)" | tee -a /tmp/user-$USER.txt
-                if [[ "$SERVICE_STATUS" == "active" ]]
-                    then
-                        echo "SESSMON_SVC: Stopping config service because session is inactive."
-                        systemctl --user stop toshy-config.service > /dev/null 2>&1
-                        # also stop KDE D-Bus service (unnecessary if config is not running)
-                        systemctl --user stop toshy-kde-dbus.service > /dev/null 2>&1
-                        STOPPED_BY_ME="true"
-                fi
-        fi
-
 done
