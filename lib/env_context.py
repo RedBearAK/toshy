@@ -551,13 +551,14 @@ class EnvironmentInfo:
 
             # LXQt often uses OpenBox, but can use a number of different WMs in X11 or Wayland
             'lxqt': [
-                'openbox',
-                'labwc',
-                'sway',
-                'hyprland',
-                'kwin_wayland',
-                'wayfire',
-                'river'
+                'openbox',          # X11/Xorg window manager
+                'labwc',            # Wayland compositor
+                'sway',             # Wayland compositor
+                'hyprland',         # Wayland compositor
+                'kwin_wayland',     # Wayland compositor
+                'wayfire',          # Wayland compositor
+                'river',            # Wayland compositor
+                'niri',             # Wayland compositor
             ],
 
             'awesome':          'awesome',
