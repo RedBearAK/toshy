@@ -82,7 +82,8 @@ class WaylandClient:
         # Only update active window title if this event is for the active handle
         if handle == self.active_handle:
             self.active_wdw_title = title
-        # print(f"Title updated for window {handle}: '{title}'")
+        print(f"Title updated for window {handle}: '{title}'")
+        self.print_running_applications()
 
     def handle_app_id_change(self, handle, app_id):
         """Update app_id in local state."""
@@ -93,7 +94,8 @@ class WaylandClient:
         # Only update active window app_id if this event is for the active handle
         if handle == self.active_handle:
             self.active_app_class = app_id
-        # print(f"App ID updated for window {handle}: '{app_id}'")
+        print(f"App ID updated for window {handle}: '{app_id}'")
+        self.print_running_applications()
 
     def handle_window_closed(self, handle):
         """Remove window from local state."""
