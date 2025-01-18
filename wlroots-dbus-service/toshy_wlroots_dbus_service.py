@@ -183,13 +183,15 @@ def check_interface_availability():
 
 class WaylandClient:
     def __init__(self):
-        self.display = None
-        self.registry = None
-        self.toplevel_manager = None
-        self.wl_fd = None
-        self.wdw_handles_dct = {}
-        self.active_app_class = ERR_NO_WLR_APP_CLASS
-        self.active_wdw_title = ERR_NO_WLR_WDW_TITLE
+        self.display            = None
+        self.registry           = None
+        self.toplevel_manager   = None
+        self.wl_fd              = None
+
+        self.wdw_handles_dct    = {}
+        self.active_handle      = None
+        self.active_app_class   = ERR_NO_WLR_APP_CLASS
+        self.active_wdw_title   = ERR_NO_WLR_WDW_TITLE
 
     def connect(self):
         try:
@@ -236,11 +238,19 @@ class WaylandClient:
         if handle not in self.wdw_handles_dct:
             self.wdw_handles_dct[handle] = {}
         self.wdw_handles_dct[handle]['app_id'] = app_id
+        # Don't rely only on state handler to set active window info in asynchronous event situations
+        # Only update active window app_id if this event is for the active handle
+        if handle == self.active_handle:
+            self.active_app_class = app_id
 
     def handle_title_change(self, handle, title):
         if handle not in self.wdw_handles_dct:
             self.wdw_handles_dct[handle] = {}
         self.wdw_handles_dct[handle]['title'] = title
+        # Don't rely only on state handler to set active window info in asynchronous event situations
+        # Only update active window title if this event is for the active handle
+        if handle == self.active_handle:
+            self.active_wdw_title = title
 
     def handle_window_closed(self, handle):
         if handle in self.wdw_handles_dct:
@@ -252,6 +262,7 @@ class WaylandClient:
         if isinstance(states_bytes, bytes):
             states = list(states_bytes)
         if ZwlrForeignToplevelHandleV1.state.activated.value in states:
+            self.active_handle = handle
             try:
                 self.active_app_class = self.wdw_handles_dct[handle]['app_id']
             except KeyError as key_err:
