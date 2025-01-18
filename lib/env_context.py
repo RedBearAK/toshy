@@ -105,8 +105,17 @@ class EnvironmentInfo:
         return contents
 
     def is_process_running(self, process_name):
+        """
+        Check if a process is running, doing a case-insensitive exact match.
+        
+        Args:
+            process_name (str): Name of the process to check for
+            
+        Returns:
+            bool: True if the process is running, False otherwise
+        """
         try:
-            subprocess.check_output(['pgrep', '-x', process_name])
+            subprocess.check_output(['pgrep', '-x', '-i', process_name])
             return True
         except subprocess.CalledProcessError:
             return False
@@ -546,7 +555,7 @@ class EnvironmentInfo:
             # Older GNOME may have 'mutter' integrated into 'gnome-shell' process
             'gnome': [
                 'mutter',
-                'gnome-shell'
+                'gnome-shell',
             ],
 
             # LXQt often uses OpenBox, but can use a number of different WMs in X11 or Wayland
@@ -565,7 +574,7 @@ class EnvironmentInfo:
             'cinnamon':         'cinnamon',
             'cosmic':           'cosmic-comp',
             'dwm':              'dwm',
-            'hyperland':        'hyprland',
+            'hyprland':         'Hyprland',     # the process name is capitalized (this is unusual)
             'i3':               'i3',
             'i3-gaps':          'i3',
             'miracle-wm':       'miracle-wm',
