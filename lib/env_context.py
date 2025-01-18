@@ -565,6 +565,7 @@ class EnvironmentInfo:
             'cinnamon':         'cinnamon',
             'cosmic':           'cosmic-comp',
             'dwm':              'dwm',
+            'hyperland':        'hyprland',
             'i3':               'i3',
             'i3-gaps':          'i3',
             'miracle-wm':       'miracle-wm',
