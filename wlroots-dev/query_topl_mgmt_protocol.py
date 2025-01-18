@@ -59,6 +59,13 @@ class WaylandClient:
             toplevel_handle: ZwlrForeignToplevelHandleV1):
         """Handle events for new toplevel windows."""
         # print(f"New toplevel window created: {toplevel_handle}")
+
+        # Initialize the dictionary entry with default values to avoid KeyError
+        self.wdw_handles_dct[toplevel_handle] = {
+            'app_id': ERR_NO_WLR_APP_CLASS,
+            'title': ERR_NO_WLR_WDW_TITLE
+        }
+
         # Subscribe to title and app_id changes as well as close event
         toplevel_handle.dispatcher['title']             = self.handle_title_change
         toplevel_handle.dispatcher['app_id']            = self.handle_app_id_change

@@ -220,10 +220,17 @@ class WaylandClient:
                 error(f"Kickstart script not found:\n\t{file_err}")
 
     def handle_toplevel_event(self, toplevel_manager, toplevel_handle):
-        toplevel_handle.dispatcher["app_id"] = self.handle_app_id_change
-        toplevel_handle.dispatcher["title"] = self.handle_title_change
-        toplevel_handle.dispatcher['closed'] = self.handle_window_closed
-        toplevel_handle.dispatcher['state'] = self.handle_state_change
+
+        # Initialize the dictionary entry with default values to avoid KeyError
+        self.wdw_handles_dct[toplevel_handle] = {
+            'app_id': ERR_NO_WLR_APP_CLASS,
+            'title': ERR_NO_WLR_WDW_TITLE
+        }
+
+        toplevel_handle.dispatcher["app_id"]            = self.handle_app_id_change
+        toplevel_handle.dispatcher["title"]             = self.handle_title_change
+        toplevel_handle.dispatcher['closed']            = self.handle_window_closed
+        toplevel_handle.dispatcher['state']             = self.handle_state_change
 
     def handle_app_id_change(self, handle, app_id):
         if handle not in self.wdw_handles_dct:
