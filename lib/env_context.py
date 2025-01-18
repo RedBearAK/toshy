@@ -351,7 +351,7 @@ class EnvironmentInfo:
             os.environ.get("DESKTOP_SESSION")
         )
 
-        # If it's a colon-separated list in XDG_CURRENT_DESKTOP, 
+        # If it's a colon-separated list in XDG_CURRENT_DESKTOP,
         # the first entry is the primary desktop environment
         if _desktop_env and ':' in _desktop_env:
             _desktop_env = _desktop_env.split(':')[0]
