@@ -1,8 +1,21 @@
+
+## Quick Links _(See top-right icon on GitHub for full table of contents)_
+
+- [How to Install](#how-to-install)
+- [How to Uninstall](#how-to-uninstall)
+- [Requirements](#requirements)
+- [Supported Desktop Environments/Window Managers](#currently-working-desktop-environments-or-window-managers)
+- [Supported Linux Distros](#currently-workingtested-linux-distros)
+- [Frequently Asked Questions (FAQ)](#faq-frequently-asked-questions)
+- [Sponsor/Donate](#sponsor-me--donate)
+
 # Current status: Stable Beta (Please Read)
 
-**2024-11-28 UPDATE**: Added support for Pantheon's Wayland session (elementary OS desktop environment). 
+**2025-01-18 UPDATE**: Fixed some issues in the `wlroots` window context method, and verified the bulk of the available LXQt Wayland session options seem to work. That includes labwc, sway, Hyprland, niri, Wayfire, and river (tested on Tumbleweed). The kwin_wayland session option is still untested (unavailable on Tumbleweed for now).
 
-**2024-10-03 UPDATE**: Fixed the broken COSMIC desktop environment support to work with COSMIC Alpha 2 or later (unless they change the relevant Wayland protocol again). 
+**2024-11-28 UPDATE**: Added support for Pantheon's Wayland session (elementary OS desktop environment).
+
+**2024-10-03 UPDATE**: Fixed the broken COSMIC desktop environment support to work with COSMIC Alpha 2 or later (unless they change the relevant Wayland protocol again).
 
 **2024-07-28 UPDATE**: Some basic `wlroots` based Wayland compositor support has been added. See the [Wiki article](https://github.com/RedBearAK/toshy/wiki/Wlroots-Based-Wayland-Compositors).
 
@@ -20,7 +33,7 @@ For new updates on the performance advancements, check the dedicated [Wiki page]
 
     [Keyboard Type Not Correct](https://github.com/RedBearAK/toshy/wiki/FAQ-(Frequently-Asked-Questions)#my-keyboard-is-not-recognized-as-the-correct-type)  
 
-- **INTERNATIONAL KEYBOARD USERS**: The keymapper is evdev-based and has **_no idea_** what keyboard layout you are using, and only sees "key codes", not the symbols on the keys. So if it encounters a combo of key codes you've asked it to remap to something else, it will remap it. This is a problem if for instance you're on an AZERTY keyboard where `A` and `Q` are swapped, and you think you're pressing `Cmd+A` but the keymapper thinks you want to remap `Cmd+Q` to `Alt+F4`. I'm looking into a way to get the keymapper to use the proper layout, but in the meantime depending on how different your layout is from the standard US layout, this keymapper may be unusable or may just need some tweaks to the key definition file to fix a few key positions. Open an issue if you have this kind of problem.  
+- **INTERNATIONAL KEYBOARD USERS**: The keymapper is evdev-based and has **_no idea_** what keyboard layout you are using. It only sees "key codes", not the symbols on the keys. So if it encounters a combo of key _codes_ you've asked it to remap to something else, it will remap it. This is a problem if for instance you're on an AZERTY keyboard where `A` and `Q` are swapped, and you think you're pressing `Cmd+A` but the keymapper thinks you want to remap `Cmd+Q` to `Alt+F4`. I'm looking into a way to get the keymapper to use the proper layout, but in the meantime, depending on how different your layout is from the standard US layout, this keymapper may either be unusable or may just need some small tweaks to the key definition file to fix a few key positions. Open an issue if you have this kind of problem.  
 
 - **DISTRO SUPPORT**: Toshy will have issues installing on distros not on the [list of supported distros](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros) in the Wiki. If you think your distro is closely related to one on the supported list, try the `./setup_toshy.py list-distros` command, and then use one of the distro names with the `--override-distro` option added to the `./setup_toshy.py install` command. See the [**How to Install**](#how-to-install) section.  
 
@@ -577,7 +590,7 @@ The lengthy FAQ section has been moved to a Wiki page to make the README shorter
 
 https://github.com/RedBearAK/toshy/wiki/FAQ-(Frequently-Asked-Questions)
 
-### Sponsor Me / Donate
+## Sponsor Me / Donate
 
 This type of project takes extraordinary amounts of time and effort to work around weird problems in different distros. If you feel like I did something useful by creating this, and you'd like me to be able to spend time maintaining and improving it, buy me a coffee:  
 
