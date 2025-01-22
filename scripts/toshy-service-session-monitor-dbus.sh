@@ -32,6 +32,11 @@ if ! command -v gdbus >/dev/null 2>&1; then
     exit_w_error "The 'gdbus' command is not available."
 fi
 
+
+# Set process name for system tools
+echo "toshy-sessmon" > /proc/$$/comm
+
+
 # Service arrays
 TOSHY_DBUS_SVCS=(                                                   \
     "toshy-kde-dbus.service"                                        \
@@ -179,6 +184,9 @@ while true; do
     SESSION_ID:   '$SESSION_ID'
     SESSION_PATH: '$SESSION_PATH'"
     }
+    
+    # Set the process name for the sub-command monitoring loop
+    echo "toshy-monitor" > /proc/$$/comm
     
     gdbus monitor --system --dest org.freedesktop.login1            \
         | grep --line-buffered "$SESSION_PATH"                      \
