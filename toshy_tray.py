@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-__version__ = '20250112'
+__version__ = '20250122'
 
 # Indicator tray icon menu app for Toshy, using pygobject/gi
 TOSHY_PART      = 'tray'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
@@ -77,6 +77,11 @@ sys.path.insert(0, current_folder_path)
 existing_path = os.environ.get('PYTHONPATH', '')
 os.environ['PYTHONPATH'] = f'{current_folder_path}:{local_site_packages_dir}:{existing_path}'
 os.environ['PATH'] = f"{home_local_bin}:{os.environ['PATH']}"
+
+# Set the process name for the Toshy Tray app main process
+# echo "toshy-tray-app" > /proc/$$/comm     # bash script version
+with open('/proc/self/comm', 'w') as f:
+    f.write('toshy-tray-app\n')
 
 
 #########################################################################

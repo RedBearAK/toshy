@@ -71,6 +71,11 @@ sys.path.insert(0, current_folder_path)
 existing_path = os.environ.get('PYTHONPATH', '')
 os.environ['PYTHONPATH'] = f'{current_folder_path}:{local_site_packages_dir}:{existing_path}'
 
+# Set the process name for the Toshy Preferences GUI app launcher process
+# echo "toshy-pref-stub" > /proc/$$/comm        # bash script version
+with open('/proc/self/comm', 'w') as f:
+    f.write('toshy-pref-app\n')
+
 
 #########################################################################
 def signal_handler(sig, frame):
