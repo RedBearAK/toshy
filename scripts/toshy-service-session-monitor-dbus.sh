@@ -18,7 +18,7 @@ exit_w_error() {
 }
 
 # Disable after testing the script works well under the target situations (switch user, logouts)
-DEBUG=1
+DEBUG=0
 
 if ! command -v loginctl >/dev/null 2>&1; then
     exit_w_error "The 'loginctl' command is not available."
