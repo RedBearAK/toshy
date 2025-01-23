@@ -9,6 +9,31 @@
 - [Frequently Asked Questions (FAQ)](#faq-frequently-asked-questions)
 - [Sponsor/Donate](#sponsor-me--donate)
 
+# Reddit account suspended, because... ???
+
+<details>
+
+<summary>
+<strong>Click to open and read about it if you care...</strong>
+</summary>
+<br/>
+
+Yeah, I have no idea why this happened, or how to fix it, or if it's even possible to fix it, and I'm presently pretty salty about it for all those reasons. If anyone thinks they can help with restoring it (it was `RedBearAK`, just like my GitHub account), you can open an issue here to talk about it. I've tried their "appeal" form with no response. 
+
+When this happened, there was nothing but a short line of text at the top of my home page one time (I don't even recall if it was a pop-up or not), that said my account was "permanently banned". It led to a link that told me to reset my password and I could continue using my account, as if this was no big deal. But that just put my account into a state where most things seem fine, and I could still seemingly make posts and vote on things, but my comments never got any replies or up/down votes. Because they were all invisible to others. The only way to know that my account is suspended is by looking at my profile in a private browser tab where I'm not logged in. Then I see what others see. Nothing but a page saying the account is suspended. 
+
+No messages ever showed up in my Reddit inbox about the ban (even though their own support documents say there will be a message about the reasons if you are banned, either temporarily or permanently). The only email I got about it was just something saying my account was "locked" due to seeing some "technical irregularities". Implying that it would be temporary. That was on the 8th of January, 2025. I haven't seen any other Reddit email since I reset my password on that same day. 
+
+If there's no way to get someone to reverse the ban, I probably just will never be participating in any Reddit conversations ever again. I found it kind of a useful site despite how many people seem to think it's useless trash at this point, so that kind of sucks, but now I'm starting to understand why those people have a low opinion of the site. If this was just some moderator deciding they didn't like me for personal reasons and permanently banning my account from the whole site, that's unacceptable, and means the site really is trash. But who knows, maybe I was violating some kind of site rule, despite never having gotten a warning of any kind about anything. Sure would be nice to know! 
+
+To reiterate, so far I have absolutely no idea why my account was suspended/banned, or whatever the heck just happened. There's no good reason (actually no reason AT ALL, good or bad) for it that I know of. Nothing that I was told in a message, no email that I was sent besides the "locked" email. Which is not the same thing as "you are permanently banned". The "locked" email implied they were protecting my account. From what? 
+
+When I'm logged in to the still-invisibly-working account, I keep getting a red error bar on every page that just says "We had a server error...", and my previous custom avatar that the site gave me a couple of years ago won't load. Very informative. 
+
+Anyway... Pointless story about a pointless social media site that probably bans many users every year, for similar unexplained reasons. Such is life. I did my best to try to help people who were asking for help, and mediate conversations that were too "hot" to bring more understanding to both sides, whenever possible. Is the lesson not to waste so much of my time doing things like that? Maybe. 
+
+</details>
+
 # Current status: Stable Beta (Please Read)
 
 **2025-01-18 UPDATE**: Fixed some issues in the `wlroots` window context method, and verified the bulk of the available LXQt Wayland session options seem to work. That includes labwc, sway, Hyprland, niri, Wayfire, and river (tested on Tumbleweed). The kwin_wayland session option is still untested (unavailable on Tumbleweed for now).
