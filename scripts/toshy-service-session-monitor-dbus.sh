@@ -42,11 +42,11 @@ TOSHY_DBUS_SVCS=(                                                   \
     "toshy-wlroots-dbus.service"                                    \
 )
 
-ALL_TOSHY_SVCS=(                                                    \
-    "toshy-config.service"                                          \
-    "${TOSHY_DBUS_SVCS[@]}"                                         \
-    "toshy-session-monitor.service"                                 \
-)
+# ALL_TOSHY_SVCS=(                                                    \
+#     "toshy-config.service"                                          \
+#     "${TOSHY_DBUS_SVCS[@]}"                                         \
+#     "toshy-session-monitor.service"                                 \
+# )
 
 # Function to stop Toshy services
 stop_toshy_services() {
@@ -113,13 +113,13 @@ while true; do
     
     if [[ "$SESSION_COUNT" -eq 0 ]]; then
         echo "SESSMON_SVC: No sessions found, stopping all services"
-        [[ $DEBUG == 1 ]] && echo "(DD) Stopping all services and exiting"
-        # Stop all services and exit if no sessions exist
-        for service in "${ALL_TOSHY_SVCS[@]}"; do
-            [[ $DEBUG == 1 ]] && echo "(DD) Stopping service: $service"
-            systemctl --user stop "$service" >/dev/null 2>&1
+        [[ $DEBUG == 1 ]] && echo "(DD) Stopping all services"
+        # Stop all services (session monitor last) if no sessions exist
+        systemctl --user stop toshy-config.service
+        for service in "${TOSHY_DBUS_SVCS[@]}"; do
+            systemctl --user stop "$service"
         done
-        exit 0
+        systemctl --user stop toshy-session-monitor.service
     fi
 
     # Get current session ID
@@ -189,65 +189,63 @@ while true; do
     SESSION_PATH: '$SESSION_PATH'"
     }
     
-    # Start new monitoring subshell with its own process name
-    (
-        echo "toshy-sessmon" > /proc/$$/comm
+    # Set monitoring process name
+    echo "toshy-sessmon" > /proc/$$/comm
         
-        gdbus monitor --system --dest org.freedesktop.login1            \
-            | grep --line-buffered "$SESSION_PATH"                      \
-            | grep --line-buffered "Active': <"                         \
-            | grep --line-buffered -o "true\|false"                     \
-            | while read -r STATE; do
-                [[ $DEBUG == 1 ]] && {
-                    echo "(DD) Processing session state:
+    gdbus monitor --system --dest org.freedesktop.login1            \
+        | grep --line-buffered "$SESSION_PATH"                      \
+        | grep --line-buffered "Active': <"                         \
+        | grep --line-buffered -o "true\|false"                     \
+        | while read -r STATE; do
+            [[ $DEBUG == 1 ]] && {
+                echo "(DD) Processing session state:
     STATE: '$STATE'
     LAST_STATE: '$LAST_STATE'"
-                }
+            }
 
-                # If session active state just changed to true, we might need to restart services
-                if [[ "$STATE" != "$LAST_STATE" ]] && [[ "$STATE" == "true" ]]; then
-                    LAST_STATE="$STATE"
-                    echo "SESSMON_SVC: Session active state changed to: $STATE"
+            # If session active state just changed to true, we might need to restart services
+            if [[ "$STATE" != "$LAST_STATE" ]] && [[ "$STATE" == "true" ]]; then
+                LAST_STATE="$STATE"
+                echo "SESSMON_SVC: Session active state changed to: $STATE"
 
+                # Get config service status
+                TOSHY_CFG_SVC_STATUS=$(systemctl --user is-active toshy-config.service)
+                [[ $DEBUG == 1 ]] && echo "(DD) Config service status: '$TOSHY_CFG_SVC_STATUS'"
+
+                if [[ "$TOSHY_CFG_SVC_STATUS" == "inactive" ]]; then
+                    [[ $DEBUG == 1 ]] && echo "(DD) Starting services due to session active"
+                    start_toshy_services
+                fi
+            fi
+
+            # Always check for logout when session active state is false
+            if [[ "$STATE" == "false" ]]; then
+                LAST_STATE="$STATE"
+                # Check if it's a full logout
+                SESSION_COUNT=$(get_session_count)
+                [[ $DEBUG == 1 ]] && echo "(DD) Checking session count during inactive state: $SESSION_COUNT"
+
+                if [[ "$SESSION_COUNT" -eq 0 ]]; then
+                    echo "SESSMON_SVC: No sessions found during inactive state, stopping all services"
+                    # Stop all services (session monitor last)
+                    systemctl --user stop toshy-config.service
+                    for service in "${TOSHY_DBUS_SVCS[@]}"; do
+                        systemctl --user stop "$service"
+                    done
+                    systemctl --user stop toshy-session-monitor.service
+                else
                     # Get config service status
                     TOSHY_CFG_SVC_STATUS=$(systemctl --user is-active toshy-config.service)
                     [[ $DEBUG == 1 ]] && echo "(DD) Config service status: '$TOSHY_CFG_SVC_STATUS'"
 
-                    if [[ "$TOSHY_CFG_SVC_STATUS" == "inactive" ]]; then
-                        [[ $DEBUG == 1 ]] && echo "(DD) Starting services due to session active"
-                        start_toshy_services
+                    # Stop services (except session monitor) if necessary
+                    if [[ "$TOSHY_CFG_SVC_STATUS" == "active" ]]; then
+                        [[ $DEBUG == 1 ]] && echo "(DD) Stopping services due to session inactive"
+                        stop_toshy_services "session is inactive"
                     fi
                 fi
-
-                # Always check for logout when session active state is false
-                if [[ "$STATE" == "false" ]]; then
-                    LAST_STATE="$STATE"
-                    # Check if it's a full logout
-                    SESSION_COUNT=$(get_session_count)
-                    [[ $DEBUG == 1 ]] && echo "(DD) Checking session count during inactive state: $SESSION_COUNT"
-
-                    if [[ "$SESSION_COUNT" -eq 0 ]]; then
-                        echo "SESSMON_SVC: No sessions found during inactive state, stopping all services"
-                        # Stop all services and exit
-                        for service in "${ALL_TOSHY_SVCS[@]}"; do
-                            [[ $DEBUG == 1 ]] && echo "(DD) Stopping service: $service"
-                            systemctl --user stop "$service" >/dev/null 2>&1
-                        done
-                        exit 0
-                    else
-                        # Get config service status
-                        TOSHY_CFG_SVC_STATUS=$(systemctl --user is-active toshy-config.service)
-                        [[ $DEBUG == 1 ]] && echo "(DD) Config service status: '$TOSHY_CFG_SVC_STATUS'"
-
-                        # Stop services (except session monitor) if necessary
-                        if [[ "$TOSHY_CFG_SVC_STATUS" == "active" ]]; then
-                            [[ $DEBUG == 1 ]] && echo "(DD) Stopping services due to session inactive"
-                            stop_toshy_services "session is inactive"
-                        fi
-                    fi
-                fi
-            done
-    )
+            fi
+        done
 
     # If monitor exits, wait before restarting
     echo "SESSMON_SVC: Monitor exited, restarting in 5 seconds..."
