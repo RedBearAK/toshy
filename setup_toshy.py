@@ -203,7 +203,8 @@ class InstallerSettings:
         self.existing_cfg_data      = None
         self.existing_cfg_slices    = None
         self.venv_path              = os.path.join(self.toshy_dir_path, '.venv')
-        self.venv_cmd_lst           = [self.py_interp_path, '-m', 'venv', self.venv_path]
+        # This was changed to a property method that re-evaluates on each access:
+        # self.venv_cmd_lst           = [self.py_interp_path, '-m', 'venv', self.venv_path]
 
         self.keymapper_tmp_path     = os.path.join(this_file_dir, 'keymapper-temp')
 
@@ -242,6 +243,13 @@ class InstallerSettings:
             ██   ██     ██          ██   ██     ██    ██     ██    ██        ██           
             ██   ██     ███████     ██████       ██████       ██████         ██        ██ 
             """)
+
+    @property
+    def venv_cmd_lst(self):
+        # Originally a class instance attribute varaible:
+        # self.venv_cmd_lst           = [self.py_interp_path, '-m', 'venv', self.venv_path]
+        # Needs to re-evaluate itself when accessed, in case Python interpreter path changed:
+        return [self.py_interp_path, '-m', 'venv', self.venv_path]
 
     def find_qdbus_command(self):
         # List of qdbus command names by preference
@@ -2307,11 +2315,11 @@ class PythonVenvQuirksHandler():
     def handle_venv_quirks_RHEL(self):
         print('Handling Python virtual environment quirks in RHEL-type distros...')
         # TODO: Add higher version if ever necessary (keep minimum 3.8)
-        potential_versions = ['3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
+        potential_versions = ['3.15', '3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
         for version in potential_versions:
             # check if the version is already installed
             if shutil.which(f'python{version}'):
-                cnfg.py_interp_path     = f'/usr/bin/python{version}'
+                cnfg.py_interp_path     = shutil.which(f'python{version}')
                 cnfg.py_interp_ver_str  = version
                 break
 
