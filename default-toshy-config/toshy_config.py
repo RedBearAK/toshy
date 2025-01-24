@@ -4259,6 +4259,9 @@ keymap("Deepin Terminal overrides", {
 
 keymap("Ghostty terminal overrides", {
     C("RC-Equal"):              C("C-Equal"),                   # Increase font size [override general terminals remap]
+    C("RC-D"):                  C("RC-Shift-O"),                # Open right split
+    C("RC-Shift-D"):            C("RC-Shift-E"),                # Open down split
+    C("RC-Alt-I"):              C("RC-Shift-I"),                 # Open inspector
 }, when = matchProps(clas="^ghostty$|^ghostty-debug$|^com.mitchellh.ghostty$"))
 
 keymap("Hyper terminal tab switching", {
