@@ -2358,6 +2358,28 @@ def install_pip_packages():
     venv_python_cmd = os.path.join(cnfg.venv_path, 'bin', 'python')
     venv_pip_cmd    = os.path.join(cnfg.venv_path, 'bin', 'pip')
 
+    # Configure build paths to use venv's Python
+    # Will this help avoid build issues when venv Python and system Python are different versions?
+
+    include_path = subprocess.check_output(
+        [venv_python_cmd, '-c', 'import sysconfig; print(sysconfig.get_path("include"))'],
+        text=True
+    ).strip()
+
+    lib_path = subprocess.check_output(
+        [venv_python_cmd, '-c', 'import sysconfig; print(sysconfig.get_config_var("LIBDIR"))'],
+        text=True
+    ).strip()
+
+    print(f"Setting PYTHONPATH to: {include_path}")
+    os.environ['PYTHONPATH'] = include_path
+    
+    print(f"Setting CFLAGS to: -I{include_path}")
+    os.environ['CFLAGS'] = f"-I{include_path}"
+    
+    print(f"Setting LDFLAGS to: -L{lib_path}")
+    os.environ['LDFLAGS'] = f"-L{lib_path}"
+
     # Bypass the install of 'dbus-python' pip package if option passed to 'install' command.
     # Diminishes peripheral app functionality and disables some Wayland methods, but 
     # allows installing Toshy even when 'dbus-python' build throws errors during install.
