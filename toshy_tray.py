@@ -81,7 +81,7 @@ os.environ['PATH'] = f"{home_local_bin}:{os.environ['PATH']}"
 # Set the process name for the Toshy Tray app main process
 # echo "toshy-tray-app" > /proc/$$/comm     # bash script version
 with open('/proc/self/comm', 'w') as f:
-    f.write('toshy-tray-app\n')
+    f.write('toshy-tray-app')
 
 
 #########################################################################
