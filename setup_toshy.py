@@ -1026,6 +1026,10 @@ class DistroQuirksHandler:
     def handle_quirks_CentOS_7():
         print('Doing prep/checks for CentOS 7...')
 
+        # Avoid trying to install 'python3-dbus' (native pkg) and 'dbus-python' (pip pkg)
+        cnfg.pkgs_for_distro = [pkg for pkg in cnfg.pkgs_for_distro if 'dbus' not in pkg]
+        cnfg.no_dbus_python = True
+
         native_pkg_installer.check_for_pkg_mgr_cmd('yum')
         yum_cmd_lst = ['sudo', 'yum', 'install', '-y']
         if py_interp_ver_tup >= (3, 8):
