@@ -105,17 +105,13 @@ class EnvironmentInfo:
         return contents
 
     def is_process_running(self, process_name):
-        """
-        Check if a process is running, doing a case-insensitive exact match.
-        
-        Args:
-            process_name (str): Name of the process to check for
-            
-        Returns:
-            bool: True if the process is running, False otherwise
-        """
+        """Utility function to check if process is running, case-insensitive where supported"""
+        cmd = ['pgrep', '-x', '-i', process_name]
+        if self.DISTRO_ID == "centos" and self.DISTRO_VER == "7":
+            # CentOS 7 complains about "-i" being invalid option, so remove it
+            cmd = ['pgrep', '-x', process_name]
         try:
-            subprocess.check_output(['pgrep', '-x', '-i', process_name])
+            subprocess.check_output(cmd)
             return True
         except subprocess.CalledProcessError:
             return False
