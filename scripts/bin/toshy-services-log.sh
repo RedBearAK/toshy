@@ -73,12 +73,19 @@ cmd_base="${STDBUF_CMD} journalctl -n200 -b -f"
 
 # First get all the Toshy service names into an array
 # Backslashes not required inside parentheses in bash?
-mapfile -t toshy_services < <(
-    systemctl --user list-unit-files |
-    grep -i toshy |
-    grep -v generated |
-    awk '{print $1}'
-)
+if systemctl --user list-unit-files &>/dev/null; then
+    mapfile -t toshy_services < <(
+        systemctl --user list-unit-files |
+        grep -i toshy |
+        grep -v generated |
+        awk '{print $1}'
+    )
+else
+    # Handle systems without user service support (e.g., CentOS 7)
+    echo "ERROR: Systemd user services are probably not supported here."
+    echo
+    exit 1
+fi
 
 # Add each service to the base command
 cmd_units=""
