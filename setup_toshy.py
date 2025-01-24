@@ -2371,12 +2371,12 @@ def install_pip_packages():
 
     include_path = subprocess.check_output(
         [venv_python_cmd, '-c', 'import sysconfig; print(sysconfig.get_path("include"))'],
-        text=True
+        universal_newlines=True
     ).strip()
 
     lib_path = subprocess.check_output(
         [venv_python_cmd, '-c', 'import sysconfig; print(sysconfig.get_config_var("LIBDIR"))'],
-        text=True
+        universal_newlines=True
     ).strip()
 
     print(f"Setting PYTHONPATH to: {include_path}")
