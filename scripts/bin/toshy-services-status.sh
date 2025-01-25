@@ -36,6 +36,13 @@ else
     exit 0
 fi
 
+# This script is pointless if the system doesn't support "user" systemd services (e.g., CentOS 7)
+if ! systemctl --user list-unit-files &>/dev/null; then
+    echo "ERROR: Systemd user services are probably not supported here."
+    echo
+    exit 1
+fi
+
 
 export SYSTEMD_PAGER=""
 

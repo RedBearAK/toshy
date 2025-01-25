@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-__version__ = '20240915'
+__version__ = '20250123'
 
 # Preferences app for Toshy, using tkinter GUI and "Sun Valley" theme
 TOSHY_PART      = 'gui'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
@@ -71,6 +71,11 @@ sys.path.insert(0, current_folder_path)
 existing_path = os.environ.get('PYTHONPATH', '')
 os.environ['PYTHONPATH'] = f'{current_folder_path}:{local_site_packages_dir}:{existing_path}'
 
+# Set the process name for the Toshy Preferences GUI app launcher process
+# echo "toshy-pref-stub" > /proc/$$/comm        # bash script version
+with open('/proc/self/comm', 'w') as f:
+    f.write('toshy-pref-app')
+
 
 #########################################################################
 def signal_handler(sig, frame):
@@ -83,6 +88,8 @@ def signal_handler(sig, frame):
 
 signal.signal(signal.SIGINT,    signal_handler)
 signal.signal(signal.SIGQUIT,   signal_handler)
+# Stop each last child process from hanging on as a "zombie" after it quits.
+signal.signal(signal.SIGCHLD, signal.SIG_IGN)
 #########################################################################
 # Let signal handler be defined and called before other things ^^^^^^^
 

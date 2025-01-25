@@ -9,7 +9,7 @@ import subprocess
 from typing import Dict
 
 # ENV_CONTEXT module version:
-__version__ = '20241210'
+__version__ = '20250118'
 
 VERBOSE = True
 FLUSH = True
@@ -105,8 +105,13 @@ class EnvironmentInfo:
         return contents
 
     def is_process_running(self, process_name):
+        """Utility function to check if process is running, case-insensitive where supported"""
+        cmd = ['pgrep', '-x', '-i', process_name]
+        if self.DISTRO_ID == "centos" and self.DISTRO_VER == "7":
+            # CentOS 7 complains about "-i" being invalid option, so remove it
+            cmd = ['pgrep', '-x', process_name]
         try:
-            subprocess.check_output(['pgrep', '-x', process_name])
+            subprocess.check_output(cmd)
             return True
         except subprocess.CalledProcessError:
             return False
@@ -342,6 +347,11 @@ class EnvironmentInfo:
             os.environ.get("DESKTOP_SESSION")
         )
 
+        # If it's a colon-separated list in XDG_CURRENT_DESKTOP,
+        # the first entry is the primary desktop environment
+        if _desktop_env and ':' in _desktop_env:
+            _desktop_env = _desktop_env.split(':')[0]
+
         # Check for Qtile if the environment variables were not set/empty
         if not _desktop_env and self.is_qtile_running():
             _desktop_env = 'qtile'
@@ -546,24 +556,26 @@ class EnvironmentInfo:
             # Older GNOME may have 'mutter' integrated into 'gnome-shell' process
             'gnome': [
                 'mutter',
-                'gnome-shell'
+                'gnome-shell',
             ],
 
             # LXQt often uses OpenBox, but can use a number of different WMs in X11 or Wayland
             'lxqt': [
-                'openbox',
-                'labwc',
-                'sway',
-                'hyprland',
-                'kwin_wayland',
-                'wayfire',
-                'river'
+                'openbox',          # X11/Xorg window manager
+                'labwc',            # Wayland compositor
+                'sway',             # Wayland compositor
+                'hyprland',         # Wayland compositor
+                'kwin_wayland',     # Wayland compositor
+                'wayfire',          # Wayland compositor
+                'river',            # Wayland compositor
+                'niri',             # Wayland compositor
             ],
 
             'awesome':          'awesome',
             'cinnamon':         'cinnamon',
             'cosmic':           'cosmic-comp',
             'dwm':              'dwm',
+            'hyprland':         'Hyprland',     # the process name is capitalized (this is unusual)
             'i3':               'i3',
             'i3-gaps':          'i3',
             'miracle-wm':       'miracle-wm',

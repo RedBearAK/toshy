@@ -40,6 +40,7 @@ class WaylandClient:
         self.toplevel_manager                   = None
 
         self.wdw_handles_dct                    = {}
+        self.active_handle                      = None
         self.active_app_class                   = ERR_NO_WLR_APP_CLASS
         self.active_wdw_title                   = ERR_NO_WLR_WDW_TITLE
 
@@ -59,6 +60,13 @@ class WaylandClient:
             toplevel_handle: ZwlrForeignToplevelHandleV1):
         """Handle events for new toplevel windows."""
         # print(f"New toplevel window created: {toplevel_handle}")
+
+        # Initialize the dictionary entry with default values to avoid KeyError
+        self.wdw_handles_dct[toplevel_handle] = {
+            'app_id': ERR_NO_WLR_APP_CLASS,
+            'title': ERR_NO_WLR_WDW_TITLE
+        }
+
         # Subscribe to title and app_id changes as well as close event
         toplevel_handle.dispatcher['title']             = self.handle_title_change
         toplevel_handle.dispatcher['app_id']            = self.handle_app_id_change
@@ -70,14 +78,24 @@ class WaylandClient:
         if handle not in self.wdw_handles_dct:
             self.wdw_handles_dct[handle] = {}
         self.wdw_handles_dct[handle]['title'] = title
-        # print(f"Title updated for window {handle}: '{title}'")
+        # Don't rely only on state handler to set active window info in asynchronous event situations
+        # Only update active window title if this event is for the active handle
+        if handle == self.active_handle:
+            self.active_wdw_title = title
+        print(f"Title updated for window {handle}: '{title}'")
+        self.print_running_applications()
 
     def handle_app_id_change(self, handle, app_id):
         """Update app_id in local state."""
         if handle not in self.wdw_handles_dct:
             self.wdw_handles_dct[handle] = {}
         self.wdw_handles_dct[handle]['app_id'] = app_id
-        # print(f"App ID updated for window {handle}: '{app_id}'")
+        # Don't rely only on state handler to set active window info in asynchronous event situations
+        # Only update active window app_id if this event is for the active handle
+        if handle == self.active_handle:
+            self.active_app_class = app_id
+        print(f"App ID updated for window {handle}: '{app_id}'")
+        self.print_running_applications()
 
     def handle_window_closed(self, handle):
         """Remove window from local state."""
@@ -91,6 +109,7 @@ class WaylandClient:
         if isinstance(states_bytes, bytes):
             states = list(states_bytes)
         if ZwlrForeignToplevelHandleV1.state.activated.value in states:
+            self.active_handle = handle
             self.active_app_class = self.wdw_handles_dct[handle]['app_id']
             self.active_wdw_title = self.wdw_handles_dct[handle]['title']
             print()

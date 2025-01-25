@@ -19,4 +19,7 @@ fi
 # shellcheck disable=SC1091
 source "$HOME/.config/toshy/.venv/bin/activate"
 
+# Set the process name for the Toshy Tray app launcher process
+echo "toshy-tray-stub" > /proc/$$/comm
+
 python3 "$HOME/.config/toshy/toshy_tray.py"

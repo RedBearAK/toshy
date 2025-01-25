@@ -1,8 +1,39 @@
+> The [Toshy] readme is like a phd thesis paper.  
+> -- No_Sandwich3888 on Reddit
+
+Yes. Yes, it is. So here are some...
+
+# ... Quick Links!
+
+_(See top-right icon here on GitHub for full README table of contents)_
+
+- [How to Install](#how-to-install)
+- [How to Uninstall](#how-to-uninstall)
+- [Requirements](#requirements)
+- [Supported Desktop Environments/Window Managers](#currently-working-desktop-environments-or-window-managers)
+- [Supported Linux Distros](#currently-workingtested-linux-distros)
+- [Frequently Asked Questions (FAQ)](#faq-frequently-asked-questions)
+- [Sponsor/Donate](#sponsor-me--donate)
+
+◊  
+
+# Help others find out about Toshy
+
+Toshy is a pretty unique utility for a very niche audience of Mac users who also use Linux or Linux users who switch between macOS and Linux a lot, and prefer the Mac-style keyboard shortcuts. It's difficult for anyone to even think to look for something like Toshy, or Kinto (the original seed project that Toshy was based on). If you want anyone else to know about Toshy, you'll have to make a post or comment about it somewhere, on your own. 
+
+I spent time making some release announcements on various Linux-related Reddit forums over the past couple of years, where it seemed to be most relevant. But my Reddit account was suddenly "permanently banned" in early January 2025, for no reason that has been provided to me, either by email or in my Reddit messages inbox. So everything I ever posted there is now gone, or at least hidden from Reddit and search engines. I don't really have any interest in ever posting on that site again, even if the account could be unbanned. Before you ask, there was no response to the appeal form. 
+
+I don't really know many other places where it might be considered appropriate to make announcements about the releases/updates of an open source project like this, where it would get the attention of the type of Mac/Linux users who would find it interesting or useful. If you have suggestions, open a (question) issue here. 
+
+◊  
+
 # Current status: Stable Beta (Please Read)
 
-**2024-11-28 UPDATE**: Added support for Pantheon's Wayland session (elementary OS desktop environment). 
+**2025-01-18 UPDATE**: Fixed some issues in the `wlroots` window context method, and verified the bulk of the available LXQt Wayland session options seem to work. That includes labwc, sway, Hyprland, niri, Wayfire, and river (tested on Tumbleweed). The kwin_wayland session option is still untested (unavailable on Tumbleweed for now).
 
-**2024-10-03 UPDATE**: Fixed the broken COSMIC desktop environment support to work with COSMIC Alpha 2 or later (unless they change the relevant Wayland protocol again). 
+**2024-11-28 UPDATE**: Added support for Pantheon's Wayland session (elementary OS desktop environment).
+
+**2024-10-03 UPDATE**: Fixed the broken COSMIC desktop environment support to work with COSMIC Alpha 2 or later (unless they change the relevant Wayland protocol again).
 
 **2024-07-28 UPDATE**: Some basic `wlroots` based Wayland compositor support has been added. See the [Wiki article](https://github.com/RedBearAK/toshy/wiki/Wlroots-Based-Wayland-Compositors).
 
@@ -12,6 +43,8 @@ https://www.youtube.com/watch?v=g4aUSRi8QX4
 
 For new updates on the performance advancements, check the dedicated [Wiki page](https://github.com/RedBearAK/toshy/wiki/Performance-Improvement-History).  
 
+◊  
+
 ## Main issues you might run into
 
 - **KDE USERS**: Did your system update itself from KDE Plasma 5 to Plasma 6, and Toshy stopped working? And you installed Toshy before January 2024? Just grab a new zip file from the big green **`  <> Code  ▼  `** button and reinstall. Your config customizations and preference choices should be preserved (if you made your config changes within the "slice marks"). Support for Plasma 6 was added around late December 2023.  
@@ -20,13 +53,15 @@ For new updates on the performance advancements, check the dedicated [Wiki page]
 
     [Keyboard Type Not Correct](https://github.com/RedBearAK/toshy/wiki/FAQ-(Frequently-Asked-Questions)#my-keyboard-is-not-recognized-as-the-correct-type)  
 
-- **INTERNATIONAL KEYBOARD USERS**: The keymapper is evdev-based and has **_no idea_** what keyboard layout you are using, and only sees "key codes", not the symbols on the keys. So if it encounters a combo of key codes you've asked it to remap to something else, it will remap it. This is a problem if for instance you're on an AZERTY keyboard where `A` and `Q` are swapped, and you think you're pressing `Cmd+A` but the keymapper thinks you want to remap `Cmd+Q` to `Alt+F4`. I'm looking into a way to get the keymapper to use the proper layout, but in the meantime depending on how different your layout is from the standard US layout, this keymapper may be unusable or may just need some tweaks to the key definition file to fix a few key positions. Open an issue if you have this kind of problem.  
+- **INTERNATIONAL KEYBOARD USERS**: The keymapper is evdev-based and has **_no idea_** what keyboard layout you are using. It only sees "key codes", not the symbols on the keys. So if it encounters a combo of key _codes_ you've asked it to remap to something else, it will remap it. This is a problem if for instance you're on an AZERTY keyboard where `A` and `Q` are swapped, and you think you're pressing `Cmd+A` but the keymapper thinks you want to remap `Cmd+Q` to `Alt+F4`. I'm looking into a way to get the keymapper to use the proper layout, but in the meantime, depending on how different your layout is from the standard US layout, this keymapper may either be unusable or may just need some small tweaks to the key definition file to fix a few key positions. Open an issue if you have this kind of problem.  
 
 - **DISTRO SUPPORT**: Toshy will have issues installing on distros not on the [list of supported distros](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros) in the Wiki. If you think your distro is closely related to one on the supported list, try the `./setup_toshy.py list-distros` command, and then use one of the distro names with the `--override-distro` option added to the `./setup_toshy.py install` command. See the [**How to Install**](#how-to-install) section.  
 
 - **STARTUP**: Toshy may seem to run at login, but not do any remapping, needing the use of the debugging command `toshy-debug` in the terminal to troubleshoot. Or, it may just need a restart of the services from the tray icon or with `toshy-services-restart`. Check the output of `toshy-services-log` and `toshy-services-status` first to see if there is an obvious error message that explains the problem. Like not having a compatible GNOME Shell extension installed/enabled to support a Wayland+GNOME session. Other than the Wayland+GNOME situation, I don't really see this much anymore.  
 
 - **INIT SYSTEMS**: On a dual-init distro like MX Linux, if you install Toshy while using SysVinit (default on MX) the installer will avoid installing the `systemd` packages and service unit files. If you then switch to using `systemd` as init at the boot screen (you can do this from the "Advanced" menu) you'll need to re-run the Toshy installer (only once) while using `systemd` to make Toshy work automatically like it does on other distros where the default init is `systemd`. Or, you can just keep running the config manually, like is currently necessary under SysVinit and any other init system besides `systemd`.  
+
+§  
 
 # Toshy README
 
@@ -38,28 +73,32 @@ For new updates on the performance advancements, check the dedicated [Wiki page]
 ![Toshy app icon](./assets/toshy_app_icon_rainbow.svg "Toshy app icon")
 
 
-## Make your Linux keyboard act like a 'Tosh! <br>(or, What the Heck is This?!?)
+## Make your Linux keyboard act like a 'Tosh! <br> (or, What the heck is this?!?)
 
-Toshy is a config file for the `xwaykeyz` Python-based keymapper for Linux (which was forked from `keyszer`, which was in turn forked from `xkeysnail`) along with some commands and apps to more conveniently interact with and manage the keymapper. The Toshy config is not strictly a fork of Kinto, but was based in the beginning entirely on the config file for Kinto.sh by Ben Reaves (https://github.com/rbreaves/kinto or https://kinto.sh). Without Kinto, Toshy would not exist. Using Toshy should feel basically the same as using Kinto, just with some new features and some problems solved.  
+Toshy is mainly a config file for the `xwaykeyz` Python-based keymapper for Linux (which was forked from `keyszer`, which was in turn forked from `xkeysnail`) along with some commands and apps to more conveniently interact with and manage the keymapper. The Toshy config is not strictly a fork of Kinto, but was based in the beginning entirely on the config file for Kinto.sh by Ben Reaves (https://github.com/rbreaves/kinto or https://kinto.sh). Without Kinto, Toshy would not exist. Using Toshy should feel basically the same as using Kinto, just with some new features and some problems solved.  
 
-The purpose of Toshy is to match, as closely as possible, the behavior of keyboard shortcuts in macOS when working on similar applications in Linux. General system-wide shortcuts such as Cmd+Q/W/R/T/A/Z/X/C/V and so on are relatively easy to mimic by just moving the modifier key locations, with `modmaps` specific to each supported keyboard type. A lot of shortcuts in Linux just use `Ctrl` in the place of where macOS would use `Cmd`. But many other shortcut combos from macOS applications have to be remapped onto entirely different shortcut combos in the Linux equivalent application. This is done using application-specific `keymaps`, that only become active when you are using the specified application or window. Some of the keymaps apply to entire groups of apps, like "terminals" or "file managers".  
+The purpose of Toshy is to match, as closely as possible, the behavior of keyboard shortcuts in macOS while using similar applications in Linux. General system-wide shortcuts such as Cmd+Q/W/R/T/A/Z/X/C/V and so on are relatively easy to mimic by just moving the modifier key locations, with `modmaps` specific to each supported keyboard type (and a `modmap` specific to retaining the Ctrl key usage in terminals). A lot of shortcuts in Linux just use `Ctrl` in the place of where macOS would use `Cmd`. But many other shortcut combos from macOS applications have to be remapped onto entirely different shortcut combos in the Linux equivalent application. This is done using application-specific `keymaps`, that only become active when you are using the specified application or window. Some of the keymaps apply to entire groups of apps, like "terminals", "web browsers" or "file managers".  
 
-All of this basic functionality is inherited from Kinto. Toshy just tries to be a bit fancier in implementing it.  
+All of this basic functionality is inherited from Kinto. Toshy just tries to be a bit fancier in implementing it. Such as auto-detecting the keyboard type, supporting multiple keyboards of different types at the same time, and letting some preferences be changed without restarting the keymapper.  
 
 > [!IMPORTANT]
 > You **_DO NOT_** need to and **_SHOULD NOT_** change any native keyboard shortcuts in Linux apps when using this keymapper config. If you've already changed some existing in-app shortcuts to try to mimic macOS shortcuts, you will need to reset those in-app shortcuts to their defaults. The keymapper config non-destructively (and temporarily, only while enabled) remaps hundreds of Mac-like shortcut combos onto the **_default_** native shortcuts for many apps in Linux, and global shortcuts. If those defaults are not in place, things will appear to "not work".  
 >  
 > Depending on the desktop environment, there are sometimes a couple of global shortcuts for app launchers and modifier-only shortcuts that need to be changed or disabled for the smoothest experience. Those changes are minimal and easily reversible.  
 >  
-> Competing techniques of remapping modifier keys like other keymappers or `~/.Xmodmap` should be reversed/disabled before trying to use Toshy, or the resulting virtualized modifier locations won't make much sense. The Toshy installer will throw a warning about `~/.Xmodmap` if it exists, to remind you about potential conflicts.  
+> Competing techniques of remapping modifier keys like other keymappers or `~/.Xmodmap` should be reversed/disabled before trying to use Toshy, or the resulting virtualized modifier locations won't make much sense. The Toshy installer will make you respond to a warning about `~/.Xmodmap` if it exists, to remind you about potential conflicts.  
 >  
 > If you're on an Apple keyboard and you chose "Apple" as the hardware keyboard model in a desktop environment like KDE to try to "fix" the modifier locations prior to trying Toshy, this may also interfere with getting the expected results. Leave the keyboard model in the DE settings to whatever it defaulted to, which is usually something like "Generic 101-key". Then Toshy's modifier remaps can take care of making the keyboard behave predictably like an Apple keyboard (even if it is not an Apple keyboard).  
+
+◊  
 
 ## Toshifying an Application
 
 A detailed guide to how to identify a window's application class and make a new keymap to apply shortcut remaps to a particular Linux application has been moved into this Wiki article: 
 
 https://github.com/RedBearAK/toshy/wiki/Toshifying-a-New-Linux-Application
+
+◊  
 
 ## Windows Support
 
@@ -68,9 +107,13 @@ Toshy has no Windows version, unlike the Kinto.sh project. I was trying to solve
 https://github.com/rbreaves/kinto  
 https://kinto.sh  
 
+◊  
+
 ## Keyboard Types
 
 Four different keyboard types are supported by Toshy (Windows/PC, Mac/Apple, IBM and Chromebook), just as in Kinto. But Toshy does its best to automatically treat each keyboard device as the correct type in real-time, as you use it, rather than requiring you to change the keyboard type from a menu. This means that you _should_ be able to use an Apple keyboard connected to a PC laptop, or an IBM keyboard connected to a MacBook, and shortcut combos on both the external and internal keyboards should work as expected, with the modifier keys appearing to be in the correct place to "Act like a 'Tosh".  
+
+◊  
 
 ## Option-key Special Characters
 
@@ -92,11 +135,15 @@ The other problem is that the Unicode entry shortcut only seems to work if you h
 
 There's no simple way around this, since the keymapper is only designed to send key codes from a virtual keyboard. Unlike AutoHotkey in Windows, which can just "send" a character pasted in an AHK script to an application (although there are potential problems with that if the AHK file encoding is wrong). 
 
+◊  
+
 ## General improvements over Kinto
 
 This section was moved to a Wiki page to make the README shorter:  
 
 https://github.com/RedBearAK/toshy/wiki/General-improvements-over-Kinto  
+
+◊  
 
 ## Requirements
 
@@ -178,6 +225,8 @@ The window context module of the keymapper installed by Toshy will seamlessly ju
 The `Xremap` GNOME shell extension is the only one that supports older GNOME versions, so it's the only one that will show up when browsing the extensions list from an environment like Zorin OS 16.x (GNOME 3.38.x) or the distros based on Red Hat Enterprise Linux (clones or RHEL compatibles like AlmaLinux, Rocky Linux, Oracle Linux, EuroLinux, etc.) which are still using GNOME 40.x on the 9.x versions.  
 
 There is a weird bug with searching for extensions by name sometimes, where you actually have to use the option "Show Unsupported" from the hamburger menu in order to get it to show up. This seems to happen at random, and may be dependent on what is going on with GNOME's extension site. Just make sure that the extension says in its details page that it is compatible with your version of the GNOME shell, and it should be fine to install.  
+
+◊  
 
 ## How to Install  
 
@@ -319,6 +368,8 @@ This will only perform the necessary steps to "prep" the system to make Toshy's 
 
 Invoking this command instead of doing the "install" command may require some extra manual steps to get a user's Toshy install fully working, if the user that wants to use Toshy is a non-admin (unprivileged) user with no access to `sudo`. Mainly this might be adding the unprivileged user to the correct `input` group and restarting the system. See the [dedicated Wiki page](https://github.com/RedBearAK/toshy/wiki/Prep-Only-and-Unprivileged-installs) for more information about the use of the `prep-only` command.  
 
+◊  
+
 ## How to Uninstall
 
 This should work now:  
@@ -328,6 +379,8 @@ This should work now:
 ``` 
 
 Please file an issue if you have some sort of trouble with the `uninstall` command. If you have a multi-desktop system you may need to run the uninstall procedure while logged into KDE if you ran the installer in KDE, due to the KDE-specific components that get installed for Wayland support.  
+
+◊  
 
 ## Currently working/tested Linux distros:
 
@@ -354,6 +407,8 @@ You will find these distro groupings in the Wiki article:
 - [Solus](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#independent-distros)
 
 - [Void](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#independent-distros)
+
+◊  
 
 ## Currently working desktop environments or window managers
 
@@ -386,6 +441,8 @@ For Wayland+GNOME this requires at least one of the known compatible GNOME Shell
 There are specific remaps or overrides of default remaps for several common desktop environments (or distros which have shortcut peculiarities in their default desktop setups). They become active if the desktop environment is detected correctly by the environment evaluation module used by the config file. If that isn't working for some reason, the information about the desktop environment can be placed in some `OVERRIDE` variables in the config file. But open an issue if that seems to be necessary.  
 
 Tiling window managers may need [some adjustments](https://github.com/RedBearAK/toshy/issues/294) in your config file, to be usable while retaining the tiling shortcuts. The example issue at the link is for a user's setup of i3 WM, where the physical `Meta/Super/Win` key was chosen as the `Mod` key in i3 config, on a PC keyboard type. Other WMs or other configuration choices will need modifications of the solution shown.  
+
+◊  
 
 ## Usage (changing preferences)
 
@@ -453,6 +510,8 @@ This submenu is a sort of temporary hack to force all attached keyboard devices 
 The main reason you'd need to use this is when a keyboard that is not made by Apple either was made for use with macOS, or just has the modifier keys next to the Space bar swapped like an Apple keyboard (common in small keyboards made to work with multiple devices including iOS/iPadOS devices), so you need to force it to be treated like an Apple keyboard. These types of keyboards can't be easily identified as the correct type by just looking at the device name.  
 
 After verifying that the forced keyboard type puts the modifiers in the correct place to work with muscle memory from using an Apple keyboard with macOS, you'll want to fix this permanently by opening your config file and editing the custom dictionary item to make the config see your device name as the correct type. See [here](#my-keyboard-is-not-recognized-as-the-correct-type) for more information.  
+
+◊  
 
 ## Usage (terminal commands)
 
@@ -571,18 +630,25 @@ toshy-gui
 toshy-tray
 ```
 
+◊  
+
 ## FAQ (Frequently Asked Questions)
 
 The lengthy FAQ section has been moved to a Wiki page to make the README shorter:  
 
 https://github.com/RedBearAK/toshy/wiki/FAQ-(Frequently-Asked-Questions)
 
-### Sponsor Me / Donate
+◊  
 
-This type of project takes extraordinary amounts of time and effort to work around weird problems in different distros. If you feel like I did something useful by creating this, and you'd like me to be able to spend time maintaining and improving it, buy me a coffee:  
+## Sponsor Me / Donate
+
+This type of project takes extraordinary amounts of time and effort to work around weird problems in different distros and develop the methods to allow the keymapper to perform app-specific remapping in all the different Wayland environments. If you feel like I did something useful by creating this, and you'd like me to be able to spend time maintaining and improving it, throw some money at me via one of these platforms:  
+
+<a href="https://www.buymeacoffee.com/RedBearAK"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=🍔&slug=RedBearAK&button_colour=63452c&font_colour=ffffff&font_family=Bree&outline_colour=ffffff&coffee_colour=FFDD00" /></a>
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/G2G34VVZW)
 
 Thanks for checking out Toshy!  
 
-§
+§  
+

@@ -184,6 +184,7 @@ class WaylandClient:
 
         self.wdw_handles_dct                    = {}
         self.cosmic_to_foreign_map              = {}
+        self.active_foreign_handle              = None
         self.active_app_class                   = ERR_NO_COSMIC_APP_CLASS
         self.active_wdw_title                   = ERR_NO_COSMIC_WDW_TITLE
 
@@ -278,11 +279,17 @@ class WaylandClient:
         if handle not in self.wdw_handles_dct:
             self.wdw_handles_dct[handle] = {}
         self.wdw_handles_dct[handle]['app_id'] = app_id
+        # Deal with possible out-of-order Wayland events
+        if handle == self.active_foreign_handle:
+            self.active_app_class = app_id
 
     def handle_title_change(self, handle, title):
         if handle not in self.wdw_handles_dct:
             self.wdw_handles_dct[handle] = {}
         self.wdw_handles_dct[handle]['title'] = title
+        # Deal with possible out-of-order Wayland events
+        if handle == self.active_foreign_handle:
+            self.active_wdw_title = title
 
     def handle_window_closed(self, handle):
         """Remove window from local state."""
@@ -340,6 +347,7 @@ class WaylandClient:
         if ZcosmicToplevelHandleV1.state.activated.value in state_values:
 
             if self.cosmic_protocol_ver >= 2:
+                self.active_foreign_handle = foreign_handle
                 self.active_app_class = self.wdw_handles_dct[foreign_handle]['app_id']
                 self.active_wdw_title = self.wdw_handles_dct[foreign_handle]['title']
 

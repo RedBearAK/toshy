@@ -78,6 +78,9 @@ if command xhost &> /dev/null; then
     fi
 fi
 
+# Set the process name for the keymapper config process
+echo "toshy-config" > /proc/$$/comm
+
 if command -v xwaykeyz >/dev/null 2>&1; then
     xwaykeyz -w -c "$HOME/.config/toshy/toshy_config.py"
 elif command -v keyszer >/dev/null 2>&1; then

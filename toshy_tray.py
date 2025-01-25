@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-__version__ = '20250112'
+__version__ = '20250123'
 
 # Indicator tray icon menu app for Toshy, using pygobject/gi
 TOSHY_PART      = 'tray'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
@@ -78,6 +78,11 @@ existing_path = os.environ.get('PYTHONPATH', '')
 os.environ['PYTHONPATH'] = f'{current_folder_path}:{local_site_packages_dir}:{existing_path}'
 os.environ['PATH'] = f"{home_local_bin}:{os.environ['PATH']}"
 
+# Set the process name for the Toshy Tray app main process
+# echo "toshy-tray-app" > /proc/$$/comm     # bash script version
+with open('/proc/self/comm', 'w') as f:
+    f.write('toshy-tray-app')
+
 
 #########################################################################
 def signal_handler(sig, frame):
@@ -90,6 +95,8 @@ def signal_handler(sig, frame):
 
 signal.signal(signal.SIGINT,    signal_handler)
 signal.signal(signal.SIGQUIT,   signal_handler)
+# Stop each last child process from hanging on as a "zombie" after it quits.
+signal.signal(signal.SIGCHLD, signal.SIG_IGN)
 #########################################################################
 # Let signal handler be defined and called before other things ^^^^^^^
 
@@ -492,7 +499,7 @@ def run_cmd_lst_in_terminal(command_list: List[str]):
     # (terminal command name, option used to pass a command to shell, DE list)
     # Each terminal app option can be associated with multiple DEs to 
     # somewhat intelligently use the "correct" terminal for a DE. 
-    terminal_apps_lst_of_tup: List[Tuple[str, List[str], ]] = [
+    terminal_apps_lst_of_tup: List[Tuple[str, List[str], List[str]]] = [
         ('gnome-terminal',          ['--'],     ['gnome', 'unity', 'cinnamon']              ),
         ('ptyxis',                  ['--'],     ['gnome', 'unity', 'cinnamon']              ),
         ('konsole',                 ['-e'],     ['kde']                                     ),

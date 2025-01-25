@@ -19,4 +19,7 @@ fi
 # shellcheck disable=SC1091
 source "$HOME/.config/toshy/.venv/bin/activate"
 
+# Set the process name for the Toshy Preferences GUI app launcher process
+echo "toshy-pref-stub" > /proc/$$/comm
+
 python3 "$HOME/.config/toshy/toshy_gui.py"

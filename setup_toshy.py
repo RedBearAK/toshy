@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20241221'                        # CLI option "--version" will print this out.
+__version__ = '20250124'                        # CLI option "--version" will print this out.
 
 import os
 os.environ['PYTHONDONTWRITEBYTECODE'] = '1'     # prevent this script from creating cache files
@@ -203,7 +203,8 @@ class InstallerSettings:
         self.existing_cfg_data      = None
         self.existing_cfg_slices    = None
         self.venv_path              = os.path.join(self.toshy_dir_path, '.venv')
-        self.venv_cmd_lst           = [self.py_interp_path, '-m', 'venv', self.venv_path]
+        # This was changed to a property method that re-evaluates on each access:
+        # self.venv_cmd_lst           = [self.py_interp_path, '-m', 'venv', self.venv_path]
 
         self.keymapper_tmp_path     = os.path.join(this_file_dir, 'keymapper-temp')
 
@@ -242,6 +243,13 @@ class InstallerSettings:
             ██   ██     ██          ██   ██     ██    ██     ██    ██        ██           
             ██   ██     ███████     ██████       ██████       ██████         ██        ██ 
             """)
+
+    @property
+    def venv_cmd_lst(self):
+        # Originally a class instance attribute varaible:
+        # self.venv_cmd_lst           = [self.py_interp_path, '-m', 'venv', self.venv_path]
+        # Needs to re-evaluate itself when accessed, in case Python interpreter path changed:
+        return [self.py_interp_path, '-m', 'venv', self.venv_path]
 
     def find_qdbus_command(self):
         # List of qdbus command names by preference
@@ -1018,6 +1026,10 @@ class DistroQuirksHandler:
     def handle_quirks_CentOS_7():
         print('Doing prep/checks for CentOS 7...')
 
+        # Avoid trying to install 'python3-dbus' (native pkg) and 'dbus-python' (pip pkg)
+        cnfg.pkgs_for_distro = [pkg for pkg in cnfg.pkgs_for_distro if 'dbus' not in pkg]
+        cnfg.no_dbus_python = True
+
         native_pkg_installer.check_for_pkg_mgr_cmd('yum')
         yum_cmd_lst = ['sudo', 'yum', 'install', '-y']
         if py_interp_ver_tup >= (3, 8):
@@ -1786,35 +1798,133 @@ def create_group(group_name):
                 safe_shutdown(1)
 
 
+def add_user_to_group(group_name: str, user_name: str) -> None:
+    """Utility function to add a user to a system group, handling errors appropriately."""
+    try:
+        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+        subprocess.run(['sudo', 'usermod', '-aG', group_name, user_name], check=True)
+    except subprocess.CalledProcessError as proc_err:
+        print()
+        error(f'ERROR: Problem when trying to add user "{user_name}" to '
+                f'group "{group_name}".\n')
+        err_output: bytes = proc_err.output
+        error(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
+        print()
+        error('ERROR: Install failed.')
+        safe_shutdown(1)
+
+    print(f'User "{user_name}" added to group "{group_name}".')
+    enable_prompt_for_reboot()
+
 def verify_user_groups():
-    """Check if the `input` group exists and user is in group"""
-    print(f'\n\n§  Checking if user is in "input" group...\n{cnfg.separator}')
+    """
+    Check if the 'input' group exists and user is in group.
+    Also check other groups like 'systemd-journal' in 
+    special cases, like openSUSE Tumbleweed and Leap.
+    """
+    print(f'\n\n§  Checking if user is in correct group(s)...\n{cnfg.separator}')
+
+    # Handle 'input' group
     create_group(cnfg.input_group)
-    # Check if the user is already in the `input` group
     group_info = grp.getgrnam(cnfg.input_group)
-    if cnfg.user_name in group_info.gr_mem:
-        print(f'User "{cnfg.user_name}" is a member of '
-                f'group "{cnfg.input_group}".')
+    if cnfg.user_name not in group_info.gr_mem:
+        add_user_to_group(cnfg.input_group, cnfg.user_name)
     else:
-        # Add the user to the input group
-        try:
-            call_attn_to_pwd_prompt_if_sudo_tkt_exp()
-            subprocess.run(
-                ['sudo', 'usermod', '-aG', cnfg.input_group, cnfg.user_name], check=True)
-        except subprocess.CalledProcessError as proc_err:
-            print()
-            error(f'ERROR: Problem when trying to add user "{cnfg.user_name}" to '
-                    f'group "{cnfg.input_group}".\n')
-            err_output: bytes = proc_err.output  # Type hinting the error output variable
-            # Deal with possible 'NoneType' error output
-            error(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
-            print()
-            error(f'ERROR: Install failed.')
-            safe_shutdown(1)
-        #
-        print(f'User "{cnfg.user_name}" added to group "{cnfg.input_group}".')
-        enable_prompt_for_reboot()
+        print(f'User "{cnfg.user_name}" is a member of group "{cnfg.input_group}".')
+
+    # Handle 'systemd-journal' group for specific distributions
+    systemd_journal_grp_distros = [
+        *distro_groups_map['leap-based'],
+        *distro_groups_map['microos-based'],
+        *distro_groups_map['rhel-based'],
+        *distro_groups_map['tumbleweed-based'],
+    ]
+
+    if cnfg.DISTRO_ID in systemd_journal_grp_distros:
+        sysd_jrnl_group = 'systemd-journal'
+        create_group(sysd_jrnl_group)
+        group_info = grp.getgrnam(sysd_jrnl_group)
+        if cnfg.user_name not in group_info.gr_mem:
+            add_user_to_group(sysd_jrnl_group, cnfg.user_name)
+        else:
+            print(f'User "{cnfg.user_name}" is a member of group "{sysd_jrnl_group}".')
+
     show_task_completed_msg()
+
+
+# def verify_user_groups():
+#     """
+#     Check if the 'input' group exists and user is in group
+#     Also check other groups like 'systemd-journal' in 
+#     special cases, like openSUSE Tumbleweed and Leap.
+#     """
+#     print(f'\n\n§  Checking if user is in correct group(s)...\n{cnfg.separator}')
+#     create_group(cnfg.input_group)
+#     # Check if the user is already in the 'input' group
+#     group_info = grp.getgrnam(cnfg.input_group)
+#     if cnfg.user_name in group_info.gr_mem:
+#         print(f'User "{cnfg.user_name}" is a member of '
+#                 f'group "{cnfg.input_group}".')
+#     else:
+#         # Add the user to the 'input' group
+#         try:
+#             call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+#             subprocess.run(
+#                 ['sudo', 'usermod', '-aG', cnfg.input_group, cnfg.user_name], check=True)
+#         except subprocess.CalledProcessError as proc_err:
+#             print()
+#             error(f'ERROR: Problem when trying to add user "{cnfg.user_name}" to '
+#                     f'group "{cnfg.input_group}".\n')
+#             err_output: bytes = proc_err.output  # Type hinting the error output variable
+#             # Deal with possible 'NoneType' error output
+#             error(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
+#             print()
+#             error(f'ERROR: Install failed.')
+#             safe_shutdown(1)
+#         #
+#         print(f'User "{cnfg.user_name}" added to group "{cnfg.input_group}".')
+#         enable_prompt_for_reboot()
+
+#     # Some distros won't show any journal output, even for "user" services,
+#     # without the user being in the 'systemd-journal' group. Or, they may
+#     # just show an annoying message about not being in that group.
+#     systemd_journal_grp_distros = [
+#         'leap',
+#         # 'opensuse-aeon',
+#         # 'opensuse-kalpa',
+#         'opensuse-leap',
+#         # 'opensuse-microos',
+#         'opensuse-tumbleweed',
+#         'tumbleweed',
+#     ]
+#     sysd_jrnl_group = 'systemd-journal'
+#     create_group(sysd_jrnl_group)
+#     if cnfg.DISTRO_ID in systemd_journal_grp_distros:
+#         # Check if the user is already in the 'systemd-journal' group
+#         group_info = grp.getgrnam(sysd_jrnl_group)
+#         if cnfg.user_name in group_info.gr_mem:
+#             print(f'User "{cnfg.user_name}" is a member of '
+#                     f'group "{sysd_jrnl_group}".')
+#         else:
+#             # Add the user to the 'systemd-journal' group
+#             try:
+#                 call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+#                 subprocess.run(
+#                     ['sudo', 'usermod', '-aG', sysd_jrnl_group, cnfg.user_name], check=True)
+#             except subprocess.CalledProcessError as proc_err:
+#                 print()
+#                 error(f'ERROR: Problem when trying to add user "{cnfg.user_name}" to '
+#                         f'group "{sysd_jrnl_group}".\n')
+#                 err_output: bytes = proc_err.output  # Type hinting the error output variable
+#                 # Deal with possible 'NoneType' error output
+#                 error(f'Command output:\n{err_output.decode() if err_output else "No error output"}')
+#                 print()
+#                 error(f'ERROR: Install failed.')
+#                 safe_shutdown(1)
+#             #
+#             print(f'User "{cnfg.user_name}" added to group "{sysd_jrnl_group}".')
+#             enable_prompt_for_reboot()
+#     show_task_completed_msg()
 
 
 def clone_keymapper_branch():
@@ -2209,11 +2319,11 @@ class PythonVenvQuirksHandler():
     def handle_venv_quirks_RHEL(self):
         print('Handling Python virtual environment quirks in RHEL-type distros...')
         # TODO: Add higher version if ever necessary (keep minimum 3.8)
-        potential_versions = ['3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
+        potential_versions = ['3.15', '3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
         for version in potential_versions:
             # check if the version is already installed
             if shutil.which(f'python{version}'):
-                cnfg.py_interp_path     = f'/usr/bin/python{version}'
+                cnfg.py_interp_path     = shutil.which(f'python{version}')
                 cnfg.py_interp_ver_str  = version
                 break
 
@@ -2259,6 +2369,28 @@ def install_pip_packages():
 
     venv_python_cmd = os.path.join(cnfg.venv_path, 'bin', 'python')
     venv_pip_cmd    = os.path.join(cnfg.venv_path, 'bin', 'pip')
+
+    # Configure build paths to use venv's Python
+    # Will this help avoid build issues when venv Python and system Python are different versions?
+
+    include_path = subprocess.check_output(
+        [venv_python_cmd, '-c', 'import sysconfig; print(sysconfig.get_path("include"))'],
+        universal_newlines=True
+    ).strip()
+
+    lib_path = subprocess.check_output(
+        [venv_python_cmd, '-c', 'import sysconfig; print(sysconfig.get_config_var("LIBDIR"))'],
+        universal_newlines=True
+    ).strip()
+
+    print(f"Setting PYTHONPATH to: {include_path}")
+    os.environ['PYTHONPATH'] = include_path
+    
+    print(f"Setting CFLAGS to: -I{include_path}")
+    os.environ['CFLAGS'] = f"-I{include_path}"
+    
+    print(f"Setting LDFLAGS to: -L{lib_path}")
+    os.environ['LDFLAGS'] = f"-L{lib_path}"
 
     # Bypass the install of 'dbus-python' pip package if option passed to 'install' command.
     # Diminishes peripheral app functionality and disables some Wayland methods, but 
