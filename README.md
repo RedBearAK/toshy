@@ -1,7 +1,7 @@
 > The [Toshy] readme is like a phd thesis paper.  
 > -- No_Sandwich3888 on Reddit
 
-Yes. Yes, it is. So have some...
+Yes. Yes, it is. So here are some...
 
 # ... Quick Links!
 
