@@ -19,9 +19,11 @@ _(See top-right icon here on GitHub for full README table of contents)_
 
 # Help others find out about Toshy
 
-Toshy is a pretty unique tool for a very niche audience of Mac users who also use Linux or switch between macOS and Linux a lot. It's difficult for anyone to even think to look for something like Toshy, or Kinto (the original seed project that Toshy was based on). If you want anyone else to know about Toshy, you'll have to make a post or comment about it somewhere, on your own. 
+Toshy is a pretty unique utility for a very niche audience of Mac users who also use Linux or Linux users who switch between macOS and Linux a lot, and prefer the Mac-style keyboard shortcuts. It's difficult for anyone to even think to look for something like Toshy, or Kinto (the original seed project that Toshy was based on). If you want anyone else to know about Toshy, you'll have to make a post or comment about it somewhere, on your own. 
 
-I spent time making some release announcements on various Linux-related Reddit forums over the past couple of years, where it seemed to be most relevant. But my Reddit account was suddenly "permanently banned" in early January 2025, for no reason that has been provided to me, either by email or in my Reddit messages inbox. So everything I ever posted there is now gone, or at least hidden from Reddit and search engines. I don't really have any interest in ever posting on that site again, even if the account could be unbanned. There was no response to the appeal form. 
+I spent time making some release announcements on various Linux-related Reddit forums over the past couple of years, where it seemed to be most relevant. But my Reddit account was suddenly "permanently banned" in early January 2025, for no reason that has been provided to me, either by email or in my Reddit messages inbox. So everything I ever posted there is now gone, or at least hidden from Reddit and search engines. I don't really have any interest in ever posting on that site again, even if the account could be unbanned. Before you ask, there was no response to the appeal form. 
+
+I don't really know many other places where it might be considered appropriate to make announcements about the releases/updates of an open source project like this, where it would get the attention of the type of Mac/Linux users who would find it interesting or useful. If you have suggestions, open a (question) issue here. 
 
 ◊  
 
