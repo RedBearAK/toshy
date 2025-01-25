@@ -499,7 +499,7 @@ def run_cmd_lst_in_terminal(command_list: List[str]):
     # (terminal command name, option used to pass a command to shell, DE list)
     # Each terminal app option can be associated with multiple DEs to 
     # somewhat intelligently use the "correct" terminal for a DE. 
-    terminal_apps_lst_of_tup: List[Tuple[str, List[str], ]] = [
+    terminal_apps_lst_of_tup: List[Tuple[str, List[str], List[str]]] = [
         ('gnome-terminal',          ['--'],     ['gnome', 'unity', 'cinnamon']              ),
         ('ptyxis',                  ['--'],     ['gnome', 'unity', 'cinnamon']              ),
         ('konsole',                 ['-e'],     ['kde']                                     ),
