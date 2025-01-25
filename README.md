@@ -3,7 +3,7 @@
 
 Yes. Yes, it is. So have some...
 
-# Quick Links
+# ... Quick Links!
 
 _(See top-right icon here on GitHub for full README table of contents)_
 
@@ -14,6 +14,8 @@ _(See top-right icon here on GitHub for full README table of contents)_
 - [Supported Linux Distros](#currently-workingtested-linux-distros)
 - [Frequently Asked Questions (FAQ)](#faq-frequently-asked-questions)
 - [Sponsor/Donate](#sponsor-me--donate)
+
+◊  
 
 # Reddit account suspended, because... ???
 
@@ -40,6 +42,8 @@ Anyway... Pointless story about a pointless social media site that probably bans
 
 </details>
 
+◊  
+
 # Current status: Stable Beta (Please Read)
 
 **2025-01-18 UPDATE**: Fixed some issues in the `wlroots` window context method, and verified the bulk of the available LXQt Wayland session options seem to work. That includes labwc, sway, Hyprland, niri, Wayfire, and river (tested on Tumbleweed). The kwin_wayland session option is still untested (unavailable on Tumbleweed for now).
@@ -56,6 +60,8 @@ https://www.youtube.com/watch?v=g4aUSRi8QX4
 
 For new updates on the performance advancements, check the dedicated [Wiki page](https://github.com/RedBearAK/toshy/wiki/Performance-Improvement-History).  
 
+◊  
+
 ## Main issues you might run into
 
 - **KDE USERS**: Did your system update itself from KDE Plasma 5 to Plasma 6, and Toshy stopped working? And you installed Toshy before January 2024? Just grab a new zip file from the big green **`  <> Code  ▼  `** button and reinstall. Your config customizations and preference choices should be preserved (if you made your config changes within the "slice marks"). Support for Plasma 6 was added around late December 2023.  
@@ -71,6 +77,8 @@ For new updates on the performance advancements, check the dedicated [Wiki page]
 - **STARTUP**: Toshy may seem to run at login, but not do any remapping, needing the use of the debugging command `toshy-debug` in the terminal to troubleshoot. Or, it may just need a restart of the services from the tray icon or with `toshy-services-restart`. Check the output of `toshy-services-log` and `toshy-services-status` first to see if there is an obvious error message that explains the problem. Like not having a compatible GNOME Shell extension installed/enabled to support a Wayland+GNOME session. Other than the Wayland+GNOME situation, I don't really see this much anymore.  
 
 - **INIT SYSTEMS**: On a dual-init distro like MX Linux, if you install Toshy while using SysVinit (default on MX) the installer will avoid installing the `systemd` packages and service unit files. If you then switch to using `systemd` as init at the boot screen (you can do this from the "Advanced" menu) you'll need to re-run the Toshy installer (only once) while using `systemd` to make Toshy work automatically like it does on other distros where the default init is `systemd`. Or, you can just keep running the config manually, like is currently necessary under SysVinit and any other init system besides `systemd`.  
+
+§  
 
 # Toshy README
 
@@ -99,11 +107,15 @@ All of this basic functionality is inherited from Kinto. Toshy just tries to be 
 >  
 > If you're on an Apple keyboard and you chose "Apple" as the hardware keyboard model in a desktop environment like KDE to try to "fix" the modifier locations prior to trying Toshy, this may also interfere with getting the expected results. Leave the keyboard model in the DE settings to whatever it defaulted to, which is usually something like "Generic 101-key". Then Toshy's modifier remaps can take care of making the keyboard behave predictably like an Apple keyboard (even if it is not an Apple keyboard).  
 
+◊  
+
 ## Toshifying an Application
 
 A detailed guide to how to identify a window's application class and make a new keymap to apply shortcut remaps to a particular Linux application has been moved into this Wiki article: 
 
 https://github.com/RedBearAK/toshy/wiki/Toshifying-a-New-Linux-Application
+
+◊  
 
 ## Windows Support
 
@@ -112,9 +124,13 @@ Toshy has no Windows version, unlike the Kinto.sh project. I was trying to solve
 https://github.com/rbreaves/kinto  
 https://kinto.sh  
 
+◊  
+
 ## Keyboard Types
 
 Four different keyboard types are supported by Toshy (Windows/PC, Mac/Apple, IBM and Chromebook), just as in Kinto. But Toshy does its best to automatically treat each keyboard device as the correct type in real-time, as you use it, rather than requiring you to change the keyboard type from a menu. This means that you _should_ be able to use an Apple keyboard connected to a PC laptop, or an IBM keyboard connected to a MacBook, and shortcut combos on both the external and internal keyboards should work as expected, with the modifier keys appearing to be in the correct place to "Act like a 'Tosh".  
+
+◊  
 
 ## Option-key Special Characters
 
@@ -136,11 +152,15 @@ The other problem is that the Unicode entry shortcut only seems to work if you h
 
 There's no simple way around this, since the keymapper is only designed to send key codes from a virtual keyboard. Unlike AutoHotkey in Windows, which can just "send" a character pasted in an AHK script to an application (although there are potential problems with that if the AHK file encoding is wrong). 
 
+◊  
+
 ## General improvements over Kinto
 
 This section was moved to a Wiki page to make the README shorter:  
 
 https://github.com/RedBearAK/toshy/wiki/General-improvements-over-Kinto  
+
+◊  
 
 ## Requirements
 
@@ -222,6 +242,8 @@ The window context module of the keymapper installed by Toshy will seamlessly ju
 The `Xremap` GNOME shell extension is the only one that supports older GNOME versions, so it's the only one that will show up when browsing the extensions list from an environment like Zorin OS 16.x (GNOME 3.38.x) or the distros based on Red Hat Enterprise Linux (clones or RHEL compatibles like AlmaLinux, Rocky Linux, Oracle Linux, EuroLinux, etc.) which are still using GNOME 40.x on the 9.x versions.  
 
 There is a weird bug with searching for extensions by name sometimes, where you actually have to use the option "Show Unsupported" from the hamburger menu in order to get it to show up. This seems to happen at random, and may be dependent on what is going on with GNOME's extension site. Just make sure that the extension says in its details page that it is compatible with your version of the GNOME shell, and it should be fine to install.  
+
+◊  
 
 ## How to Install  
 
@@ -363,6 +385,8 @@ This will only perform the necessary steps to "prep" the system to make Toshy's 
 
 Invoking this command instead of doing the "install" command may require some extra manual steps to get a user's Toshy install fully working, if the user that wants to use Toshy is a non-admin (unprivileged) user with no access to `sudo`. Mainly this might be adding the unprivileged user to the correct `input` group and restarting the system. See the [dedicated Wiki page](https://github.com/RedBearAK/toshy/wiki/Prep-Only-and-Unprivileged-installs) for more information about the use of the `prep-only` command.  
 
+◊  
+
 ## How to Uninstall
 
 This should work now:  
@@ -372,6 +396,8 @@ This should work now:
 ``` 
 
 Please file an issue if you have some sort of trouble with the `uninstall` command. If you have a multi-desktop system you may need to run the uninstall procedure while logged into KDE if you ran the installer in KDE, due to the KDE-specific components that get installed for Wayland support.  
+
+◊  
 
 ## Currently working/tested Linux distros:
 
@@ -398,6 +424,8 @@ You will find these distro groupings in the Wiki article:
 - [Solus](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#independent-distros)
 
 - [Void](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#independent-distros)
+
+◊  
 
 ## Currently working desktop environments or window managers
 
@@ -430,6 +458,8 @@ For Wayland+GNOME this requires at least one of the known compatible GNOME Shell
 There are specific remaps or overrides of default remaps for several common desktop environments (or distros which have shortcut peculiarities in their default desktop setups). They become active if the desktop environment is detected correctly by the environment evaluation module used by the config file. If that isn't working for some reason, the information about the desktop environment can be placed in some `OVERRIDE` variables in the config file. But open an issue if that seems to be necessary.  
 
 Tiling window managers may need [some adjustments](https://github.com/RedBearAK/toshy/issues/294) in your config file, to be usable while retaining the tiling shortcuts. The example issue at the link is for a user's setup of i3 WM, where the physical `Meta/Super/Win` key was chosen as the `Mod` key in i3 config, on a PC keyboard type. Other WMs or other configuration choices will need modifications of the solution shown.  
+
+◊  
 
 ## Usage (changing preferences)
 
@@ -497,6 +527,8 @@ This submenu is a sort of temporary hack to force all attached keyboard devices 
 The main reason you'd need to use this is when a keyboard that is not made by Apple either was made for use with macOS, or just has the modifier keys next to the Space bar swapped like an Apple keyboard (common in small keyboards made to work with multiple devices including iOS/iPadOS devices), so you need to force it to be treated like an Apple keyboard. These types of keyboards can't be easily identified as the correct type by just looking at the device name.  
 
 After verifying that the forced keyboard type puts the modifiers in the correct place to work with muscle memory from using an Apple keyboard with macOS, you'll want to fix this permanently by opening your config file and editing the custom dictionary item to make the config see your device name as the correct type. See [here](#my-keyboard-is-not-recognized-as-the-correct-type) for more information.  
+
+◊  
 
 ## Usage (terminal commands)
 
@@ -615,11 +647,15 @@ toshy-gui
 toshy-tray
 ```
 
+◊  
+
 ## FAQ (Frequently Asked Questions)
 
 The lengthy FAQ section has been moved to a Wiki page to make the README shorter:  
 
 https://github.com/RedBearAK/toshy/wiki/FAQ-(Frequently-Asked-Questions)
+
+◊  
 
 ## Sponsor Me / Donate
 
@@ -631,4 +667,5 @@ This type of project takes extraordinary amounts of time and effort to work arou
 
 Thanks for checking out Toshy!  
 
-§
+§  
+
