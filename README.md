@@ -1,5 +1,11 @@
+> The [Toshy] readme is like a phd thesis paper.  
+> -- No_Sandwich3888 on Reddit
 
-## Quick Links _(See top-right icon on GitHub for full table of contents)_
+Yes. Yes, it is. So have some...
+
+# Quick Links
+
+_(See top-right icon here on GitHub for full README table of contents)_
 
 - [How to Install](#how-to-install)
 - [How to Uninstall](#how-to-uninstall)
@@ -14,7 +20,7 @@
 <details>
 
 <summary>
-<strong>Click to open and read about it if you care...</strong>
+<strong>Click to open and read all about it if you care...</strong>
 </summary>
 <br/>
 
@@ -617,7 +623,9 @@ https://github.com/RedBearAK/toshy/wiki/FAQ-(Frequently-Asked-Questions)
 
 ## Sponsor Me / Donate
 
-This type of project takes extraordinary amounts of time and effort to work around weird problems in different distros. If you feel like I did something useful by creating this, and you'd like me to be able to spend time maintaining and improving it, buy me a coffee:  
+This type of project takes extraordinary amounts of time and effort to work around weird problems in different distros and develop the methods to allow the keymapper to perform app-specific remapping in all the different Wayland environments. If you feel like I did something useful by creating this, and you'd like me to be able to spend time maintaining and improving it, throw some money at me via one of these platforms:  
+
+<a href="https://www.buymeacoffee.com/RedBearAK"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=🍔&slug=RedBearAK&button_colour=63452c&font_colour=ffffff&font_family=Bree&outline_colour=ffffff&coffee_colour=FFDD00" /></a>
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/G2G34VVZW)
 
