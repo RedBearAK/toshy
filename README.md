@@ -19,10 +19,12 @@ _(See top-right icon here on GitHub for full README table of contents)_
 
 # Reddit account suspended, because... ???
 
+tl;dr - If you want anyone to know about Toshy, you'll need to post or comment about it yourself, on Reddit or elesewhere. Because I can't, and every announcement post I ever made on the site over the past couple of years has now disappeared from that site, and also from search engines. 
+
 <details>
 
 <summary>
-<strong>Click to open and read all about it if you care...</strong>
+<strong>Click to open if you care about the limited details available...</strong>
 </summary>
 <br/>
 
