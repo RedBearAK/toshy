@@ -40,6 +40,10 @@ When I'm logged in to the still-invisibly-working account, I keep getting a red 
 
 Anyway... Pointless story about a pointless social media site that probably bans many users every year, for similar unexplained reasons. Such is life. I did my best to try to help people who were asking for help, and mediate conversations that were too "hot" to bring more understanding to both sides, whenever possible. Is the lesson not to waste so much of my time doing things like that? Maybe. 
 
+And, I just realized that every single original post I made about Toshy releases in any sub-reddit on the entire site, has now become invisible, due to the account suspension. So that was a huge waste of my time. Someone or something decided everything I ever posted or said on all of Reddit needed to vanish, and they made it happen. Nice. 
+
+Rant over, for now. 
+
 </details>
 
 ◊  
