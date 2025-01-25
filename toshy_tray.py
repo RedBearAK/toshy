@@ -26,7 +26,7 @@ import threading
 import subprocess
 
 from subprocess import DEVNULL
-from typing import List, Dict, Tuple, TypeAlias
+from typing import List, Dict, Tuple
 
 # Local imports
 import lib.env as env
@@ -499,8 +499,7 @@ def run_cmd_lst_in_terminal(command_list: List[str]):
     # (terminal command name, option used to pass a command to shell, DE list)
     # Each terminal app option can be associated with multiple DEs to 
     # somewhat intelligently use the "correct" terminal for a DE. 
-    TerminalCommandList: TypeAlias = List[Tuple[str, List[str], List[str]]]
-    terminal_apps_lst_of_tup: TerminalCommandList = [
+    terminal_apps_lst_of_tup: List[Tuple[str, List[str], List[str]]] = [
         ('gnome-terminal',          ['--'],     ['gnome', 'unity', 'cinnamon']              ),
         ('ptyxis',                  ['--'],     ['gnome', 'unity', 'cinnamon']              ),
         ('konsole',                 ['-e'],     ['kde']                                     ),
