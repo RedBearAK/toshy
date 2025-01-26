@@ -267,6 +267,7 @@ known_wlroots_compositors = [
     'labwc',
     'miracle-wm',
     'miriway',
+    'miriway-shell',    # actual process name for 'miriway' compositor?
     'niri',
     'qtile',
     'river',

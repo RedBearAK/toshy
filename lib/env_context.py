@@ -571,6 +571,7 @@ class EnvironmentInfo:
                 'river',            # Wayland compositor
                 'niri',             # Wayland compositor
                 'miriway',          # Wayland compositor
+                'miriway-shell',    # Wayland compositor (actual process name?)
             ],
 
             'awesome':          'awesome',
@@ -625,6 +626,8 @@ class EnvironmentInfo:
                     if line.startswith('window_manager=') or line.startswith('compositor='):
                         # Typically the line would be like "window_manager=openbox\n"
                         wm_name = os.path.basename(line.strip().split('=')[1])
+                        if wm_name == 'miriway':
+                            wm_name = 'miriway-shell'
                         if self.is_process_running(wm_name):
                             self.WINDOW_MGR = wm_name
                             return
