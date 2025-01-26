@@ -624,7 +624,7 @@ class EnvironmentInfo:
                 for line in config_file:
                     if line.startswith('window_manager='):
                         # Typically the line would be like "window_manager=openbox\n"
-                        wm_name = line.strip().split('=')[1]
+                        wm_name = os.path.basename(line.strip().split('=')[1])
                         if self.is_process_running(wm_name):
                             self.WINDOW_MGR = wm_name
                             return
