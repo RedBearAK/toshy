@@ -385,6 +385,7 @@ class EnvironmentInfo:
             'MATE':                     'mate',
             'Miracle-WM':               'miracle-wm',
             'miracle-wm:mir':           'miracle-wm',
+            'Miriway':                  'miriway',
             'Niri':                     'niri',
             'Pantheon':                 'pantheon',
             'Plasma':                   'kde',
@@ -569,6 +570,7 @@ class EnvironmentInfo:
                 'wayfire',          # Wayland compositor
                 'river',            # Wayland compositor
                 'niri',             # Wayland compositor
+                'miriway',          # Wayland compositor
             ],
 
             'awesome':          'awesome',
