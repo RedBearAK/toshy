@@ -622,7 +622,7 @@ class EnvironmentInfo:
         try:
             with open(config_path, 'r') as config_file:
                 for line in config_file:
-                    if line.startswith('window_manager='):
+                    if line.startswith('window_manager=') or line.startswith('compositor='):
                         # Typically the line would be like "window_manager=openbox\n"
                         wm_name = os.path.basename(line.strip().split('=')[1])
                         if self.is_process_running(wm_name):
