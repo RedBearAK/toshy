@@ -2357,7 +2357,7 @@ def setup_python_vir_env():
 
         try:
             print(f'Using Python version {cnfg.py_interp_ver_str}.')
-            print(f'Full venv command: {cnfg.venv_cmd_lst}')
+            print(f'Full venv command: {" ".join(cnfg.venv_cmd_lst)}')
 
             subprocess.run(cnfg.venv_cmd_lst, check=True)
 
