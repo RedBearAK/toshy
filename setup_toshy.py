@@ -246,7 +246,7 @@ class InstallerSettings:
 
     @property
     def venv_cmd_lst(self):
-        # Originally a class instance attribute varaible:
+        # Originally a class instance attribute variable:
         # self.venv_cmd_lst           = [self.py_interp_path, '-m', 'venv', self.venv_path]
         # Needs to re-evaluate itself when accessed, in case Python interpreter path changed:
         return [self.py_interp_path, '-m', 'venv', self.venv_path]
@@ -2333,28 +2333,41 @@ class PythonVenvQuirksHandler():
 
 def setup_python_vir_env():
     """Setup a virtual environment to install Python packages"""
-    print(f'\n\n§  Setting up the Python virtual environment...\n{cnfg.separator}')
     venv_quirks_handler = PythonVenvQuirksHandler()
+
+    print(f'\n\n§  Setting up the Python virtual environment...\n{cnfg.separator}')
+
     # Create the virtual environment if it doesn't exist
     if not os.path.exists(cnfg.venv_path):
+
         if cnfg.DISTRO_ID in distro_groups_map['leap-based']:
             venv_quirks_handler.handle_venv_quirks_Leap()
+
         elif cnfg.DISTRO_ID in distro_groups_map['tumbleweed-based']:
             venv_quirks_handler.handle_venv_quirks_Tumbleweed()
+
         elif cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '7':
             venv_quirks_handler.handle_venv_quirks_CentOS_7()
+
         elif cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '8':
             venv_quirks_handler.handle_venv_quirks_CentOS_Stream_8()
+
         elif cnfg.DISTRO_ID in distro_groups_map['rhel-based']:
             venv_quirks_handler.handle_venv_quirks_RHEL()
+
         try:
             print(f'Using Python version {cnfg.py_interp_ver_str}.')
+            print(f'Full venv command: {" ".join(cnfg.venv_cmd_lst)}')
+
             subprocess.run(cnfg.venv_cmd_lst, check=True)
+
+            # Strange behavior on OpenMandriva req's re-running the same command. Weird but true. 
             if cnfg.DISTRO_ID in ['openmandriva']:
                 venv_quirks_handler.handle_venv_quirks_OpenMandriva(cnfg.venv_cmd_lst)
         except subprocess.CalledProcessError as proc_err:
             error(f'ERROR: Problem creating the Python virtual environment:\n\t{proc_err}')
             safe_shutdown(1)
+
     # We do not need to "activate" the venv right now, just create it
     print(f'Python virtual environment setup complete.')
     print(f"Location: '{cnfg.venv_path}'")

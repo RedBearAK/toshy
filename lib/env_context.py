@@ -385,6 +385,7 @@ class EnvironmentInfo:
             'MATE':                     'mate',
             'Miracle-WM':               'miracle-wm',
             'miracle-wm:mir':           'miracle-wm',
+            'Miriway':                  'miriway',
             'Niri':                     'niri',
             'Pantheon':                 'pantheon',
             'Plasma':                   'kde',
@@ -492,6 +493,8 @@ class EnvironmentInfo:
             self.DE_MAJ_VER = self.get_gnome_version()
         elif self.DESKTOP_ENV == 'kde':
             self.DE_MAJ_VER = self.get_kde_version()
+        elif self.DESKTOP_ENV == 'lxqt':
+            self.DE_MAJ_VER = self.get_lxqt_version()
 
         if not self.DE_MAJ_VER:
             self.DE_MAJ_VER = 'no_logic_for_DE'
@@ -526,6 +529,16 @@ class EnvironmentInfo:
             return '4'
         # no 'kpackagetool' command in KDE 3?
         return 'kde_ver_check_err'
+
+    def get_lxqt_version(self):
+        try:
+            output = subprocess.check_output(["lxqt-session", "--version"]).decode().strip()
+            match = re.search(r"lxqt-session (\d+\.\d+\.\d+)", output)
+            if match:
+                major_version = match.group(1).split('.')[0]
+                return major_version
+        except subprocess.CalledProcessError:
+            return 'lxqt_ver_check_err'
 
 ####################################################################################################
 ##                                                                                                ##
@@ -569,6 +582,8 @@ class EnvironmentInfo:
                 'wayfire',          # Wayland compositor
                 'river',            # Wayland compositor
                 'niri',             # Wayland compositor
+                'miriway',          # Wayland compositor
+                'miriway-shell',    # Wayland compositor (actual process name?)
             ],
 
             'awesome':          'awesome',
@@ -620,10 +635,13 @@ class EnvironmentInfo:
         try:
             with open(config_path, 'r') as config_file:
                 for line in config_file:
-                    if line.startswith('window_manager='):
+                    if line.startswith('window_manager=') or line.startswith('compositor='):
                         # Typically the line would be like "window_manager=openbox\n"
-                        wm_name = line.strip().split('=')[1]
-                        if self.is_process_running(wm_name):
+                        wm_name = os.path.basename(line.strip().split('=')[1])
+                        if wm_name == 'miriway' and self.is_process_running('miriway-shell'):
+                            self.WINDOW_MGR = 'miriway-shell'
+                            return
+                        elif self.is_process_running(wm_name):
                             self.WINDOW_MGR = wm_name
                             return
                         else:

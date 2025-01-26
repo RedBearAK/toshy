@@ -264,13 +264,15 @@ debug(  f'Toshy config sees this environment:'
 # the keymapper. 
 known_wlroots_compositors = [
     'hyprland',
-    'labwc',        # untested but should work
+    'labwc',
     'miracle-wm',
+    'miriway',
+    'miriway-shell',    # actual process name for 'miriway' compositor?
     'niri',
     'qtile',
-    'river',        # untested but should work
+    'river',
     'sway',
-    'wayfire',      # untested but should work
+    'wayfire',
 ]
 
 # Make sure the 'wlroots_compositors' list variable exists before checking it.
