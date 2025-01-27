@@ -9,7 +9,7 @@ import subprocess
 from typing import Dict
 
 # ENV_CONTEXT module version:
-__version__ = '20250118'
+__version__ = '20250126'
 
 VERBOSE = True
 FLUSH = True
