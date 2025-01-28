@@ -3139,20 +3139,18 @@ def install_coding_font():
 
     print(f'Installing terminal/coding font "FantasqueSansMNoLig Nerd Font": ', flush=True)
 
-    cannot_install_font = False
-
     # Install Fantasque Sans Mono Nerd Font
     # (variant with no ligatures, large line height, no "loop K").
     # Created from spinda no-ligatures fork by processing with Nerd Font script.
     # Original repo: https://github.com/spinda/fantasque-sans-ligatures
-    font_file   = 'FantasqueSansMNoLig_Nerd_Font.zip'
-    font_url    = 'https://github.com/RedBearAK/FantasqueSansMNoLigNerdFont/raw/main'
-    font_link   = f'{font_url}/{font_file}'
+    font_file               = 'FantasqueSansMNoLig_Nerd_Font.zip'
+    font_url                = 'https://github.com/RedBearAK/FantasqueSansMNoLigNerdFont/raw/main'
+    font_link               = f'{font_url}/{font_file}'
+    zip_path                = f'{cnfg.run_tmp_dir}/{font_file}'
 
     print(f'  Downloading… ', end='', flush=True)
 
-    zip_path    = f'{cnfg.run_tmp_dir}/{font_file}'
-    
+    cannot_download_font    = False
     if shutil.which('curl'):
         subprocess.run(['curl', '-Lo', zip_path, font_link], 
                     stdout=DEVNULL, stderr=DEVNULL)
@@ -3160,42 +3158,50 @@ def install_coding_font():
         subprocess.run(['wget', '-O', zip_path, font_link],
                     stdout=DEVNULL, stderr=DEVNULL)
     else:
-        error("\nERROR: Neither 'curl' nor 'wget' is available. Can't install font.")
-        cannot_install_font = True
+        error("\nERROR: Neither the 'curl' nor 'wget' utils are available. Cannot download font.")
+        cannot_download_font = True
 
-    if not cannot_install_font and os.path.isfile(zip_path):
-        folder_name = font_file.rsplit('.', 1)[0]
-
-        local_fonts_dir = os.path.join(home_dir, '.local', 'share', 'fonts')
-        os.makedirs(local_fonts_dir, exist_ok=True)
-
-        # extract_dir = f'{cnfg.run_tmp_dir}/'
-        extract_dir = f'{local_fonts_dir}/'         # extract directly to local fonts folder
+    if not cannot_download_font and os.path.isfile(zip_path):
 
         print(f'Unzipping… ', end='', flush=True)
+
+        final_folder_name       = None
+        fallback_folder_name    = font_file.rsplit('.', 1)[0]
+        local_fonts_dir         = os.path.join(home_dir, '.local', 'share', 'fonts')
+        extract_dir             = f'{local_fonts_dir}/' # extract directly to local fonts folder
 
         # Open the zip file and check if it has a top-level directory
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
 
             # Get the first part of each path in the zip file
             top_dirs = {name.split('/')[0] for name in zip_ref.namelist()}
-            
-            # If the zip doesn't have a consistent top-level directory, 
-            # create one and adjust extract_dir
+
             if len(top_dirs) > 1:
-                extract_dir = os.path.join(extract_dir, folder_name)
-                os.makedirs(extract_dir, exist_ok=True)
-            
+                # Set the final folder name to the fallback from zip file name
+                final_folder_name = fallback_folder_name
+                # If the zip doesn't have a consistent top-level directory, 
+                # adjust extract_dir and create one
+                extract_dir = os.path.join(extract_dir, fallback_folder_name)
+            else:
+                # Get the single top directory name
+                final_folder_name = list(top_dirs)[0]
+
+            os.makedirs(extract_dir, exist_ok=True)
             zip_ref.extractall(extract_dir)
 
         print(f'Refreshing font cache… ', end='', flush=True)
 
-        # Update the font cache after putting new font files in place
+        # Update the font cache after putting the font files in place
+        # Any open applications will still need to be restarted to see a new font
         cmd_lst = ['fc-cache', '-f', '-v']
-        subprocess.run(cmd_lst, stdout=DEVNULL, stderr=DEVNULL)
-        print(f'Done.', flush=True)
+        try:
+            subprocess.run(cmd_lst, stdout=DEVNULL, stderr=DEVNULL)
+            print(f'Done.', flush=True)
+        except subprocess.CalledProcessError as proc_err:
+            error(f"\nERROR: Problem while attempting to refresh font cache:\n  {proc_err}")
 
-        print(f"Installed font into folder: \n\t'{extract_dir}'")
+        final_folder_path = os.path.join(extract_dir, final_folder_name)
+        print(f"Installed font into location:\n  '{final_folder_path}'")
 
 
 ###################################################################################################
