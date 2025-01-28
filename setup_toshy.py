@@ -3152,11 +3152,9 @@ def install_coding_font():
 
     cannot_download_font    = False
     if shutil.which('curl'):
-        subprocess.run(['curl', '-Lo', zip_path, font_link], 
-                    stdout=DEVNULL, stderr=DEVNULL)
+        subprocess.run(['curl', '-Lo', zip_path, font_link], stdout=DEVNULL, stderr=DEVNULL)
     elif shutil.which('wget'):
-        subprocess.run(['wget', '-O', zip_path, font_link],
-                    stdout=DEVNULL, stderr=DEVNULL)
+        subprocess.run(['wget', '-O', zip_path, font_link], stdout=DEVNULL, stderr=DEVNULL)
     else:
         error("\nERROR: Neither the 'curl' nor 'wget' utils are available. Cannot download font.")
         cannot_download_font = True
