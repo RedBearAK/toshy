@@ -2361,9 +2361,8 @@ def setup_python_vir_env():
 
             subprocess.run(cnfg.venv_cmd_lst, check=True)
 
-            # Strange behavior on OpenMandriva req's re-running the same command. Weird but true. 
             if cnfg.DISTRO_ID in ['openmandriva']:
-                venv_quirks_handler.handle_venv_quirks_OpenMandriva(cnfg.venv_cmd_lst)
+                venv_quirks_handler.handle_venv_quirks_OpenMandriva()
         except subprocess.CalledProcessError as proc_err:
             error(f'ERROR: Problem creating the Python virtual environment:\n\t{proc_err}')
             safe_shutdown(1)
