@@ -710,7 +710,7 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "libappindicator-gtk3", "libnotify", "libxkbcommon-devel",
                             "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
                             "systemd-devel",
-                            "xset",
+                            "xdg-utils", "xset",
                             "zenity"],
 
     # NOTE: Do not add 'gnome-shell-extension-appindicator' to Fedora/RHELs.
