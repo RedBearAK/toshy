@@ -911,7 +911,7 @@ def get_supported_distro_ids_idx() -> str:
     sorted_distro_list: List[str] = sorted(distro_list)
     prev_char: str = sorted_distro_list[0][0]
     # start index with the initial letter
-    distro_index = prev_char.upper() + ": "
+    distro_index = "\t" + prev_char.upper() + ": "
     line_length = len(distro_index)             # initial line length
 
     for distro in sorted_distro_list:
@@ -938,6 +938,19 @@ def get_supported_distro_ids_cnt() -> int:
     return len(get_supported_distro_ids_lst())
 
 
+def get_supported_distro_types_cnt() -> int:
+    """Utility function to return the total count of supported distro types (not individual IDs)"""
+    return len(distro_groups_map.keys())
+
+
+def get_supported_pkg_managers_cnt() -> int:
+    """Utility function to return the total count of package manager methods available."""
+    return len([
+        method for method in dir(PackageInstallerDispatcher)
+        if method.startswith('install_on_') and method.endswith('_distro')
+    ])
+
+
 def exit_with_invalid_distro_error(pkg_mgr_err=None):
     """Utility function to show error message and exit when distro is not valid"""
     print()
@@ -949,7 +962,7 @@ def exit_with_invalid_distro_error(pkg_mgr_err=None):
     print()
     print(
         f'Try one of these with "--override-distro" option:'
-        f'\n\n\t{get_supported_distro_ids_idx()}'
+        f'\n\n{get_supported_distro_ids_idx()}'
     )
     safe_shutdown(1)
 
@@ -3527,10 +3540,12 @@ def handle_cli_arguments():
 
     if args.command == 'list-distros':
         print(
-            f'Index of distro IDs known to the Toshy installer:'
-            f'\n\n(These can be tried with the "--override-distro" flag on unknown variants.)'
-            f'\n\n\t{get_supported_distro_ids_idx()}'
-            f'\n\n Number of currently supported distro IDs: {get_supported_distro_ids_cnt()}'
+            f'Index of distro IDs known to the Toshy installer:\n'
+            f'\n(These can be tried with the "--override-distro" flag on unknown variants.)\n'
+            f'\n{get_supported_distro_ids_idx()}\n'
+            f'\n Total supported package managers:      {get_supported_pkg_managers_cnt()}'
+            f'\n Total supported basic distro types:    {get_supported_distro_types_cnt()}'
+            f'\n Total supported known distro IDs:      {get_supported_distro_ids_cnt()}'
         )
         safe_shutdown(0)
 
