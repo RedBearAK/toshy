@@ -3944,6 +3944,9 @@ keymap("VSCodes", {
 
     C("Alt-RC-Z"):              C("Alt-Z"),                     # View: toggle "Word Wrap"
 
+    C("Alt-RC-Up"):             C("Shift-Alt-Up"),              # Insert cursor above
+    C("Alt-RC-Down"):           C("Shift-Alt-Down"),            # Insert cursor below
+
     C("Shift-Super-Right"):     C("Shift-Alt-Right"),           # Expand Selection (increase logical scope of smart selection)
     C("Shift-Super-Left"):      C("Shift-Alt-Left"),            # Shrink Selection (reduce logical scope of smart selection)
 
