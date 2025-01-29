@@ -3545,7 +3545,7 @@ def handle_cli_arguments():
             f'\n{get_supported_distro_ids_idx()}\n'
             f'\n Total supported package managers:      {get_supported_pkg_managers_cnt()}'
             f'\n Total supported basic distro types:    {get_supported_distro_types_cnt()}'
-            f'\n Total supported known distro IDs:      {get_supported_distro_ids_cnt()}'
+            f'\n Total supported popular distro IDs:    {get_supported_distro_ids_cnt()}'
         )
         safe_shutdown(0)
 
