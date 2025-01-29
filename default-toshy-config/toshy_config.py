@@ -4266,7 +4266,8 @@ keymap("Ghostty terminal overrides", {
     C("RC-Equal"):              C("C-Equal"),                   # Increase font size [override general terminals remap]
     C("RC-D"):                  C("RC-Shift-O"),                # Open right split
     C("RC-Shift-D"):            C("RC-Shift-E"),                # Open down split
-    C("RC-Alt-I"):              C("RC-Shift-I"),                 # Open inspector
+    C("RC-Alt-I"):              C("RC-Shift-I"),                # Open inspector
+    C("RC-K"):                  C("C-L"),                       # clear log
 }, when = matchProps(clas="^ghostty$|^ghostty-debug$|^com.mitchellh.ghostty$"))
 
 keymap("Hyper terminal tab switching", {
@@ -4283,6 +4284,7 @@ keymap("Kitty terminal - not tab nav", {
 keymap("Konsole terminal - not tab nav", {
     C("RC-comma"):              C("Shift-C-comma"),             # Open Preferences dialog
     C("RC-0"):                  C("C-Alt-0"),                   # Reset font size
+    C("RC-K"):                  C("Shift-C-K"),                 # clear log
 }, when = matchProps(clas="^Konsole$|^org.kde.Konsole$"))
 
 keymap("Terminology terminal", {
