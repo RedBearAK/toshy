@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-__version__ = '20250123'
+__version__ = '20250128'
 
 # Indicator tray icon menu app for Toshy, using pygobject/gi
 TOSHY_PART      = 'tray'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
@@ -476,8 +476,17 @@ def fn_open_preferences(widget):
 
 
 def fn_open_config_folder(widget):
+    xdg_open_cmd = shutil.which('xdg-open')
+    if not xdg_open_cmd:
+        _ntfy_icon = icon_file_inverse
+        _ntfy_msg = ("The 'xdg-open' utility is missing.\r"
+                        "Try installing 'xdg-utils' package.")
+        ntfy.send_notification(_ntfy_msg, _ntfy_icon, urgency='critical')
+        _error_msg = ("The 'xdg-open' utility is missing.\n"
+                        "     Try installing 'xdg-utils' package.")
+        error(f"{_error_msg}")
+        return
     try:
-        xdg_open_cmd = shutil.which('xdg-open')
         subprocess.Popen([xdg_open_cmd, current_folder_path])
     except FileNotFoundError as e:
         error('File not found. I have no idea how this error is possible.')
@@ -553,10 +562,10 @@ def run_cmd_lst_in_terminal(command_list: List[str]):
             return
 
     # If we reach this, we failed to find a terminal app to use, so show a notification.
-    ntfy_icon_file = icon_file_inverse  # predefined path to icon file
-    ntfy_msg = "ERROR: No suitable terminal emulator could be opened."
-    ntfy.send_notification(ntfy_msg, ntfy_icon_file)
-    debug(f'{ntfy_msg}')
+    _ntfy_icon_file = icon_file_inverse  # predefined path to icon file
+    _ntfy_msg = "ERROR: No suitable terminal emulator could be opened."
+    ntfy.send_notification(_ntfy_msg, _ntfy_icon_file)
+    debug(f'{_ntfy_msg}')
 
 
 def fn_show_services_log(widget):
