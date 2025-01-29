@@ -4281,7 +4281,7 @@ keymap("Kitty terminal - not tab nav", {
 keymap("Konsole terminal - not tab nav", {
     C("RC-comma"):              C("Shift-C-comma"),             # Open Preferences dialog
     C("RC-0"):                  C("C-Alt-0"),                   # Reset font size
-    C("RC-K"):                  C("C-L"),                       # clear log
+    C("RC-K"):                  C("Shift-C-K"),                 # clear log
 }, when = matchProps(clas="^Konsole$|^org.kde.Konsole$"))
 
 keymap("Terminology terminal", {
