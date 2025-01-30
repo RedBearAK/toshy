@@ -9,7 +9,7 @@ import subprocess
 from typing import Dict
 
 # ENV_CONTEXT module version:
-__version__ = '20250126'
+__version__ = '20250129'
 
 VERBOSE = True
 FLUSH = True
@@ -389,6 +389,7 @@ class EnvironmentInfo:
             'Niri':                     'niri',
             'Pantheon':                 'pantheon',
             'Plasma':                   'kde',
+            'pop':                      'pop',      # System76 changed DE name on 22.04 LTS to 'pop'?
             'qtile:wlroots':            'qtile',
             'Qtile':                    'qtile',
             'qtilewaylan':              'qtile',    # actual value in real life (typo in Qtile code?)
