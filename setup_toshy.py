@@ -1835,7 +1835,7 @@ def verify_user_groups():
     """
     Check if the 'input' group exists and user is in group.
     Also check other groups like 'systemd-journal' in 
-    special cases, like openSUSE Tumbleweed and Leap.
+    special cases, like openSUSE Tumbleweed and Leap, and Solus.
     """
     print(f'\n\n§  Checking if user is in correct group(s)...\n{cnfg.separator}')
 
@@ -1852,6 +1852,7 @@ def verify_user_groups():
         *distro_groups_map['leap-based'],
         *distro_groups_map['microos-based'],
         *distro_groups_map['rhel-based'],
+        *distro_groups_map['solus-based'],
         *distro_groups_map['tumbleweed-based'],
     ]
 
