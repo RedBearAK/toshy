@@ -946,7 +946,7 @@ def get_supported_distro_types_cnt() -> int:
 def get_supported_pkg_managers_cnt() -> int:
     """Utility function to return the total count of package manager methods available."""
     return len([
-        method for method in dir(PackageInstallerDispatcher)
+        method for method in dir(PackageInstallDispatcher)
         if method.startswith('install_on_') and method.endswith('_distro')
     ])
 
@@ -1309,7 +1309,7 @@ class NativePackageInstaller:
             self.exit_with_pkg_install_error(proc_err)
 
 
-class PackageInstallerDispatcher:
+class PackageInstallDispatcher:
     """
     Utility class to hold the static methods that will optionally invoke any necessary 
     distro quirks handling, and then proceed to prep for and finally invoke the correct 
@@ -1492,6 +1492,68 @@ class PackageInstallerDispatcher:
         native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
 
+class PackageManagerGroups:
+    """Container for package manager distro groupings and dispatch map"""
+    
+    def __init__(self):
+        # Initialize package manager distro lists
+        self.apt_distros        = []    # 'apt': Debian/Ubuntu
+        self.dnf_distros        = []    # 'dnf': Fedora/RHEL/OpenMandriva
+        self.eopkg_distros      = []    # 'eopkg': Solus
+        self.pacman_distros     = []    # 'pacman': Arch, BTW
+        self.rpmostree_distros  = []    # 'rpm-ostree': Fedora atomic/immutables
+        self.transupd_distros   = []    # 'transactional-update': openSUSE MicroOS/Aeon/Kalpa
+        self.xbps_distros       = []    # 'xbps-install': Void
+        self.zypper_distros     = []    # 'zypper': openSUSE Tumbleweed/Leap
+        # Initialize package manager dispatch map
+        self.dispatch_map       = None
+        # Build the lists and map
+        self.populate_lists()
+        self.create_dispatch_map()
+
+    def populate_lists(self):
+        """Populate package manager distro lists from distro_groups_map"""
+
+        try:
+            # 'apt': Debian/Ubuntu
+            self.apt_distros            += distro_groups_map['ubuntu-based']
+            self.apt_distros            += distro_groups_map['debian-based']
+            # 'dnf': Fedora/RHEL/OpenMandriva
+            self.dnf_distros            += distro_groups_map['fedora-based']
+            self.dnf_distros            += distro_groups_map['rhel-based']
+            self.dnf_distros            += distro_groups_map['mandriva-based']
+            # 'eopkg': Solus
+            self.eopkg_distros          += distro_groups_map['solus-based']
+            # 'pacman': Arch, BTW
+            self.pacman_distros         += distro_groups_map['arch-based']
+            # 'rpm-ostree': Fedora atomic/immutables
+            self.rpmostree_distros      += distro_groups_map['fedora-immutables']
+            # 'transactional-update': openSUSE MicroOS/Aeon/Kalpa
+            self.transupd_distros       += distro_groups_map['microos-based']
+            # 'xbps-install': Void
+            self.xbps_distros           += distro_groups_map['void-based']
+            # 'zypper': openSUSE Tumbleweed/Leap
+            self.zypper_distros         += distro_groups_map['tumbleweed-based']
+            self.zypper_distros         += distro_groups_map['leap-based']
+
+        except (KeyError, TypeError) as key_err:
+            error(f'Problem setting up package manager distro lists:\n\t{key_err}')
+            safe_shutdown(1)
+
+    def create_dispatch_map(self):
+        """Create mapping of distro lists to their installer methods"""
+        self.dispatch_map = {
+            tuple(self.apt_distros):         PackageInstallDispatcher.install_on_apt_distro,
+            tuple(self.dnf_distros):         PackageInstallDispatcher.install_on_dnf_distro,
+            tuple(self.eopkg_distros):       PackageInstallDispatcher.install_on_eopkg_distro,
+            tuple(self.pacman_distros):      PackageInstallDispatcher.install_on_pacman_distro,
+            tuple(self.rpmostree_distros):   PackageInstallDispatcher.install_on_rpmostree_distro,
+            tuple(self.transupd_distros):    PackageInstallDispatcher.install_on_transupd_distro,
+            tuple(self.xbps_distros):        PackageInstallDispatcher.install_on_xbps_distro,
+            tuple(self.zypper_distros):      PackageInstallDispatcher.install_on_zypper_distro,
+        }
+
+
 def install_distro_pkgs():
     """Install needed packages from list for distro type"""
     print(f'\n\n§  Installing native packages for this distro type...\n{cnfg.separator}')
@@ -1539,43 +1601,6 @@ def install_distro_pkgs():
         if cnfg.systemctl_present or 'systemd' not in pkg
     ]
 
-    apt_distros                 = []    # 'apt': Debian/Ubuntu
-    dnf_distros                 = []    # 'dnf': Fedora/RHEL/OpenMandriva
-    eopkg_distros               = []    # 'eopkg': Solus
-    pacman_distros              = []    # 'pacman': Arch, BTW
-    rpmostree_distros           = []    # 'rpm-ostree': Fedora atomic/immutables
-    transupd_distros            = []    # 'transactional-update': openSUSE MicroOS/Aeon/Kalpa
-    xbps_distros                = []    # 'xbps-install': Void
-    zypper_distros              = []    # 'zypper': openSUSE Tumbleweed/Leap
-
-    # assemble specific pkg mgr distro lists
-
-    try:
-        apt_distros             += distro_groups_map['ubuntu-based']
-        apt_distros             += distro_groups_map['debian-based']
-
-        dnf_distros             += distro_groups_map['fedora-based']
-        dnf_distros             += distro_groups_map['rhel-based']
-        dnf_distros             += distro_groups_map['mandriva-based']
-
-        eopkg_distros           += distro_groups_map['solus-based']
-
-        pacman_distros          += distro_groups_map['arch-based']
-
-        rpmostree_distros       += distro_groups_map['fedora-immutables']
-
-        transupd_distros        += distro_groups_map['microos-based']
-
-        xbps_distros            += distro_groups_map['void-based']
-
-        zypper_distros          += distro_groups_map['tumbleweed-based']
-        zypper_distros          += distro_groups_map['leap-based']
-
-    except (KeyError, TypeError) as key_err:
-        print()
-        error(f'Problem setting up package manager distro lists:\n\t{key_err}')
-        safe_shutdown(1)
-
     def call_installer_method(installer_method):
         """Utility function to call the installer function and handle post-call tasks."""
         if callable(installer_method):  # Ensure the passed method is callable
@@ -1588,24 +1613,10 @@ def install_distro_pkgs():
             error(f"The provided installer_method argument is not a callable:\n {obj_name}")
             safe_shutdown(1)
 
-    ###########################################################################
-    ###  PACKAGE MANAGER DISPATCHER  ##########################################
-    ###########################################################################
-    # map installer dispatcher class static methods to each pkg mgr distro list
-    pkg_mgr_dispatch_map = {
-        tuple(apt_distros):             PackageInstallerDispatcher.install_on_apt_distro,
-        tuple(dnf_distros):             PackageInstallerDispatcher.install_on_dnf_distro,
-        tuple(eopkg_distros):           PackageInstallerDispatcher.install_on_eopkg_distro,
-        tuple(pacman_distros):          PackageInstallerDispatcher.install_on_pacman_distro,
-        tuple(rpmostree_distros):       PackageInstallerDispatcher.install_on_rpmostree_distro,
-        tuple(transupd_distros):        PackageInstallerDispatcher.install_on_transupd_distro,
-        tuple(xbps_distros):            PackageInstallerDispatcher.install_on_xbps_distro,
-        tuple(zypper_distros):          PackageInstallerDispatcher.install_on_zypper_distro,
-        # add any new package manager distro lists...
-    }
+    pkg_mgr_groups = PackageManagerGroups()
 
     # Determine the correct installation class method
-    for distro_list, installer_method in pkg_mgr_dispatch_map.items():
+    for distro_list, installer_method in pkg_mgr_groups.dispatch_map.items():
         if cnfg.DISTRO_ID in distro_list:
             call_installer_method(installer_method)
             return
