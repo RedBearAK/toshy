@@ -376,13 +376,13 @@ Invoking this command instead of doing the "install" command may require some ex
 
 ## How to Uninstall
 
-This should work now:  
+The `uninstall` command is just another command inside the setup script, so follow the same instructions from "How to Install", but run the setup script with `uninstall` as the command argument, instead of `install`. Like this:  
 
 ```sh
 ./setup_toshy.py uninstall
 ``` 
 
-Please file an issue if you have some sort of trouble with the `uninstall` command. If you have a multi-desktop system you may need to run the uninstall procedure while logged into KDE if you ran the installer in KDE, due to the KDE-specific components that get installed for Wayland support.  
+Please file an issue if you have some sort of trouble with the `uninstall` command. If you have a multi-desktop system you may need to run the uninstall procedure while logged into KDE if you ran the installer in KDE, due to the KDE-specific components that get installed for Wayland support. Or just manually remove the KWin script from the KWin Scripts control panel.  
 
 ◊  
 
@@ -398,7 +398,7 @@ You will find these distro groupings in the Wiki article:
 
 - [RHEL, CentOS and clones/compatibles](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#red-hat-enterprise-linux-rhel-clones-centos-stream)
 
-- [openSUSE Leap/Tumbleweed/Aeon](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#opensuse-rpm-based-packaging-system)
+- [openSUSE Leap / Tumbleweed / Aeon / MicroOS](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#opensuse-rpm-based-packaging-system)
 
 - [OpenMandriva](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#openmandriva-dnfrpm-based-descended-from-mandriva-mandrake)
 
@@ -408,9 +408,8 @@ You will find these distro groupings in the Wiki article:
 
 - [Arch (... BTW) and variants](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#arch-arch-based-and-related-distros)
 
-- [Solus](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#independent-distros)
 
-- [Void](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#independent-distros)
+- [Independent distros](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#independent-distros)
 
 ◊  
 
