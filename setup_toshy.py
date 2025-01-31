@@ -1125,7 +1125,7 @@ class DistroQuirksHandler:
             safe_shutdown(1)
 
     @staticmethod
-    def handle_quirks_RHEL_8_9():
+    def handle_quirks_RHEL_8_and_9():
         print('Doing prep/checks for RHEL 8/9 type distro...')
 
         # for libappindicator-gtk3: sudo dnf install -y epel-release
@@ -1401,7 +1401,7 @@ class PackageInstallDispatcher:
             if cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '8':
                 DistroQuirksHandler.handle_quirks_CentOS_Stream_8()
             if cnfg.distro_mjr_ver in ['8', '9']:
-                DistroQuirksHandler.handle_quirks_RHEL_8_9()
+                DistroQuirksHandler.handle_quirks_RHEL_8_and_9()
             if cnfg.distro_mjr_ver in ['10']:
                 DistroQuirksHandler.handle_quirks_RHEL_10()
 
