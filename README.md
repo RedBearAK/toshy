@@ -224,7 +224,7 @@ The window context module of the keymapper installed by Toshy will seamlessly ju
 
 The `Xremap` GNOME shell extension is the only one that supports older GNOME versions, so it's the only one that will show up when browsing the extensions list from an environment like Zorin OS 16.x (GNOME 3.38.x) or the distros based on Red Hat Enterprise Linux (clones or RHEL compatibles like AlmaLinux, Rocky Linux, Oracle Linux, EuroLinux, etc.) which are still using GNOME 40.x on the 9.x versions.  
 
-There is a weird bug with searching for extensions by name sometimes, where you actually have to use the option "Show Unsupported" from the hamburger menu in order to get it to show up. This seems to happen at random, and may be dependent on what is going on with GNOME's extension site. Just make sure that the extension says in its details page that it is compatible with your version of the GNOME shell, and it should be fine to install.  
+There is a weird bug at times with searching for extensions by name, where you actually have to use the option "Show Unsupported" from the hamburger menu in order to get it to show up. This seems to happen at random, and may be dependent on what is going on with GNOME's extension site. Just make sure that the extension says in its details page that it is compatible with your version of the GNOME shell, and it should be fine to install.  
 
 ◊  
 
@@ -240,10 +240,14 @@ There is a weird bug with searching for extensions by name sometimes, where you 
 > Installer commands and options are now different from early Toshy releases.  
 > CentOS 7 and CentOS Stream 8 users: run `./prep_centos_before_setup.sh` first.  
 
-0. Verify that your specific distro or basic distro type is [supported](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros)
+0. _Verify that your specific distro or basic distro type is [supported](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros)_
+
 1. Click the big green **`  <> Code  ▼  `** button near the top of the page.
+
 1. Download the latest zip file from the drop-down. ("Releases" are older.)  
+
 1. Unzip the archive, and open a terminal **_in the resulting folder_**.  
+
 1. Run the Toshy installer script command in the terminal, like this:  
 
 ```sh
@@ -372,13 +376,13 @@ Invoking this command instead of doing the "install" command may require some ex
 
 ## How to Uninstall
 
-This should work now:  
+The `uninstall` command is just another command inside the setup script, so follow the same instructions from "How to Install", but run the setup script with `uninstall` as the command argument, instead of `install`. Like this:  
 
 ```sh
 ./setup_toshy.py uninstall
 ``` 
 
-Please file an issue if you have some sort of trouble with the `uninstall` command. If you have a multi-desktop system you may need to run the uninstall procedure while logged into KDE if you ran the installer in KDE, due to the KDE-specific components that get installed for Wayland support.  
+Please file an issue if you have some sort of trouble with the `uninstall` command. If you have a multi-desktop system you may need to run the uninstall procedure while logged into KDE if you ran the installer in KDE, due to the KDE-specific components that get installed for Wayland support. Or just manually remove the KWin script from the KWin Scripts control panel.  
 
 ◊  
 
@@ -394,7 +398,7 @@ You will find these distro groupings in the Wiki article:
 
 - [RHEL, CentOS and clones/compatibles](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#red-hat-enterprise-linux-rhel-clones-centos-stream)
 
-- [openSUSE Leap/Tumbleweed/Aeon](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#opensuse-rpm-based-packaging-system)
+- [openSUSE Leap / Tumbleweed / Aeon / MicroOS](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#opensuse-rpm-based-packaging-system)
 
 - [OpenMandriva](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#openmandriva-dnfrpm-based-descended-from-mandriva-mandrake)
 
@@ -404,9 +408,8 @@ You will find these distro groupings in the Wiki article:
 
 - [Arch (... BTW) and variants](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#arch-arch-based-and-related-distros)
 
-- [Solus](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#independent-distros)
 
-- [Void](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#independent-distros)
+- [Independent distros](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#independent-distros)
 
 ◊  
 
@@ -528,15 +531,18 @@ Toshy does its best to set itself up automatically on any Linux system that uses
 - `xbps-install`
 - `zypper`
 
-If the install was successful, there should be a number of different `toshy-*` terminal commands available to check the status of the Toshy `systemd` user services (the services are not system-wide, in an attempt to support multi-user setups and support Wayland environments more easily) and stop/start/restart the services.  
+If the install was successful, there should be a number of different `toshy-*` terminal commands available to check the status of the Toshy `systemd` user services (the services are not system-wide, in an attempt to support multi-user setups and support Wayland environments more easily) and do useful like stop/start/restart the services.  
 
 Toshy primarily consists of two separate `systemd` services meant to work together, with one monitoring the other, so the shell commands are meant to make working with the paired services much easier.  
 
-(There are now multiple other services, but they are each only active in a specific Wayland environment, creating a D-Bus service for the keymapper to query. The D-Bus service in turn receives updates from some source with the necessary window info, such as a KWin script in Plasma, or events from a Wayland protocol interface in `wlroots` or COSMIC. If you aren't in one of the relevant environments, these extra service units should all be inactive a few seconds after all the services start.)  
+> [!NOTE]  
+> (There are now multiple other services, but they will only stay active in a specific Wayland environment, creating a D-Bus service for the keymapper to query. The D-Bus service in turn acqquires data from some source with the necessary active/focused window info, such as a KWin script in Plasma, or events from a Wayland protocol interface in `wlroots` or COSMIC. If you aren't in one of the relevant environments, these extra service units should all be inactive a few seconds after all the services start/restart.)  
 
-The commands are copied into `~/.local/bin`, and you will be prompted to add that location to your shell's `PATH` if it is not present. Depends on the distro whether that location is already set up as part of the path or not.  
+The commands are copied into `~/.local/bin/`, and you will be prompted to let the installer script automatically add that location to your user's `PATH` if it is not present in the default `PATH` variable. It depends on the distro whether that location is already set up as part of the path or not, so you may not see this prompt if it's not necessary.  
 
-If you change your shell or reset your RC file and need to fix the `PATH`, an easy way to do that is to run this script that re-installs the terminal commands in the same way they were initially installed:  
+Originally the local/bin location was added to the user's `PATH` in their shell's RC file. But this made the commands only available in a terminal app. The Toshy installer now adds `~/.local/bin/` to the `PATH` in a more appropriate place, the `~/.profile` file, which makes the commands available throughout the login session, even if you aren't in a terminal. This means the commands should work in startup scripts and app launchers that are capable of running raw commands.  
+
+If for any reason you need to fix the `PATH`, such as having deleted or modified `~/.profile` in a way that removed the `PATH` addition, an easy way to fix that is to run this script that re-installs the terminal commands in the same way they were initially installed:  
 
 ```sh
 ~/.config/toshy/scripts/toshy-bincommands-setup.sh
