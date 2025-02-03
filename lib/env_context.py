@@ -105,11 +105,50 @@ class EnvironmentInfo:
         return contents
 
     def is_process_running(self, process_name):
-        """Utility function to check if process is running, case-insensitive where supported"""
-        cmd = ['pgrep', '-x', '-i', process_name]
-        if self.DISTRO_ID == "centos" and self.DISTRO_VER == "7":
-            # CentOS 7 complains about "-i" being invalid option, so remove it
-            cmd = ['pgrep', '-x', process_name]
+        """
+        Utility function to check if process is running.
+        For names >15 chars, uses pgrep -f with careful pattern matching to avoid false positives.
+        Tests for feature support and falls back gracefully if advanced features unavailable.
+        """
+        # Test if -i is supported
+        try:
+            subprocess.check_output(['pgrep', '-i', 'test'], stderr=subprocess.PIPE)
+            case_insensitive = True
+        except subprocess.CalledProcessError as e:
+            if "invalid option" in str(e.stderr):
+                case_insensitive = False
+            else:
+                # Process just wasn't found in test, but -i is supported
+                case_insensitive = True
+
+        if len(process_name) <= 15:
+            # Standard exact match for short names
+            cmd = ['pgrep', '-x']
+            if case_insensitive:
+                cmd.append('-i')
+            cmd.append(process_name)
+        else:
+            # For long names, try using -f with careful pattern matching
+            pattern = f"(/|^){process_name}($| )"
+            try:
+                # Test if -f is supported with a pattern
+                test_cmd = ['pgrep', '-f', 'test']
+                subprocess.check_output(test_cmd, stderr=subprocess.PIPE)
+                # If we get here, -f is supported
+                cmd = ['pgrep', '-f', pattern]
+            except subprocess.CalledProcessError as e:
+                if "invalid option" in str(e.stderr):
+                    # If -f isn't supported, fall back to truncated exact match
+                    print(f"Warning: process name '{process_name}' is >15 chars and pgrep -f "
+                        f"is not supported. Falling back to exact match with '{process_name[:15]}'")
+                    cmd = ['pgrep', '-x']
+                    if case_insensitive:
+                        cmd.append('-i')
+                    cmd.append(process_name[:15])
+                else:
+                    # Process just wasn't found in test
+                    cmd = ['pgrep', '-f', pattern]
+
         try:
             subprocess.check_output(cmd)
             return True
