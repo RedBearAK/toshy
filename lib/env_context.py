@@ -587,6 +587,13 @@ class EnvironmentInfo:
                 'miriway-shell',    # Wayland compositor (actual process name?)
             ],
 
+            # Deepin Desktop Environment
+            'dde': [
+                'deepin-kwin_wayland',
+                'deepin-kwin_x11',
+                'deepin-kwin',
+            ],
+
             'awesome':          'awesome',
             'cinnamon':         'cinnamon',
             'cosmic':           'cosmic-comp',
