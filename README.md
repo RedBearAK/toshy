@@ -376,7 +376,7 @@ Invoking this command instead of doing the "install" command may require some ex
 
 ## How to Uninstall
 
-The `uninstall` command is just another command inside the setup script, so follow the same instructions from "How to Install", but run the setup script with `uninstall` as the command argument, instead of `install`. Like this:  
+The `uninstall` command is just another command inside the setup script, so follow the same initial instructions from the "[How to Install](#how-to-install)" section above, but run the setup script with `uninstall` as the command argument, instead of `install`. Like this:  
 
 ```sh
 ./setup_toshy.py uninstall
