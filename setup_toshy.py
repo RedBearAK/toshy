@@ -665,6 +665,8 @@ distro_groups_map: Dict[str, List[str]] = {
 
     'void-based':               ["void"],
 
+    'kaos-based':               ["kaos"],
+
     # Add more as needed...
 }
 
@@ -836,6 +838,16 @@ pkg_groups_map: Dict[str, List[str]] = {
                                 "python3-pkgconfig", "python3-tkinter",
                             "wayland-devel", "wget",
                             "xset",
+                            "zenity"],
+
+    'kaos-based':          ["cairo",
+                            "dbus",
+                            "evtest",
+                            "gcc", "git", "gobject-introspection",
+                            "libappindicator-gtk3", "libnotify", "libxkbcommon",
+                            "pkg-config", "python", "dbus-python3", "python-pip",
+                            "systemd",
+                            "tk",
                             "zenity"],
 
 }
@@ -1526,6 +1538,7 @@ class PackageManagerGroups:
             self.eopkg_distros          += distro_groups_map['solus-based']
             # 'pacman': Arch, BTW
             self.pacman_distros         += distro_groups_map['arch-based']
+            self.pacman_distros         += distro_groups_map['kaos-based']
             # 'rpm-ostree': Fedora atomic/immutables
             self.rpmostree_distros      += distro_groups_map['fedora-immutables']
             # 'transactional-update': openSUSE MicroOS/Aeon/Kalpa
