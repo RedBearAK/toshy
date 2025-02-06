@@ -549,6 +549,44 @@ def ask_add_home_local_bin():
                 file.write('Nothing to see here.')
 
 
+def check_gnome_wayland_extns():
+    """
+    Utility function to check for installed/enabled shell extensions compatible with the 
+    keymapper, for supporting app-specific remapping in Wayland+GNOME sessions.
+    """
+
+    extensions_to_check = [
+        'focused-window-dbus@flexagoon.com',
+        'window-calls-extended@hseliger.eu',
+        'xremap@k0kubun.com',
+    ]
+
+    # Check for installed extensions
+    user_ext_dir = os.path.expanduser('~/.local/share/gnome-shell/extensions')
+    sys_ext_dir = '/usr/share/gnome-shell/extensions'
+    
+    installed_exts = []
+    
+    for ext_uuid in extensions_to_check:
+        if (os.path.exists(os.path.join(user_ext_dir, ext_uuid)) or 
+            os.path.exists(os.path.join(sys_ext_dir, ext_uuid))):
+            installed_exts.append(ext_uuid)
+
+    # Check enabled state via gsettings
+    try:
+        result = subprocess.run(
+            ['gsettings', 'get', 'org.gnome.shell', 'enabled-extensions'],
+            capture_output=True, 
+            text=True
+        )
+        enabled_extensions = eval(result.stdout.strip())  # Safely evaluate the array string
+        enabled_exts = [ext for ext in installed_exts if ext in enabled_extensions]
+    except (subprocess.SubprocessError, ValueError):
+        enabled_exts = []  # Can't determine enabled state
+        
+    return installed_exts, enabled_exts
+
+
 def elevate_privileges():
     """Elevate privileges early in the installer process, or invoke unprivileged install"""
 
@@ -665,7 +703,10 @@ distro_groups_map: Dict[str, List[str]] = {
 
     'void-based':               ["void"],
 
-    'kaos-based':               ["kaos"],
+    # Attempted to add and test KaOS Linux. Result:
+    # KaOS is NOT compatible with this project. 
+    # No packages provide "evtest", "libappindicator", "zenity". 
+    # The KaOS repos seem highly restricted to only Qt/KDE related packages. 
 
     # Add more as needed...
 }
@@ -838,16 +879,6 @@ pkg_groups_map: Dict[str, List[str]] = {
                                 "python3-pkgconfig", "python3-tkinter",
                             "wayland-devel", "wget",
                             "xset",
-                            "zenity"],
-
-    'kaos-based':          ["cairo",
-                            "dbus",
-                            "evtest",
-                            "gcc", "git", "gobject-introspection",
-                            "libappindicator-gtk3", "libnotify", "libxkbcommon",
-                            "pkg-config", "python", "dbus-python3", "python-pip",
-                            "systemd",
-                            "tk",
                             "zenity"],
 
 }
@@ -1538,7 +1569,6 @@ class PackageManagerGroups:
             self.eopkg_distros          += distro_groups_map['solus-based']
             # 'pacman': Arch, BTW
             self.pacman_distros         += distro_groups_map['arch-based']
-            self.pacman_distros         += distro_groups_map['kaos-based']
             # 'rpm-ostree': Fedora atomic/immutables
             self.rpmostree_distros      += distro_groups_map['fedora-immutables']
             # 'transactional-update': openSUSE MicroOS/Aeon/Kalpa
