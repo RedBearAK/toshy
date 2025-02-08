@@ -228,6 +228,7 @@ class InstallerSettings:
         self.barebones_config       = None
         self.skip_native            = None
         self.fancy_pants            = None
+        self.app_switcher           = None      # Install/upgrade Application Switcher KWin script
         self.no_dbus_python         = None
 
         self.tweak_applied          = None
@@ -270,6 +271,13 @@ def safe_shutdown(exit_code: int):
     subprocess.run(['sudo', '-k'])
     print()                         # avoid crowding the prompt on exit
     sys.exit(exit_code)
+
+
+# Limit script to operating on Python 3.6 or later (e.g. CentOS 7, Leap, RHEL 8, etc.)
+if py_interp_ver_tup < (3, 6):
+    print()
+    error(f"Python version is older than 3.6. This is untested and probably will not work.")
+    safe_shutdown(1)
 
 
 def show_reboot_prompt():
@@ -549,11 +557,34 @@ def ask_add_home_local_bin():
                 file.write('Nothing to see here.')
 
 
-def check_gnome_wayland_extns():
+def ask_for_attn_on_info():
+    """
+    Utility function to request confirmation of attention before 
+    moving on in the install process.
+    """
+    secret_code = generate_secret_code()
+
+    response = input(
+        f"To show that you read the info just above, enter the secret code '{secret_code}': "
+    )
+
+    if response == secret_code:
+        print()
+        info("Good code. User has acknowledged reading the info above. Proceeding...\n")
+    else:
+        print()
+        error("Code does not match! Run the installer again and pay more attention...")
+        safe_shutdown(1)
+
+
+def check_gnome_wayland_exts():
     """
     Utility function to check for installed/enabled shell extensions compatible with the 
     keymapper, for supporting app-specific remapping in Wayland+GNOME sessions.
     """
+
+    if not cnfg.DESKTOP_ENV == 'gnome':
+        return
 
     extensions_to_check = [
         'focused-window-dbus@flexagoon.com',
@@ -564,9 +595,9 @@ def check_gnome_wayland_extns():
     # Check for installed extensions
     user_ext_dir = os.path.expanduser('~/.local/share/gnome-shell/extensions')
     sys_ext_dir = '/usr/share/gnome-shell/extensions'
-    
+
     installed_exts = []
-    
+
     for ext_uuid in extensions_to_check:
         if (os.path.exists(os.path.join(user_ext_dir, ext_uuid)) or 
             os.path.exists(os.path.join(sys_ext_dir, ext_uuid))):
@@ -574,17 +605,139 @@ def check_gnome_wayland_extns():
 
     # Check enabled state via gsettings
     try:
-        result = subprocess.run(
-            ['gsettings', 'get', 'org.gnome.shell', 'enabled-extensions'],
-            capture_output=True, 
-            text=True
-        )
-        enabled_extensions = eval(result.stdout.strip())  # Safely evaluate the array string
-        enabled_exts = [ext for ext in installed_exts if ext in enabled_extensions]
+
+        cmd_lst = ['gsettings', 'get', 'org.gnome.shell', 'enabled-extensions']
+
+        if py_interp_ver_tup >= (3, 7):
+            result = subprocess.run(cmd_lst, capture_output=True, text=True)
+        elif py_interp_ver_tup == (3, 6):
+            result = subprocess.run(cmd_lst, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+        # Versions older than 3.6 already blocked in code, right after safe_shutdown defined.
+
+        # Get raw string output and clean it
+        gsettings_output = result.stdout.strip()
+
+        # Parse the string safely - it's a list literal with single quotes
+        if gsettings_output.startswith('[') and gsettings_output.endswith(']'):
+            # Remove brackets and split on commas
+            raw_exts = gsettings_output[1:-1].split(',')
+            # Clean up each extension string
+            all_enabled_exts = [ext.strip().strip("'") for ext in raw_exts if ext.strip()]
+        else:
+            all_enabled_exts = []
+
+        # Filter to just our required extensions that are both installed and enabled
+        enabled_exts = [ext for ext in installed_exts if ext in all_enabled_exts]
+
     except (subprocess.SubprocessError, ValueError):
         enabled_exts = []  # Can't determine enabled state
-        
-    return installed_exts, enabled_exts
+
+    if len(enabled_exts) >= 1:
+        # If at least one GNOME extension is enabled, everything is good
+        print("A compatible GNOME shell extension is enabled for Wayland+GNOME. All good.")
+        print(f"Extension(s) found: {enabled_exts}")
+    elif not enabled_exts and len(installed_exts) >= 1:
+        # If no GNOME extensions enabled, but at least one installed, remind user to enable
+        print("Enable one of the compatible GNOME shell extension for Wayland+GNOME support.")
+        print("See 'Requirements' section in the Toshy README.")
+        ask_for_attn_on_info()
+    elif not installed_exts:
+        # If no GNOME extension installed, remind user to install and enable one
+        print("Install one of the compatible GNOME shell extensions for Wayland+GNOME support.")
+        print("See 'Requirements' section in the Toshy README.")
+        ask_for_attn_on_info()
+
+
+def check_gnome_indicator_ext():
+    """
+    Utility function to check for an installed and enabled GNOME shell extension for
+    supporting the display of app indicators in the top bar. Such as the extension
+    'AppIndicator and KStatusNotifierItem Support' maintained by Ubuntu.
+    """
+    if not cnfg.DESKTOP_ENV == 'gnome':
+        return
+
+    extensions_to_check = [
+        'appindicatorsupport@rgcjonas.gmail.com',
+        'TopIcons@phocean.net', 
+        'top-icons-redux@pop-planet.info',
+    ]
+
+    # Check for installed extensions
+    user_ext_dir = os.path.expanduser('~/.local/share/gnome-shell/extensions')
+    sys_ext_dir = '/usr/share/gnome-shell/extensions'
+
+    installed_exts = []
+
+    for ext_uuid in extensions_to_check:
+        if (os.path.exists(os.path.join(user_ext_dir, ext_uuid)) or 
+            os.path.exists(os.path.join(sys_ext_dir, ext_uuid))):
+            installed_exts.append(ext_uuid)
+
+    # Check enabled state via gsettings
+    try:
+        cmd_lst = ['gsettings', 'get', 'org.gnome.shell', 'enabled-extensions']
+
+        if py_interp_ver_tup >= (3, 7):
+            result = subprocess.run(cmd_lst, capture_output=True, text=True)
+        elif py_interp_ver_tup == (3, 6):
+            result = subprocess.run(cmd_lst, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+        # Versions older than 3.6 already blocked in code, right after safe_shutdown defined.
+
+        # Get raw string output and clean it
+        gsettings_output = result.stdout.strip()
+
+        # Parse the string safely - it's a list literal with single quotes
+        if gsettings_output.startswith('[') and gsettings_output.endswith(']'):
+            # Remove brackets and split on commas
+            raw_exts = gsettings_output[1:-1].split(',')
+            # Clean up each extension string
+            all_enabled_exts = [ext.strip().strip("'") for ext in raw_exts if ext.strip()]
+        else:
+            all_enabled_exts = []
+
+        # Filter to just our required extensions that are both installed and enabled
+        enabled_exts = [ext for ext in installed_exts if ext in all_enabled_exts]
+
+    except (subprocess.SubprocessError, ValueError):
+        enabled_exts = []  # Can't determine enabled state
+
+    if len(enabled_exts) >= 1:
+        # If at least one GNOME extension is enabled, everything is good 
+        print("A compatible GNOME shell extension is enabled for system tray icons. All good.")
+        print(f"Extension(s) found: {enabled_exts}")
+    elif not enabled_exts and len(installed_exts) >= 1:
+        # If no GNOME extensions enabled, but at least one installed, remind user to enable
+        print("Enable one of the compatible GNOME shell extensions for system tray icon support.")
+        print("See 'Requirements' section in the Toshy README.")
+        ask_for_attn_on_info()
+    elif not installed_exts:
+        # If no GNOME extension installed, remind user to install and enable one 
+        print("Install one of the compatible GNOME shell extensions for system tray icon support.")
+        print("See 'Requirements' section in the Toshy README.")
+        ask_for_attn_on_info()
+
+
+def check_kde_app_switcher():
+    """
+    Utility function to check for the Application Switcher KWin script that enables 
+    grouped-application-windows task switching in KDE/KWin environments.
+    """
+    if not cnfg.DESKTOP_ENV == 'kde':
+        return
+
+    script_path = os.path.expanduser('~/.local/share/kwin/scripts/applicationswitcher')
+
+    if os.path.exists(script_path):
+        print("Application Switcher KWin script is installed. All good.")
+        # Reinstall/upgrade the Application Switcher KWin script to make sure it is current
+        cnfg.app_switcher = True
+    else:
+        print()
+        result = input(
+            "Install the Application Switcher KWin script for grouped window switching? [Y/n]: ")
+        if result.casefold() == 'y':
+            cnfg.app_switcher = True
 
 
 def elevate_privileges():
@@ -3089,7 +3242,7 @@ def apply_tweaks_KDE():
     # Run reconfigure command
     do_kwin_reconfigure()
 
-    if cnfg.fancy_pants:
+    if cnfg.fancy_pants or cnfg.app_switcher:
         print(f'Installing "Application Switcher" KWin script...')
         # How to install nclarius grouped "Application Switcher" KWin script:
         # git clone https://github.com/nclarius/kwin-application-switcher.git
@@ -3649,6 +3802,13 @@ def main(cnfg: InstallerSettings):
 
     if cnfg.DISTRO_ID not in get_supported_distro_ids_lst():
         exit_with_invalid_distro_error()
+
+    if cnfg.DESKTOP_ENV == 'gnome':
+        check_gnome_wayland_exts()
+        check_gnome_indicator_ext()
+
+    if not cnfg.fancy_pants and cnfg.DESKTOP_ENV == 'kde':
+        check_kde_app_switcher()
 
     elevate_privileges()
 
