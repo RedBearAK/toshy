@@ -228,8 +228,9 @@ class InstallerSettings:
         self.barebones_config       = None
         self.skip_native            = None
         self.fancy_pants            = None
-        self.app_switcher           = None      # Install/upgrade Application Switcher KWin script
         self.no_dbus_python         = None
+
+        self.app_switcher           = None      # Install/upgrade Application Switcher KWin script
 
         self.tweak_applied          = None
         self.remind_extensions      = None
@@ -735,9 +736,12 @@ def check_kde_app_switcher():
     else:
         print()
         result = input(
-            "Install the Application Switcher KWin script for grouped window switching? [Y/n]: ")
-        if result.casefold() == 'y':
+            "Install a KWin script that enables macOS-like grouped window switching? [Y/n]: ")
+        if result.casefold() in ['y', 'yes', '']:
             cnfg.app_switcher = True
+        elif result.casefold() not in ['n', 'no']:
+            error("Invalid input. Run the installer and try again.")
+            safe_shutdown(1)
 
 
 def elevate_privileges():
