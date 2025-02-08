@@ -719,7 +719,7 @@ def check_gnome_indicator_ext():
     if len(enabled_exts) >= 1:
         # If at least one GNOME extension is enabled, everything is good 
         print()
-        print("A compatible GNOME shell extension is enabled for system tray icons. All good.")
+        print("A compatible GNOME shell extension is enabled for system tray icons. Good.")
         print(f"Enabled extension(s) found:\n  {enabled_exts}")
     elif not enabled_exts and len(installed_exts) >= 1:
         # If no GNOME extensions enabled, but at least one installed, remind user to enable
@@ -3830,14 +3830,16 @@ def main(cnfg: InstallerSettings):
     if cnfg.DISTRO_ID not in get_supported_distro_ids_lst():
         exit_with_invalid_distro_error()
 
-    if cnfg.DESKTOP_ENV == 'gnome' and cnfg.SESSION_TYPE == 'wayland':
-        check_gnome_wayland_exts()
+    if not cnfg.prep_only:
 
-    if cnfg.DESKTOP_ENV == 'gnome':
-        check_gnome_indicator_ext()
+        if cnfg.DESKTOP_ENV == 'gnome' and cnfg.SESSION_TYPE == 'wayland':
+            check_gnome_wayland_exts()
 
-    if not cnfg.fancy_pants and cnfg.DESKTOP_ENV == 'kde':
-        check_kde_app_switcher()
+        if cnfg.DESKTOP_ENV == 'gnome':
+            check_gnome_indicator_ext()
+
+        if not cnfg.fancy_pants and cnfg.DESKTOP_ENV == 'kde':
+            check_kde_app_switcher()
 
     elevate_privileges()
 
