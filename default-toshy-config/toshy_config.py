@@ -4284,7 +4284,7 @@ keymap("Kitty terminal - not tab nav", {
 keymap("Konsole terminal - not tab nav", {
     C("RC-comma"):              C("Shift-C-comma"),             # Open Preferences dialog
     C("RC-0"):                  C("C-Alt-0"),                   # Reset font size
-    C("RC-K"):                  C("Shift-C-K"),                 # clear log
+    C("RC-K"):                  C("Shift-C-K"),                 # Clear Scrollback and Reset
 }, when = matchProps(clas="^Konsole$|^org.kde.Konsole$"))
 
 keymap("Terminology terminal", {
@@ -4350,7 +4350,9 @@ if DESKTOP_ENV == 'budgie':
         matchProps(clas=termStr)(ctx)
     )
 
-if DESKTOP_ENV == 'cosmic':
+# On Pop!_OS 22.04, System76 seems to have changed the name of the DE from 'cosmic' to 'pop'.
+# Probably to avoid overlapping with the new COSMIC desktop environment in Pop!_OS 24.04 and later.
+if DESKTOP_ENV in ['cosmic', 'pop']:
     keymap("GenTerms overrides: COSMIC", {
         C("LC-RC-F"):               C("Super-M"),                   # Maximize window toggle (overrides General terminals)
     }, when = lambda ctx:
@@ -4651,7 +4653,9 @@ if DESKTOP_ENV == 'cinnamon':
         matchProps(not_clas=remoteStr)(ctx)
     )
 
-if DESKTOP_ENV == 'cosmic':
+# On Pop!_OS 22.04, System76 seems to have changed the name of the DE from 'cosmic' to 'pop'.
+# Probably to avoid overlapping with the new COSMIC desktop environment in Pop!_OS 24.04 and later.
+if DESKTOP_ENV in ['cosmic', 'pop']:
     keymap("GenGUI overrides: COSMIC", {
         # No shortcuts settings panel seems to be available at this time (July 30, 2024),
         # so we can't "fix" this during Toshy install to not use the Meta/Super key.
