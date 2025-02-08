@@ -643,14 +643,17 @@ def check_gnome_wayland_exts():
         # If no GNOME extensions enabled, but at least one installed, remind user to enable
         print()
         print(cnfg.separator)
-        print("There is a compatible shell extension installed, but it is not enabled.")
-        print("Enable one of the compatible GNOME shell extension for Wayland+GNOME support.")
+        print()
+        print("There is a compatible shell extension installed, but it is not enabled:")
+        print(f"  {installed_exts}")
+        print("Enable one of the compatible GNOME shell extensions for Wayland+GNOME support.")
         print("  (See 'Requirements' section in the Toshy README.)")
         ask_for_attn_on_info()
     elif not installed_exts:
         # If no GNOME extension installed, remind user to install and enable one
         print()
         print(cnfg.separator)
+        print()
         print("Install one of the compatible GNOME shell extensions for Wayland+GNOME support.")
         print("  (See 'Requirements' section in the Toshy README.)")
         ask_for_attn_on_info()
@@ -719,14 +722,17 @@ def check_gnome_indicator_ext():
         # If no GNOME extensions enabled, but at least one installed, remind user to enable
         print()
         print(cnfg.separator)
-        print("There is a system tray indicator extension installed, but it is not enabled.")
-        print("Enable one of the compatible GNOME shell extensions for system tray icon support.")
+        print()
+        print("There is a system tray indicator extension installed, but it is not enabled:")
+        print(f"  {installed_exts}")
+        print("Without an extension enabled, the tray icon will NOT appear in the top bar.")
         print("  (See 'Requirements' section in the Toshy README.)")
         ask_for_attn_on_info()
     elif not installed_exts:
         # If no GNOME extension installed, remind user to install and enable one 
         print()
         print(cnfg.separator)
+        print()
         print("Install one of the compatible GNOME shell extensions for system tray icon support.")
         print("  (See 'Requirements' section in the Toshy README.)")
         ask_for_attn_on_info()
