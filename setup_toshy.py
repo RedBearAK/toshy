@@ -635,15 +635,18 @@ def check_gnome_wayland_exts():
 
     if len(enabled_exts) >= 1:
         # If at least one GNOME extension is enabled, everything is good
+        print()
         print("A compatible GNOME shell extension is enabled for Wayland+GNOME. All good.")
         print(f"Extension(s) found: {enabled_exts}")
     elif not enabled_exts and len(installed_exts) >= 1:
         # If no GNOME extensions enabled, but at least one installed, remind user to enable
+        print()
         print("Enable one of the compatible GNOME shell extension for Wayland+GNOME support.")
         print("See 'Requirements' section in the Toshy README.")
         ask_for_attn_on_info()
     elif not installed_exts:
         # If no GNOME extension installed, remind user to install and enable one
+        print()
         print("Install one of the compatible GNOME shell extensions for Wayland+GNOME support.")
         print("See 'Requirements' section in the Toshy README.")
         ask_for_attn_on_info()
@@ -705,15 +708,18 @@ def check_gnome_indicator_ext():
 
     if len(enabled_exts) >= 1:
         # If at least one GNOME extension is enabled, everything is good 
+        print()
         print("A compatible GNOME shell extension is enabled for system tray icons. All good.")
         print(f"Extension(s) found: {enabled_exts}")
     elif not enabled_exts and len(installed_exts) >= 1:
         # If no GNOME extensions enabled, but at least one installed, remind user to enable
+        print()
         print("Enable one of the compatible GNOME shell extensions for system tray icon support.")
         print("See 'Requirements' section in the Toshy README.")
         ask_for_attn_on_info()
     elif not installed_exts:
         # If no GNOME extension installed, remind user to install and enable one 
+        print()
         print("Install one of the compatible GNOME shell extensions for system tray icon support.")
         print("See 'Requirements' section in the Toshy README.")
         ask_for_attn_on_info()
