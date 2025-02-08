@@ -637,16 +637,17 @@ def check_gnome_wayland_exts():
     if len(enabled_exts) >= 1:
         # If at least one GNOME extension is enabled, everything is good
         print()
-        print("A compatible GNOME shell extension is enabled for Wayland+GNOME. All good.")
+        print("A compatible GNOME shell extension is enabled for GNOME Wayland support. Good.")
         print(f"Enabled extension(s) found:\n  {enabled_exts}")
     elif not enabled_exts and len(installed_exts) >= 1:
         # If no GNOME extensions enabled, but at least one installed, remind user to enable
         print()
         print(cnfg.separator)
         print()
-        print("There is a compatible shell extension installed, but it is not enabled:")
+        print("A shell extension is installed for GNOME Wayland support, but it is not enabled:")
         print(f"  {installed_exts}")
-        print("Enable one of the compatible GNOME shell extensions for Wayland+GNOME support.")
+        print("Enable any of the compatible GNOME shell extensions for GNOME Wayland support.")
+        print("Without this, app-specific keymapping will NOT work in a GNOME Wayland session.")
         print("  (See 'Requirements' section in the Toshy README.)")
         ask_for_attn_on_info()
     elif not installed_exts:
@@ -654,7 +655,9 @@ def check_gnome_wayland_exts():
         print()
         print(cnfg.separator)
         print()
-        print("Install one of the compatible GNOME shell extensions for Wayland+GNOME support.")
+        print("No compatible shell extensions for GNOME Wayland session support were found...")
+        print("Install any of the compatible GNOME shell extensions for GNOME Wayland support.")
+        print("Without this, app-specific keymapping will NOT work in a GNOME Wayland session.")
         print("  (See 'Requirements' section in the Toshy README.)")
         ask_for_attn_on_info()
 
@@ -725,7 +728,7 @@ def check_gnome_indicator_ext():
         print()
         print("There is a system tray indicator extension installed, but it is not enabled:")
         print(f"  {installed_exts}")
-        print("Without an extension enabled, the tray icon will NOT appear in the top bar.")
+        print("Without an extension enabled, the Toshy icon will NOT appear in the top bar.")
         print("  (See 'Requirements' section in the Toshy README.)")
         ask_for_attn_on_info()
     elif not installed_exts:
@@ -733,7 +736,8 @@ def check_gnome_indicator_ext():
         print()
         print(cnfg.separator)
         print()
-        print("Install one of the compatible GNOME shell extensions for system tray icon support.")
+        print("Install any compatible GNOME shell extension for system tray icon support.")
+        print("Without an extension enabled, the Toshy icon will NOT appear in the top bar.")
         print("  (See 'Requirements' section in the Toshy README.)")
         ask_for_attn_on_info()
 
