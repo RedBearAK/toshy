@@ -753,7 +753,8 @@ def check_kde_app_switcher():
     script_path = os.path.expanduser('~/.local/share/kwin/scripts/applicationswitcher')
 
     if os.path.exists(script_path):
-        print("Application Switcher KWin script is installed. All good.")
+        print()
+        print("Application Switcher KWin script is installed. Good.")
         # Reinstall/upgrade the Application Switcher KWin script to make sure it is current
         cnfg.app_switcher = True
     else:
