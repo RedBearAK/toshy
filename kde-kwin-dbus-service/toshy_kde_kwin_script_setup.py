@@ -29,8 +29,6 @@ existing_path = os.environ.get('PYTHONPATH', '')
 os.environ['PYTHONPATH'] = f'{parent_folder_path}:{current_folder_path}:{existing_path}'
 
 # local imports now that path is prepped
-import lib.env as env
-
 from lib.env_context import EnvironmentInfo
 
 if os.name == 'posix' and os.geteuid() == 0:
