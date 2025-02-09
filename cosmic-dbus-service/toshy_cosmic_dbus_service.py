@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20241014'
+__version__ = '20250208'
 
 # Reference for generating the protocol modules with pywayland scanner:
 # https://github.com/flacjacket/pywayland/issues/8#issuecomment-987040284
@@ -56,8 +56,6 @@ existing_path = os.environ.get('PYTHONPATH', '')
 os.environ['PYTHONPATH'] = f'{parent_folder_path}:{current_folder_path}:{existing_path}'
 
 # local imports now that path is prepped
-import lib.env as env
-
 from lib.env_context import EnvironmentInfo
 
 from protocols.cosmic_toplevel_info_unstable_v1.zcosmic_toplevel_info_v1 import (
