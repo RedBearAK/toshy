@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20240904'
+__version__ = '20250208'
 
 # Reference for generating the protocol modules with pywayland scanner:
 # https://github.com/flacjacket/pywayland/issues/8#issuecomment-987040284
