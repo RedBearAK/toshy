@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20250124'                        # CLI option "--version" will print this out.
+__version__ = '20250208'                        # CLI option "--version" will print this out.
 
 import os
 os.environ['PYTHONDONTWRITEBYTECODE'] = '1'     # prevent this script from creating cache files
@@ -24,9 +24,7 @@ import subprocess
 from subprocess import DEVNULL, PIPE
 from typing import Dict, List, Tuple, Optional
 
-# local import
-import lib.env as env
-
+# local imports
 from lib.env_context import EnvironmentInfo
 from lib.logger import debug, error, warn, info
 from lib import logger

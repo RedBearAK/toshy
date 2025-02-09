@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-__version__ = '20250128'
+__version__ = '20250208'
 
 # Indicator tray icon menu app for Toshy, using pygobject/gi
 TOSHY_PART      = 'tray'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
@@ -29,8 +29,6 @@ from subprocess import DEVNULL
 from typing import List, Dict, Tuple
 
 # Local imports
-import lib.env as env
-
 from lib.env_context import EnvironmentInfo
 from lib.logger import *
 from lib import logger

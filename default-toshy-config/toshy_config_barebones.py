@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = '20241212'
+__version__ = '20250208'
 ###############################################################################
 ############################   Welcome to Toshy!   ############################
 ###  
@@ -75,8 +75,7 @@ config_globals = inspect.stack()[1][0].f_globals
 current_folder_path = os.path.dirname(os.path.abspath(config_globals["__config__"]))
 sys.path.insert(0, current_folder_path)
 
-import lib.env
-
+# Local imports after path has been set
 from lib.env_context import EnvironmentInfo
 from lib.machine_context import get_machine_id_hash
 from lib.notification_manager import NotificationManager
