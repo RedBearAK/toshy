@@ -219,7 +219,7 @@ else:
 
 try:
     # Help the keymapper select the correct window context provider object
-    environ_api(session_type = SESSION_TYPE, wl_desktop_env = _desktop_env) # type: ignore
+    environ_api(session_type = SESSION_TYPE, wl_compositor = _desktop_env) # type: ignore
 except NameError:
     error(f"The API function 'environ_api' is not defined yet. Wrong keymapper branch?")
     pass
