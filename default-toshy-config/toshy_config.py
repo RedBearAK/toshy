@@ -277,17 +277,17 @@ all_wlroots_compositors = known_wlroots_compositors + wlroots_compositors
 if wlroots_compositors and WINDOW_MGR in wlroots_compositors:
     debug(f"Will use 'wlroots' context provider for '{WINDOW_MGR}' WM", ctx="CG")
     debug("File an issue on GitHub repo if this works for your WM.", ctx="CG")
-    _desktop_env = 'wlroots'
+    _wl_compositor = 'wlroots'
 elif wlroots_compositors and DESKTOP_ENV in wlroots_compositors:
     debug(f"Will use 'wlroots' context provider for '{DESKTOP_ENV}' DE", ctx="CG")
     debug("File an issue on GitHub repo if this works for your DE.", ctx="CG")
-    _desktop_env = 'wlroots'
+    _wl_compositor = 'wlroots'
 elif WINDOW_MGR in known_wlroots_compositors:
     debug(f"WM '{WINDOW_MGR}' is in known 'wlroots' compositor list.", ctx="CG")
-    _desktop_env = 'wlroots'
+    _wl_compositor = 'wlroots'
 elif DESKTOP_ENV in known_wlroots_compositors:
     debug(f"DE '{DESKTOP_ENV}' is in known 'wlroots' compositor list.", ctx="CG")
-    _desktop_env = 'wlroots'
+    _wl_compositor = 'wlroots'
 # elif (SESSION_TYPE, DESKTOP_ENV) == ('wayland', 'lxqt') and WINDOW_MGR == 'kwin_wayland':
 #     # The Toshy KWin script must be installed in the LXQt/KWin environment for this to work!
 #     debug(f"DE is LXQt, WM is '{WINDOW_MGR}', using 'kwin_wayland' window context method.", ctx="CG")
@@ -296,11 +296,11 @@ elif DESKTOP_ENV in known_wlroots_compositors:
 #     debug(f"DE is LXQt, WM is '{WINDOW_MGR}', using 'wlroots' window context method.", ctx="CG")
 #     _desktop_env = 'wlroots'
 else:
-    _desktop_env = DESKTOP_ENV
+    _wl_compositor = WINDOW_MGR
 
 try:
     # Help the keymapper select the correct window context provider object
-    environ_api(session_type = SESSION_TYPE, wl_compositor = _desktop_env) # type: ignore
+    environ_api(session_type = SESSION_TYPE, wl_compositor = _wl_compositor) # type: ignore
 except NameError:
     error(f"The API function 'environ_api' is not defined yet. Wrong keymapper branch?")
     pass
