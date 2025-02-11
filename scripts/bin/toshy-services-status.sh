@@ -53,7 +53,7 @@ systemctl --user status toshy-cosmic-dbus.service
 
 echo "--------------------------------------------------------------------------------"
 
-systemctl --user status toshy-kde-dbus.service
+systemctl --user status toshy-kwin-dbus.service
 
 echo "--------------------------------------------------------------------------------"
 

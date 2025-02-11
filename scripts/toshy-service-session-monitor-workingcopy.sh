@@ -82,7 +82,7 @@ while true
         if [ "$SESSION_COUNT" -eq 0 ]
             then
                 systemctl --user stop toshy-config.service
-                systemctl --user stop toshy-kde-dbus.service
+                systemctl --user stop toshy-kwin-dbus.service
                 # User is logged out entirely if there are no sessions, 
                 # so stop session monitor too:
                 systemctl --user stop toshy-session-monitor.service
@@ -106,8 +106,8 @@ while true
                         # only start Toshy Config service if we stopped it due to inactive session (below)
                         if [[ "$STOPPED_BY_ME" == "true" ]]
                             then
-                                # start/restart KDE D-Bus service (adapt to switching DEs w/out reboot)
-                                systemctl --user restart toshy-kde-dbus.service > /dev/null 2>&1
+                                # start/restart KWIN D-Bus service (adapt to switching DEs w/out reboot)
+                                systemctl --user restart toshy-kwin-dbus.service > /dev/null 2>&1
                                 sleep 0.5
                                 systemctl --user restart toshy-config.service > /dev/null 2>&1
                                 STOPPED_BY_ME="false"
@@ -123,8 +123,8 @@ while true
                     then
                         echo "SESSMON_SVC: Stopping config service because session is inactive."
                         systemctl --user stop toshy-config.service > /dev/null 2>&1
-                        # also stop KDE D-Bus service (unnecessary if config is not running)
-                        systemctl --user stop toshy-kde-dbus.service > /dev/null 2>&1
+                        # also stop KWIN D-Bus service (unnecessary if config is not running)
+                        systemctl --user stop toshy-kwin-dbus.service > /dev/null 2>&1
                         STOPPED_BY_ME="true"
                 fi
         fi

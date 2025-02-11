@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = '20250208'
+__version__ = '20250210'
 ###############################################################################
 ############################   Welcome to Toshy!   ############################
 ###  
@@ -128,9 +128,10 @@ OVERRIDE_WINDOW_MGR             = None
 wlroots_compositors             = [
     # Comma-separated list of Wayland desktop environments or window managers
     # that should try to use the 'wlroots' window context provider. Use the 
-    # 'DESKTOP_ENV' name that appears when running `toshy-env`. 
+    # 'WINDOW_MGR' name that appears when running `toshy-env`, or 'DESKTOP_ENV'
+    # if the window manager name is not identified. 
     # 'obscurewm',
-    # 'unknownwm',
+    # 'unknown-wm',
 
 ]
 
@@ -145,15 +146,6 @@ SESSION_TYPE                    = None
 DESKTOP_ENV                     = None
 DE_MAJ_VER                      = None
 WINDOW_MGR                      = None
-
-# env_info: Dict[str, str] = lib.env.get_env_info()
-
-# DISTRO_ID       = locals().get('OVERRIDE_DISTRO_ID')    or env_info.get('DISTRO_ID',    'keymissing')
-# DISTRO_VER      = locals().get('OVERRIDE_DISTRO_VER')   or env_info.get('DISTRO_VER',   'keymissing')
-# VARIANT_ID      = locals().get('OVERRIDE_VARIANT_ID')   or env_info.get('VARIANT_ID',   'keymissing')
-# SESSION_TYPE    = locals().get('OVERRIDE_SESSION_TYPE') or env_info.get('SESSION_TYPE', 'keymissing')
-# DESKTOP_ENV     = locals().get('OVERRIDE_DESKTOP_ENV')  or env_info.get('DESKTOP_ENV',  'keymissing')
-# DE_MAJ_VER      = locals().get('OVERRIDE_DE_MAJ_VER')   or env_info.get('DE_MAJ_VER',   'keymissing')
 
 env_ctxt_getter = EnvironmentInfo()
 env_ctxt: Dict[str, str] = env_ctxt_getter.get_env_info()
@@ -181,14 +173,16 @@ debug(  f'Toshy (barebones) config sees this environment:'
 # continuing to add new environments into the 'wlroots' provider inside 
 # the keymapper. 
 known_wlroots_compositors = [
-    'hyprland',
-    'labwc',        # untested but should work
-    'miracle-wm',
-    'niri',
-    'qtile',
-    'river',        # untested but should work
-    'sway',
-    'wayfire',      # untested but should work
+    # 'hyprland',
+    # 'labwc',
+    # 'miracle-wm',
+    # 'miriway',
+    # 'miriway-shell',    # actual process name for 'miriway' compositor?
+    # 'niri',
+    # 'qtile',
+    # 'river',
+    # 'sway',
+    # 'wayfire',
 ]
 
 # Make sure the 'wlroots_compositors' list variable exists before checking it.
@@ -199,20 +193,27 @@ all_wlroots_compositors = known_wlroots_compositors + wlroots_compositors
 
 # Direct the keymapper to try to use `wlroots` window context for
 # all DEs/WMs in user list, if list is not empty.
-if wlroots_compositors and DESKTOP_ENV in wlroots_compositors:
-    debug(f"Will use 'wlroots' context provider for '{DESKTOP_ENV}' DE/WM", ctx="CG")
-    debug("File an issue on GitHub repo if this works for your DE/WM.", ctx="CG")
+if wlroots_compositors and WINDOW_MGR in wlroots_compositors:
+    debug(f"Will use 'wlroots' context provider for '{WINDOW_MGR}' WM", ctx="CG")
+    debug("File an issue on GitHub repo if this works for your WM.", ctx="CG")
+    _desktop_env = 'wlroots'
+elif wlroots_compositors and DESKTOP_ENV in wlroots_compositors:
+    debug(f"Will use 'wlroots' context provider for '{DESKTOP_ENV}' DE", ctx="CG")
+    debug("File an issue on GitHub repo if this works for your DE.", ctx="CG")
+    _desktop_env = 'wlroots'
+elif WINDOW_MGR in known_wlroots_compositors:
+    debug(f"WM '{WINDOW_MGR}' is in known 'wlroots' compositor list.", ctx="CG")
     _desktop_env = 'wlroots'
 elif DESKTOP_ENV in known_wlroots_compositors:
-    debug(f"DE/WM '{DESKTOP_ENV}' is in known 'wlroots' compositor list.", ctx="CG")
+    debug(f"DE '{DESKTOP_ENV}' is in known 'wlroots' compositor list.", ctx="CG")
     _desktop_env = 'wlroots'
-elif (SESSION_TYPE, DESKTOP_ENV) == ('wayland', 'lxqt') and WINDOW_MGR == 'kwin_wayland':
-    # The Toshy KWin script must be installed in the LXQt/KWin environment for this to work!
-    debug(f"DE is LXQt, WM is '{WINDOW_MGR}', using 'kde' window context method.", ctx="CG")
-    _desktop_env = 'kde'
-elif (SESSION_TYPE, DESKTOP_ENV) == ('wayland', 'lxqt') and WINDOW_MGR in all_wlroots_compositors:
-    debug(f"DE is LXQt, WM is '{WINDOW_MGR}', using 'wlroots' window context method.", ctx="CG")
-    _desktop_env = 'wlroots'
+# elif (SESSION_TYPE, DESKTOP_ENV) == ('wayland', 'lxqt') and WINDOW_MGR == 'kwin_wayland':
+#     # The Toshy KWin script must be installed in the LXQt/KWin environment for this to work!
+#     debug(f"DE is LXQt, WM is '{WINDOW_MGR}', using 'kwin_wayland' window context method.", ctx="CG")
+#     _desktop_env = 'kde'
+# elif (SESSION_TYPE, DESKTOP_ENV) == ('wayland', 'lxqt') and WINDOW_MGR in all_wlroots_compositors:
+#     debug(f"DE is LXQt, WM is '{WINDOW_MGR}', using 'wlroots' window context method.", ctx="CG")
+#     _desktop_env = 'wlroots'
 else:
     _desktop_env = DESKTOP_ENV
 

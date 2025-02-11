@@ -49,9 +49,11 @@ echo -e "\nRemoving Toshy systemd services...\n"
 # systemctl "disable" automatically deletes all symlinks (might be bug)
 
 
+# Include "toshy-kde-dbus.service" to clean up from previous installations
 service_names=(
     "toshy-cosmic-dbus.service"
     "toshy-kde-dbus.service"
+    "toshy-kwin-dbus.service"
     "toshy-wlroots-dbus.service"
     "toshy-config.service"
     "toshy-session-monitor.service"

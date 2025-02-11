@@ -50,7 +50,7 @@ echo -e "\nRestarting Toshy systemd services..."
 
 systemctl --user restart toshy-cosmic-dbus.service
 sleep 0.5
-systemctl --user restart toshy-kde-dbus.service
+systemctl --user restart toshy-kwin-dbus.service
 sleep 0.5
 systemctl --user restart toshy-wlroots-dbus.service
 sleep 0.5

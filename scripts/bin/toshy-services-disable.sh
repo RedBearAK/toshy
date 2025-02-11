@@ -49,7 +49,7 @@ echo -e "\nDisabling Toshy systemd services..."
 
 systemctl --user disable toshy-cosmic-dbus.service
 sleep 0.5
-systemctl --user disable toshy-kde-dbus.service
+systemctl --user disable toshy-kwin-dbus.service
 sleep 0.5
 systemctl --user disable toshy-wlroots-dbus.service
 sleep 0.5

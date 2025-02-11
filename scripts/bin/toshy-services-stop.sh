@@ -50,7 +50,7 @@ echo "Stopping Toshy systemd services..."
 
 systemctl --user stop toshy-cosmic-dbus.service
 sleep 0.5
-systemctl --user stop toshy-kde-dbus.service
+systemctl --user stop toshy-kwin-dbus.service
 sleep 0.5
 systemctl --user stop toshy-wlroots-dbus.service
 sleep 0.5

@@ -39,7 +39,7 @@ USER="$(whoami)"
 
 # Service arrays
 TOSHY_DBUS_SVCS=(                                                   \
-    "toshy-kde-dbus.service"                                        \
+    "toshy-kwin-dbus.service"                                        \
     "toshy-cosmic-dbus.service"                                     \
     "toshy-wlroots-dbus.service"                                    \
 )
