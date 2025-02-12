@@ -614,38 +614,54 @@ class EnvironmentInfo:
 
             # LXQt often uses OpenBox, but can use a number of different WMs in X11 or Wayland
             'lxqt': [
-                'openbox',          # X11/Xorg window manager
-                'labwc',            # Wayland compositor
-                'sway',             # Wayland compositor
-                'hyprland',         # Wayland compositor
-                'kwin_wayland',     # Wayland compositor
-                'wayfire',          # Wayland compositor
-                'river',            # Wayland compositor
-                'niri',             # Wayland compositor
-                'miriway',          # Wayland compositor
-                'miriway-shell',    # Wayland compositor (actual process name?)
+                # X11/Xorg window manager
+                'openbox',
+                # Wayland compositors
+                'labwc',
+                'sway',
+                'hyprland',
+                'kwin_wayland',
+                'wayfire',
+                'river',
+                'niri',
+                'miriway',
+                'miriway-shell',    # (actual process name for miriway)
             ],
 
             # Deepin Desktop Environment
             'dde': [
-                'deepin-kwin_wayland',
+                'deepin-kwin_wayland',  # This might never exist (too long? over 15 characters)
                 'deepin-kwin_x11',
                 'deepin-kwin',
             ],
 
-            'awesome':          'awesome',
-            'cinnamon':         'cinnamon',
-            'cosmic':           'cosmic-comp',
-            'dwm':              'dwm',
-            'hyprland':         'Hyprland',     # the process name is capitalized (this is unusual)
-            'i3':               'i3',
-            'i3-gaps':          'i3',
-            'miracle-wm':       'miracle-wm',
-            'openbox':          'openbox',
-            'pantheon':         'gala',
-            'sway':             'sway',
-            'unity':            'compiz',
-            'xfce':             'xfwm4',
+            'awesome':          ['awesome'],
+            'budgie':           ['budgie-wm'],
+            'cinnamon':         ['cinnamon'],
+            'cosmic':           ['cosmic-comp'],
+            'cutefish':         ['kwin_x11'],
+            'dwm':              ['dwm'],
+            'enlightenment':    ['enlightenment'],
+            'hyprland':         ['Hyprland'],
+            'i3':               ['i3'],
+            'i3-gaps':          ['i3'],
+            'icewm':            ['icewm'],
+            'labwc':            ['labwc'],
+            'lxde':             ['openbox'],
+            'mate':             ['marco'],
+            'miracle-wm':       ['miracle-wm'],
+            'openbox':          ['openbox'],
+            'pantheon':         ['gala'],
+            'pop':              ['gnome-shell'],
+            'qtile':            ['qtile'],
+            'river':            ['river'],
+            'sway':             ['sway'],
+            'trinity':          ['kwin_x11'],
+            'ukui':             ['ukwm'],
+            'unity':            ['compiz'],
+            'wayfire':          ['wayfire'],
+            'wmaker':           ['wmaker'],
+            'xfce':             ['xfwm4'],
 
         }
 
