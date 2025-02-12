@@ -644,6 +644,7 @@ class EnvironmentInfo:
             'openbox':          'openbox',
             'pantheon':         'gala',
             'sway':             'sway',
+            'unity':            'compiz',
             'xfce':             'xfwm4',
 
         }
