@@ -252,7 +252,7 @@ def setup_kwin2dbus_script():
 
     kwin_script_name        = 'toshy-dbus-notifyactivewindow'
     kwin_script_path        = os.path.join( parent_folder_path,
-                                            'kde-kwin-script',
+                                            'kwin-script',
                                             f'kde{KDE_ver}',
                                             kwin_script_name)
     script_tmp_file         = f'{run_tmp_dir}/{kwin_script_name}.kwinscript'

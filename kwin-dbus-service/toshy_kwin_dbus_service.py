@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20250208'
+__version__ = '20250210'
 
 print("(--) Starting Toshy D-Bus service to receive updates from KWin script...")
 
@@ -68,7 +68,7 @@ sep_reps        = 80
 sep_char        = '='
 separator       = sep_char * sep_reps
 
-LOG_PFX = 'TOSHY_KDE_DBUS_SVC'
+LOG_PFX = 'TOSHY_KWIN_DBUS_SVC'
 
 DISTRO_ID       = None
 DISTRO_VER      = None
@@ -76,19 +76,22 @@ VARIANT_ID      = None
 SESSION_TYPE    = None
 DESKTOP_ENV     = None
 DE_MAJ_VER      = None
+WINDOW_MGR      = None
 
 def check_environment():
     """Retrieve the current environment from env module"""
-    # env_info_dct   = env.get_env_info()
-    env_ctxt_getter = EnvironmentInfo()
-    env_info_dct   = env_ctxt_getter.get_env_info()
-    global DISTRO_ID, DISTRO_VER, VARIANT_ID, SESSION_TYPE, DESKTOP_ENV, DE_MAJ_VER
-    DISTRO_ID       = env_info_dct.get('DISTRO_ID', 'keymissing')
-    DISTRO_VER      = env_info_dct.get('DISTRO_VER', 'keymissing')
-    VARIANT_ID      = env_info_dct.get('VARIANT_ID', 'keymissing')
-    SESSION_TYPE    = env_info_dct.get('SESSION_TYPE', 'keymissing')
-    DESKTOP_ENV     = env_info_dct.get('DESKTOP_ENV', 'keymissing')
-    DE_MAJ_VER      = env_info_dct.get('DE_MAJ_VER', 'keymissing')
+    global DISTRO_ID, DISTRO_VER, VARIANT_ID, SESSION_TYPE, DESKTOP_ENV, DE_MAJ_VER, WINDOW_MGR
+
+    env_ctxt_getter     = EnvironmentInfo()
+    env_info_dct        = env_ctxt_getter.get_env_info()
+
+    DISTRO_ID           = env_info_dct.get('DISTRO_ID',     'keymissing')
+    DISTRO_VER          = env_info_dct.get('DISTRO_VER',    'keymissing')
+    VARIANT_ID          = env_info_dct.get('VARIANT_ID',    'keymissing')
+    SESSION_TYPE        = env_info_dct.get('SESSION_TYPE',  'keymissing')
+    DESKTOP_ENV         = env_info_dct.get('DESKTOP_ENV',   'keymissing')
+    DE_MAJ_VER          = env_info_dct.get('DE_MAJ_VER',    'keymissing')
+    WINDOW_MGR          = env_info_dct.get('WINDOW_MGR',    'keymissing')
 
 
 check_environment()
@@ -96,30 +99,32 @@ check_environment()
 
 # Adding 'lxqt' as a possible desktop environment where 'kwin_wayland' might be used.
 # TODO: Add a way to auto-install the KWin script in LXQt? Or will it already auto-install?
-if SESSION_TYPE == 'wayland' and DESKTOP_ENV in ['kde', 'plasma', 'lxqt']:
+# if SESSION_TYPE == 'wayland' and DESKTOP_ENV in ['kde', 'plasma', 'lxqt']:
+
+# Switching to looking for 'kwin_wayland' as window manager, instead of desktop environment.
+# This way we shouldn't have to care what the DE is, only if they are using 'kwin_wayland'.
+if SESSION_TYPE == 'wayland' and WINDOW_MGR == 'kwin_wayland':
     pass
 else:
-    debug(f'{LOG_PFX}: Not a Wayland+KDE environment. Exiting.')
+    debug(f'{LOG_PFX}: Not a kwin_wayland environment. Exiting.')
     time.sleep(2)
     sys.exit(0)
 
 
 # debug("")
-# debug(  f'Toshy KDE D-Bus service script sees this environment:'
+# debug(  f'Toshy KWIN D-Bus service script sees this environment:'
 #         f'\n\t{DISTRO_ID        = }'
 #         f'\n\t{DISTRO_VER       = }'
 #         f'\n\t{VARIANT_ID       = }'
 #         f'\n\t{SESSION_TYPE     = }'
-#         f'\n\t{DESKTOP_ENV      = }')
-#         f'\n\t{DE_MAJ_VER       = }\n', ctx="CG")
+#         f'\n\t{DESKTOP_ENV      = }'
+#         f'\n\t{DE_MAJ_VER       = }'
+#         f'\n\t{WINDOW_MGR       = }\n', ctx="CG")
 
-
-# TOSHY_KDE_DBUS_SVC_PATH         = '/org/toshy/Toshy'
-# TOSHY_KDE_DBUS_SVC_IFACE        = 'org.toshy.Toshy'
 
 # Rename the D-Bus object/path more specifically for Plasma (there are others, like Wlroots)
-TOSHY_KDE_DBUS_SVC_PATH         = '/org/toshy/Plasma'
-TOSHY_KDE_DBUS_SVC_IFACE        = 'org.toshy.Plasma'
+TOSHY_KWIN_DBUS_SVC_PATH        = '/org/toshy/Plasma'
+TOSHY_KWIN_DBUS_SVC_IFACE       = 'org.toshy.Plasma'
 
 
 class DBUS_Object(dbus.service.Object):
@@ -132,7 +137,7 @@ class DBUS_Object(dbus.service.Object):
         self.resource_class     = "NO_DATA"
         self.resource_name      = "NO_DATA"
 
-    @dbus.service.method(TOSHY_KDE_DBUS_SVC_IFACE, in_signature='sss')
+    @dbus.service.method(TOSHY_KWIN_DBUS_SVC_IFACE, in_signature='sss')
     def NotifyActiveWindow(self, caption, resource_class, resource_name):
         # debug(f'{LOG_PFX}: NotifyActiveWindow() called...')
         self.caption            = str(caption)
@@ -144,7 +149,7 @@ class DBUS_Object(dbus.service.Object):
         #         f"\n\t resource_name  = '{self.resource_name}'"
         # )
 
-    @dbus.service.method(TOSHY_KDE_DBUS_SVC_IFACE, out_signature='a{sv}')
+    @dbus.service.method(TOSHY_KWIN_DBUS_SVC_IFACE, out_signature='a{sv}')
     def GetActiveWindow(self):
         # debug(f'{LOG_PFX}: GetActiveWindow() called...')
         return {    'caption':          self.caption,
@@ -161,7 +166,7 @@ def main():
 
     # Create the DBUS_Object
     try:
-        DBUS_Object(session_bus, TOSHY_KDE_DBUS_SVC_PATH, TOSHY_KDE_DBUS_SVC_IFACE)
+        DBUS_Object(session_bus, TOSHY_KWIN_DBUS_SVC_PATH, TOSHY_KWIN_DBUS_SVC_IFACE)
     except DBusException as dbus_error:
         error(f"{LOG_PFX}: Error occurred while creating D-Bus service object:\n\t{dbus_error}")
         sys.exit(1)

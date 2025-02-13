@@ -24,13 +24,13 @@ pkill -f "bin/xkeysnail"
 
 ############################  COMPANION D-BUS SERVICES  #####################################
 
-# start KDE D-Bus service in case we are in Wayland+KDE (it will stop itself if not)
-nohup "${HOME}/.local/bin/toshy-kde-dbus-service" >/dev/null 2>&1 &
+# start KWIN D-Bus service in case we are using kwin_wayland (it will stop itself if not)
+nohup "${HOME}/.local/bin/toshy-kwin-dbus-service" >/dev/null 2>&1 &
 
-# start COSMIC D-Bus service in case we are in Wayland+COSMIC (it will stop itself if not)
+# start COSMIC D-Bus service in case we are using cosmic-comp (it will stop itself if not)
 nohup "${HOME}/.local/bin/toshy-cosmic-dbus-service" >/dev/null 2>&1 &
 
-# start Wlroots D-Bus service in case we are in a wlroots-based DE/WM (it will stop itself if not)
+# start Wlroots D-Bus service in case we are using a wlroots-based WM (it will stop itself if not)
 nohup "${HOME}/.local/bin/toshy-wlroots-dbus-service" >/dev/null 2>&1 &
 
 

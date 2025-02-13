@@ -37,7 +37,7 @@ stop_toshy_services() {
     echo "SESSMON_SVC: Stopping config service because $reason"
     systemctl --user stop toshy-config.service >/dev/null 2>&1
     sleep 0.5
-    systemctl --user stop toshy-kde-dbus.service >/dev/null 2>&1
+    systemctl --user stop toshy-kwin-dbus.service >/dev/null 2>&1
     systemctl --user stop toshy-cosmic-dbus.service >/dev/null 2>&1
     systemctl --user stop toshy-wlroots-dbus.service >/dev/null 2>&1
     STOPPED_BY_ME="true"
@@ -46,7 +46,7 @@ stop_toshy_services() {
 # Function to start Toshy services
 start_toshy_services() {
     if [[ "$STOPPED_BY_ME" == "true" ]]; then
-        systemctl --user restart toshy-kde-dbus.service >/dev/null 2>&1
+        systemctl --user restart toshy-kwin-dbus.service >/dev/null 2>&1
         systemctl --user restart toshy-cosmic-dbus.service >/dev/null 2>&1
         systemctl --user restart toshy-wlroots-dbus.service >/dev/null 2>&1
         sleep 0.5
@@ -86,7 +86,7 @@ while true; do
     
     if [[ "$SESSION_COUNT" -eq 0 ]]; then
         systemctl --user stop toshy-config.service
-        systemctl --user stop toshy-kde-dbus.service
+        systemctl --user stop toshy-kwin-dbus.service
         systemctl --user stop toshy-cosmic-dbus.service
         systemctl --user stop toshy-wlroots-dbus.service
         # User is logged out entirely if there are no sessions, 

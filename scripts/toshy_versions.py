@@ -41,7 +41,7 @@ sys.path.insert(0, lib_dir_path)
 # ~/.config/toshy/lib/settings_class.py
 
 # ~/.config/toshy/cosmic-dbus-service/toshy_cosmic_dbus_service.py
-# ~/.config/toshy/kde-kwin-dbus-service/toshy_kde_dbus_service.py
+# ~/.config/toshy/kwin-dbus-service/toshy_kwin_dbus_service.py
 # ~/.config/toshy/wlroots-dbus-service/toshy_wlroots_dbus_service.py
 
 
@@ -57,7 +57,7 @@ file_paths = [
     os.path.join(lib_dir_path, 'settings_class.py'),
     None,
     os.path.join(toshy_dir_path, 'cosmic-dbus-service', 'toshy_cosmic_dbus_service.py'),
-    os.path.join(toshy_dir_path, 'kde-kwin-dbus-service', 'toshy_kde_dbus_service.py'),
+    os.path.join(toshy_dir_path, 'kwin-dbus-service', 'toshy_kwin_dbus_service.py'),
     os.path.join(toshy_dir_path, 'wlroots-dbus-service', 'toshy_wlroots_dbus_service.py'),
 ]
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-__version__ = '20250208'
+__version__ = '20250210'
 
 # Indicator tray icon menu app for Toshy, using pygobject/gi
 TOSHY_PART      = 'tray'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
@@ -269,7 +269,7 @@ user_sysctl     = f'{sysctl_cmd} --user'
 
 toshy_svc_sessmon               = 'toshy-session-monitor.service'
 toshy_svc_config                = 'toshy-config.service'
-toshy_svc_kde_dbus              = 'toshy-kde-dbus.service'
+toshy_svc_kwin_dbus             = 'toshy-kwin-dbus.service'
 
 svc_status_sessmon              = '???'              #  ❓  # 'Undefined'
 svc_status_config               = '???'              #  ❓  # 'Undefined'
@@ -647,7 +647,7 @@ def fn_toggle_toshy_svcs_autostart(widget):
             # Enable user services
             enable_cmd_lst = ["systemctl", "--user", "enable"]
             subprocess.run(enable_cmd_lst + [toshy_svc_sessmon], check=True)
-            subprocess.run(enable_cmd_lst + [toshy_svc_kde_dbus], check=True)
+            subprocess.run(enable_cmd_lst + [toshy_svc_kwin_dbus], check=True)
             subprocess.run(enable_cmd_lst + [toshy_svc_config], check=True)
             debug("Toshy systemd services enabled. Will autostart at login.")
             _ntfy_icon_file = icon_file_active
@@ -657,7 +657,7 @@ def fn_toggle_toshy_svcs_autostart(widget):
             # Disable user services
             disable_cmd_lst = ["systemctl", "--user", "disable"]
             subprocess.run(disable_cmd_lst + [toshy_svc_config], check=True)
-            subprocess.run(disable_cmd_lst + [toshy_svc_kde_dbus], check=True)
+            subprocess.run(disable_cmd_lst + [toshy_svc_kwin_dbus], check=True)
             subprocess.run(disable_cmd_lst + [toshy_svc_sessmon], check=True)
             debug("Toshy systemd services disabled. Will NOT autostart at login.")
             _ntfy_icon_file = icon_file_grayscale
