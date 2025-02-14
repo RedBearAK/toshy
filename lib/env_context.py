@@ -656,7 +656,7 @@ class EnvironmentInfo:
             'qtile':            ['qtile'],
             'river':            ['river'],
             'sway':             ['sway'],
-            'trinity':          ['kwin_x11'],
+            'trinity':          ['twin'],
             'ukui':             ['ukwm'],
             'unity':            ['compiz'],
             'wayfire':          ['wayfire'],
