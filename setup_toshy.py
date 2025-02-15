@@ -2157,7 +2157,7 @@ def verify_user_groups():
 def clone_keymapper_branch():
     """Clone the designated keymapper branch from GitHub"""
     print(f'\n\n§  Cloning keymapper branch...\n{cnfg.separator}')
-    print(f'Cloning branch "{cnfg.keymapper_branch}" from {cnfg.keymapper_url}...')
+
     # Check if `git` command exists. If not, exit script with error.
     has_git = shutil.which('git')
     if not has_git:
