@@ -211,7 +211,8 @@ class InstallerSettings:
 
         self.keymapper_url          = 'https://github.com/RedBearAK/xwaykeyz.git'
 
-        self.keymapper_clone_cmd    = f'git clone -b {self.keymapper_branch} {self.keymapper_url}'
+        # This was changed to a property method that re-evaluates on each access:
+        # self.keymapper_clone_cmd    = f'git clone -b {self.keymapper_branch} {self.keymapper_url}'
 
         self.input_group            = 'input'
         self.user_name              = pwd.getpwuid(os.getuid()).pw_name
@@ -227,6 +228,7 @@ class InstallerSettings:
         self.skip_native            = None
         self.fancy_pants            = None
         self.no_dbus_python         = None
+        self.use_dev_keymapper      = None
 
         self.app_switcher           = None      # Install/upgrade Application Switcher KWin script
 
@@ -250,6 +252,18 @@ class InstallerSettings:
         # self.venv_cmd_lst           = [self.py_interp_path, '-m', 'venv', self.venv_path]
         # Needs to re-evaluate itself when accessed, in case Python interpreter path changed:
         return [self.py_interp_path, '-m', 'venv', self.venv_path]
+
+    @property
+    def keymapper_clone_cmd(self):
+        # Originally a class instance attribute variable:
+        # self.keymapper_clone_cmd    = f'git clone -b {self.keymapper_branch} {self.keymapper_url}'
+        if self.use_dev_keymapper:
+            _km_branch = self.keymapper_dev_branch
+        else:
+            _km_branch = self.keymapper_branch
+        _clone_cmd = f'git clone -b {_km_branch} {self.keymapper_url}'
+        print(f"Keymapper clone command:\n  {_clone_cmd}")
+        return _clone_cmd
 
     def find_qdbus_command(self):
         # List of qdbus command names by preference
@@ -3625,6 +3639,11 @@ def handle_cli_arguments():
         help='Avoid installing "dbus-python" pip package (breaks some stuff).'
     )
     subparser_install.add_argument(
+        '--dev-keymapper',
+        action='store_true',
+        help='Install the development branch of the keymapper.'
+    )
+    subparser_install.add_argument(
         '--fancy-pants',
         action='store_true',
         help='See README for more info on this option.'
@@ -3699,6 +3718,9 @@ def handle_cli_arguments():
 
         if args.no_dbus_python:
             cnfg.no_dbus_python = True
+
+        if args.dev_keymapper:
+            cnfg.use_dev_keymapper = True
 
         if args.fancy_pants:
             cnfg.fancy_pants = True
