@@ -1445,12 +1445,13 @@ class DistroQuirksHandler:
             # Why were we doing this AFTER the 'epel-release' install?
             # Because in RHEL 8 distros the 'epel-release' package installs '/usr/bin/crb' command!
             # Also the repo ends up being named 'powertools' for some reason. 
+            print("Enabling CRB (CodeReady Builder) repo...")
             if not is_dnf_repo_enabled('powertools'):
                 # enable CRB repo on RHEL 8.x distros, but not CentOS Stream 8:
                 cmd_lst = ['sudo', '/usr/bin/crb', 'enable']
                 try:
-                    print("Enabling CRB (CodeReady Builder) repo...")
                     subprocess.run(cmd_lst, check=True)
+                    print("CRB (CodeReady Builder) repo now enabled. (Repo name: 'powertools'.)")
                 except subprocess.CalledProcessError as proc_err:
                     print()
                     error(f'ERROR: Problem while enabling CRB repo.\n\t{proc_err}')
@@ -1463,14 +1464,15 @@ class DistroQuirksHandler:
 
         if cnfg.distro_mjr_ver in ['9']:
 
+            print("Enabling CRB (CodeReady Builder) repo...")
             if not is_dnf_repo_enabled('crb'):
                 # enable "CodeReady Builder" repo for 'gobject-introspection-devel' only on 
                 # RHEL 9.x and CentOS Stream 9:
                 # sudo dnf config-manager --set-enabled crb
                 cmd_lst = ['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb']
                 try:
-                    print("Enabling CRB (CodeReady Builder) repo...")
                     subprocess.run(cmd_lst, check=True)
+                    print("CRB (CodeReady Builder) repo now enabled.")
                 except subprocess.CalledProcessError as proc_err:
                     print()
                     error(f'ERROR: Problem while enabling CRB repo:\n\t{proc_err}')
@@ -1483,11 +1485,12 @@ class DistroQuirksHandler:
             get_newest_python_version()
 
             # for libappindicator-gtk3: sudo dnf install -y epel-release
+            print("Installing and enabling EPEL repository...")
             if not is_dnf_repo_enabled("epel"):
                 try:
                     cmd_lst = ['sudo', 'dnf', 'install', '-y', 'epel-release']
-                    print("Installing and enabling EPEL repository...")
                     subprocess.run(cmd_lst, check=True)
+                    print("EPEL repository is now enabled.")
                     cmd_lst = ['sudo', 'dnf', 'makecache']
                     subprocess.run(cmd_lst, check=True)
                 except subprocess.CalledProcessError as proc_err:
@@ -1501,28 +1504,30 @@ class DistroQuirksHandler:
     def handle_quirks_RHEL_10():
         print('Doing prep/checks for RHEL 10 type distro...')
 
+        print("Enabling CRB (CodeReady Builder) repo...")
         if not is_dnf_repo_enabled('crb'):
             try:
                 cmd_lst = ['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb']
-                print("Enabling CRB (CodeReady Builder) repo...")
                 subprocess.run(cmd_lst, check=True)
+                print("CRB (CodeReady Builder) repo now enabled.")
             except subprocess.CalledProcessError as proc_err:
                 print()
                 error(f'ERROR: Problem while enabling CRB repo:\n\t{proc_err}')
                 safe_shutdown(1)
         else:
-            print(f"CRB (CodeReady Builder) repo is already enabled. Continuing...")
+            print(f"CRB (CodeReady Builder) repo is already enabled.")
 
         # Command to install EPEL release package:
         # sudo dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm
 
         epel_10_rpm_url = 'https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm'
 
+        print("Installing and enabling EPEL 10 repository...")
         if not is_dnf_repo_enabled("epel"):
             try:
                 cmd_lst = ['sudo', 'dnf', 'install', '-y', epel_10_rpm_url]
-                print("Installing and enabling EPEL 10 repository...")
                 subprocess.run(cmd_lst, check=True)
+                print("EPEL repository is now enabled.")
             except subprocess.CalledProcessError as proc_err:
                 error(f"Problem installing the EPEL 10 repository:\n{proc_err}")
                 safe_shutdown(1)
