@@ -1469,6 +1469,7 @@ class DistroQuirksHandler:
                 # sudo dnf config-manager --set-enabled crb
                 cmd_lst = ['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb']
                 try:
+                    print("Enabling CRB (CodeReady Builder) repo...")
                     subprocess.run(cmd_lst, check=True)
                 except subprocess.CalledProcessError as proc_err:
                     print()
