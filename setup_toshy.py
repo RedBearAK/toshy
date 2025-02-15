@@ -1473,13 +1473,18 @@ class DistroQuirksHandler:
         # sudo dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm
 
         epel_10_rpm_url = 'https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm'
-        try:
-            cmd_lst = ['sudo', 'dnf', 'install', '-y', epel_10_rpm_url]
-            print("Installing EPEL 10 release package...")
-            subprocess.run(cmd_lst, check=True)
-        except subprocess.CalledProcessError as proc_err:
-            error(f"Problem installing the EPEL 10 release package:\n{proc_err}")
-            safe_shutdown(1)
+
+        # Oreon 10 already has EPEL repo enabled.
+        if not cnfg.DISTRO_ID == 'oreon':
+            try:
+                cmd_lst = ['sudo', 'dnf', 'install', '-y', epel_10_rpm_url]
+                print("Installing EPEL 10 release package...")
+                subprocess.run(cmd_lst, check=True)
+            except subprocess.CalledProcessError as proc_err:
+                error(f"Problem installing the EPEL 10 release package:\n{proc_err}")
+                safe_shutdown(1)
+        else:
+            print("Distro is Oreon, EPEL 10 repo is already enabled.")
 
         # The 'xset' command does not appear to be provided by any available
         # package in RHEL 10 distro types (e.g. AlmaLinux 10):
