@@ -1427,8 +1427,25 @@ class DistroQuirksHandler:
 
         if cnfg.DISTRO_ID != 'centos' and cnfg.distro_mjr_ver in ['8']:
 
+            # for libappindicator-gtk3: sudo dnf install -y epel-release
+            if not is_dnf_repo_enabled("epel"):
+                try:
+                    cmd_lst = ['sudo', 'dnf', 'install', '-y', 'epel-release']
+                    print("Installing and enabling EPEL repository...")
+                    subprocess.run(cmd_lst, check=True)
+                    cmd_lst = ['sudo', 'dnf', 'makecache']
+                    subprocess.run(cmd_lst, check=True)
+                except subprocess.CalledProcessError as proc_err:
+                    print()
+                    error(f'ERROR: Problem while adding "epel-release" repo.\n\t{proc_err}')
+                    safe_shutdown(1)
+            else:
+                print("EPEL repository is already enabled.")
+
             # Why were we doing this AFTER the 'epel-release' install?
-            if not is_dnf_repo_enabled('crb'):
+            # Because in RHEL 8 distros the 'epel-release' package installs '/usr/bin/crb' command!
+            # Also the repo ends up being named 'powertools' for some reason. 
+            if not is_dnf_repo_enabled('powertools'):
                 # enable CRB repo on RHEL 8.x distros, but not CentOS Stream 8:
                 cmd_lst = ['sudo', '/usr/bin/crb', 'enable']
                 try:
@@ -1464,20 +1481,20 @@ class DistroQuirksHandler:
             # CentOS Stream 9, RHEL 9 and clones
             get_newest_python_version()
 
-        # for libappindicator-gtk3: sudo dnf install -y epel-release
-        if not is_dnf_repo_enabled("epel"):
-            try:
-                cmd_lst = ['sudo', 'dnf', 'install', '-y', 'epel-release']
-                print("Installing and enabling EPEL repository...")
-                subprocess.run(cmd_lst, check=True)
-                cmd_lst = ['sudo', 'dnf', 'makecache']
-                subprocess.run(cmd_lst, check=True)
-            except subprocess.CalledProcessError as proc_err:
-                print()
-                error(f'ERROR: Problem while adding "epel-release" repo.\n\t{proc_err}')
-                safe_shutdown(1)
-        else:
-            print("EPEL repository is already enabled.")
+            # for libappindicator-gtk3: sudo dnf install -y epel-release
+            if not is_dnf_repo_enabled("epel"):
+                try:
+                    cmd_lst = ['sudo', 'dnf', 'install', '-y', 'epel-release']
+                    print("Installing and enabling EPEL repository...")
+                    subprocess.run(cmd_lst, check=True)
+                    cmd_lst = ['sudo', 'dnf', 'makecache']
+                    subprocess.run(cmd_lst, check=True)
+                except subprocess.CalledProcessError as proc_err:
+                    print()
+                    error(f'ERROR: Problem while adding "epel-release" repo.\n\t{proc_err}')
+                    safe_shutdown(1)
+            else:
+                print("EPEL repository is already enabled.")
 
     @staticmethod
     def handle_quirks_RHEL_10():
