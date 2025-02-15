@@ -3765,7 +3765,7 @@ def handle_cli_arguments():
         safe_shutdown(0)
 
     if args.command == 'install-font':
-        print(f'\n\n§  Installing coding/terminal font...\n{cnfg.separator}')
+        print(f'\n§  Installing coding/terminal font...\n{cnfg.separator}')
         install_coding_font()
         show_task_completed_msg()
         safe_shutdown(0)
