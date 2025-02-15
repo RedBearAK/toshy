@@ -3653,14 +3653,14 @@ def handle_cli_arguments():
         help='See README for more info on this option.'
     )
 
-    subparser_install_font      = subparsers.add_parser(
-        'install-font',
-        help='Install Fantasque Sans Mono coding/terminal font'
-    )
-
     subparser_remove_tweaks     = subparsers.add_parser(
         'remove-tweaks',
         help='Remove desktop environment tweaks only, no install'
+    )
+
+    subparser_install_font      = subparsers.add_parser(
+        'install-font',
+        help='Install Fantasque Sans Mono coding/terminal font'
     )
 
     subparser_prep_only         = subparsers.add_parser(

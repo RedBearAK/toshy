@@ -369,6 +369,14 @@ Just applies the "desktop tweaks" for the environment, does not do the full inst
 Just removes the "desktop tweaks" the installer applied. Does not do the full uninstall.  
 
 ```sh
+./setup_toshy.py install-font
+```
+
+Just installs the coding/terminal font Fantasque Sans Mono, a task that is also included in the `install --fancy-pants` or `apply-tweaks --fancy-pants` modified commands. If you didn't use the `--fancy-pants` option in either case, this will install the font indepdently.  
+
+This will only install the font. It won't cause the font to be set as a default for any app, and Linux apps have to be restarted to be able to see a newly installed font in their font selectors.  
+
+```sh
 ./setup_toshy.py prep-only
 ```
 
