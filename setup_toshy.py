@@ -1480,10 +1480,6 @@ class DistroQuirksHandler:
             else:
                 print("CRB (CodeReady Builder) repo is already enabled.")
 
-            # Get a much newer Python version than the default 3.9 currently on 
-            # CentOS Stream 9, RHEL 9 and clones
-            get_newest_python_version()
-
             # for libappindicator-gtk3: sudo dnf install -y epel-release
             print("Installing and enabling EPEL repository...")
             if not is_dnf_repo_enabled("epel"):
@@ -1499,6 +1495,10 @@ class DistroQuirksHandler:
                     safe_shutdown(1)
             else:
                 print("EPEL repository is already enabled.")
+
+            # Get a much newer Python version than the default 3.9 currently on 
+            # CentOS Stream 9, RHEL 9 and clones
+            get_newest_python_version()
 
     @staticmethod
     def handle_quirks_RHEL_10():
