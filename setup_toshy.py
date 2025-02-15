@@ -1456,7 +1456,7 @@ class DistroQuirksHandler:
                     error(f'ERROR: Problem while enabling CRB repo.\n\t{proc_err}')
                     safe_shutdown(1)
             else:
-                print("CRB (CodeReady Builder) repo is already enabled.")
+                print("CRB (CodeReady Builder) repo is already enabled. (Repo name: 'powertools'.)")
 
             # Get a much newer Python version than the default 3.6 currently on RHEL 8 and clones
             get_newest_python_version()
