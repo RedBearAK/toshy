@@ -1210,7 +1210,8 @@ def is_dnf_repo_enabled(repo_name):
     try:
         native_pkg_installer.check_for_pkg_mgr_cmd('dnf')
         cmd_lst = ["dnf", "repolist", "enabled"]
-        result = subprocess.run(cmd_lst, stdout=PIPE, stderr=PIPE, text=True, check=True)
+        result = subprocess.run(cmd_lst, stdout=PIPE, stderr=PIPE, 
+                                universal_newlines=True, check=True)
         return repo_name.casefold() in result.stdout.casefold()
     except subprocess.CalledProcessError as proc_err:
         error(f"There was a problem checking if {repo_name} repo is enabled:\n{proc_err}")
