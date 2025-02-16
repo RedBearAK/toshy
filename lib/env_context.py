@@ -150,8 +150,10 @@ class EnvironmentInfo:
                     cmd = ['pgrep', '-f', pattern]
 
         try:
-            subprocess.check_output(cmd)
-            return True
+            result = subprocess.check_output(cmd)
+            if result.strip():
+                return True
+            return False
         except subprocess.CalledProcessError:
             return False
 
