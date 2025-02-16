@@ -3833,7 +3833,10 @@ def main(cnfg: InstallerSettings):
         if cnfg.DESKTOP_ENV == 'gnome':
             check_gnome_indicator_ext()
 
-        if not cnfg.fancy_pants and cnfg.DESKTOP_ENV == 'kde':
+        app_switcher_kwin_compat = cnfg.DESKTOP_ENV == 'kde' and cnfg.DE_MAJ_VER in ['5', '6']
+        if app_switcher_kwin_compat and not cnfg.fancy_pants:
+            # Need to limit this check to the versions of KDE Plasma
+            # that are actually compatible with the KWin script (5/6).
             check_kde_app_switcher()
 
     elevate_privileges()
