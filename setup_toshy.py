@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20250211'                        # CLI option "--version" will print this out.
+__version__ = '20250216'                        # CLI option "--version" will print this out.
 
 import os
 os.environ['PYTHONDONTWRITEBYTECODE'] = '1'     # prevent this script from creating cache files
@@ -211,7 +211,8 @@ class InstallerSettings:
 
         self.keymapper_url          = 'https://github.com/RedBearAK/xwaykeyz.git'
 
-        self.keymapper_clone_cmd    = f'git clone -b {self.keymapper_branch} {self.keymapper_url}'
+        # This was changed to a property method that re-evaluates on each access:
+        # self.keymapper_clone_cmd    = f'git clone -b {self.keymapper_branch} {self.keymapper_url}'
 
         self.input_group            = 'input'
         self.user_name              = pwd.getpwuid(os.getuid()).pw_name
@@ -227,6 +228,7 @@ class InstallerSettings:
         self.skip_native            = None
         self.fancy_pants            = None
         self.no_dbus_python         = None
+        self.use_dev_keymapper      = None
 
         self.app_switcher           = None      # Install/upgrade Application Switcher KWin script
 
@@ -250,6 +252,18 @@ class InstallerSettings:
         # self.venv_cmd_lst           = [self.py_interp_path, '-m', 'venv', self.venv_path]
         # Needs to re-evaluate itself when accessed, in case Python interpreter path changed:
         return [self.py_interp_path, '-m', 'venv', self.venv_path]
+
+    @property
+    def keymapper_clone_cmd(self):
+        # Originally a class instance attribute variable:
+        # self.keymapper_clone_cmd    = f'git clone -b {self.keymapper_branch} {self.keymapper_url}'
+        if self.use_dev_keymapper:
+            _km_branch = self.keymapper_dev_branch
+        else:
+            _km_branch = self.keymapper_branch
+        _clone_cmd = f'git clone -b {_km_branch} {self.keymapper_url}'
+        print(f"Keymapper clone command:\n  {_clone_cmd}")
+        return _clone_cmd
 
     def find_qdbus_command(self):
         # List of qdbus command names by preference
@@ -1189,6 +1203,21 @@ def exit_with_invalid_distro_error(pkg_mgr_err=None):
     safe_shutdown(1)
 
 
+def is_dnf_repo_enabled(repo_name):
+    """
+    Utility function that checks if a specified DNF repository is present and enabled.
+    """
+    try:
+        native_pkg_installer.check_for_pkg_mgr_cmd('dnf')
+        cmd_lst = ["dnf", "repolist", "enabled"]
+        result = subprocess.run(cmd_lst, stdout=PIPE, stderr=PIPE, 
+                                universal_newlines=True, check=True)
+        return repo_name.casefold() in result.stdout.casefold()
+    except subprocess.CalledProcessError as proc_err:
+        error(f"There was a problem checking if {repo_name} repo is enabled:\n{proc_err}")
+        safe_shutdown(1)
+
+
 class DistroQuirksHandler:
     """
     Utility class to contain static methods for prepping specific distro variants that
@@ -1350,18 +1379,6 @@ class DistroQuirksHandler:
     def handle_quirks_RHEL_8_and_9():
         print('Doing prep/checks for RHEL 8/9 type distro...')
 
-        # for libappindicator-gtk3: sudo dnf install -y epel-release
-        try:
-            native_pkg_installer.check_for_pkg_mgr_cmd('dnf')
-            cmd_lst = ['sudo', 'dnf', 'install', '-y', 'epel-release']
-            subprocess.run(cmd_lst, check=True)
-            cmd_lst = ['sudo', 'dnf', 'makecache']
-            subprocess.run(cmd_lst, check=True)
-        except subprocess.CalledProcessError as proc_err:
-            print()
-            error(f'ERROR: Problem while adding "epel-release" repo.\n\t{proc_err}')
-            safe_shutdown(1)
-
         def get_newest_python_version():
             """Utility function to find the latest Python available on RHEL 8 and 9 distro types"""
             # TODO: Add higher version if ever necessary (keep minimum 3.8)
@@ -1408,33 +1425,76 @@ class DistroQuirksHandler:
             pkgs_to_remove = ["python3-devel", "python3-pip", "python3-tkinter"]
             cnfg.pkgs_for_distro = [pkg for pkg in cnfg.pkgs_for_distro if pkg not in pkgs_to_remove]
 
-        # Need to do this AFTER the 'epel-release' install
         if cnfg.DISTRO_ID != 'centos' and cnfg.distro_mjr_ver in ['8']:
 
-            # enable CRB repo on RHEL 8.x distros, but not CentOS Stream 8:
-            cmd_lst = ['sudo', '/usr/bin/crb', 'enable']
-            try:
-                subprocess.run(cmd_lst, check=True)
-            except subprocess.CalledProcessError as proc_err:
-                print()
-                error(f'ERROR: Problem while enabling CRB repo.\n\t{proc_err}')
-                safe_shutdown(1)
+            # for libappindicator-gtk3: sudo dnf install -y epel-release
+            if not is_dnf_repo_enabled("epel"):
+                try:
+                    cmd_lst = ['sudo', 'dnf', 'install', '-y', 'epel-release']
+                    print("Installing and enabling EPEL repository...")
+                    subprocess.run(cmd_lst, check=True)
+                    cmd_lst = ['sudo', 'dnf', 'makecache']
+                    subprocess.run(cmd_lst, check=True)
+                except subprocess.CalledProcessError as proc_err:
+                    print()
+                    error(f'ERROR: Problem while adding "epel-release" repo.\n\t{proc_err}')
+                    safe_shutdown(1)
+            else:
+                print("EPEL repository is already enabled.")
+
+            # Why were we doing this AFTER the 'epel-release' install?
+            # Because in RHEL 8 distros the 'epel-release' package installs '/usr/bin/crb' command!
+            # Also the repo ends up being named 'powertools' for some reason. 
+            print("Enabling CRB (CodeReady Builder) repo...")
+            if not is_dnf_repo_enabled('powertools'):
+                # enable CRB repo on RHEL 8.x distros, but not CentOS Stream 8:
+                cmd_lst = ['sudo', '/usr/bin/crb', 'enable']
+                try:
+                    subprocess.run(cmd_lst, check=True)
+                    print("CRB (CodeReady Builder) repo now enabled. (Repo name: 'powertools'.)")
+                except subprocess.CalledProcessError as proc_err:
+                    print()
+                    error(f'ERROR: Problem while enabling CRB repo.\n\t{proc_err}')
+                    safe_shutdown(1)
+            else:
+                print("CRB (CodeReady Builder) repo is already enabled. (Repo name: 'powertools'.)")
 
             # Get a much newer Python version than the default 3.6 currently on RHEL 8 and clones
             get_newest_python_version()
 
         if cnfg.distro_mjr_ver in ['9']:
-            #
-            # enable "CodeReady Builder" repo for 'gobject-introspection-devel' only on 
-            # RHEL 9.x and CentOS Stream 9:
-            # sudo dnf config-manager --set-enabled crb
-            cmd_lst = ['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb']
-            try:
-                subprocess.run(cmd_lst, check=True)
-            except subprocess.CalledProcessError as proc_err:
-                print()
-                error(f'ERROR: Problem while enabling CRB repo:\n\t{proc_err}')
-                safe_shutdown(1)
+
+            print("Enabling CRB (CodeReady Builder) repo...")
+            if not is_dnf_repo_enabled('crb'):
+                # enable "CodeReady Builder" repo for 'gobject-introspection-devel' only on 
+                # RHEL 9.x and CentOS Stream 9:
+                # sudo dnf config-manager --set-enabled crb
+                cmd_lst = ['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb']
+                try:
+                    subprocess.run(cmd_lst, check=True)
+                    print("CRB (CodeReady Builder) repo now enabled.")
+                except subprocess.CalledProcessError as proc_err:
+                    print()
+                    error(f'ERROR: Problem while enabling CRB repo:\n\t{proc_err}')
+                    safe_shutdown(1)
+            else:
+                print("CRB (CodeReady Builder) repo is already enabled.")
+
+            # for libappindicator-gtk3: sudo dnf install -y epel-release
+            print("Installing and enabling EPEL repository...")
+            if not is_dnf_repo_enabled("epel"):
+                try:
+                    cmd_lst = ['sudo', 'dnf', 'install', '-y', 'epel-release']
+                    subprocess.run(cmd_lst, check=True)
+                    print("EPEL repository is now enabled.")
+                    cmd_lst = ['sudo', 'dnf', 'makecache']
+                    subprocess.run(cmd_lst, check=True)
+                except subprocess.CalledProcessError as proc_err:
+                    print()
+                    error(f'ERROR: Problem while adding "epel-release" repo.\n\t{proc_err}')
+                    safe_shutdown(1)
+            else:
+                print("EPEL repository is already enabled.")
 
             # Get a much newer Python version than the default 3.9 currently on 
             # CentOS Stream 9, RHEL 9 and clones
@@ -1444,47 +1504,35 @@ class DistroQuirksHandler:
     def handle_quirks_RHEL_10():
         print('Doing prep/checks for RHEL 10 type distro...')
 
-        def is_crb_repo_enabled():
-            """
-            Checks if the CRB (CodeReady Builder) repository is present and enabled.
-            """
-            try:
-                native_pkg_installer.check_for_pkg_mgr_cmd('dnf')
-                cmd_lst = ["dnf", "repolist", "enabled"]
-                result = subprocess.run(cmd_lst, capture_output=True, text=True, check=True)
-                return "crb" in result.stdout.casefold()
-            except subprocess.CalledProcessError as proc_err:
-                error(f"There was a problem checking if CRB repo is enabled:\n{proc_err}")
-                safe_shutdown(1)
-
-        if not is_crb_repo_enabled():
+        print("Enabling CRB (CodeReady Builder) repo...")
+        if not is_dnf_repo_enabled('crb'):
             try:
                 cmd_lst = ['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb']
-                print("Enabling CRB (CodeReady Builder) repo...")
                 subprocess.run(cmd_lst, check=True)
+                print("CRB (CodeReady Builder) repo now enabled.")
             except subprocess.CalledProcessError as proc_err:
                 print()
                 error(f'ERROR: Problem while enabling CRB repo:\n\t{proc_err}')
                 safe_shutdown(1)
         else:
-            print(f"CRB (CodeReady Builder) repo is already enabled. Continuing...")
-        
+            print(f"CRB (CodeReady Builder) repo is already enabled.")
+
         # Command to install EPEL release package:
         # sudo dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm
 
         epel_10_rpm_url = 'https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm'
 
-        # Oreon 10 already has EPEL repo enabled.
-        if not cnfg.DISTRO_ID == 'oreon':
+        print("Installing and enabling EPEL 10 repository...")
+        if not is_dnf_repo_enabled("epel"):
             try:
                 cmd_lst = ['sudo', 'dnf', 'install', '-y', epel_10_rpm_url]
-                print("Installing EPEL 10 release package...")
                 subprocess.run(cmd_lst, check=True)
+                print("EPEL repository is now enabled.")
             except subprocess.CalledProcessError as proc_err:
-                error(f"Problem installing the EPEL 10 release package:\n{proc_err}")
+                error(f"Problem installing the EPEL 10 repository:\n{proc_err}")
                 safe_shutdown(1)
         else:
-            print("Distro is Oreon, EPEL 10 repo is already enabled.")
+            print("EPEL repository is already enabled.")
 
         # The 'xset' command does not appear to be provided by any available
         # package in RHEL 10 distro types (e.g. AlmaLinux 10):
@@ -1831,7 +1879,7 @@ def install_distro_pkgs():
     def call_installer_method(installer_method):
         """Utility function to call the installer function and handle post-call tasks."""
         if callable(installer_method):  # Ensure the passed method is callable
-            print(f"Calling installer dispatcher method:\n {installer_method.__name__}")
+            print(f"Calling installer dispatcher method:\n  {installer_method.__name__}")
             installer_method()  # Call the function
             native_pkg_installer.show_pkg_install_success_msg()
             show_task_completed_msg()
@@ -2109,7 +2157,7 @@ def verify_user_groups():
 def clone_keymapper_branch():
     """Clone the designated keymapper branch from GitHub"""
     print(f'\n\n§  Cloning keymapper branch...\n{cnfg.separator}')
-    print(f'Cloning branch "{cnfg.keymapper_branch}" from {cnfg.keymapper_url}...')
+
     # Check if `git` command exists. If not, exit script with error.
     has_git = shutil.which('git')
     if not has_git:
@@ -3625,6 +3673,11 @@ def handle_cli_arguments():
         help='Avoid installing "dbus-python" pip package (breaks some stuff).'
     )
     subparser_install.add_argument(
+        '--dev-keymapper',
+        action='store_true',
+        help='Install the development branch of the keymapper.'
+    )
+    subparser_install.add_argument(
         '--fancy-pants',
         action='store_true',
         help='See README for more info on this option.'
@@ -3700,6 +3753,9 @@ def handle_cli_arguments():
         if args.no_dbus_python:
             cnfg.no_dbus_python = True
 
+        if args.dev_keymapper:
+            cnfg.use_dev_keymapper = True
+
         if args.fancy_pants:
             cnfg.fancy_pants = True
 
@@ -3737,14 +3793,15 @@ def handle_cli_arguments():
             print()
         safe_shutdown(0)
 
-    if args.command == 'install-font':
-        install_coding_font()
-        show_task_completed_msg()
-        safe_shutdown(0)
-
     if args.command == 'remove-tweaks':
         get_environment_info()
         remove_desktop_tweaks()
+        safe_shutdown(0)
+
+    if args.command == 'install-font':
+        print(f'\n§  Installing coding/terminal font...\n{cnfg.separator}')
+        install_coding_font()
+        show_task_completed_msg()
         safe_shutdown(0)
 
     if args.command == 'uninstall':
@@ -3776,7 +3833,10 @@ def main(cnfg: InstallerSettings):
         if cnfg.DESKTOP_ENV == 'gnome':
             check_gnome_indicator_ext()
 
-        if not cnfg.fancy_pants and cnfg.DESKTOP_ENV == 'kde':
+        app_switcher_kwin_compat = cnfg.DESKTOP_ENV == 'kde' and cnfg.DE_MAJ_VER in ['5', '6']
+        if app_switcher_kwin_compat and not cnfg.fancy_pants:
+            # Need to limit this check to the versions of KDE Plasma
+            # that are actually compatible with the KWin script (5/6).
             check_kde_app_switcher()
 
     elevate_privileges()

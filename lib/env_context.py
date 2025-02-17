@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import re
 import os
+import re
 import time
 import shutil
 import subprocess
@@ -9,7 +9,7 @@ import subprocess
 from typing import Dict
 
 # ENV_CONTEXT module version:
-__version__ = '20250129'
+__version__ = '20250216'
 
 VERBOSE = True
 FLUSH = True
@@ -63,14 +63,20 @@ class EnvironmentInfo:
         self.WINDOW_MGR                     = None
         # self.WDW_MGR_VER                    = None        # Just in case we need it later
 
+        # Split parts version information
+        self.distro_mjr_ver                 = None
+        self.distro_mnr_ver                 = None
+        # self.de_major_ver                   = None        # Just in case we need it later
+        # self.de_minor_ver                   = None        # Just in case we need it later
+
         self.env_info_dct: Dict[str, str]   = {}
         self.release_files: Dict[str, str]  = self.read_release_files()
 
     def get_env_info(self):
         """Primary method to get complete environment info"""
 
-        # Call methods to populate the instance variables with info.
-        # As of 2024-09-04 there are seven different bits of info to generate. 
+        # Call methods to harvest environment info and populate the instance variables.
+        # As of 2024-09-04 there are seven different bits of primary info to generate.
         self.get_distro_id()
         self.get_distro_version()
         self.get_variant_id()
@@ -91,6 +97,15 @@ class EnvironmentInfo:
             'WINDOW_MGR':       self.WINDOW_MGR,
             # 'WDW_MGR_VER':      self.WDW_MGR_VER,         # Just in case we need it later
         }
+
+        # Add split parts version info
+        self.env_info_dct.update({
+            'distro_mjr_ver':   self.distro_mjr_ver,
+            'distro_mnr_ver':   self.distro_mnr_ver,
+            # 'de_major_ver':     self.de_major_ver,        # Just in case we need it later
+            # 'de_minor_ver':     self.de_minor_ver,        # Just in case we need it later
+        })
+
         return self.env_info_dct
 
     def read_release_files(self) -> Dict[str, str]:
@@ -106,52 +121,36 @@ class EnvironmentInfo:
 
     def is_process_running(self, process_name):
         """
-        Utility function to check if process is running.
+        Utility function to check if a process with a specific name is running.
         For names >15 chars, uses pgrep -f with careful pattern matching to avoid false positives.
-        Tests for feature support and falls back gracefully if advanced features unavailable.
         """
-        # Test if -i is supported
-        try:
-            subprocess.check_output(['pgrep', '-i', 'test'], stderr=subprocess.PIPE)
-            case_insensitive = True
-        except subprocess.CalledProcessError as e:
-            if "invalid option" in str(e.stderr):
-                case_insensitive = False
-            else:
-                # Process just wasn't found in test, but -i is supported
-                case_insensitive = True
+        use_pgrep_i = True
+
+        distros_without_pgrep_i = [
+            # Tuple format is (distro_id, major_version)
+            ('centos', '7'),    # CentOS 7.x pgrep doesn't support -i flag
+            # ('rhel', '7'),    # Add other distros as needed
+        ]
+
+        for distro_tup in distros_without_pgrep_i:
+            if distro_tup == (self.DISTRO_ID, self.distro_mjr_ver):
+                use_pgrep_i = False
+                break
 
         if len(process_name) <= 15:
             # Standard exact match for short names
             cmd = ['pgrep', '-x']
-            if case_insensitive:
+            if use_pgrep_i:
                 cmd.append('-i')
             cmd.append(process_name)
         else:
-            # For long names, try using -f with careful pattern matching
+            # For long names, use -f with careful pattern matching
             pattern = f"(/|^){process_name}($| )"
-            try:
-                # Test if -f is supported with a pattern
-                test_cmd = ['pgrep', '-f', 'test']
-                subprocess.check_output(test_cmd, stderr=subprocess.PIPE)
-                # If we get here, -f is supported
-                cmd = ['pgrep', '-f', pattern]
-            except subprocess.CalledProcessError as e:
-                if "invalid option" in str(e.stderr):
-                    # If -f isn't supported, fall back to truncated exact match
-                    print(f"Warning: process name '{process_name}' is >15 chars and pgrep -f "
-                        f"is not supported. Falling back to exact match with '{process_name[:15]}'")
-                    cmd = ['pgrep', '-x']
-                    if case_insensitive:
-                        cmd.append('-i')
-                    cmd.append(process_name[:15])
-                else:
-                    # Process just wasn't found in test
-                    cmd = ['pgrep', '-f', pattern]
+            cmd = ['pgrep', '-f', pattern]
 
         try:
-            subprocess.check_output(cmd)
-            return True
+            result = subprocess.check_output(cmd)
+            return bool(result.strip())
         except subprocess.CalledProcessError:
             return False
 
@@ -263,6 +262,12 @@ class EnvironmentInfo:
                 self.DISTRO_VER = 'arch_btw'
             else:
                 self.DISTRO_VER = 'notfound'
+
+        # Parse out major and minor distro version
+        distro_ver_parts        = self.DISTRO_VER.split('.') if self.DISTRO_VER else []
+        self.distro_mjr_ver     = distro_ver_parts[0] if distro_ver_parts else 'NO_VER'
+        self.distro_mnr_ver     = distro_ver_parts[1] if len(distro_ver_parts) > 1 else 'no_mnr_ver'
+
 
 ####################################################################################################
 ##                                                                                                ##
