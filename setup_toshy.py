@@ -1879,7 +1879,7 @@ def install_distro_pkgs():
     def call_installer_method(installer_method):
         """Utility function to call the installer function and handle post-call tasks."""
         if callable(installer_method):  # Ensure the passed method is callable
-            print(f"Calling installer dispatcher method:\n {installer_method.__name__}")
+            print(f"Calling installer dispatcher method:\n  {installer_method.__name__}")
             installer_method()  # Call the function
             native_pkg_installer.show_pkg_install_success_msg()
             show_task_completed_msg()
