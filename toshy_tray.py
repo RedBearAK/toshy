@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-__version__ = '20250210'
+__version__ = '20250218'
 
 # Indicator tray icon menu app for Toshy, using pygobject/gi
 TOSHY_PART      = 'tray'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
@@ -474,6 +474,7 @@ def fn_open_preferences(widget):
 
 
 def fn_open_config_folder(widget):
+
     xdg_open_cmd = shutil.which('xdg-open')
     if not xdg_open_cmd:
         _ntfy_icon = icon_file_inverse
@@ -484,6 +485,12 @@ def fn_open_config_folder(widget):
                         "     Try installing 'xdg-utils' package.")
         error(f"{_error_msg}")
         return
+
+    # Sometimes xdg-open script is unpatched for Plasma 6 (e.g., Leap 16), so use kde-open instead
+    kde_open_cmd = shutil.which('kde-open')
+    if DESKTOP_ENV == 'kde' and DE_MAJ_VER == '6' and kde_open_cmd:
+        xdg_open_cmd = kde_open_cmd
+
     try:
         subprocess.Popen([xdg_open_cmd, current_folder_path])
     except FileNotFoundError as e:
@@ -936,18 +943,20 @@ def main():
 
     global loop
     global DESKTOP_ENV
-    # env_info_dct   = env.get_env_info()
-    env_ctxt_getter = EnvironmentInfo()
-    env_info_dct   = env_ctxt_getter.get_env_info()
-    DESKTOP_ENV = str(env_info_dct.get('DESKTOP_ENV', None)).casefold()
+    global DE_MAJ_VER
+
+    env_ctxt_getter             = EnvironmentInfo()
+    env_info_dct                = env_ctxt_getter.get_env_info()
+    DESKTOP_ENV                 = str(env_info_dct.get('DESKTOP_ENV', None)).casefold()
+    DE_MAJ_VER                  = str(env_info_dct.get('DE_MAJ_VER', None)).casefold()
 
     # COSMIC desktop environment messes with tray icon, so use 'grayscale' icon
     if DESKTOP_ENV == 'cosmic':
         # Use 'global' keyword since we need to change the global values here
         global icon_file_active
         global icon_file_inverse
-        icon_file_active = icon_file_grayscale
-        icon_file_inverse = icon_file_grayscale
+        icon_file_active        = icon_file_grayscale
+        icon_file_inverse       = icon_file_grayscale
 
     if shutil.which('systemctl') and is_init_systemd():
         # help out the config file user service
