@@ -8,30 +8,38 @@ assignees: RedBearAK
 ---
 
 <!--
-These terminal commands may provide helpful info:
+These Toshy terminal commands may provide helpful info:
 
-- toshy-services-log  
-- toshy-services-status  
-- toshy-config-verbose-start  
+- toshy-services-log      (Log output from systemd services)
+- toshy-services-status   (Active/inactive state of the services)
+- toshy-debug             (Verbose logging into the terminal)
+- toshy-env               (The environment as seen by Toshy)
+- toshy-devices           (List of input devices libinput can see)
+- toshy-versions          (Change dates of several Toshy components)
+
+
+Try running 'toshy-env' in a terminal to fill out the environment fields below,
+or use the diagnostic dialog shortcut Shift+Opt+Cmd+I,I (double-tap the "I").
+
 --> 
 
 ```
+Linux distro name: 
+Distro variant: None
+Distro version: 
+X11/Xorg or Wayland: 
+Desktop environment: 
+DE major version: 
+Window manager: 
+
+Keyboard type (Apple, Chromebook, IBM, Windows): 
+Keyboard device name (try 'toshy-devices'): 
+
 Bare metal or virtual machine: 
 (If in VM, which VM software): None
-
-(Try running 'toshy-env' in a terminal to fill out the following fields...)
-
-Linux distro name: 
-Distro version: 
-Distro variant: 
-X11/Xorg or Wayland: 
-Desktop environment(s): 
-DE version(s): 
-
-Keyboard type (IBM, Chromebook, Windows, Apple): 
-Keyboard device name (try 'toshy-devices'): 
 ```
 
+<!-- Enter your issue report below the horizontal rule characters (* * *)... -->
 * * *
 
 Problem observed:
