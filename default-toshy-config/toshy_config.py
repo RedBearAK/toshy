@@ -3707,7 +3707,8 @@ keymap("Firefox Browsers Overrides", {
 
 # Zotero is a Firefox based research app
 keymap("Zotero", {
-    C("Shift-Alt-RC-i"):        C("Shift-Alt-C-i"),    # Import from clipboard (override diagnostic dialog shortcut)
+    # (override the Shift+Opt+Cmd+I,I diagnostic dialog shortcut in Zotero)
+    C("Shift-Alt-RC-i"):        C("Shift-Alt-C-i"),             # Import from clipboard
 }, when = matchProps(clas="^.*Zotero.*$") )
 
 # Vivaldi is a Chromium based web browser
