@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = '20250210'
+__version__ = '20250218'
 ###############################################################################
 ############################   Welcome to Toshy!   ############################
 ###  
@@ -3693,7 +3693,6 @@ keymap("General File Managers - Finder Mods", {
 ###                                                                              ###
 ####################################################################################
 
-# Open preferences in Firefox browsers
 keymap("Firefox Browsers Overrides", {
     C("C-comma"):              [C("C-t"), sleep(0.1),
                                 ST("about:preferences"),
@@ -3705,6 +3704,11 @@ keymap("Firefox Browsers Overrides", {
     C("Shift-RC-Minus"):        ignore_combo,                       # Ignore alternate zoom out shortcut
     C("Shift-RC-Equal"):        ignore_combo,                       # Ignore alternate zoom in shortcut
 }, when = matchProps(clas=browsers_firefoxStr))
+
+# Zotero is a Firefox based research app
+keymap("Zotero", {
+    C("Shift-Alt-RC-i"):        C("Shift-Alt-C-i"),    # Import from clipboard (override diagnostic dialog shortcut)
+}, when = matchProps(clas="^.*Zotero.*$") )
 
 # Vivaldi is a Chromium based web browser
 keymap("Overrides for Vivaldi browser", {
@@ -4918,6 +4922,7 @@ keymap("General GUI", {
 
 
 keymap("Diagnostics", {
-    C("Shift-Alt-RC-i"):        isDoubleTap(notify_context),
-    C("Shift-Alt-RC-t"):        isDoubleTap(macro_tester),
+    C("Shift-Alt-RC-i"):        isDoubleTap(notify_context),    # Diagnostic dialog (primary)
+    C("Shift-Alt-RC-h"):        isDoubleTap(notify_context),    # Diagnostic dialog (alternate)
+    C("Shift-Alt-RC-t"):        isDoubleTap(macro_tester),      # Type out test macro
 }, when = lambda ctx: ctx is ctx )
