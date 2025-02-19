@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = '20250210'
+__version__ = '20250218'
 ###############################################################################
 ############################   Welcome to Toshy!   ############################
 ###  
@@ -979,6 +979,7 @@ keymap("Currency character overlay", {
 ###  SLICE_MARK_END: barebones_user_cfg  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 ###################################################################################################
 keymap("Diagnostics", {
-    C("Shift-Super-Alt-i"):        isDoubleTap(notify_context),
-    C("Shift-Super-Alt-t"):        isDoubleTap(macro_tester),
+    C("Shift-Super-Alt-i"):        isDoubleTap(notify_context),     # Diagnostic dialog (primary)
+    C("Shift-Super-Alt-h"):        isDoubleTap(notify_context),     # Diagnostic dialog (alternate)
+    C("Shift-Super-Alt-t"):        isDoubleTap(macro_tester),       # Type out test macro
 }, when = lambda ctx: ctx is ctx )
