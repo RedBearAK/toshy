@@ -890,7 +890,7 @@ distro_groups_map: Dict[str, List[str]] = {
     'ubuntu-based':             ["elementary", "mint", "neon", "pop", "tuxedo", "ubuntu", "zorin"],
     'debian-based':             ["debian", "deepin", "kali", "lmde", "peppermint", "q4os"],
 
-    'arch-based':               ["arch", "arcolinux", "endeavouros", "garuda", "manjaro"],
+    'arch-based':               ["arch", "arcolinux", "cachyos", "endeavouros", "garuda", "manjaro"],
 
     'solus-based':              ["solus"],
 
