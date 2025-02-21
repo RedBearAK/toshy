@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20250216'                        # CLI option "--version" will print this out.
+__version__ = '20250220'                        # CLI option "--version" will print this out.
 
 import os
 os.environ['PYTHONDONTWRITEBYTECODE'] = '1'     # prevent this script from creating cache files
@@ -206,8 +206,9 @@ class InstallerSettings:
 
         self.keymapper_tmp_path     = os.path.join(this_file_dir, 'keymapper-temp')
 
-        self.keymapper_branch       = 'main'          # new branch when switched to 'xwaykeyz'
-        self.keymapper_dev_branch   = 'dev_beta'      # branch to test new keymapper features
+        self.keymapper_branch       = 'main'        # new branch when switched to 'xwaykeyz'
+        self.keymapper_dev_branch   = 'dev_beta'    # branch to test new keymapper features
+        self.keymapper_cust_branch  = None          # Branch name provided by CLI flag argument
 
         self.keymapper_url          = 'https://github.com/RedBearAK/xwaykeyz.git'
 
@@ -257,10 +258,15 @@ class InstallerSettings:
     def keymapper_clone_cmd(self):
         # Originally a class instance attribute variable:
         # self.keymapper_clone_cmd    = f'git clone -b {self.keymapper_branch} {self.keymapper_url}'
+
         if self.use_dev_keymapper:
-            _km_branch = self.keymapper_dev_branch
+            if self.keymapper_cust_branch:
+                _km_branch = self.keymapper_cust_branch
+            else:
+                _km_branch = self.keymapper_dev_branch
         else:
             _km_branch = self.keymapper_branch
+
         _clone_cmd = f'git clone -b {_km_branch} {self.keymapper_url}'
         print(f"Keymapper clone command:\n  {_clone_cmd}")
         return _clone_cmd
@@ -3655,7 +3661,7 @@ def handle_cli_arguments():
     subparser_install.add_argument(
         '--override-distro',
         type=str,
-        help=f'Override auto-detection of distro. See "--list-distros"'
+        help=f'Override auto-detection of distro. See "list-distros" command.'
     )
     subparser_install.add_argument(
         '--barebones-config',
@@ -3674,8 +3680,12 @@ def handle_cli_arguments():
     )
     subparser_install.add_argument(
         '--dev-keymapper',
-        action='store_true',
-        help='Install the development branch of the keymapper.'
+        nargs='?',          # Makes the argument optional
+        const=True,         # Value if flag is present but no branch specified
+        default=False,
+        metavar='BRANCH',
+        help='Install the development branch of the keymapper. '
+                'Optionally specify a custom branch name.'
     )
     subparser_install.add_argument(
         '--fancy-pants',
@@ -3755,6 +3765,8 @@ def handle_cli_arguments():
 
         if args.dev_keymapper:
             cnfg.use_dev_keymapper = True
+            if isinstance(args.dev_keymapper, str):
+                cnfg.keymapper_cust_branch = args.dev_keymapper
 
         if args.fancy_pants:
             cnfg.fancy_pants = True
