@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = '20250218'
+__version__ = '20250220'
 ###############################################################################
 ############################   Welcome to Toshy!   ############################
 ###  
@@ -4587,9 +4587,6 @@ if DISTRO_ID == 'manjaro' and DESKTOP_ENV == 'xfce':
 if DISTRO_ID == 'manjaro':
     keymap("GenGUI overrides: Manjaro", {
         C("Super-RC-f"):              C("Super-PAGE_UP"),             # SL- Maximize app manjaro
-        # TODO: figure out why these two are the same! (And wrong, LC is for terminals!)
-        # C("RC-LC-f"):               C("Super-PAGE_UP"),             # SL- Maximize app manjaro
-        # C("RC-LC-f"):               C("Super-PAGE_DOWN"),           # SL - Minimize app manjaro
     }, when = lambda ctx:
         cnfg.screen_has_focus and
         matchProps(not_clas=remoteStr)(ctx)
