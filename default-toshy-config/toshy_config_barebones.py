@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = '20250218'
+__version__ = '20250220'
 ###############################################################################
 ############################   Welcome to Toshy!   ############################
 ###  
@@ -169,9 +169,8 @@ debug(  f'Toshy (barebones) config sees this environment:'
         f'\n\t{WINDOW_MGR       = }\n', ctx="CG")
 
 
-# TODO: Add a list here to concat with 'wlroots_compositors', instead of
-# continuing to add new environments into the 'wlroots' provider inside 
-# the keymapper. 
+# NOTE: List kind of stabilized, so moved all into keymapper wlroots window context method
+# during the transition from using "desktop environment" to using "window manager".
 known_wlroots_compositors = [
     # 'hyprland',
     # 'labwc',
@@ -949,8 +948,8 @@ def notify_context():
 
         kdialog_cmd_lst = [kdialog_cmd, '--msgbox', message, '--title', 'Toshy Context Info']
         # Add icon if needed: kdialog_cmd_lst += ['--icon', '/path/to/icon']
-        # TODO: Figure out why icon argument doesn't work. Need a proper icon theme folder?
-        # Figured out: Kdialog does not support custom icons!
+        # Figure out why icon argument doesn't work. Need a proper icon theme folder?
+        # DONE: Figured out that Kdialog does not support custom icons at all!
         kdialog_cmd_lst += ['--icon', 'toshy_app_icon_rainbow']
 
         if dialog_cmd == kdialog_cmd:

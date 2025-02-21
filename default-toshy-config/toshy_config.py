@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = '20250218'
+__version__ = '20250220'
 ###############################################################################
 ############################   Welcome to Toshy!   ############################
 ###  
@@ -250,9 +250,8 @@ debug(  f'Toshy config sees this environment:'
         f'\n\t{WINDOW_MGR       = }\n', ctx="CG")
 
 
-# TODO: Add a list here to concat with 'wlroots_compositors', instead of
-# continuing to add new environments into the 'wlroots' provider inside 
-# the keymapper. 
+# NOTE: List kind of stabilized, so moved all into keymapper wlroots window context method
+# during the transition from using "desktop environment" to using "window manager".
 known_wlroots_compositors = [
     # 'hyprland',
     # 'labwc',
@@ -1344,8 +1343,8 @@ def notify_context():
 
         kdialog_cmd_lst = [kdialog_cmd, '--msgbox', message, '--title', 'Toshy Context Info']
         # Add icon if needed: kdialog_cmd_lst += ['--icon', '/path/to/icon']
-        # TODO: Figure out why icon argument doesn't work. Need a proper icon theme folder?
-        # Figured out: Kdialog does not support custom icons!
+        # Figure out why icon argument doesn't work. Need a proper icon theme folder?
+        # DONE: Figured out that Kdialog does not support custom icons at all!
         kdialog_cmd_lst += ['--icon', 'toshy_app_icon_rainbow']
 
         if dialog_cmd == kdialog_cmd:
@@ -4587,9 +4586,7 @@ if DISTRO_ID == 'manjaro' and DESKTOP_ENV == 'xfce':
 
 if DISTRO_ID == 'manjaro':
     keymap("GenGUI overrides: Manjaro", {
-        # TODO: figure out why these two are the same!
-        C("RC-LC-f"):               C("Super-PAGE_UP"),             # SL- Maximize app manjaro
-        C("RC-LC-f"):               C("Super-PAGE_DOWN"),           # SL - Minimize app manjaro
+        C("Super-RC-f"):              C("Super-PAGE_UP"),             # SL- Maximize app manjaro
     }, when = lambda ctx:
         cnfg.screen_has_focus and
         matchProps(not_clas=remoteStr)(ctx)
@@ -4797,7 +4794,7 @@ if DESKTOP_ENV == 'pantheon':
         C("RC-F3"):                 C("Super-d"),                   # Show Desktop (gnome/kde,elementary)
         # C("RC-Space"):             [iEF2NT(),C("Super-Space")],     # Launch Application Menu (elementary)
         C("RC-Space"):             [iEF2NT(),C("Alt-F2")],          # Launch Application Menu (elementary OS 8)
-        C("RC-LC-f"):               C("Super-Up"),                  # Maximize app elementary
+        C("Super-RC-f"):            C("Super-Up"),                  # Maximize app elementary
     }, when = lambda ctx:
         cnfg.screen_has_focus and
         matchProps(not_clas=remoteStr)(ctx)
