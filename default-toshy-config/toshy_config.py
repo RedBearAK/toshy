@@ -735,6 +735,7 @@ keyboards_Apple = [
     'Magic Keyboard with Numeric Keypad',
     'Magic Keyboard',
     'MX Keys Mac Keyboard',
+    'HP TouchPad Wireless Keyboard',    # Missing some keys, but Apple type probably best default
 ]
 
 kbtype_lists = {
