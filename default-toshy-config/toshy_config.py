@@ -1538,7 +1538,7 @@ modmap("Cond modmap - Forced Numpad feature",{
     Key.KPENTER:                Key.ENTER,
 }, when = lambda ctx:
     cnfg.forced_numpad and
-    matchProps(not_clas=exclude_kpad_devs_Str)(ctx) and
+    matchProps(not_devn=exclude_kpad_devs_Str)(ctx) and
     matchProps(not_clas=remoteStr)(ctx)
 )
 
@@ -1563,7 +1563,7 @@ modmap("Cond modmap - GTK3 numpad nav keys fix",{
 }, when = lambda ctx:
     not cnfg.forced_numpad and
     matchProps(numlk=False)(ctx) and
-    matchProps(not_clas=exclude_kpad_devs_Str)(ctx) and
+    matchProps(not_devn=exclude_kpad_devs_Str)(ctx) and
     matchProps(not_clas=remoteStr)(ctx)
 )
 
