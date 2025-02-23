@@ -25,5 +25,15 @@ else
     return 0
 fi
 
+# Absolute path to the venv
+VENV_PATH="$HOME/.config/toshy/.venv"
+
+# Verify the venv directory exists
+if [ ! -d "$VENV_PATH" ]; then
+    echo "Error: Virtual environment not found at $VENV_PATH"
+    exit 1
+fi
+
+# Activate the venv for complete environment setup
 # shellcheck disable=SC1091
-source "$HOME/.config/toshy/.venv/bin/activate"
+source "${VENV_PATH}/bin/activate"

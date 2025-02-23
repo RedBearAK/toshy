@@ -22,11 +22,20 @@ FILE_NAME="toshy_wlroots_dbus_service"
 
 pkill -f "${FILE_NAME}"
 
-sleep 1
+sleep 0.5
 
-# run the Python interpreter from within the virtual environment
+# Absolute path to the venv
+VENV_PATH="$HOME/.config/toshy/.venv"
+
+# Verify the venv directory exists
+if [ ! -d "$VENV_PATH" ]; then
+    echo "Error: Virtual environment not found at $VENV_PATH"
+    exit 1
+fi
+
+# Activate the venv for complete environment setup
 # shellcheck disable=SC1091
-source "${TOSHY_CFG}/.venv/bin/activate"
+source "${VENV_PATH}/bin/activate"
 
 # start the script that will create the D-Bus object/interface
-python3 "${TOSHY_WLROOTS}/${FILE_NAME}.py"
+"${VENV_PATH}/bin/python" "${TOSHY_WLROOTS}/${FILE_NAME}.py"
