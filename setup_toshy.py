@@ -252,7 +252,10 @@ class InstallerSettings:
         # Originally a class instance attribute variable:
         # self.venv_cmd_lst           = [self.py_interp_path, '-m', 'venv', self.venv_path]
         # Needs to re-evaluate itself when accessed, in case Python interpreter path changed:
-        return [self.py_interp_path, '-m', 'venv', self.venv_path]
+
+        # Add '--copies' flag to avoid using symlinks to system Python interpreter, and
+        # hopefully prevent Toshy from breaking when user does a dist-upgrade.
+        return [self.py_interp_path, '-m', 'venv', '--copies', self.venv_path]
 
     @property
     def keymapper_clone_cmd(self):
