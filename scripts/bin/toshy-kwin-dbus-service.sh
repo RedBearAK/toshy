@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-# Start Toshy KWIN D-Bus service, after terminating existing
+# Start Toshy Kwin D-Bus service, after terminating existing
 # processes and activating Python virtual environment
 
 # Check if the script is being run as root
@@ -22,14 +22,23 @@ FILE_NAME="toshy_kwin_dbus_service"
 
 pkill -f "${FILE_NAME}"
 
-sleep 1
+sleep 0.5
 
-# run the Python interpreter from within the virtual environment
+# Absolute path to the venv
+VENV_PATH="$HOME/.config/toshy/.venv"
+
+# Verify the venv directory exists
+if [ ! -d "$VENV_PATH" ]; then
+    echo "Error: Virtual environment not found at $VENV_PATH"
+    exit 1
+fi
+
+# Activate the venv for complete environment setup
 # shellcheck disable=SC1091
-source "${TOSHY_CFG}/.venv/bin/activate"
+source "${VENV_PATH}/bin/activate"
 
 # start the script (unattached) that will deal with KWin script setup and kickstart
-nohup python3 "${TOSHY_KWIN}/toshy_kwin_script_setup.py" &
+nohup "${VENV_PATH}/bin/python" "${TOSHY_KWIN}/toshy_kwin_script_setup.py" &
 
 # start the script that will create the D-Bus object/interface
-python3 "${TOSHY_KWIN}/${FILE_NAME}.py"
+"${VENV_PATH}/bin/python" "${TOSHY_KWIN}/${FILE_NAME}.py"

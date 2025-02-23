@@ -16,10 +16,20 @@ if [[ -z $USER ]] || [[ -z $HOME ]]; then
 fi
 
 
-# shellcheck disable=SC1091
-source "$HOME/.config/toshy/.venv/bin/activate"
-
 # Set the process name for the Toshy Preferences GUI app launcher process
 echo "toshy-pref-stub" > /proc/$$/comm
 
-python3 "$HOME/.config/toshy/toshy_gui.py"
+# Absolute path to the venv
+VENV_PATH="$HOME/.config/toshy/.venv"
+
+# Verify the venv directory exists
+if [ ! -d "$VENV_PATH" ]; then
+    echo "Error: Virtual environment not found at $VENV_PATH"
+    exit 1
+fi
+
+# Activate the venv for complete environment setup
+# shellcheck disable=SC1091
+source "${VENV_PATH}/bin/activate"
+
+"${VENV_PATH}/bin/python" "$HOME/.config/toshy/toshy_gui.py"

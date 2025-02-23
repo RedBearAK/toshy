@@ -2,7 +2,17 @@
 
 # Echoes the versions of various Toshy components. 
 
-# shellcheck disable=SC1091
-source "$HOME/.config/toshy/.venv/bin/activate"
+# Absolute path to the venv
+VENV_PATH="$HOME/.config/toshy/.venv"
 
-python3 ~/.config/toshy/scripts/toshy_versions.py
+# Verify the venv directory exists
+if [ ! -d "$VENV_PATH" ]; then
+    echo "Error: Virtual environment not found at $VENV_PATH"
+    exit 1
+fi
+
+# Activate the venv for complete environment setup
+# shellcheck disable=SC1091
+source "${VENV_PATH}/bin/activate"
+
+"${VENV_PATH}/bin/python" "${HOME}/.config/toshy/scripts/toshy_versions.py"
