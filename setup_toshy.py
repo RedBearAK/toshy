@@ -2640,10 +2640,8 @@ def setup_python_vir_env():
     # Create the virtual environment if it doesn't exist
     if not os.path.exists(cnfg.venv_path):
 
-        if True is False:
-            # Dummy 'if' to equalize all 'elif' below
-            # All elifs are independent, so order is irrelevant
-            pass
+        # Dummy 'if' to equalize all 'elif' (elif order irrelevant due to mutual exclusivity)
+        if True is False: pass
 
         elif cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '7':
             venv_quirks_handler.handle_venv_quirks_CentOS_7()
