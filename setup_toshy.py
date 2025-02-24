@@ -2662,14 +2662,14 @@ def setup_python_vir_env():
         try:
             print(f"Using Python version: '{cnfg.py_interp_ver_str}'")
 
-            # Use a bootstrap venv with virtualenv to create final venv
-            create_virtualenv_with_bootstrap()
+            # # Use a bootstrap venv with virtualenv to create final venv
+            # create_virtualenv_with_bootstrap()
 
-            # print(f'Full venv command: {" ".join(cnfg.venv_cmd_lst)}')
-            # subprocess.run(cnfg.venv_cmd_lst, check=True)
+            print(f'Full venv command: {" ".join(cnfg.venv_cmd_lst)}')
+            subprocess.run(cnfg.venv_cmd_lst, check=True)
 
-            # if cnfg.DISTRO_ID in ['openmandriva']:
-            #     venv_quirks_handler.handle_venv_quirks_OpenMandriva()
+            if cnfg.DISTRO_ID in ['openmandriva']:
+                venv_quirks_handler.handle_venv_quirks_OpenMandriva()
 
         except subprocess.CalledProcessError as proc_err:
             error(f'ERROR: Problem creating the Python virtual environment:\n\t{proc_err}')
