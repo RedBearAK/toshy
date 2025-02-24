@@ -2640,7 +2640,9 @@ def setup_python_vir_env():
     if not os.path.exists(cnfg.venv_path):
 
         if True is False:
-            pass   # Dummy 'if' to equalize all 'elif' below (order of elifs irrelevant)
+            # Dummy 'if' to equalize all 'elif' below
+            # All elifs are independent, so order is irrelevant
+            pass
 
         elif cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '7':
             venv_quirks_handler.handle_venv_quirks_CentOS_7()
@@ -2658,7 +2660,7 @@ def setup_python_vir_env():
             venv_quirks_handler.handle_venv_quirks_Tumbleweed()
 
         try:
-            print(f'Using Python version {cnfg.py_interp_ver_str}.')
+            print(f"Using Python version: '{cnfg.py_interp_ver_str}'")
 
             # Use a bootstrap venv with virtualenv to create final venv
             create_virtualenv_with_bootstrap()
