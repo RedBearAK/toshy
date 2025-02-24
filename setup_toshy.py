@@ -2568,66 +2568,67 @@ class PythonVenvQuirksHandler():
         self.update_C_INCLUDE_PATH()
 
 
-def create_virtualenv_with_bootstrap():
-    """Creates a virtual environment using virtualenv installed in a temporary bootstrap venv.
+# This FAILED to solve the issue of venv breaking when system Python version changes. Unused.
+# def create_virtualenv_with_bootstrap():
+#     """Creates a virtual environment using virtualenv installed in a temporary bootstrap venv.
     
-    Args:
-        python_interpreter: Path to Python interpreter to use
-        target_venv_path: Path where the final virtualenv should be created
+#     Args:
+#         python_interpreter: Path to Python interpreter to use
+#         target_venv_path: Path where the final virtualenv should be created
 
-    This approach uses a temporary bootstrap venv to install virtualenv, then uses
-    that to create a more robust final virtual environment with better isolation.
-    """
+#     This approach uses a temporary bootstrap venv to install virtualenv, then uses
+#     that to create a more robust final virtual environment with better isolation.
+#     """
 
-    python_interpreter          = cnfg.py_interp_path
-    target_venv_path            = cnfg.venv_path
-    bootstrap_venv_path         = f"{target_venv_path}_bootstrap"
+#     python_interpreter          = cnfg.py_interp_path
+#     target_venv_path            = cnfg.venv_path
+#     bootstrap_venv_path         = f"{target_venv_path}_bootstrap"
 
-    try:
-        # Create bootstrap venv
-        print("Creating bootstrap Python environment...")
-        bootstrap_venv_cmd      = [python_interpreter, '-m', 'venv', bootstrap_venv_path]
-        subprocess.run(bootstrap_venv_cmd, check=True)
+#     try:
+#         # Create bootstrap venv
+#         print("Creating bootstrap Python environment...")
+#         bootstrap_venv_cmd      = [python_interpreter, '-m', 'venv', bootstrap_venv_path]
+#         subprocess.run(bootstrap_venv_cmd, check=True)
 
-        # Handle OpenMandriva's odd need for double venv creation to overcome a bug where
-        # the venv is only partially populated with the necessary components.
-        if cnfg.DISTRO_ID == 'openmandriva':
-            print("Handling OpenMandriva venv creation quirk...")
-            subprocess.run(bootstrap_venv_cmd, check=True)  # Second run, same command!
+#         # Handle OpenMandriva's odd need for double venv creation to overcome a bug where
+#         # the venv is only partially populated with the necessary components.
+#         if cnfg.DISTRO_ID == 'openmandriva':
+#             print("Handling OpenMandriva venv creation quirk...")
+#             subprocess.run(bootstrap_venv_cmd, check=True)  # Second run, same command!
 
-        # Install 'virtualenv' in bootstrap venv, to be used to create final venv
-        print("Installing 'virtualenv' in bootstrap environment...")
-        bootstrap_pip_cmd       = os.path.join(bootstrap_venv_path, 'bin', 'pip')
-        # Upgrading pip avoids notice about newer version of pip being available
-        subprocess.run([bootstrap_pip_cmd, 'install', '--upgrade', 'pip'], check=True)
-        subprocess.run([bootstrap_pip_cmd, 'install', '--upgrade', 'virtualenv'], check=True)
+#         # Install 'virtualenv' in bootstrap venv, to be used to create final venv
+#         print("Installing 'virtualenv' in bootstrap environment...")
+#         bootstrap_pip_cmd       = os.path.join(bootstrap_venv_path, 'bin', 'pip')
+#         # Upgrading pip avoids notice about newer version of pip being available
+#         subprocess.run([bootstrap_pip_cmd, 'install', '--upgrade', 'pip'], check=True)
+#         subprocess.run([bootstrap_pip_cmd, 'install', '--upgrade', 'virtualenv'], check=True)
 
-        # Use bootstrap's virtualenv to create final venv
-        virtualenv_cmd_path     = os.path.join(bootstrap_venv_path, 'bin', 'virtualenv')
-        final_venv_cmd_lst      = [
-            virtualenv_cmd_path,
-            '--copies',                 # Use copies instead of symlinks
-            '--download',               # Download latest pip/setuptools
-            '--always-copy',            # Copy all files, never symlink
-            '--no-periodic-update',     # Prevent automatic updates
-            target_venv_path
-        ]
+#         # Use bootstrap's virtualenv to create final venv
+#         virtualenv_cmd_path     = os.path.join(bootstrap_venv_path, 'bin', 'virtualenv')
+#         final_venv_cmd_lst      = [
+#             virtualenv_cmd_path,
+#             '--copies',                 # Use copies instead of symlinks
+#             '--download',               # Download latest pip/setuptools
+#             '--always-copy',            # Copy all files, never symlink
+#             '--no-periodic-update',     # Prevent automatic updates
+#             target_venv_path
+#         ]
 
-        print(f'Creating final virtual environment...')
-        print(f'Full command: {" ".join(final_venv_cmd_lst)}')
-        subprocess.run(final_venv_cmd_lst, check=True)
+#         print(f'Creating final virtual environment...')
+#         print(f'Full command: {" ".join(final_venv_cmd_lst)}')
+#         subprocess.run(final_venv_cmd_lst, check=True)
 
-    except subprocess.CalledProcessError as proc_err:
-        error(f"Failed during bootstrap/virtualenv creation: {proc_err}")
-        if os.path.exists(bootstrap_venv_path):
-            shutil.rmtree(bootstrap_venv_path)
-        safe_shutdown(1)
+#     except subprocess.CalledProcessError as proc_err:
+#         error(f"Failed during bootstrap/virtualenv creation: {proc_err}")
+#         if os.path.exists(bootstrap_venv_path):
+#             shutil.rmtree(bootstrap_venv_path)
+#         safe_shutdown(1)
 
-    finally:
-        # Clean up bootstrap venv
-        print("Cleaning up bootstrap environment...")
-        if os.path.exists(bootstrap_venv_path):
-            shutil.rmtree(bootstrap_venv_path)
+#     finally:
+#         # Clean up bootstrap venv
+#         print("Cleaning up bootstrap environment...")
+#         if os.path.exists(bootstrap_venv_path):
+#             shutil.rmtree(bootstrap_venv_path)
 
 
 def setup_python_vir_env():
@@ -2662,6 +2663,7 @@ def setup_python_vir_env():
         try:
             print(f"Using Python version: '{cnfg.py_interp_ver_str}'")
 
+            # This FAILED to solve issue of venv breaking when system Python version changes.
             # # Use a bootstrap venv with virtualenv to create final venv
             # create_virtualenv_with_bootstrap()
 
