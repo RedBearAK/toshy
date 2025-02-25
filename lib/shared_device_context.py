@@ -67,7 +67,9 @@ class SynergyMonitor(SharedDeviceMonitorInterface):
     def __init__(self):
         self.process_names = ['synergy', 'synergys', 'synergyc']
         self.log_paths = [
+            # Observed in the wild
             os.path.expanduser("~/.local/state/Synergy/synergy.log"),
+            # Guesses by Claude
             os.path.expanduser("~/.local/share/Synergy/synergy.log"),
             os.path.expanduser("~/.config/Synergy/synergy.log"),
         ]
@@ -110,6 +112,9 @@ class InputLeapMonitor(SharedDeviceMonitorInterface):
     def __init__(self):
         self.process_names = ['input-leap', 'input-leaps', 'input-leapc']
         self.log_paths = [
+            # Observed in the wild
+            os.path.expanduser("/var/log/input-leap.log"),
+            # Guesses by Claude
             os.path.expanduser("~/.local/state/InputLeap/input-leap.log"),
             os.path.expanduser("~/.local/share/InputLeap/input-leap.log"),
             os.path.expanduser("~/.config/InputLeap/input-leap.log"),
@@ -153,6 +158,9 @@ class DeskflowMonitor(SharedDeviceMonitorInterface):
     def __init__(self):
         self.process_names = ['deskflow', 'deskflows', 'deskflowc']
         self.log_paths = [
+            # Observed in the wild
+            os.path.expanduser("~/deskflow.log"),
+            # Guesses by Claude
             os.path.expanduser("~/.local/state/Deskflow/deskflow.log"),
             os.path.expanduser("~/.local/share/Deskflow/deskflow.log"),
             os.path.expanduser("~/.config/Deskflow/deskflow.log"),
