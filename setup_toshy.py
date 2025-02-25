@@ -2637,25 +2637,35 @@ def setup_python_vir_env():
 
     print(f'\n\n§  Setting up the Python virtual environment...\n{cnfg.separator}')
 
-    # Create the virtual environment if it doesn't exist
+    # Create the virtual environment if it doesn't exist, while handling any
+    # venv quirks/prep that is sometimes necessary.
     if not os.path.exists(cnfg.venv_path):
 
-        # Dummy 'if' to equalize all 'elif' (elif order irrelevant due to mutual exclusivity)
-        if True is False: pass
+        # Define clear condition variables with short names
+        is_CentOS_7             = cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '7'
+        is_CentOS_8             = cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '8'
+        is_CentOS_7_or_8        = cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver in ['7', '8']
+        is_Leap_based           = cnfg.DISTRO_ID in distro_groups_map['leap-based']
+        is_RHEL_based           = cnfg.DISTRO_ID in distro_groups_map['rhel-based']
+        is_Tumbleweed_based     = cnfg.DISTRO_ID in distro_groups_map['tumbleweed-based']
 
-        elif cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '7':
+        # Order of elifs is very delicate unless conditions are 100% mutually exclusive, 
+        # but the venv quirks handlers are set up to be independent (unlike distro quirks).
+        if True is False: pass  # Dummy 'if' to equalize all 'elif' branches below
+
+        elif is_CentOS_7:
             venv_quirks_handler.handle_venv_quirks_CentOS_7()
 
-        elif cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '8':
+        elif is_CentOS_8:
             venv_quirks_handler.handle_venv_quirks_CentOS_Stream_8()
 
-        elif cnfg.DISTRO_ID in distro_groups_map['leap-based']:
+        elif is_Leap_based:
             venv_quirks_handler.handle_venv_quirks_Leap()
 
-        elif cnfg.DISTRO_ID in distro_groups_map['rhel-based']:
+        elif is_RHEL_based and not is_CentOS_7_or_8:
             venv_quirks_handler.handle_venv_quirks_RHEL()
 
-        elif cnfg.DISTRO_ID in distro_groups_map['tumbleweed-based']:
+        elif is_Tumbleweed_based:
             venv_quirks_handler.handle_venv_quirks_Tumbleweed()
 
         try:
