@@ -7,6 +7,7 @@
 
 import os
 import sys
+from xwaykeyz.version import __version__ as xwaykeyz_ver
 
 home_dir                = os.path.expanduser('~')
 toshy_dir_path          = os.path.join(home_dir, '.config', 'toshy')
@@ -89,6 +90,10 @@ max_file_name_length = max(len(os.path.basename(path)) for path in file_paths if
 
 # Print header
 print()             # Blank line to start output
+
+# Print the keymapper info
+print(f"Keymapper version:  xwaykeyz {xwaykeyz_ver}")
+print()             # Separation from Toshy files version output
 print(f"{'File Name'.ljust(max_file_name_length + 4)}Version")
 print('-' * (max_file_name_length + 14))
 
