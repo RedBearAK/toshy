@@ -242,10 +242,12 @@ class Settings:
                     original_on_focus_change(has_focus)
                     # Update our screen_has_focus property
                     self.screen_has_focus = has_focus
-                    if has_focus:
-                        debug("Shared device focus returned to this screen")
-                    else:
-                        debug("Shared device focus left this screen")
+                    # These debugging lines are kind of redundant with the output from the 
+                    # shared_device_context module debug lines.
+                    # if has_focus:
+                    #     debug("Shared device focus returned to this screen")
+                    # else:
+                    #     debug("Shared device focus left this screen")
                 
                 # Replace the callback
                 self.shared_device_context.on_focus_change = on_focus_change

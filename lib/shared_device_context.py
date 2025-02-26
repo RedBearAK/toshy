@@ -269,7 +269,7 @@ class SharedDeviceContext:
         # Log which monitors are available
         software_list = [software for monitor in self.monitors 
                         for software in monitor.get_supported_software()]
-        debug(f"SharedDeviceContext initialized with support for: {', '.join(software_list)}")
+        debug(f"SharedDeviceContext initialized with support for:\n       {', '.join(software_list)}")
 
     def detect_active_software(self) -> Set[str]:
         """
@@ -324,7 +324,7 @@ class SharedDeviceContext:
             self.handlers[log_path] = handler
             self.active_monitors.update(supported_software)
 
-            debug(f"Monitoring {', '.join(supported_software)} log file: {log_path}")
+            debug(f"Monitoring {', '.join(supported_software)} log file:\n       {log_path}")
 
         # Start the observer if we have any handlers
         if self.handlers:
@@ -356,7 +356,9 @@ class SharedDeviceContext:
         """
         if has_focus != self.screen_has_focus:
             self.screen_has_focus = has_focus
-            debug(f"Screen focus changed: {'entered' if has_focus else 'left'}")
+            print()
+            debug(f"Screen focus changed: {'entered screen' if has_focus else 'left screen'}",
+                ctx="FC")
 
     def get_focus_state(self) -> bool:
         """
