@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20250224'
+__version__ = '20250226'
 
 # NOTE: This new context module for monitoring keyboard-mouse sharing sofware was
 # originally produced by Claude 3.7 Sonnet, based on the window_context module in

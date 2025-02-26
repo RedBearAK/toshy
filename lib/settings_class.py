@@ -1,4 +1,4 @@
-__version__ = '20250224'
+__version__ = '20250226'
 
 import os
 import inspect
