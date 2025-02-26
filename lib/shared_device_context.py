@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 __version__ = '20250226'
 
-# NOTE: This new context module for monitoring keyboard-mouse sharing sofware was
+# NOTE: This new context module for monitoring keyboard-mouse sharing software was
 # originally produced by Claude 3.7 Sonnet, based on the window_context module in
 # the keymapper (xwaykeyz) as a template. [2025-02-25]
 
@@ -9,10 +9,11 @@ import os
 import re
 import abc
 import time
+import socket
 import platform
 import subprocess
 
-from typing import Dict, List, Optional, Set, Callable
+from typing import Dict, List, Optional, Set, Callable, Tuple
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler, FileSystemEvent
 from xwaykeyz.lib.logger import debug, error, warn
@@ -59,20 +60,35 @@ class SharedDeviceMonitorInterface(abc.ABC):
         :returns: True if focus entered, False if focus left, None if not a focus change event
         """
         pass
+        
+    @abc.abstractmethod
+    def is_server(self) -> bool:
+        """
+        Determines if this system is running as a server/host for the shared device software.
+        
+        :returns: True if this is a server, False if it's a client or undetermined
+        """
+        pass
 
 
 class SynergyMonitor(SharedDeviceMonitorInterface):
     """Monitor for Synergy software"""
 
     def __init__(self):
-        self.process_names = ['synergy', 'synergys', 'synergyc']
+        self.process_names = ['synergy', 'synergys', 'synergyc', 'synergy-core']
+        self.server_process_names = ['synergys', 'synergy', 'synergy-core']  # 'synergy' can be both
+        self.client_process_names = ['synergyc', 'synergy', 'synergy-core']  # 'synergy' can be both
         self.log_paths = [
             # Observed in the wild
             os.path.expanduser("~/.local/state/Synergy/synergy.log"),
-            # Guesses by Claude
+            # Additional possibilities
             os.path.expanduser("~/.local/share/Synergy/synergy.log"),
             os.path.expanduser("~/.config/Synergy/synergy.log"),
+            os.path.expanduser("~/synergy.log"),
+            # Older versions
+            os.path.expanduser("~/.synergy/synergy.log"),
         ]
+        self._server_status = None  # Cache for server status
 
     @classmethod
     def get_supported_software(cls):
@@ -104,6 +120,69 @@ class SynergyMonitor(SharedDeviceMonitorInterface):
         elif "entering screen" in line:
             return True
         return None
+        
+    def is_server(self) -> bool:
+        """
+        Determine if this system is running Synergy as a server.
+        
+        Checks:
+        1. If 'synergys' process is running
+        2. If log file contains server initialization messages
+        3. If configuration is set up for server mode
+        
+        Returns True if any check suggests this is a server, False otherwise.
+        """
+        if self._server_status is not None:
+            return self._server_status
+            
+        # Check if server process is running
+        for process_name in self.server_process_names:
+            try:
+                # Use -f flag to match full command line arguments
+                result = subprocess.run(['pgrep', '-f', f'^{process_name}.*server'], 
+                                        capture_output=True, text=True)
+                if result.returncode == 0:
+                    self._server_status = True
+                    debug("Synergy server process detected")
+                    return True
+            except subprocess.SubprocessError:
+                pass
+                
+        # Check if only client process is running (definitively a client)
+        client_only = False
+        for process_name in self.client_process_names:
+            try:
+                result = subprocess.run(['pgrep', '-f', f'^{process_name}.*client'], 
+                                        capture_output=True, text=True)
+                if result.returncode == 0:
+                    client_only = True
+                    break
+            except subprocess.SubprocessError:
+                pass
+                
+        if client_only:
+            self._server_status = False
+            debug("Synergy client process detected")
+            return False
+                
+        # Check log file for server messages
+        log_path = self.get_log_file_path()
+        if log_path and os.path.exists(log_path):
+            try:
+                # Only check the first 50 lines for server initialization messages
+                with open(log_path, 'r') as f:
+                    lines = [f.readline() for _ in range(50)]
+                    for line in lines:
+                        if "server started" in line.lower() or "started server" in line.lower():
+                            self._server_status = True
+                            debug("Synergy server detected from log file")
+                            return True
+            except Exception as e:
+                error(f"Error reading Synergy log file: {e}")
+                
+        # Default assumption: if Synergy is running but we couldn't determine, assume client
+        self._server_status = False
+        return False
 
 
 class InputLeapMonitor(SharedDeviceMonitorInterface):
@@ -111,14 +190,18 @@ class InputLeapMonitor(SharedDeviceMonitorInterface):
 
     def __init__(self):
         self.process_names = ['input-leap', 'input-leaps', 'input-leapc']
+        self.server_process_names = ['input-leaps', 'input-leap']  # 'input-leap' might be both
+        self.client_process_names = ['input-leapc', 'input-leap']  # 'input-leap' might be both
         self.log_paths = [
-            # Observed in the wild
-            os.path.expanduser("/var/log/input-leap.log"),
-            # Guesses by Claude
+            # Most likely locations based on observed patterns
+            "/var/log/input-leap.log",
+            os.path.expanduser("~/input-leap.log"),
+            # Additional guesses
             os.path.expanduser("~/.local/state/InputLeap/input-leap.log"),
             os.path.expanduser("~/.local/share/InputLeap/input-leap.log"),
             os.path.expanduser("~/.config/InputLeap/input-leap.log"),
         ]
+        self._server_status = None  # Cache for server status
 
     @classmethod
     def get_supported_software(cls):
@@ -150,6 +233,71 @@ class InputLeapMonitor(SharedDeviceMonitorInterface):
         elif "entering screen" in line:
             return True
         return None
+        
+    def is_server(self) -> bool:
+        """
+        Determine if this system is running Input Leap as a server.
+        
+        Checks:
+        1. If 'input-leaps' process is running
+        2. If log file contains server initialization messages
+        3. If 'input-leap' is running with server arguments
+        
+        Returns True if any check suggests this is a server, False otherwise.
+        """
+        if self._server_status is not None:
+            return self._server_status
+            
+        # Check if server process is running
+        for process_name in self.server_process_names:
+            try:
+                # Use -f flag to match full command line arguments for 'input-leap'
+                cmd = 'pgrep' 
+                args = ['-x', process_name] if process_name == 'input-leaps' else ['-f', f'^{process_name}.*--server']
+                result = subprocess.run([cmd] + args, capture_output=True, text=True)
+                if result.returncode == 0:
+                    self._server_status = True
+                    debug("Input Leap server process detected")
+                    return True
+            except subprocess.SubprocessError:
+                pass
+                
+        # Check if only client process is running (definitively a client)
+        client_only = False
+        for process_name in self.client_process_names:
+            try:
+                cmd = 'pgrep'
+                args = ['-x', process_name] if process_name == 'input-leapc' else ['-f', f'^{process_name}.*--client']
+                result = subprocess.run([cmd] + args, capture_output=True, text=True)
+                if result.returncode == 0:
+                    client_only = True
+                    break
+            except subprocess.SubprocessError:
+                pass
+                
+        if client_only:
+            self._server_status = False
+            debug("Input Leap client process detected")
+            return False
+                
+        # Check log file for server messages
+        log_path = self.get_log_file_path()
+        if log_path and os.path.exists(log_path):
+            try:
+                # Only check the first 50 lines for server initialization messages
+                with open(log_path, 'r') as f:
+                    lines = [f.readline() for _ in range(50)]
+                    for line in lines:
+                        if "server started" in line.lower() or "started server" in line.lower():
+                            self._server_status = True
+                            debug("Input Leap server detected from log file")
+                            return True
+            except Exception as e:
+                error(f"Error reading Input Leap log file: {e}")
+                
+        # Default assumption: if Input Leap is running but we couldn't determine, assume client
+        self._server_status = False
+        return False
 
 
 class DeskflowMonitor(SharedDeviceMonitorInterface):
@@ -157,14 +305,18 @@ class DeskflowMonitor(SharedDeviceMonitorInterface):
 
     def __init__(self):
         self.process_names = ['deskflow', 'deskflows', 'deskflowc']
+        self.server_process_names = ['deskflows', 'deskflow']  # 'deskflow' might be both
+        self.client_process_names = ['deskflowc', 'deskflow']  # 'deskflow' might be both
         self.log_paths = [
             # Observed in the wild
             os.path.expanduser("~/deskflow.log"),
-            # Guesses by Claude
+            # Additional guesses
             os.path.expanduser("~/.local/state/Deskflow/deskflow.log"),
             os.path.expanduser("~/.local/share/Deskflow/deskflow.log"),
             os.path.expanduser("~/.config/Deskflow/deskflow.log"),
+            "/var/log/deskflow.log",
         ]
+        self._server_status = None  # Cache for server status
 
     @classmethod
     def get_supported_software(cls):
@@ -196,6 +348,71 @@ class DeskflowMonitor(SharedDeviceMonitorInterface):
         elif "entering screen" in line:
             return True
         return None
+        
+    def is_server(self) -> bool:
+        """
+        Determine if this system is running Deskflow as a server.
+        
+        Checks:
+        1. If 'deskflows' process is running
+        2. If log file contains server initialization messages
+        3. If 'deskflow' is running with server arguments
+        
+        Returns True if any check suggests this is a server, False otherwise.
+        """
+        if self._server_status is not None:
+            return self._server_status
+            
+        # Check if server process is running
+        for process_name in self.server_process_names:
+            try:
+                # Use -f flag to match full command line arguments for 'deskflow'
+                cmd = 'pgrep' 
+                args = ['-x', process_name] if process_name == 'deskflows' else ['-f', f'^{process_name}.*--server']
+                result = subprocess.run([cmd] + args, capture_output=True, text=True)
+                if result.returncode == 0:
+                    self._server_status = True
+                    debug("Deskflow server process detected")
+                    return True
+            except subprocess.SubprocessError:
+                pass
+                
+        # Check if only client process is running (definitively a client)
+        client_only = False
+        for process_name in self.client_process_names:
+            try:
+                cmd = 'pgrep'
+                args = ['-x', process_name] if process_name == 'deskflowc' else ['-f', f'^{process_name}.*--client']
+                result = subprocess.run([cmd] + args, capture_output=True, text=True)
+                if result.returncode == 0:
+                    client_only = True
+                    break
+            except subprocess.SubprocessError:
+                pass
+                
+        if client_only:
+            self._server_status = False
+            debug("Deskflow client process detected")
+            return False
+                
+        # Check log file for server messages
+        log_path = self.get_log_file_path()
+        if log_path and os.path.exists(log_path):
+            try:
+                # Only check the first 50 lines for server initialization messages
+                with open(log_path, 'r') as f:
+                    lines = [f.readline() for _ in range(50)]
+                    for line in lines:
+                        if "server started" in line.lower() or "started server" in line.lower():
+                            self._server_status = True
+                            debug("Deskflow server detected from log file")
+                            return True
+            except Exception as e:
+                error(f"Error reading Deskflow log file: {e}")
+                
+        # Default assumption: if Deskflow is running but we couldn't determine, assume client
+        self._server_status = False
+        return False
 
 
 class LogWatcherHandler(FileSystemEventHandler):
@@ -209,6 +426,7 @@ class LogWatcherHandler(FileSystemEventHandler):
         self.on_focus_change = on_focus_change
         self.last_position = 0
         self.initialized = False
+        self.startup_time = time.time()
 
     def on_modified(self, event: FileSystemEvent):
         if event.src_path == self.log_path:
@@ -224,13 +442,14 @@ class LogWatcherHandler(FileSystemEventHandler):
 
         with open(self.log_path, 'r') as f:
             if not self.initialized:
-                # On first run, just read the last bit of the file
+                # On first run, seek to the end of the file
+                # We'll ignore all historical log entries and assume focus is on this screen
                 f.seek(0, os.SEEK_END)
-                end_pos = f.tell()
-                f.seek(max(end_pos - 1024, 0))
-                if f.tell() != 0:
-                    f.readline()  # Skip partial line
+                self.last_position = f.tell()
                 self.initialized = True
+                # Default to having focus at startup
+                self.on_focus_change(True)
+                return
             else:
                 f.seek(self.last_position)
 
@@ -240,8 +459,33 @@ class LogWatcherHandler(FileSystemEventHandler):
             # Process lines to find focus changes
             most_recent_state = None
             for line in lines:
-                line = line.strip()
-                state = self.parse_func(line)
+                line_to_process = line.strip()
+                
+                # Try to extract a timestamp from the log line
+                # This regex handles formats like:
+                # [2025-02-24T18:13:23]
+                # 2025-02-24 18:13:23
+                # synergy-core    [2023-11-08T11:04:30]
+                timestamp_match = re.search(r'(?:.*\[|\[)?(\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2})(?:\])?', line_to_process)
+                
+                if timestamp_match:
+                    line_time_str = timestamp_match.group(1)
+                    try:
+                        # Handle both formats: '2025-02-24 18:13:23' and '2025-02-24T18:13:23'
+                        format_str = "%Y-%m-%d %H:%M:%S" if " " in line_time_str else "%Y-%m-%dT%H:%M:%S"
+                        line_time = time.strptime(line_time_str, format_str)
+                        line_timestamp = time.mktime(line_time)
+                        
+                        # Ignore entries from before we started monitoring
+                        if line_timestamp < self.startup_time:
+                            debug(f"Ignoring focus event from before monitor startup: {line_to_process}")
+                            continue
+                    except ValueError:
+                        # If we can't parse the timestamp, process the line anyway
+                        pass
+                
+                # Process the line for focus change events
+                state = self.parse_func(line_to_process)
                 if state is not None:
                     most_recent_state = state
 
@@ -261,6 +505,7 @@ class SharedDeviceContext:
         self.monitors = []
         self.screen_has_focus = True
         self.active_monitors = set()
+        self.is_server_system = False
 
         # Initialize all available monitors
         for monitor_class in SharedDeviceMonitorInterface.__subclasses__():
@@ -269,7 +514,7 @@ class SharedDeviceContext:
         # Log which monitors are available
         software_list = [software for monitor in self.monitors 
                         for software in monitor.get_supported_software()]
-        debug(f"SharedDeviceContext initialized with support for:\n       {', '.join(software_list)}")
+        debug(f"SharedDeviceContext initialized with support for:\n      {', '.join(software_list)}")
 
     def detect_active_software(self) -> Set[str]:
         """
@@ -281,6 +526,9 @@ class SharedDeviceContext:
         for monitor in self.monitors:
             if monitor.is_running():
                 active_software.update(monitor.get_supported_software())
+                # If any monitor is running as a server, mark this as a server system
+                if monitor.is_server():
+                    self.is_server_system = True
         return active_software
 
     def start_monitoring(self):
@@ -296,6 +544,15 @@ class SharedDeviceContext:
             return
 
         debug(f"Detected active shared device software: {', '.join(active_software)}")
+        
+        # If we're on a client system, don't bother monitoring logs
+        # Always keep screen_has_focus as True
+        if not self.is_server_system:
+            debug("Running as a client system - keeping keymapping enabled")
+            self.screen_has_focus = True
+            return
+
+        debug("Running as a server system - monitoring focus changes")
 
         # Start monitoring each active software
         for monitor in self.monitors:
@@ -367,6 +624,10 @@ class SharedDeviceContext:
         
         :returns: True if the screen has focus, False otherwise
         """
+        # Client systems always have focus for keymapping purposes
+        if not self.is_server_system:
+            return True
+            
         return self.screen_has_focus
 
     def refresh_monitoring(self):
