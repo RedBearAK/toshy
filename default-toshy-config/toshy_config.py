@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = '20250220'
+__version__ = '20250225'
 ###############################################################################
 ############################   Welcome to Toshy!   ############################
 ###  
@@ -1030,7 +1030,8 @@ def matchProps(*,
     # but only after the guard clauses have had a chance to evaluate on
     # all possible uses of the function that may exist in the config.
     if MAX_MATCHPROPS_ITERATIONS_REACHED and not cnfg.screen_has_focus:
-        return False
+        # return False    # Returning a boolean here causes as exception. Must return a callable!
+        return lambda _: False
 
     if total_matchProps_iterations >= MAX_MATCHPROPS_ITERATIONS:
         MAX_MATCHPROPS_ITERATIONS_REACHED = True
