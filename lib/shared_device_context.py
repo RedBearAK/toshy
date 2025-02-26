@@ -291,7 +291,8 @@ class SharedDeviceContext:
         active_software = self.detect_active_software()
 
         if not active_software:
-            debug("No shared device software detected")
+            # Debug line is redundant with settings class debug line
+            # debug("No shared device software detected")
             return
 
         debug(f"Detected active shared device software: {', '.join(active_software)}")
