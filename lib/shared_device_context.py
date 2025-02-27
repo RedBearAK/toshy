@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20250226'
+__version__ = '20250227'
 
 # NOTE: This new context module for monitoring keyboard-mouse sharing software was
 # originally produced by Claude 3.7 Sonnet, based on the window_context module in
@@ -70,7 +70,7 @@ class SharedDeviceMonitorInterface(abc.ABC):
         """
         pass
 
-    def get_active_log_file_paths(self, max_age_hours=24) -> List[Tuple[str, float]]:
+    def get_active_log_file_paths(self, max_age_hours=8) -> List[Tuple[str, float]]:
         """
         Returns all existing log file paths sorted by likelihood of being active.
         
@@ -78,17 +78,17 @@ class SharedDeviceMonitorInterface(abc.ABC):
         :returns: List of tuples (path, score) sorted by score (higher is more likely active)
         """
         log_files = []
-        
+
         # Check all possible paths
         for path in self.log_paths:
             if not os.path.exists(path):
                 continue
-                
+
             # Base score on file modification time (newer is better)
             try:
                 mod_time = os.path.getmtime(path)
                 age_hours = (time.time() - mod_time) / 3600
-                
+
                 # If file is very old, give it a low score but still include it
                 if age_hours > max_age_hours:
                     score = 0.1  # Very low but non-zero score
@@ -97,26 +97,26 @@ class SharedDeviceMonitorInterface(abc.ABC):
                     # Score based on recency (newer files get higher scores)
                     # 1.0 for just modified, approaching 0.1 as age approaches max_age_hours
                     score = 1.0 - (0.9 * age_hours / max_age_hours)
-                
+
                 # Check file size - very small files might be inactive
                 size = os.path.getsize(path)
                 if size < 100:  # Less than 100 bytes
                     score *= 0.5  # Reduce score for very small files
-                    
+
                 # Check for recent timestamps inside the file
                 recent_activity_score = self.check_log_file_activity(path, max_age_hours)
                 if recent_activity_score > 0:
                     # Boost score if we found recent timestamps
                     score = max(score, recent_activity_score)
-                
+
                 log_files.append((path, score))
             except Exception as e:
                 error(f"Error checking log file {path}: {e}")
-        
+
         # Sort by score (descending)
         return sorted(log_files, key=lambda x: x[1], reverse=True)
-                
-    def check_log_file_activity(self, log_path, max_age_hours=24) -> float:
+
+    def check_log_file_activity(self, log_path, max_age_hours=8) -> float:
         """
         Check if log file contains recent entries and return an activity score.
         
@@ -141,9 +141,9 @@ class SharedDeviceMonitorInterface(abc.ABC):
                 
                 # Get last 20 lines
                 lines = chunk.splitlines()[-20:]
-            
+
             newest_timestamp = None
-            
+
             for line in lines:
                 timestamp_match = re.search(r'(?:.*\[|\[)?(\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2})(?:\])?', line)
                 if timestamp_match:
@@ -157,14 +157,14 @@ class SharedDeviceMonitorInterface(abc.ABC):
                             newest_timestamp = line_timestamp
                     except ValueError:
                         pass
-            
+
             if newest_timestamp is None:
                 debug(f"No valid timestamps found in log file {log_path}")
                 return 0.1  # Very low but non-zero score
                 
             # Calculate age in hours
             age_hours = (time.time() - newest_timestamp) / 3600
-            
+
             if age_hours <= max_age_hours:
                 # Score based on recency (1.0 for just now, approaching 0.1 as age approaches max_age_hours)
                 score = 1.0 - (0.9 * age_hours / max_age_hours)
@@ -223,12 +223,12 @@ class DeskflowMonitor(SharedDeviceMonitorInterface):
 
     def parse_log_line(self, line: str) -> Optional[bool]:
         """Parse Deskflow log line for focus events"""
-        if "leaving screen" in line:
+        if "leaving screen" in line.lower():
             return False
-        elif "entering screen" in line:
+        elif "entering screen" in line.lower():
             return True
         return None
-        
+
     def is_server(self) -> bool:
         """
         Determine if this system is running Deskflow as a server.
@@ -279,11 +279,18 @@ class DeskflowMonitor(SharedDeviceMonitorInterface):
         log_path = self.get_log_file_path()
         if log_path and os.path.exists(log_path):
             try:
+                file_size = os.path.getsize(log_path)
+                if file_size < 50:  # Less than 50 bytes
+                    warn(f"Found empty/minimal log file: {log_path}. Server detection may be unreliable.")
+                
                 # Only check the first 50 lines for server initialization messages
                 with open(log_path, 'r') as f:
                     lines = [f.readline() for _ in range(50)]
                     for line in lines:
-                        if "server started" in line.lower() or "started server" in line.lower():
+                        if ("server started" in line.lower() or 
+                            "started server" in line.lower() or
+                            "accepted client connection" in line.lower() or
+                            "waiting for clients" in line.lower()):
                             self._server_status = True
                             debug("Deskflow server detected from log file")
                             return True
@@ -342,12 +349,12 @@ class SynergyMonitor(SharedDeviceMonitorInterface):
 
     def parse_log_line(self, line: str) -> Optional[bool]:
         """Parse Synergy log line for focus events"""
-        if "leaving screen" in line:
+        if "leaving screen" in line.lower():
             return False
-        elif "entering screen" in line:
+        elif "entering screen" in line.lower():
             return True
         return None
-        
+
     def is_server(self) -> bool:
         """
         Determine if this system is running Synergy as a server.
@@ -396,11 +403,18 @@ class SynergyMonitor(SharedDeviceMonitorInterface):
         log_path = self.get_log_file_path()
         if log_path and os.path.exists(log_path):
             try:
+                file_size = os.path.getsize(log_path)
+                if file_size < 50:  # Less than 50 bytes
+                    warn(f"Found empty/minimal log file: {log_path}. Server detection may be unreliable.")
+                
                 # Only check the first 50 lines for server initialization messages
                 with open(log_path, 'r') as f:
                     lines = [f.readline() for _ in range(50)]
                     for line in lines:
-                        if "server started" in line.lower() or "started server" in line.lower():
+                        if ("server started" in line.lower() or 
+                            "started server" in line.lower() or
+                            "accepted client connection" in line.lower() or
+                            "waiting for clients" in line.lower()):
                             self._server_status = True
                             debug("Synergy server detected from log file")
                             return True
@@ -458,12 +472,12 @@ class InputLeapMonitor(SharedDeviceMonitorInterface):
 
     def parse_log_line(self, line: str) -> Optional[bool]:
         """Parse Input Leap log line for focus events"""
-        if "leaving screen" in line:
+        if "leaving screen" in line.lower():
             return False
-        elif "entering screen" in line:
+        elif "entering screen" in line.lower():
             return True
         return None
-        
+
     def is_server(self) -> bool:
         """
         Determine if this system is running Input Leap as a server.
@@ -514,11 +528,18 @@ class InputLeapMonitor(SharedDeviceMonitorInterface):
         log_path = self.get_log_file_path()
         if log_path and os.path.exists(log_path):
             try:
+                file_size = os.path.getsize(log_path)
+                if file_size < 50:  # Less than 50 bytes
+                    warn(f"Found empty/minimal log file: {log_path}. Server detection may be unreliable.")
+                
                 # Only check the first 50 lines for server initialization messages
                 with open(log_path, 'r') as f:
                     lines = [f.readline() for _ in range(50)]
                     for line in lines:
-                        if "server started" in line.lower() or "started server" in line.lower():
+                        if ("server started" in line.lower() or 
+                            "started server" in line.lower() or
+                            "accepted client connection" in line.lower() or
+                            "waiting for clients" in line.lower()):
                             self._server_status = True
                             debug("Input Leap server detected from log file")
                             return True
@@ -594,17 +615,12 @@ class BarrierMonitor(SharedDeviceMonitorInterface):
         Assumes logging format similar to Input Leap and Synergy.
         May need adjustment if actual format differs.
         """
-        if "leaving screen" in line:
+        if "leaving screen" in line.lower():
             return False
-        elif "entering screen" in line:
+        elif "entering screen" in line.lower():
             return True
-        # Alternative wordings that might be used
-        elif "switched to screen" in line:
-            return True
-        elif "switched from screen" in line:
-            return False
         return None
-        
+
     def is_server(self) -> bool:
         """
         Determine if this system is running Barrier as a server.
@@ -655,11 +671,18 @@ class BarrierMonitor(SharedDeviceMonitorInterface):
         log_path = self.get_log_file_path()
         if log_path and os.path.exists(log_path):
             try:
+                file_size = os.path.getsize(log_path)
+                if file_size < 50:  # Less than 50 bytes
+                    warn(f"Found empty/minimal log file: {log_path}. Server detection may be unreliable.")
+                
                 # Only check the first 50 lines for server initialization messages
                 with open(log_path, 'r') as f:
                     lines = [f.readline() for _ in range(50)]
                     for line in lines:
-                        if "server started" in line.lower() or "started server" in line.lower():
+                        if ("server started" in line.lower() or 
+                            "started server" in line.lower() or
+                            "accepted client connection" in line.lower() or
+                            "waiting for clients" in line.lower()):
                             self._server_status = True
                             debug("Barrier server detected from log file")
                             return True
@@ -760,7 +783,7 @@ class LogWatcherHandler(FileSystemEventHandler):
             if most_recent_state is not None:
                 self.on_focus_change(most_recent_state)
 
-    def is_active(self, max_inactive_hours=24) -> bool:
+    def is_active(self, max_inactive_hours=8) -> bool:
         """
         Check if this log file shows signs of activity.
         
@@ -783,7 +806,7 @@ class LogWatcherHandler(FileSystemEventHandler):
 
 class SharedDeviceContext:
     """
-    Manages focus tracking for shared device software (Synergy, Input Leap, Deskflow)
+    Manages focus tracking for shared device software (Synergy, Input Leap, Deskflow, Barrier)
     """
 
     def __init__(self):
@@ -811,6 +834,8 @@ class SharedDeviceContext:
         :returns: Set of software names that are currently running
         """
         active_software = set()
+        self.is_server_system = False  # Reset server status for fresh detection
+        
         for monitor in self.monitors:
             if monitor.is_running():
                 active_software.update(monitor.get_supported_software())
@@ -952,6 +977,20 @@ class SharedDeviceContext:
                     if top_score > 0.8 and top_path not in self.handlers:
                         debug(f"Health check: Found new active log file: {top_path}")
                         return False
+        else:
+            # For clients, check if we might actually be a server
+            for monitor in self.monitors:
+                if not monitor.is_running():
+                    continue
+                    
+                # Reset cached server status to force fresh detection
+                monitor._server_status = None
+                
+                # If any monitor is now detected as a server, refresh monitoring
+                if monitor.is_server():
+                    debug(f"Health check: Detected change from client to server mode for {monitor.get_supported_software()[0]}")
+                    self.is_server_system = True
+                    return False  # Trigger a refresh
         
         return True
 
