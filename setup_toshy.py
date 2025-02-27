@@ -230,6 +230,7 @@ class InstallerSettings:
         self.fancy_pants            = None
         self.no_dbus_python         = None
         self.use_dev_keymapper      = None
+        self.fix_apt_held           = None
 
         self.app_switcher           = None      # Install/upgrade Application Switcher KWin script
 
@@ -1727,12 +1728,15 @@ class PackageInstallDispatcher:
     @staticmethod
     def install_on_apt_distro():
         """utility function that gets dispatched for distros that use APT package manager"""
-        # Hasn't been working on several Debian/Ubuntu distros with broken dependencies or
-        # packages that are being "held back"
-        # cmd_lst = ['sudo', 'apt', 'install', '-y']
 
-        # Try to fix broken dependencies on certain Debian/Ubuntu distros
-        cmd_lst = ['sudo', 'apt', 'upgrade', '-y', '--ignore-hold', '--allow-change-held-packages']
+        if cnfg.fix_apt_held:
+            # Try to fix broken dependencies on certain Debian/Ubuntu distros
+            cmd_lst = ['sudo', 'apt', 'upgrade',
+                        '-y', '--ignore-hold', '--allow-change-held-packages']
+        else:
+            # Hasn't been working on several Debian/Ubuntu distros with broken dependencies or
+            # packages that are being "held back"
+            cmd_lst = ['sudo', 'apt', 'install', '-y']
         native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
     ###########################################################################
@@ -3778,6 +3782,11 @@ def handle_cli_arguments():
                 'Optionally specify a custom branch name.'
     )
     subparser_install.add_argument(
+        '--fix-apt-held',
+        action='store_true',
+        help='Attempt to fix dependency blocks on Debian/Ubuntu distros.'
+    )
+    subparser_install.add_argument(
         '--fancy-pants',
         action='store_true',
         help='See README for more info on this option.'
@@ -3857,6 +3866,9 @@ def handle_cli_arguments():
             cnfg.use_dev_keymapper = True
             if isinstance(args.dev_keymapper, str):
                 cnfg.keymapper_cust_branch = args.dev_keymapper
+
+        if args.fix_apt_held:
+            cnfg.fix_apt_held = True
 
         if args.fancy_pants:
             cnfg.fancy_pants = True
