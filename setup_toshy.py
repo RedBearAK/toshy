@@ -1729,14 +1729,22 @@ class PackageInstallDispatcher:
     def install_on_apt_distro():
         """utility function that gets dispatched for distros that use APT package manager"""
 
-        if cnfg.fix_apt_held:
+        if not cnfg.fix_apt_held:
+            # Hasn't been working on several Debian/Ubuntu distros with broken dependencies or
+            # packages that are being "held back".
+            cmd_lst = ['sudo', 'apt', 'install', '-y']
+            print('If install fails due to bad dependencies, try the "--fix-apt-held" option.')
+        else:
             # Try to fix broken dependencies on certain Debian/Ubuntu distros
+            # Deepin 25 beta, Linux Lite 7.2, Ubuntu Kylin 23.10, Zorin OS 16.x
             cmd_lst = ['sudo', 'apt', 'upgrade',
                         '-y', '--ignore-hold', '--allow-change-held-packages']
-        else:
-            # Hasn't been working on several Debian/Ubuntu distros with broken dependencies or
-            # packages that are being "held back"
-            cmd_lst = ['sudo', 'apt', 'install', '-y']
+            print('User provided "--fix-apt-held" install option.')
+            print('Setting alternate package install command to overcome "held" package issues.')
+            print(f"Full APT command:\n  {' '.join(cmd_lst)}")
+            print(f"Package list to install:\n  {' '.join(cnfg.pkgs_for_distro)}")
+            print("If this fails, attempt individual upgrade of bad packages yourself.")
+
         native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
     ###########################################################################
