@@ -177,6 +177,124 @@ class SharedDeviceMonitorInterface(abc.ABC):
             return 0.0
 
 
+class DeskflowMonitor(SharedDeviceMonitorInterface):
+    """Monitor for Deskflow software (upstream project of Synergy)"""
+
+    def __init__(self):
+        self.process_names = ['deskflow', 'deskflows', 'deskflowc']
+        self.server_process_names = ['deskflows', 'deskflow']  # 'deskflow' might be both
+        self.client_process_names = ['deskflowc', 'deskflow']  # 'deskflow' might be both
+        self.log_paths = [
+            # Observed in the wild
+            os.path.expanduser("~/deskflow.log"),
+            # Additional guesses
+            os.path.expanduser("~/.local/state/Deskflow/deskflow.log"),
+            os.path.expanduser("~/.local/share/Deskflow/deskflow.log"),
+            os.path.expanduser("~/.config/Deskflow/deskflow.log"),
+            "/var/log/deskflow.log",
+        ]
+        self._server_status = None  # Cache for server status
+
+    @classmethod
+    def get_supported_software(cls):
+        return ['deskflow']
+
+    def is_running(self):
+        """Check if any Deskflow process is running"""
+        for process_name in self.process_names:
+            try:
+                result = subprocess.run(['pgrep', '-x', process_name], 
+                                        capture_output=True, text=True)
+                if result.returncode == 0:
+                    return True
+            except subprocess.SubprocessError:
+                pass
+        return False
+
+    def get_log_file_path(self):
+        """Return the first existing log file path"""
+        active_logs = self.get_active_log_file_paths()
+        if active_logs:
+            path, score = active_logs[0]
+            if score < 0.5:
+                warn(f"Log file {path} seems to be inactive (activity score: {score:.2f})")
+            return path
+        return None
+
+    def parse_log_line(self, line: str) -> Optional[bool]:
+        """Parse Deskflow log line for focus events"""
+        if "leaving screen" in line:
+            return False
+        elif "entering screen" in line:
+            return True
+        return None
+        
+    def is_server(self) -> bool:
+        """
+        Determine if this system is running Deskflow as a server.
+        
+        Checks:
+        1. If 'deskflows' process is running
+        2. If log file contains server initialization messages
+        3. If 'deskflow' is running with server arguments
+        
+        Returns True if any check suggests this is a server, False otherwise.
+        """
+        if self._server_status is not None:
+            return self._server_status
+            
+        # Check if server process is running
+        for process_name in self.server_process_names:
+            try:
+                # Use -f flag to match full command line arguments for 'deskflow'
+                cmd = 'pgrep' 
+                args = ['-x', process_name] if process_name == 'deskflows' else ['-f', f'^{process_name}.*--server']
+                result = subprocess.run([cmd] + args, capture_output=True, text=True)
+                if result.returncode == 0:
+                    self._server_status = True
+                    debug("Deskflow server process detected")
+                    return True
+            except subprocess.SubprocessError:
+                pass
+                
+        # Check if only client process is running (definitively a client)
+        client_only = False
+        for process_name in self.client_process_names:
+            try:
+                cmd = 'pgrep'
+                args = ['-x', process_name] if process_name == 'deskflowc' else ['-f', f'^{process_name}.*--client']
+                result = subprocess.run([cmd] + args, capture_output=True, text=True)
+                if result.returncode == 0:
+                    client_only = True
+                    break
+            except subprocess.SubprocessError:
+                pass
+                
+        if client_only:
+            self._server_status = False
+            debug("Deskflow client process detected")
+            return False
+                
+        # Check log file for server messages
+        log_path = self.get_log_file_path()
+        if log_path and os.path.exists(log_path):
+            try:
+                # Only check the first 50 lines for server initialization messages
+                with open(log_path, 'r') as f:
+                    lines = [f.readline() for _ in range(50)]
+                    for line in lines:
+                        if "server started" in line.lower() or "started server" in line.lower():
+                            self._server_status = True
+                            debug("Deskflow server detected from log file")
+                            return True
+            except Exception as e:
+                error(f"Error reading Deskflow log file: {e}")
+                
+        # Default assumption: if Deskflow is running but we couldn't determine, assume client
+        self._server_status = False
+        return False
+
+
 class SynergyMonitor(SharedDeviceMonitorInterface):
     """Monitor for Synergy software"""
 
@@ -295,7 +413,7 @@ class SynergyMonitor(SharedDeviceMonitorInterface):
 
 
 class InputLeapMonitor(SharedDeviceMonitorInterface):
-    """Monitor for Input Leap software"""
+    """Monitor for Input Leap software (open source fork of Barrier)"""
 
     def __init__(self):
         self.process_names = ['input-leap', 'input-leaps', 'input-leapc']
@@ -412,34 +530,47 @@ class InputLeapMonitor(SharedDeviceMonitorInterface):
         return False
 
 
-class DeskflowMonitor(SharedDeviceMonitorInterface):
-    """Monitor for Deskflow software"""
+class BarrierMonitor(SharedDeviceMonitorInterface):
+    """
+    Monitor for Barrier software
+    
+    Note: This implementation is based on expected similarities with Input Leap,
+    as Input Leap is a fork of Barrier. The log parsing may need refinement
+    if Barrier's logging format differs significantly.
+    """
 
     def __init__(self):
-        self.process_names = ['deskflow', 'deskflows', 'deskflowc']
-        self.server_process_names = ['deskflows', 'deskflow']  # 'deskflow' might be both
-        self.client_process_names = ['deskflowc', 'deskflow']  # 'deskflow' might be both
+        self.process_names = ['barrier', 'barriers', 'barrierc', 'barrier-daemon']
+        self.server_process_names = ['barriers', 'barrier', 'barrier-daemon']  # 'barrier' might be both
+        self.client_process_names = ['barrierc', 'barrier', 'barrier-daemon']  # 'barrier' might be both
         self.log_paths = [
-            # Observed in the wild
-            os.path.expanduser("~/deskflow.log"),
-            # Additional guesses
-            os.path.expanduser("~/.local/state/Deskflow/deskflow.log"),
-            os.path.expanduser("~/.local/share/Deskflow/deskflow.log"),
-            os.path.expanduser("~/.config/Deskflow/deskflow.log"),
-            "/var/log/deskflow.log",
+            # Most likely locations based on observed patterns in similar software
+            "/var/log/barrier.log",
+            os.path.expanduser("~/barrier.log"),
+            # Standard XDG paths
+            os.path.expanduser("~/.local/state/Barrier/barrier.log"),
+            os.path.expanduser("~/.local/share/Barrier/barrier.log"),
+            os.path.expanduser("~/.config/Barrier/barrier.log"),
+            # Application-specific paths
+            os.path.expanduser("~/.barrier/barrier.log"),
+            # Case variations
+            os.path.expanduser("~/.Barrier/barrier.log"),
+            # Potential paths with version numbers
+            os.path.expanduser("~/.barrier/barrier-2.log"),
+            os.path.expanduser("~/.local/share/barrier/barrier.log"),
         ]
         self._server_status = None  # Cache for server status
 
     @classmethod
     def get_supported_software(cls):
-        return ['deskflow']
+        return ['barrier']
 
     def is_running(self):
-        """Check if any Deskflow process is running"""
+        """Check if any Barrier process is running"""
         for process_name in self.process_names:
             try:
                 result = subprocess.run(['pgrep', '-x', process_name], 
-                                        capture_output=True, text=True)
+                                      capture_output=True, text=True)
                 if result.returncode == 0:
                     return True
             except subprocess.SubprocessError:
@@ -457,21 +588,31 @@ class DeskflowMonitor(SharedDeviceMonitorInterface):
         return None
 
     def parse_log_line(self, line: str) -> Optional[bool]:
-        """Parse Deskflow log line for focus events"""
+        """
+        Parse Barrier log line for focus events
+        
+        Assumes logging format similar to Input Leap and Synergy.
+        May need adjustment if actual format differs.
+        """
         if "leaving screen" in line:
             return False
         elif "entering screen" in line:
             return True
+        # Alternative wordings that might be used
+        elif "switched to screen" in line:
+            return True
+        elif "switched from screen" in line:
+            return False
         return None
         
     def is_server(self) -> bool:
         """
-        Determine if this system is running Deskflow as a server.
+        Determine if this system is running Barrier as a server.
         
         Checks:
-        1. If 'deskflows' process is running
+        1. If 'barriers' process is running
         2. If log file contains server initialization messages
-        3. If 'deskflow' is running with server arguments
+        3. If 'barrier' is running with server arguments
         
         Returns True if any check suggests this is a server, False otherwise.
         """
@@ -481,13 +622,13 @@ class DeskflowMonitor(SharedDeviceMonitorInterface):
         # Check if server process is running
         for process_name in self.server_process_names:
             try:
-                # Use -f flag to match full command line arguments for 'deskflow'
+                # Use -f flag to match full command line arguments for 'barrier'
                 cmd = 'pgrep' 
-                args = ['-x', process_name] if process_name == 'deskflows' else ['-f', f'^{process_name}.*--server']
+                args = ['-x', process_name] if process_name == 'barriers' else ['-f', f'^{process_name}.*--server']
                 result = subprocess.run([cmd] + args, capture_output=True, text=True)
                 if result.returncode == 0:
                     self._server_status = True
-                    debug("Deskflow server process detected")
+                    debug("Barrier server process detected")
                     return True
             except subprocess.SubprocessError:
                 pass
@@ -497,7 +638,7 @@ class DeskflowMonitor(SharedDeviceMonitorInterface):
         for process_name in self.client_process_names:
             try:
                 cmd = 'pgrep'
-                args = ['-x', process_name] if process_name == 'deskflowc' else ['-f', f'^{process_name}.*--client']
+                args = ['-x', process_name] if process_name == 'barrierc' else ['-f', f'^{process_name}.*--client']
                 result = subprocess.run([cmd] + args, capture_output=True, text=True)
                 if result.returncode == 0:
                     client_only = True
@@ -507,7 +648,7 @@ class DeskflowMonitor(SharedDeviceMonitorInterface):
                 
         if client_only:
             self._server_status = False
-            debug("Deskflow client process detected")
+            debug("Barrier client process detected")
             return False
                 
         # Check log file for server messages
@@ -520,12 +661,12 @@ class DeskflowMonitor(SharedDeviceMonitorInterface):
                     for line in lines:
                         if "server started" in line.lower() or "started server" in line.lower():
                             self._server_status = True
-                            debug("Deskflow server detected from log file")
+                            debug("Barrier server detected from log file")
                             return True
             except Exception as e:
-                error(f"Error reading Deskflow log file: {e}")
+                error(f"Error reading Barrier log file: {e}")
                 
-        # Default assumption: if Deskflow is running but we couldn't determine, assume client
+        # Default assumption: if Barrier is running but we couldn't determine, assume client
         self._server_status = False
         return False
 
