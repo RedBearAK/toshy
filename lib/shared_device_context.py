@@ -60,7 +60,7 @@ class SharedDeviceMonitorInterface(abc.ABC):
         :returns: True if focus entered, False if focus left, None if not a focus change event
         """
         pass
-        
+
     @abc.abstractmethod
     def is_server(self) -> bool:
         """
@@ -69,6 +69,112 @@ class SharedDeviceMonitorInterface(abc.ABC):
         :returns: True if this is a server, False if it's a client or undetermined
         """
         pass
+
+    def get_active_log_file_paths(self, max_age_hours=24) -> List[Tuple[str, float]]:
+        """
+        Returns all existing log file paths sorted by likelihood of being active.
+        
+        :param max_age_hours: Maximum age in hours for a log to be considered possibly active
+        :returns: List of tuples (path, score) sorted by score (higher is more likely active)
+        """
+        log_files = []
+        
+        # Check all possible paths
+        for path in self.log_paths:
+            if not os.path.exists(path):
+                continue
+                
+            # Base score on file modification time (newer is better)
+            try:
+                mod_time = os.path.getmtime(path)
+                age_hours = (time.time() - mod_time) / 3600
+                
+                # If file is very old, give it a low score but still include it
+                if age_hours > max_age_hours:
+                    score = 0.1  # Very low but non-zero score
+                    debug(f"Log file {path} is old (modified {age_hours:.1f} hours ago)")
+                else:
+                    # Score based on recency (newer files get higher scores)
+                    # 1.0 for just modified, approaching 0.1 as age approaches max_age_hours
+                    score = 1.0 - (0.9 * age_hours / max_age_hours)
+                
+                # Check file size - very small files might be inactive
+                size = os.path.getsize(path)
+                if size < 100:  # Less than 100 bytes
+                    score *= 0.5  # Reduce score for very small files
+                    
+                # Check for recent timestamps inside the file
+                recent_activity_score = self.check_log_file_activity(path, max_age_hours)
+                if recent_activity_score > 0:
+                    # Boost score if we found recent timestamps
+                    score = max(score, recent_activity_score)
+                
+                log_files.append((path, score))
+            except Exception as e:
+                error(f"Error checking log file {path}: {e}")
+        
+        # Sort by score (descending)
+        return sorted(log_files, key=lambda x: x[1], reverse=True)
+                
+    def check_log_file_activity(self, log_path, max_age_hours=24) -> float:
+        """
+        Check if log file contains recent entries and return an activity score.
+        
+        :param log_path: Path to the log file
+        :param max_age_hours: Maximum age in hours for log entries to be considered recent
+        :returns: Activity score between 0.0 (inactive) and 1.0 (very active)
+        """
+        try:
+            with open(log_path, 'r') as f:
+                # Read last 20 lines
+                f.seek(0, os.SEEK_END)
+                file_size = f.tell()
+                
+                # If file is empty, return 0
+                if file_size == 0:
+                    return 0.0
+                    
+                # Read at most the last 4KB
+                read_size = min(4096, file_size)
+                f.seek(file_size - read_size)
+                chunk = f.read(read_size)
+                
+                # Get last 20 lines
+                lines = chunk.splitlines()[-20:]
+            
+            newest_timestamp = None
+            
+            for line in lines:
+                timestamp_match = re.search(r'(?:.*\[|\[)?(\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2})(?:\])?', line)
+                if timestamp_match:
+                    line_time_str = timestamp_match.group(1)
+                    try:
+                        format_str = "%Y-%m-%d %H:%M:%S" if " " in line_time_str else "%Y-%m-%dT%H:%M:%S"
+                        line_time = time.strptime(line_time_str, format_str)
+                        line_timestamp = time.mktime(line_time)
+                        
+                        if newest_timestamp is None or line_timestamp > newest_timestamp:
+                            newest_timestamp = line_timestamp
+                    except ValueError:
+                        pass
+            
+            if newest_timestamp is None:
+                debug(f"No valid timestamps found in log file {log_path}")
+                return 0.1  # Very low but non-zero score
+                
+            # Calculate age in hours
+            age_hours = (time.time() - newest_timestamp) / 3600
+            
+            if age_hours <= max_age_hours:
+                # Score based on recency (1.0 for just now, approaching 0.1 as age approaches max_age_hours)
+                score = 1.0 - (0.9 * age_hours / max_age_hours)
+                return score
+            else:
+                debug(f"Log file {log_path} has no recent entries (newest is {age_hours:.1f} hours old)")
+                return 0.0
+        except Exception as e:
+            error(f"Error checking log file activity: {e}")
+            return 0.0
 
 
 class SynergyMonitor(SharedDeviceMonitorInterface):
@@ -108,9 +214,12 @@ class SynergyMonitor(SharedDeviceMonitorInterface):
 
     def get_log_file_path(self):
         """Return the first existing log file path"""
-        for path in self.log_paths:
-            if os.path.exists(path):
-                return path
+        active_logs = self.get_active_log_file_paths()
+        if active_logs:
+            path, score = active_logs[0]
+            if score < 0.5:
+                warn(f"Log file {path} seems to be inactive (activity score: {score:.2f})")
+            return path
         return None
 
     def parse_log_line(self, line: str) -> Optional[bool]:
@@ -221,9 +330,12 @@ class InputLeapMonitor(SharedDeviceMonitorInterface):
 
     def get_log_file_path(self):
         """Return the first existing log file path"""
-        for path in self.log_paths:
-            if os.path.exists(path):
-                return path
+        active_logs = self.get_active_log_file_paths()
+        if active_logs:
+            path, score = active_logs[0]
+            if score < 0.5:
+                warn(f"Log file {path} seems to be inactive (activity score: {score:.2f})")
+            return path
         return None
 
     def parse_log_line(self, line: str) -> Optional[bool]:
@@ -336,9 +448,12 @@ class DeskflowMonitor(SharedDeviceMonitorInterface):
 
     def get_log_file_path(self):
         """Return the first existing log file path"""
-        for path in self.log_paths:
-            if os.path.exists(path):
-                return path
+        active_logs = self.get_active_log_file_paths()
+        if active_logs:
+            path, score = active_logs[0]
+            if score < 0.5:
+                warn(f"Log file {path} seems to be inactive (activity score: {score:.2f})")
+            return path
         return None
 
     def parse_log_line(self, line: str) -> Optional[bool]:
@@ -427,6 +542,8 @@ class LogWatcherHandler(FileSystemEventHandler):
         self.last_position = 0
         self.initialized = False
         self.startup_time = time.time()
+        self.last_activity_time = None
+        self.activity_counter = 0
 
     def on_modified(self, event: FileSystemEvent):
         if event.src_path == self.log_path:
@@ -454,18 +571,23 @@ class LogWatcherHandler(FileSystemEventHandler):
                 f.seek(self.last_position)
 
             lines = f.readlines()
-            self.last_position = f.tell()
+            new_position = f.tell()
+            
+            # If we got new content, update last activity time
+            if new_position > self.last_position:
+                self.last_activity_time = time.time()
+                self.activity_counter += 1
+                
+            self.last_position = new_position
 
             # Process lines to find focus changes
             most_recent_state = None
+            newest_timestamp = None
+            
             for line in lines:
                 line_to_process = line.strip()
                 
                 # Try to extract a timestamp from the log line
-                # This regex handles formats like:
-                # [2025-02-24T18:13:23]
-                # 2025-02-24 18:13:23
-                # synergy-core    [2023-11-08T11:04:30]
                 timestamp_match = re.search(r'(?:.*\[|\[)?(\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2})(?:\])?', line_to_process)
                 
                 if timestamp_match:
@@ -475,6 +597,10 @@ class LogWatcherHandler(FileSystemEventHandler):
                         format_str = "%Y-%m-%d %H:%M:%S" if " " in line_time_str else "%Y-%m-%dT%H:%M:%S"
                         line_time = time.strptime(line_time_str, format_str)
                         line_timestamp = time.mktime(line_time)
+                        
+                        # Update newest timestamp
+                        if newest_timestamp is None or line_timestamp > newest_timestamp:
+                            newest_timestamp = line_timestamp
                         
                         # Ignore entries from before we started monitoring
                         if line_timestamp < self.startup_time:
@@ -493,6 +619,26 @@ class LogWatcherHandler(FileSystemEventHandler):
             if most_recent_state is not None:
                 self.on_focus_change(most_recent_state)
 
+    def is_active(self, max_inactive_hours=24) -> bool:
+        """
+        Check if this log file shows signs of activity.
+        
+        :param max_inactive_hours: Maximum hours of inactivity before considering inactive
+        :returns: True if the log file shows recent activity, False otherwise
+        """
+        if not self.last_activity_time:
+            # If we've never seen activity, check based on file modification time
+            try:
+                mod_time = os.path.getmtime(self.log_path)
+                hours_since_mod = (time.time() - mod_time) / 3600
+                return hours_since_mod <= max_inactive_hours
+            except Exception:
+                return False
+                
+        # If we've seen activity, check how long it's been
+        hours_since_activity = (time.time() - self.last_activity_time) / 3600
+        return hours_since_activity <= max_inactive_hours
+
 
 class SharedDeviceContext:
     """
@@ -506,6 +652,7 @@ class SharedDeviceContext:
         self.screen_has_focus = True
         self.active_monitors = set()
         self.is_server_system = False
+        self.last_health_check = 0
 
         # Initialize all available monitors
         for monitor_class in SharedDeviceMonitorInterface.__subclasses__():
@@ -514,7 +661,7 @@ class SharedDeviceContext:
         # Log which monitors are available
         software_list = [software for monitor in self.monitors 
                         for software in monitor.get_supported_software()]
-        debug(f"SharedDeviceContext initialized with support for:\n      {', '.join(software_list)}")
+        debug(f"SharedDeviceContext initialized with support for: {', '.join(software_list)}")
 
     def detect_active_software(self) -> Set[str]:
         """
@@ -560,29 +707,51 @@ class SharedDeviceContext:
             if not supported_software.intersection(active_software):
                 continue
 
-            log_path = monitor.get_log_file_path()
-            if not log_path:
-                warn(f"No log file found for {', '.join(supported_software)}")
+            # Get all potential log files sorted by activity likelihood
+            active_logs = monitor.get_active_log_file_paths()
+            
+            if not active_logs:
+                warn(f"No log files found for {', '.join(supported_software)}")
                 continue
+                
+            # Check if all logs have low activity scores
+            all_inactive = all(score < 0.5 for _, score in active_logs)
+            if all_inactive:
+                warn(f"WARNING: All detected log files for {', '.join(supported_software)} appear to be inactive!")
+                warn(f"Focus detection may not work correctly. Check software configuration.")
+                
+            # If we have multiple potential log files, log them with their scores
+            if len(active_logs) > 1:
+                debug(f"Found multiple potential log files for {', '.join(supported_software)}:")
+                for path, score in active_logs:
+                    debug(f"  - {path} (activity score: {score:.2f})")
+            
+            # Monitor all potential log files, but prefer the most likely active ones
+            for log_path, score in active_logs:
+                log_dir = os.path.dirname(log_path)
+                if not os.path.exists(log_dir):
+                    warn(f"Log directory does not exist: {log_dir}")
+                    continue
 
-            log_dir = os.path.dirname(log_path)
-            if not os.path.exists(log_dir):
-                warn(f"Log directory does not exist: {log_dir}")
-                continue
+                # Create a handler for this log file
+                handler = LogWatcherHandler(
+                    log_path=log_path,
+                    parse_func=monitor.parse_log_line,
+                    on_focus_change=self.on_focus_change
+                )
 
-            # Create a handler for this log file
-            handler = LogWatcherHandler(
-                log_path=log_path,
-                parse_func=monitor.parse_log_line,
-                on_focus_change=self.on_focus_change
-            )
+                # Schedule the handler with the observer
+                self.observer.schedule(handler, path=log_dir, recursive=False)
+                self.handlers[log_path] = handler
+                self.active_monitors.update(supported_software)
 
-            # Schedule the handler with the observer
-            self.observer.schedule(handler, path=log_dir, recursive=False)
-            self.handlers[log_path] = handler
-            self.active_monitors.update(supported_software)
-
-            debug(f"Monitoring {', '.join(supported_software)} log file:\n       {log_path}")
+                if os.path.exists(log_path):
+                    if score < 0.5:
+                        warn(f"Monitoring possibly inactive log file: {log_path} (score: {score:.2f})")
+                    else:
+                        debug(f"Monitoring log file: {log_path} (score: {score:.2f})")
+                else:
+                    debug(f"Watching for future log file: {log_path}")
 
         # Start the observer if we have any handlers
         if self.handlers:
@@ -593,6 +762,57 @@ class SharedDeviceContext:
             for log_path, handler in self.handlers.items():
                 if os.path.exists(log_path):
                     handler.handle_log_file_change()
+                    
+        # Initialize health check timer
+        self.last_health_check = time.time()
+
+    def check_health(self) -> bool:
+        """
+        Check if our monitoring is healthy and working properly.
+        
+        :returns: True if healthy, False if we need to refresh monitoring
+        """
+        # Only run health check every 5 minutes
+        current_time = time.time()
+        if current_time - self.last_health_check < 300:  # 5 minutes in seconds
+            return True
+            
+        self.last_health_check = current_time
+        
+        # Verify monitored software is still running
+        active_software = self.detect_active_software()
+        if not active_software:
+            debug("Health check: No active shared device software detected")
+            return False
+            
+        # For servers, check if log files are still active
+        if self.is_server_system:
+            # Check if any handlers are showing activity
+            any_active = False
+            for log_path, handler in self.handlers.items():
+                if os.path.exists(log_path) and handler.is_active():
+                    any_active = True
+                    break
+                    
+            if not any_active and self.handlers:
+                warn("Health check: No active log files detected, refreshing monitoring")
+                warn("Focus detection may not be working! Check KVM software configuration.")
+                return False
+                
+            # Check if any new log files have appeared that might be more active
+            for monitor in self.monitors:
+                if not set(monitor.get_supported_software()).intersection(active_software):
+                    continue
+                    
+                active_logs = monitor.get_active_log_file_paths()
+                if active_logs:
+                    top_path, top_score = active_logs[0]
+                    # If we found a highly active log we're not currently monitoring, refresh
+                    if top_score > 0.8 and top_path not in self.handlers:
+                        debug(f"Health check: Found new active log file: {top_path}")
+                        return False
+        
+        return True
 
     def stop_monitoring(self):
         """
@@ -624,6 +844,11 @@ class SharedDeviceContext:
         
         :returns: True if the screen has focus, False otherwise
         """
+        # Periodically check health of our monitoring
+        if not self.check_health():
+            debug("Health check failed, refreshing monitoring")
+            self.refresh_monitoring()
+            
         # Client systems always have focus for keymapping purposes
         if not self.is_server_system:
             return True
