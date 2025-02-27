@@ -230,7 +230,6 @@ class InstallerSettings:
         self.fancy_pants            = None
         self.no_dbus_python         = None
         self.use_dev_keymapper      = None
-        self.fix_apt_held           = None
 
         self.app_switcher           = None      # Install/upgrade Application Switcher KWin script
 
@@ -1728,23 +1727,10 @@ class PackageInstallDispatcher:
     @staticmethod
     def install_on_apt_distro():
         """utility function that gets dispatched for distros that use APT package manager"""
-
-        if not cnfg.fix_apt_held:
-            # Hasn't been working on several Debian/Ubuntu distros with broken dependencies or
-            # packages that are being "held back".
-            cmd_lst = ['sudo', 'apt', 'install', '-y']
-            print('If install fails due to bad dependencies, try the "--fix-apt-held" option.')
-        else:
-            # Try to fix broken dependencies on certain Debian/Ubuntu distros
-            # Deepin 25 beta, Linux Lite 7.2, Ubuntu Kylin 23.10, Zorin OS 16.x
-            cmd_lst = ['sudo', 'apt', 'upgrade',
-                        '-y', '--ignore-hold', '--allow-change-held-packages']
-            print('User provided "--fix-apt-held" install option.')
-            print('Setting alternate package install command to overcome "held" package issues.')
-            print(f"Full APT command:\n  {' '.join(cmd_lst)}")
-            print(f"Package list to install:\n  {' '.join(cnfg.pkgs_for_distro)}")
-            print("If this fails, attempt individual upgrade of bad packages yourself.")
-
+        # Hasn't been working on several Debian/Ubuntu distros with broken dependencies.
+        # So far: Deepin 25 beta, Linux Lite 7.2, Ubuntu Kylin 23.10, Zorin OS 16.x
+        # There is no safe way to overcome the issue automatically. Repos are broken.
+        cmd_lst = ['sudo', 'apt', 'install', '-y']
         native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
     ###########################################################################
@@ -3790,11 +3776,6 @@ def handle_cli_arguments():
                 'Optionally specify a custom branch name.'
     )
     subparser_install.add_argument(
-        '--fix-apt-held',
-        action='store_true',
-        help='Attempt to fix dependency blocks on Debian/Ubuntu distros.'
-    )
-    subparser_install.add_argument(
         '--fancy-pants',
         action='store_true',
         help='See README for more info on this option.'
@@ -3874,9 +3855,6 @@ def handle_cli_arguments():
             cnfg.use_dev_keymapper = True
             if isinstance(args.dev_keymapper, str):
                 cnfg.keymapper_cust_branch = args.dev_keymapper
-
-        if args.fix_apt_held:
-            cnfg.fix_apt_held = True
 
         if args.fancy_pants:
             cnfg.fancy_pants = True
