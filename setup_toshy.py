@@ -1730,7 +1730,7 @@ class PackageInstallDispatcher:
         # cmd_lst = ['sudo', 'apt', 'install', '-y']
 
         # Try to fix broken dependencies on certain Debian/Ubuntu distros
-        cmd_lst = ['sudo', 'apt', 'upgrade', '-y', '--allow-change-held-packages']
+        cmd_lst = ['sudo', 'apt', 'upgrade', '-y', '--ignore-hold']
         native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
     ###########################################################################
