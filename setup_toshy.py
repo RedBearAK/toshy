@@ -1727,10 +1727,12 @@ class PackageInstallDispatcher:
     @staticmethod
     def install_on_apt_distro():
         """utility function that gets dispatched for distros that use APT package manager"""
+        # Hasn't been working on several Debian/Ubuntu distros with broken dependencies or
+        # packages that are being "held back"
         # cmd_lst = ['sudo', 'apt', 'install', '-y']
 
         # Try to fix broken dependencies on certain Debian/Ubuntu distros
-        cmd_lst = ['sudo', 'apt', 'upgrade', '-y', '--ignore-hold']
+        cmd_lst = ['sudo', 'apt', 'upgrade', '-y', '--ignore-hold', '--allow-change-held-packages']
         native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
     ###########################################################################
