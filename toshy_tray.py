@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-__version__ = '20250218'
+__version__ = '20250227'
 
 # Indicator tray icon menu app for Toshy, using pygobject/gi
 TOSHY_PART      = 'tray'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
@@ -267,8 +267,10 @@ def fn_monitor_internal_settings():
 sysctl_cmd      = f"{shutil.which('systemctl')}"
 user_sysctl     = f'{sysctl_cmd} --user'
 
+# Main service units
 toshy_svc_sessmon               = 'toshy-session-monitor.service'
 toshy_svc_config                = 'toshy-config.service'
+# DBus service units
 toshy_svc_cosmic_dbus           = 'toshy-cosmic-dbus.service'
 toshy_svc_kwin_dbus             = 'toshy-kwin-dbus.service'
 toshy_svc_wlroots_dbus          = 'toshy-wlroots-dbus.service'
