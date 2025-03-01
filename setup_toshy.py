@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20250226'                        # CLI option "--version" will print this out.
+__version__ = '20250301'                        # CLI option "--version" will print this out.
 
 import os
 os.environ['PYTHONDONTWRITEBYTECODE'] = '1'     # prevent this script from creating cache files
@@ -1132,20 +1132,20 @@ pip_pkgs   = [
     ############################################################################################
     # Everything below here is just to make the keymapper (xwaykeyz) install smoother.
 
+    "appdirs",                  # Get appropriate platform-specific directories for app data/config
+    "evdev",                    # Interface with Linux input system for keyboard/mouse event handling
     "hyprpy",                   # Python binding for Hyprland Wayland compositor
     "i3ipc",                    # Interface with i3/sway window managers via their IPC protocol
-    "pywayland",                # Python bindings for Wayland display protocol
+    "inotify-simple",           # Monitor filesystem events
+    "ordered-set",              # Set implementation that preserves insertion order (for key combos)
 
     # TODO: Check on 'python-xlib' project by mid-2025 to see if this bug is fixed:
     #   [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']
     # If the bug is fixed, remove pinning to v0.31 here.
     # But it does not appear that the bug is ever likely to be fixed.
-
-    "appdirs",                  # Get appropriate platform-specific directories for app data/config
-    "evdev",                    # Interface with Linux input system for keyboard/mouse event handling
-    "inotify-simple",           # Monitor filesystem events
-    "ordered-set",              # Set implementation that preserves insertion order (for key combos)
     "python-xlib==0.31",        # Python interface to X11 library for X11 session support
+
+    "pywayland",                # Python bindings for Wayland display protocol
     "six"                       # Python 2/3 compatibility library (dependency for other packages)
 
 ]
