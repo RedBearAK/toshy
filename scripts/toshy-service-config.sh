@@ -79,7 +79,8 @@ if command xhost &> /dev/null; then
 fi
 
 # Set the process name for the keymapper config process
-echo "toshy-config" > /proc/$$/comm
+# echo "toshy-config" > /proc/$$/comm
+# REMOVING: This seems to confuse systemd and cause error messages in the journal
 
 if command -v xwaykeyz >/dev/null 2>&1; then
     xwaykeyz -w -c "$HOME/.config/toshy/toshy_config.py"

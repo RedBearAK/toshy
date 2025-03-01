@@ -47,7 +47,8 @@ echo "Showing systemd journal messages for Toshy services (since last boot):"
 
 
 # Set the process name for the Toshy services log process
-echo "toshy-svcs-log" > /proc/$$/comm
+# echo "toshy-svcs-log" > /proc/$$/comm
+# REMOVING: This seems to confuse systemd and cause error messages in the journal
 
 
 # Check if stdbuf is available and set the appropriate command

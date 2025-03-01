@@ -33,7 +33,8 @@ if ! command -v gdbus >/dev/null 2>&1; then
 fi
 
 # Set main process name for system tools
-echo "toshy-sessmon" > /proc/$$/comm
+# echo "toshy-sessmon" > /proc/$$/comm
+# REMOVING: This seems to confuse systemd and cause error messages in the journal
 
 USER="$(whoami)"
 
@@ -202,7 +203,8 @@ while true; do
     }
     
     # Set monitoring process name
-    echo "toshy-sessmon" > /proc/$$/comm
+    # echo "toshy-sessmon" > /proc/$$/comm
+    # REMOVING: This seems to confuse systemd and cause error messages in the journal
         
     gdbus monitor --system --dest org.freedesktop.login1            \
         | grep --line-buffered "$SESSION_PATH"                      \
