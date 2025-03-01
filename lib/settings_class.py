@@ -227,8 +227,16 @@ class Settings:
 
     def watch_shared_devices(self):
         """
-        Start monitoring for shared device software (Synergy, Input Leap, Deskflow)
-        This replaces the old synergy-specific watching.
+        Start monitoring for shared device (network KVM switch) software 
+        
+        Examples of what the module supports: 
+        
+        - Synergy
+        - Deskflow
+        - Input Leap
+        - Barrier
+
+        This replaces the old Synergy-specific watching.
         """
         # Initialize the shared device context if it doesn't exist
         if self.shared_device_context is None:
