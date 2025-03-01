@@ -11,6 +11,6 @@ RestartSec=5
 
 [Install]
 # We can't use graphical-session.target here because some 
-# distros (or desktop environments? fail to activate it 
+# distros (or desktop environments?) fail to activate it 
 # during the user's desktop session (Manjaro Xfce, Xubuntu, etc.)
 WantedBy=default.target
