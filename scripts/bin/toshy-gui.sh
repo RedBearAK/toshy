@@ -33,4 +33,4 @@ fi
 # shellcheck disable=SC1091
 source "${VENV_PATH}/bin/activate"
 
-"${VENV_PATH}/bin/python" "$HOME/.config/toshy/toshy_gui.py"
+exec "${VENV_PATH}/bin/python" "$HOME/.config/toshy/toshy_gui.py"
