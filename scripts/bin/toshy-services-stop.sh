@@ -49,14 +49,14 @@ fi
 echo "Stopping Toshy systemd services..."
 
 systemctl --user stop toshy-cosmic-dbus.service
-sleep 0.5
+sleep 0.1
 systemctl --user stop toshy-kwin-dbus.service
-sleep 0.5
+sleep 0.1
 systemctl --user stop toshy-wlroots-dbus.service
-sleep 0.5
+sleep 0.1
 systemctl --user stop toshy-session-monitor.service
-sleep 0.5
+sleep 0.1
 systemctl --user stop toshy-config.service
 
 echo "Toshy systemd services stopped."
-sleep 0.5
+sleep 0.1
