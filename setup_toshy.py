@@ -1112,7 +1112,9 @@ pip_pkgs   = [
     # NOTE: Pygobject is pinned to 3.44.1 (or earlier) to get through install on RHEL 8.x and clones
     "pygobject<=3.44.1",        # Python bindings for GObject/GTK (for tray icon and notifications)
 
-    "setproctitle",             # Allows changing how the process looks in "top" apps
+    # NOTE: This was too much of a sledgehammer, changing both "program" and "command" strings
+    # "setproctitle",             # Allows changing how the process looks in "top" apps
+
     "sv_ttk",                   # Modern-ish dark/light theme for tkinter GUI preferences app
     "systemd-python",           # Provides bindings to interact with systemd services and journal
     "tk",                       # For GUI preferences app
