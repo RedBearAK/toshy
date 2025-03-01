@@ -98,7 +98,7 @@ sep_reps        = 80
 sep_char        = '='
 separator       = sep_char * sep_reps
 
-LOG_PFX = 'TOSHY_WLROOTS_DBUS_SVC'
+LOG_PFX = 'TOSHY_WLR_DBUS_SVC'
 
 DISTRO_ID       = None
 DISTRO_VER      = None
