@@ -1102,37 +1102,50 @@ remove_pkgs_map = {
 
 pip_pkgs   = [
 
-    # Pinned pygobject to 3.44.1 (or earlier) to get through install on RHEL 8.x and clones
-    "lockfile", "dbus-python", "systemd-python", "pygobject<=3.44.1", "tk",
-    "sv_ttk", "watchdog", "psutil", 
-    
-    # NOTE: Version 1.5 of 'xkbcommon' introduced breaking API changes:
-    # XKB_CONTEXT_NO_SECURE_GETENV
+    ############################################################################################
+    # First section are packages needed directly by one or more Toshy components.
+
+    "dbus-python",              # Python bindings for D-Bus IPC comms with desktop environments
+    "lockfile",                 # Makes it easier to keep multiple apps/icons from appearing
+    "psutil",                   # For checking running processes (window manager, KVM apps, ect.)
+
+    # NOTE: Pygobject is pinned to 3.44.1 (or earlier) to get through install on RHEL 8.x and clones
+    "pygobject<=3.44.1",        # Python bindings for GObject/GTK (for tray icon and notifications)
+
+    "setproctitle",             # Allows changing how the process looks in "top" apps
+    "sv_ttk",                   # Modern-ish dark/light theme for tkinter GUI preferences app
+    "systemd-python",           # Provides bindings to interact with systemd services and journal
+    "tk",                       # For GUI preferences app
+    "watchdog",                 # For setting observers on log files, preferences db file, etc.
+
+    # NOTE: Version 1.5 of 'xkbcommon' introduced breaking API changes: XKB_CONTEXT_NO_SECURE_GETENV
     # https://github.com/sde1000/python-xkbcommon/issues/23
     # Need to pin version to less than v1.1 to avoid errors installing 'xkbcommon' on older distros.
     # TODO: Revisit this pinning in... 2028.
-    "xkbcommon<1.1",
+    "xkbcommon<1.1",            # Python binding for libxkbcommon (keyboard mapping library)
 
     # NOTE: WE CANNOT USE `xkbregistry` DUE TO CONFUSION AMONG SUPPORTING NATIVE PACKAGES
     # "xkbregistry",
 
+    ############################################################################################
     # Everything below here is just to make the keymapper (xwaykeyz) install smoother.
 
-    "hyprpy", "i3ipc", 
-
-    # NOTE: Need to install 'pywayland' from a GitHub PR (#64) for now, to handle NewId error
-    # "pywayland", 
-    # "git+https://github.com/heuer/pywayland@issue_33_newid",
-    # "git+https://github.com/flacjacket/pywayland@db8fb1c3a29761a014cfbb57f84025ddf3882c3c",
-    # NOTE: PR #64 on pywayland GitHub was merged, so we should be able to install from main
-    "pywayland",
+    "hyprpy",                   # Python binding for Hyprland Wayland compositor
+    "i3ipc",                    # Interface with i3/sway window managers via their IPC protocol
+    "pywayland",                # Python bindings for Wayland display protocol
 
     # TODO: Check on 'python-xlib' project by mid-2025 to see if this bug is fixed:
     #   [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']
     # If the bug is fixed, remove pinning to v0.31 here.
     # But it does not appear that the bug is ever likely to be fixed.
 
-    "inotify-simple", "evdev", "appdirs", "ordered-set", "python-xlib==0.31", "six"
+    "appdirs",                  # Get appropriate platform-specific directories for app data/config
+    "evdev",                    # Interface with Linux input system for keyboard/mouse event handling
+    "inotify-simple",           # Monitor filesystem events
+    "ordered-set",              # Set implementation that preserves insertion order (for key combos)
+    "python-xlib==0.31",        # Python interface to X11 library for X11 session support
+    "six"                       # Python 2/3 compatibility library (dependency for other packages)
+
 ]
 
 
