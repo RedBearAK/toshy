@@ -63,6 +63,10 @@ else:
     error(f'This is only meant to run on Linux. Exiting...')
     sys.exit(1)
 
+# Set the process name now that we know we are on Linux
+with open('/proc/self/comm', 'w') as f:
+    f.write('toshy-kwin-dbus')
+
 
 sep_reps        = 80
 sep_char        = '='
