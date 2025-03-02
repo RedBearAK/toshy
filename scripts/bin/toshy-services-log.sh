@@ -40,7 +40,9 @@ trap 'clean_exit' SIGINT
 
 echo "Showing systemd journal messages for Toshy services (since last boot):"
 
-# Set the process name for the Toshy services log process
+# Set the process name for the Toshy services log process.
+# We can do this here because this is just a direct launcher script.
+# This trick seems to confuse systemd as it tries to track "child" processes. 
 echo "toshy-svcs-log" > /proc/$$/comm
 
 # First get all the Toshy service names into an array
