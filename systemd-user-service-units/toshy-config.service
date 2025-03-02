@@ -4,8 +4,11 @@ After=default.target
 
 [Service]
 SyslogIdentifier=toshy-config
-ExecStartPre=/bin/bash -c 'env TERM=xterm $HOME/.config/toshy/scripts/toshy-service-config-execstartpre.sh'
-ExecStart=/bin/bash -c 'env TERM=xterm $HOME/.config/toshy/scripts/toshy-service-config.sh'
+Environment=TERM=xterm
+# ExecStartPre=/bin/bash -c 'env TERM=xterm $HOME/.config/toshy/scripts/toshy-service-config-execstartpre.sh'
+ExecStartPre=%h/.config/toshy/scripts/toshy-service-config-execstartpre.sh
+# ExecStart=/bin/bash -c 'env TERM=xterm $HOME/.config/toshy/scripts/toshy-service-config.sh'
+ExecStart=%h/.config/toshy/scripts/toshy-service-config.sh
 Restart=always
 RestartSec=5
 
