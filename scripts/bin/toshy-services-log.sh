@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-
 # Show the journalctl output of the Toshy systemd services (session monitor and config).
 
 # Check if the script is being run as root
@@ -8,7 +7,6 @@ if [[ $EUID -eq 0 ]]; then
     echo "This script must not be run as root"
     exit 1
 fi
-
 
 # Check if systemd is actually the init system
 if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
@@ -20,7 +18,6 @@ else
     exit 0
 fi
 
-
 # Get out of here if systemctl is not available
 if command -v systemctl >/dev/null 2>&1; then
     # systemctl is installed, proceed
@@ -29,7 +26,6 @@ else
     # no systemctl found, exit silently
     exit 0
 fi
-
 
 clean_exit() {
     echo "Caught Interrupt signal. Exiting..."
@@ -42,38 +38,9 @@ clean_exit() {
 # Trap the interrupt signal
 trap 'clean_exit' SIGINT
 
-
 echo "Showing systemd journal messages for Toshy services (since last boot):"
 
-
-# Set the process name for the Toshy services log process
-# echo "toshy-svcs-log" > /proc/$$/comm
-# REMOVING: This seems to confuse systemd and cause error messages in the journal
-
-
-# Check if stdbuf is available and set the appropriate command
-# Hopefully this may stop certain terminals from holding back journal
-# output and showing new output in large bursts.
-if command -v stdbuf >/dev/null 2>&1; then
-    STDBUF_CMD="stdbuf -oL"
-else
-    STDBUF_CMD=""
-fi
-
-# -b flag to only show messages since last boot
-# -f flag to follow new journal output
-# -n100 to show the last 100 lines (max) of existing log output
-# journalctl --user -n100 -b -f -u toshy-config -u toshy-session-monitor -u toshy-kde-dbus
-# newer(?) syntax to do the same thing? 
-# ${STDBUF_CMD} journalctl -n100 -b -f --user-unit 'toshy-*'
-
-# Had trouble with Tumbleweed not wanting to show any output at all when using the wildcard, so...
-
-# Start building the command with the basic parameters
-cmd_base="${STDBUF_CMD} journalctl -n200 -b -f"
-
 # First get all the Toshy service names into an array
-# Backslashes not required inside parentheses in bash?
 if systemctl --user list-unit-files &>/dev/null; then
     mapfile -t toshy_services < <(
         systemctl --user list-unit-files |
@@ -88,13 +55,31 @@ else
     exit 1
 fi
 
-# Add each service to the base command
-cmd_units=""
+# Check if any services were found
+if [ ${#toshy_services[@]} -eq 0 ]; then
+    echo "No Toshy services found. Exiting."
+    exit 0
+fi
+
+# Check if stdbuf is available and build the command array
+if command -v stdbuf >/dev/null 2>&1; then
+    cmd=(stdbuf -oL journalctl -n200 -b -f)
+else
+    cmd=(journalctl -n200 -b -f)
+fi
+
+# Add each service to the command array
 for service in "${toshy_services[@]}"; do
-    cmd_units+=" --user-unit $service"
+    cmd+=(--user-unit "$service")
 done
 
-# Combine and execute
-full_cmd="${cmd_base}${cmd_units}"
-# echo "Executing: $full_cmd"
-eval "$full_cmd"
+# Set process name before exec - this will be visible briefly, but exec will replace it
+echo "toshy-svcs-log" > /proc/$$/comm
+
+# Use exec with the -a option to set the process name
+# The -a option sets the zeroth argument of the process, which is often used in process listings
+if command -v stdbuf >/dev/null 2>&1; then
+    exec -a "toshy-svcs-log" "${cmd[@]}"
+else
+    exec -a "toshy-svcs-log" journalctl -n200 -b -f "${cmd[@]:2}"
+fi
