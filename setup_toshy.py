@@ -106,6 +106,10 @@ app_dirs = get_linux_app_dirs(app_name)
 
 
 home_dir                = os.path.expanduser('~')
+
+# This was being defined several times in different functions, for some reason. Moved to global.
+autostart_dir_path      = os.path.join(home_dir, '.config', 'autostart')
+
 trash_dir               = os.path.join(home_dir, '.local', 'share', 'Trash')
 this_file_path          = os.path.realpath(__file__)
 this_file_dir           = os.path.dirname(this_file_path)
@@ -3088,7 +3092,7 @@ def setup_kwin_dbus_script():
 
 def ensure_XDG_autostart_dir_exists():
     """Utility function to make sure XDG autostart directory exists"""
-    autostart_dir_path      = os.path.join(home_dir, '.config', 'autostart')
+    # autostart_dir_path      = os.path.join(home_dir, '.config', 'autostart')
     if not os.path.isdir(autostart_dir_path):
         try:
             os.makedirs(autostart_dir_path, exist_ok=True)
@@ -3103,7 +3107,7 @@ def setup_kwin_dbus_service():
     print(f'\n\n§  Setting up the Toshy KWin D-Bus service...\n{cnfg.separator}')
 
     # need to autostart "$HOME/.local/bin/toshy-kwin-dbus-service"
-    autostart_dir_path      = os.path.join(home_dir, '.config', 'autostart')
+    # autostart_dir_path      = os.path.join(home_dir, '.config', 'autostart')
     toshy_dt_files_path     = os.path.join(cnfg.toshy_dir_path, 'desktop')
     dbus_svc_desktop_file   = os.path.join(toshy_dt_files_path, 'Toshy_KWin_DBus_Service.desktop')
     start_dbus_svc_cmd      = os.path.join(home_dir, '.local', 'bin', 'toshy-kwin-dbus-service')
@@ -3166,7 +3170,7 @@ def autostart_systemd_kickstarter():
     svcs_kick_dt_file_name  = 'Toshy_Systemd_Service_Kickstart.desktop'
     toshy_dt_files_path     = os.path.join(cnfg.toshy_dir_path, 'desktop')
     svcs_kick_dt_file       = os.path.join(toshy_dt_files_path, svcs_kick_dt_file_name)
-    autostart_dir_path      = os.path.join(home_dir, '.config', 'autostart')
+    # autostart_dir_path      = os.path.join(home_dir, '.config', 'autostart')
     dest_link_file          = os.path.join(autostart_dir_path, svcs_kick_dt_file_name)
 
     cmd_lst                 = ['ln', '-sf', svcs_kick_dt_file, dest_link_file]
@@ -3664,7 +3668,7 @@ def uninstall_toshy():
             error(f'Problem terminating Toshy KWin D-Bus service script:\n\t{proc_err}')
 
     # try to remove the KDE D-Bus service autostart file
-    autostart_dir_path  = os.path.join(home_dir, '.config', 'autostart')
+    # autostart_dir_path  = os.path.join(home_dir, '.config', 'autostart')
     dbus_svc_dt_file    = os.path.join(autostart_dir_path, 'Toshy_KWin_DBus_Service.desktop')
     dbus_svc_rm_cmd     = ['rm', '-f', dbus_svc_dt_file]
     try:
@@ -3674,7 +3678,7 @@ def uninstall_toshy():
         error(f'Problem removing Toshy KWin D-Bus service autostart:\n\t{proc_err}')
 
     # try to remove the systemd services kickstart autostart file
-    autostart_dir_path  = os.path.join(home_dir, '.config', 'autostart')
+    # autostart_dir_path  = os.path.join(home_dir, '.config', 'autostart')
     svcs_kick_dt_file   = os.path.join(autostart_dir_path, 'Toshy_Systemd_Service_Kickstart.desktop')
     svcs_kick_rm_cmd    = ['rm', '-f', svcs_kick_dt_file]
     try:
