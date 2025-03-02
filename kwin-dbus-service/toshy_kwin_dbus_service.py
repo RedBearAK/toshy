@@ -112,7 +112,7 @@ else:
 
 
 # debug("")
-# debug(  f'Toshy KWIN D-Bus service script sees this environment:'
+# debug(  f'Toshy KWin D-Bus service script sees this environment:'
 #         f'\n\t{DISTRO_ID        = }'
 #         f'\n\t{DISTRO_VER       = }'
 #         f'\n\t{VARIANT_ID       = }'
