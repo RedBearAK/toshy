@@ -319,8 +319,7 @@ def show_reboot_prompt():
 
 
 def get_environment_info():
-    """Get back the distro name (ID), distro version, session type and desktop 
-        environment from the environment evaluation module"""
+    """Get the necessary info from the environment evaluation module"""
     print(f'\n§  Getting environment information...\n{cnfg.separator}')
 
     known_init_systems = {
