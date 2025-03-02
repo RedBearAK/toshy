@@ -27,10 +27,22 @@ else
     exit 0
 fi
 
+# Use the XDG_RUNTIME_DIR if available, otherwise fall back to /tmp
+if [ -n "$XDG_RUNTIME_DIR" ] && [ -d "$XDG_RUNTIME_DIR" ]; then
+    RUNTIME_DIR="$XDG_RUNTIME_DIR"
+else
+    RUNTIME_DIR="/tmp"
+fi
+
+# Create a toshy-specific directory in the runtime directory
+TEMP_DIR="$RUNTIME_DIR/toshy-logs"
+mkdir -p "$TEMP_DIR"
+TEMP_SYMLINK="$TEMP_DIR/toshy-svcs-log"
+
 clean_exit() {
     echo "Caught Interrupt signal. Exiting..."
-    # Add your clean-up commands here
-
+    # Clean up our temporary files
+    rm -rf "$TEMP_DIR"
     # Exit the script
     exit 0
 }
@@ -61,25 +73,34 @@ if [ ${#toshy_services[@]} -eq 0 ]; then
     exit 0
 fi
 
-# Check if stdbuf is available and build the command array
+# Check if stdbuf is available
+USE_STDBUF=0
 if command -v stdbuf >/dev/null 2>&1; then
-    cmd=(stdbuf -oL journalctl -n200 -b -f)
-else
-    cmd=(journalctl -n200 -b -f)
+    USE_STDBUF=1
 fi
 
-# Add each service to the command array
+# Prepare the command arguments
+ARGS=(-n200 -b -f)
+
+# Add each service to the arguments
 for service in "${toshy_services[@]}"; do
-    cmd+=(--user-unit "$service")
+    ARGS+=(--user-unit "$service")
 done
 
-# Set process name before exec - this will be visible briefly, but exec will replace it
-echo "toshy-svcs-log" > /proc/$$/comm
-
-# Use exec with the -a option to set the process name
-# The -a option sets the zeroth argument of the process, which is often used in process listings
-if command -v stdbuf >/dev/null 2>&1; then
-    exec -a "toshy-svcs-log" "${cmd[@]}"
+# Create the appropriate symlink based on whether stdbuf is used
+if [ $USE_STDBUF -eq 1 ]; then
+    # Create a special wrapper script that calls stdbuf with journalctl
+    cat > "$TEMP_SYMLINK" << 'EOF'
+#!/bin/sh
+exec stdbuf -oL journalctl "$@"
+EOF
+    chmod +x "$TEMP_SYMLINK"
 else
-    exec -a "toshy-svcs-log" journalctl -n200 -b -f "${cmd[@]:2}"
+    # Create a symlink to journalctl with our custom name
+    JOURNALCTL_PATH=$(command -v journalctl)
+    ln -sf "$JOURNALCTL_PATH" "$TEMP_SYMLINK"
 fi
+
+# Execute the command through our renamed symlink or wrapper
+# The PATH manipulation ensures our renamed command is found first
+PATH="$TEMP_DIR:$PATH" exec toshy-svcs-log "${ARGS[@]}"
