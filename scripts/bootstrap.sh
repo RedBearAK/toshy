@@ -5,12 +5,16 @@
 
 set -e  # Exit on error
 
-echo "Starting Toshy download process..."
+# Store the original directory
+ORIGINAL_DIR="$(pwd)"
 
 # Create a unique folder name with timestamp
 FILE_NAME="toshy_$(date +%Y%m%d_%H%M)"
 DOWNLOAD_DIR="$HOME/Downloads"
 URL="https://github.com/RedBearAK/toshy/archive/refs/heads/main.zip"
+TOSHY_DIR="$DOWNLOAD_DIR/$FILE_NAME/toshy-main"
+
+echo "Starting Toshy download process..."
 
 # Create the Downloads directory if it doesn't exist
 mkdir -p "$DOWNLOAD_DIR"
@@ -33,10 +37,26 @@ fi
 
 # Navigate to the setup directory
 cd "$FILE_NAME/toshy-main"
+
+# Define the Ctrl+C trap function
+# This handles the SIGINT (Ctrl+C) signal
+ctrl_c() {
+    echo
+    echo "Installation paused."
+    echo
+    echo "To navigate to the Toshy directory and run the setup manually, use:"
+    echo "  cd \"$TOSHY_DIR\""
+    echo
+    exit 0
+}
+
+# Set up the trap before the countdown
+trap ctrl_c INT
+
 echo
 echo "==================================================================="
 echo "Toshy has been downloaded and extracted to:"
-echo "  $DOWNLOAD_DIR/$FILE_NAME/toshy-main"
+echo "  $TOSHY_DIR"
 echo
 echo "To install Toshy with default settings, run (or wait 10 sec):"
 echo "  ./setup_toshy.py install"
@@ -60,7 +80,7 @@ for i in {10..1}; do
     sleep 1
 done
 
-echo -e "\Executing default installation now...      "
+echo -e "\rExecuting default installation now...      "
 echo
 
 # Run the setup script with default settings
@@ -72,3 +92,6 @@ fi
 echo
 echo "Toshy bootstrap-based installation completed successfully!"
 echo
+
+# Return to original directory
+cd "$ORIGINAL_DIR"
