@@ -3,9 +3,12 @@ Description=Toshy Session Monitor
 After=default.target
 
 [Service]
-ExecStart=/bin/bash -c 'env TERM=xterm $HOME/.config/toshy/scripts/toshy-service-session-monitor.sh'
+SyslogIdentifier=toshy-sessmon
 # Switch back to the non-DBus version of the session monitor if there are any problems. (There were problems.)
 # ExecStart=/bin/bash -c 'env TERM=xterm $HOME/.config/toshy/scripts/toshy-service-session-monitor-dbus.sh'
+# ExecStart=/bin/bash -c 'env TERM=xterm $HOME/.config/toshy/scripts/toshy-service-session-monitor.sh'
+Environment=TERM=xterm
+ExecStart=%h/.config/toshy/scripts/toshy-service-session-monitor.sh
 Restart=always
 RestartSec=5
 

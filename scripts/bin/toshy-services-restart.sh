@@ -49,16 +49,16 @@ fi
 echo -e "\nRestarting Toshy systemd services..."
 
 systemctl --user restart toshy-cosmic-dbus.service
-sleep 0.5
+sleep 0.1
 systemctl --user restart toshy-kwin-dbus.service
-sleep 0.5
+sleep 0.1
 systemctl --user restart toshy-wlroots-dbus.service
-sleep 0.5
+sleep 0.1
 systemctl --user stop toshy-session-monitor.service
-sleep 0.5
+sleep 0.1
 systemctl --user restart toshy-config.service
-sleep 0.5
+sleep 0.1
 systemctl --user start toshy-session-monitor.service
 
 echo -e "\nToshy systemd services restarted.\n\nRemember to tap a modifier key before trying shortcuts!\n"
-sleep 1
+sleep 0.1

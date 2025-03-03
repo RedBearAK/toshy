@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
-Name=Toshy KWIN D-Bus Service
-GenericName=Toshy KWIN D-Bus Service
+Name=Toshy KWin D-Bus Service
+GenericName=Toshy KWin D-Bus Service
 # autostart the D-Bus service to get window focus notifications from KWin script
 Exec=/bin/sh -c 'exec env $HOME/.local/bin/toshy-kwin-dbus-service'
 Terminal=false

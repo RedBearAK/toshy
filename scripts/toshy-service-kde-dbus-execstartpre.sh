@@ -2,12 +2,9 @@
 
 # Function to check if KWin is responding to DBus
 kwin_responding() {
-    # Use qdbus to send a simple command to KWin and check the response
-    if [ "$(qdbus org.kde.KWin /KWin org.kde.KWin.currentDesktop)" != "" ]; then
-        return 0
-    else
-        return 1
-    fi
+    # Use gdbus instead of qdbus (always available on nearly all Linux distros)
+    gdbus call --session --dest org.kde.KWin --object-path /KWin \
+        --method org.kde.KWin.currentDesktop &>/dev/null
 }
 
 # Wait for KWin to be ready

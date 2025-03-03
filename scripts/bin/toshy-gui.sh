@@ -17,7 +17,8 @@ fi
 
 
 # Set the process name for the Toshy Preferences GUI app launcher process
-echo "toshy-pref-stub" > /proc/$$/comm
+# echo "toshy-pref-stub" > /proc/$$/comm
+# REMOVING: This seems to confuse systemd and cause error messages in the journal
 
 # Absolute path to the venv
 VENV_PATH="$HOME/.config/toshy/.venv"
@@ -32,4 +33,4 @@ fi
 # shellcheck disable=SC1091
 source "${VENV_PATH}/bin/activate"
 
-"${VENV_PATH}/bin/python" "$HOME/.config/toshy/toshy_gui.py"
+exec "${VENV_PATH}/bin/python" "$HOME/.config/toshy/toshy_gui.py"

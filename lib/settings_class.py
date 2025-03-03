@@ -1,4 +1,4 @@
-__version__ = '20240915'
+__version__ = '20250226'
 
 import os
 import inspect
@@ -11,6 +11,9 @@ from watchdog.events import FileSystemEvent, FileSystemEventHandler
 
 import xwaykeyz.lib.logger
 from xwaykeyz.lib.logger import debug, error
+
+# Import the SharedDeviceContext class
+from lib.shared_device_context import SharedDeviceContext
 
 
 class Settings:
@@ -40,11 +43,11 @@ class Settings:
         self.Caps2Esc_Cmd           = False             # Default: False
         self.Enter2Ent_Cmd          = False             # Default: False
         self.ST3_in_VSCode          = False             # Default: False
-        # Synergy
+
+        # Shared device context
         self.screen_has_focus       = True  # True if focus is on the screen, False otherwise
-        self.synergy_log_path       = os.path.expanduser("~/.local/state/Synergy/synergy.log")
-        self.synergy_log_last_pos   = 0  # Keep track of the last read position in the log file
-        self.initial_log_read_done  = False
+        self.shared_device_context  = None  # Will be initialized later if needed
+        
         # Make sure the database and tables are actually existing before trying to load settings
         self.ensure_database_setup()
         # Load user's custom settings from database (defaults will be saved if no DB)
@@ -222,62 +225,74 @@ class Settings:
         settings_list = [(attr, getattr(self, attr)) for attr in filtered_attributes]
         return settings_list
 
+    def watch_shared_devices(self):
+        """
+        Start monitoring for shared device (network KVM switch) software 
+        
+        Examples of what the module supports: 
+        
+        - Synergy
+        - Deskflow
+        - Input Leap
+        - Barrier
+
+        This replaces the old Synergy-specific watching.
+        """
+        # Initialize the shared device context if it doesn't exist
+        if self.shared_device_context is None:
+            try:
+                self.shared_device_context = SharedDeviceContext()
+                # Set up a callback to update the screen_has_focus property
+                original_on_focus_change = self.shared_device_context.on_focus_change
+                
+                def on_focus_change(has_focus: bool):
+                    # Call the original callback
+                    original_on_focus_change(has_focus)
+                    # Update our screen_has_focus property
+                    self.screen_has_focus = has_focus
+                    # These debugging lines are kind of redundant with the output from the 
+                    # shared_device_context module debug lines.
+                    # if has_focus:
+                    #     debug("Shared device focus returned to this screen")
+                    # else:
+                    #     debug("Shared device focus left this screen")
+                
+                # Replace the callback
+                self.shared_device_context.on_focus_change = on_focus_change
+                
+                # Start monitoring
+                self.shared_device_context.start_monitoring()
+                
+                if self.shared_device_context.active_monitors:
+                    active_list = ", ".join(self.shared_device_context.active_monitors)
+                    debug(f"Monitoring active shared device software: {active_list}")
+                else:
+                    debug("No shared device software detected to monitor")
+            except Exception as e:
+                error(f"Failed to initialize shared device context: {e}")
+                self.screen_has_focus = True  # Assume focus is on the screen if monitoring fails
+
     def watch_synergy_log(self):
-        log_dir = os.path.dirname(self.synergy_log_path)
-        if not os.path.exists(log_dir):
-            debug("No Synergy log folder found. No log observer will be engaged.")
-        else:
-            debug(f"Setting an observer on '{log_dir}'")
-            event_handler = FileSystemEventHandler()
-            event_handler.on_modified = self.on_synergy_log_modified
-            event_handler.on_created = self.on_synergy_log_created
-            observer = Observer()
-            observer.schedule(event_handler, path=log_dir, recursive=False)
-            observer.start()
+        """
+        Legacy method for backward compatibility.
+        Now uses the shared device context.
+        """
+        self.watch_shared_devices()
 
-    def on_synergy_log_modified(self, event: Optional[FileSystemEvent]):
-        if event.src_path == self.synergy_log_path:
-            self.handle_synergy_log_file_change()
-
-    def on_synergy_log_created(self, event: Optional[FileSystemEvent]):
-        if event.src_path == self.synergy_log_path:
-            self.handle_synergy_log_file_change()
-
-    def handle_synergy_log_file_change(self):
-        lines = []  # prevent UnboundLocalError
-        if os.path.exists(self.synergy_log_path):
-            with open(self.synergy_log_path, 'r') as f:
-                if self.synergy_log_last_pos == 0:
-                    # Seek to a position near the end of the file
-                    f.seek(0, os.SEEK_END)
-                    end_pos = f.tell()
-                    f.seek(max(end_pos - 1024, 0))  # Read the last ~1024 bytes
-                    if f.tell() != 0:
-                        f.readline()  # Skip partial line
-                    lines = f.readlines()
-                    self.synergy_log_last_pos = f.tell()
-                else:
-                    f.seek(self.synergy_log_last_pos)
-                    lines = f.readlines()
-                    self.synergy_log_last_pos = f.tell()  # Update the last read position
-                # Track the most recent relevant screen focus state
-        if lines:
-            most_recent_state = None
-            for line in lines:
-                line = line.strip()
-                if "leaving screen" in line:
-                    most_recent_state = False
-                elif "entering screen" in line:
-                    most_recent_state = True
-
-            if most_recent_state is not None:
-                self.screen_has_focus = most_recent_state
-                if self.screen_has_focus:
-                    debug("Synergy log watcher detected return of screen focus.")
-                else:
-                    debug("Synergy log watcher detected loss of screen focus.")
+    def refresh_shared_device_monitoring(self):
+        """
+        Refresh the shared device monitoring, checking for newly started/stopped software
+        """
+        if self.shared_device_context is not None:
+            self.shared_device_context.refresh_monitoring()
 
     def __str__(self):
+        active_monitors = (
+            ", ".join(self.shared_device_context.active_monitors)
+            if self.shared_device_context and self.shared_device_context.active_monitors
+            else "None"
+        )
+        
         return f"""Current settings:
         ------------------------------------------------------------------------------
         calling_module          = '{self.calling_module}'
@@ -298,5 +313,8 @@ class Settings:
         Caps2Esc_Cmd            = {self.Caps2Esc_Cmd}
         Enter2Ent_Cmd           = {self.Enter2Ent_Cmd}
         ST3_in_VSCode           = {self.ST3_in_VSCode}
+        ------------------------------------------------------------------------------
+        screen_has_focus        = {self.screen_has_focus}
+        active_monitors         = {active_monitors}
         ------------------------------------------------------------------------------
         """

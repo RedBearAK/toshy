@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = '20250220'
+__version__ = '20250301'
 ###############################################################################
 ############################   Welcome to Toshy!   ############################
 ###  
@@ -61,6 +61,17 @@ devices_api(
     ]
 )
 
+###########################################################
+# If you need to use something like the wordwise 'emacs' 
+# style shortcuts, and want them to be repeatable, use
+# the API call below to stop the keymapper from ignoring
+# "repeat" key events. This will use a bit more CPU while
+# holding any key down, especially while holding a key combo
+# that is getting remapped onto something else in the config.
+###########################################################
+# ignore_repeating_keys(False)
+
+
 ###  SLICE_MARK_END: keymapper_api  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 ###################################################################################################
 
@@ -93,9 +104,9 @@ APP_VERSION     = __version__
 
 # Settings object used to tweak preferences "live" between gui, tray and config.
 cnfg = Settings(current_folder_path)
-cnfg.watch_database()       # activate watchdog observer on the sqlite3 db file
-cnfg.watch_synergy_log()    # activate watchdog observer on the Synergy log file
-debug("")
+cnfg.watch_database()           # activate watchdog observer on the sqlite3 db file
+cnfg.watch_shared_devices()     # Look for network KVM apps and watch logs (on server only)
+# debug("")
 debug(cnfg, ctx="CG")
 
 
@@ -158,7 +169,7 @@ DESKTOP_ENV     = locals().get('OVERRIDE_DESKTOP_ENV')  or env_ctxt.get('DESKTOP
 DE_MAJ_VER      = locals().get('OVERRIDE_DE_MAJ_VER')   or env_ctxt.get('DE_MAJ_VER',   'keymissing')
 WINDOW_MGR      = locals().get('OVERRIDE_WINDOW_MGR')   or env_ctxt.get('WINDOW_MGR',   'keymissing')
 
-debug("")
+# debug("")
 debug(  f'Toshy (barebones) config sees this environment:'
         f'\n\t{DISTRO_ID        = }'
         f'\n\t{DISTRO_VER       = }'
@@ -166,7 +177,7 @@ debug(  f'Toshy (barebones) config sees this environment:'
         f'\n\t{SESSION_TYPE     = }'
         f'\n\t{DESKTOP_ENV      = }'
         f'\n\t{DE_MAJ_VER       = }'
-        f'\n\t{WINDOW_MGR       = }\n', ctx="CG")
+        f'\n\t{WINDOW_MGR       = }', ctx="CG")
 
 
 # NOTE: List kind of stabilized, so moved all into keymapper wlroots window context method
@@ -655,7 +666,8 @@ def matchProps(*,
     # but only after the guard clauses have had a chance to evaluate on
     # all possible uses of the function that may exist in the config.
     if MAX_MATCHPROPS_ITERATIONS_REACHED and not cnfg.screen_has_focus:
-        return False
+        # return False    # Returning a boolean here causes as exception. Must return a callable!
+        return lambda _: False
 
     if total_matchProps_iterations >= MAX_MATCHPROPS_ITERATIONS:
         MAX_MATCHPROPS_ITERATIONS_REACHED = True

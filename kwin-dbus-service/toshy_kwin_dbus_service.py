@@ -63,6 +63,10 @@ else:
     error(f'This is only meant to run on Linux. Exiting...')
     sys.exit(1)
 
+# Set the process name now that we know we are on Linux
+with open('/proc/self/comm', 'w') as f:
+    f.write('toshy-kwin-dbus')
+
 
 sep_reps        = 80
 sep_char        = '='
@@ -112,7 +116,7 @@ else:
 
 
 # debug("")
-# debug(  f'Toshy KWIN D-Bus service script sees this environment:'
+# debug(  f'Toshy KWin D-Bus service script sees this environment:'
 #         f'\n\t{DISTRO_ID        = }'
 #         f'\n\t{DISTRO_VER       = }'
 #         f'\n\t{VARIANT_ID       = }'

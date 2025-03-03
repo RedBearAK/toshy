@@ -35,7 +35,7 @@ nohup "${HOME}/.local/bin/toshy-wlroots-dbus-service" >/dev/null 2>&1 &
 
 
 # pause to let D-Bus service(s) start up
-sleep 2
+sleep 1
 
 # shellcheck disable=SC1091
 source "$HOME/.config/toshy/.venv/bin/activate"

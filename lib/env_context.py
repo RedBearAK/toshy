@@ -740,7 +740,7 @@ if __name__ == "__main__":
     env_info_getter = EnvironmentInfo()
     _env_info = env_info_getter.get_env_info()
     print('')
-    debug(  f'Toshy env_info module sees this environment:'
+    debug(  f'Toshy env_context module sees this environment:'
             f'\n\t\t DISTRO_ID       = \'{_env_info["DISTRO_ID"]}\''
             f'\n\t\t DISTRO_VER      = \'{_env_info["DISTRO_VER"]}\''
             f'\n\t\t VARIANT_ID      = \'{_env_info["VARIANT_ID"]}\''

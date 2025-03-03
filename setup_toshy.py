@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20250220'                        # CLI option "--version" will print this out.
+__version__ = '20250301'                        # CLI option "--version" will print this out.
 
 import os
 os.environ['PYTHONDONTWRITEBYTECODE'] = '1'     # prevent this script from creating cache files
@@ -106,6 +106,10 @@ app_dirs = get_linux_app_dirs(app_name)
 
 
 home_dir                = os.path.expanduser('~')
+
+# This was being defined several times in different functions, for some reason. Moved to global.
+autostart_dir_path      = os.path.join(home_dir, '.config', 'autostart')
+
 trash_dir               = os.path.join(home_dir, '.local', 'share', 'Trash')
 this_file_path          = os.path.realpath(__file__)
 this_file_dir           = os.path.dirname(this_file_path)
@@ -315,8 +319,7 @@ def show_reboot_prompt():
 
 
 def get_environment_info():
-    """Get back the distro name (ID), distro version, session type and desktop 
-        environment from the environment evaluation module"""
+    """Get the necessary info from the environment evaluation module"""
     print(f'\n§  Getting environment information...\n{cnfg.separator}')
 
     known_init_systems = {
@@ -1102,37 +1105,52 @@ remove_pkgs_map = {
 
 pip_pkgs   = [
 
-    # Pinned pygobject to 3.44.1 (or earlier) to get through install on RHEL 8.x and clones
-    "lockfile", "dbus-python", "systemd-python", "pygobject<=3.44.1", "tk",
-    "sv_ttk", "watchdog", "psutil", 
-    
-    # NOTE: Version 1.5 of 'xkbcommon' introduced breaking API changes:
-    # XKB_CONTEXT_NO_SECURE_GETENV
+    ############################################################################################
+    # First section are packages needed directly by one or more Toshy components.
+
+    "dbus-python",              # Python bindings for D-Bus IPC comms with desktop environments
+    "lockfile",                 # Makes it easier to keep multiple apps/icons from appearing
+    "psutil",                   # For checking running processes (window manager, KVM apps, ect.)
+
+    # NOTE: Pygobject is pinned to 3.44.1 (or earlier) to get through install on RHEL 8.x and clones
+    "pygobject<=3.44.1",        # Python bindings for GObject/GTK (for tray icon and notifications)
+
+    # NOTE: This was too much of a sledgehammer, changing both "program" and "command" strings
+    # "setproctitle",             # Allows changing how the process looks in "top" apps
+
+    "sv_ttk",                   # Modern-ish dark/light theme for tkinter GUI preferences app
+    "systemd-python",           # Provides bindings to interact with systemd services and journal
+    "tk",                       # For GUI preferences app
+    "watchdog",                 # For setting observers on log files, preferences db file, etc.
+
+    # NOTE: Version 1.5 of 'xkbcommon' introduced breaking API changes: XKB_CONTEXT_NO_SECURE_GETENV
     # https://github.com/sde1000/python-xkbcommon/issues/23
     # Need to pin version to less than v1.1 to avoid errors installing 'xkbcommon' on older distros.
     # TODO: Revisit this pinning in... 2028.
-    "xkbcommon<1.1",
+    "xkbcommon<1.1",            # Python binding for libxkbcommon (keyboard mapping library)
 
     # NOTE: WE CANNOT USE `xkbregistry` DUE TO CONFUSION AMONG SUPPORTING NATIVE PACKAGES
     # "xkbregistry",
 
+    ############################################################################################
     # Everything below here is just to make the keymapper (xwaykeyz) install smoother.
 
-    "hyprpy", "i3ipc", 
-
-    # NOTE: Need to install 'pywayland' from a GitHub PR (#64) for now, to handle NewId error
-    # "pywayland", 
-    # "git+https://github.com/heuer/pywayland@issue_33_newid",
-    # "git+https://github.com/flacjacket/pywayland@db8fb1c3a29761a014cfbb57f84025ddf3882c3c",
-    # NOTE: PR #64 on pywayland GitHub was merged, so we should be able to install from main
-    "pywayland",
+    "appdirs",                  # Get appropriate platform-specific directories for app data/config
+    "evdev",                    # Interface with Linux input system for keyboard/mouse event handling
+    "hyprpy",                   # Python binding for Hyprland Wayland compositor
+    "i3ipc",                    # Interface with i3/sway window managers via their IPC protocol
+    "inotify-simple",           # Monitor filesystem events
+    "ordered-set",              # Set implementation that preserves insertion order (for key combos)
 
     # TODO: Check on 'python-xlib' project by mid-2025 to see if this bug is fixed:
     #   [AttributeError: 'BadRRModeError' object has no attribute 'sequence_number']
     # If the bug is fixed, remove pinning to v0.31 here.
     # But it does not appear that the bug is ever likely to be fixed.
+    "python-xlib==0.31",        # Python interface to X11 library for X11 session support
 
-    "inotify-simple", "evdev", "appdirs", "ordered-set", "python-xlib==0.31", "six"
+    "pywayland",                # Python bindings for Wayland display protocol
+    "six"                       # Python 2/3 compatibility library (dependency for other packages)
+
 ]
 
 
@@ -1727,6 +1745,9 @@ class PackageInstallDispatcher:
     @staticmethod
     def install_on_apt_distro():
         """utility function that gets dispatched for distros that use APT package manager"""
+        # Hasn't been working on several Debian/Ubuntu distros with broken dependencies.
+        # So far: Deepin 25 beta, Linux Lite 7.2, Ubuntu Kylin 23.10, Zorin OS 16.x
+        # There is no safe way to overcome the issue automatically. Repos are broken.
         cmd_lst = ['sudo', 'apt', 'install', '-y']
         native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
@@ -3070,7 +3091,7 @@ def setup_kwin_dbus_script():
 
 def ensure_XDG_autostart_dir_exists():
     """Utility function to make sure XDG autostart directory exists"""
-    autostart_dir_path      = os.path.join(home_dir, '.config', 'autostart')
+    # autostart_dir_path      = os.path.join(home_dir, '.config', 'autostart')
     if not os.path.isdir(autostart_dir_path):
         try:
             os.makedirs(autostart_dir_path, exist_ok=True)
@@ -3082,12 +3103,12 @@ def ensure_XDG_autostart_dir_exists():
 def setup_kwin_dbus_service():
     """Install the D-Bus service initialization script to receive window focus
     change notifications from the KWin script in 'kwin_wayland' environments"""
-    print(f'\n\n§  Setting up the Toshy KWIN D-Bus service...\n{cnfg.separator}')
+    print(f'\n\n§  Setting up the Toshy KWin D-Bus service...\n{cnfg.separator}')
 
     # need to autostart "$HOME/.local/bin/toshy-kwin-dbus-service"
-    autostart_dir_path      = os.path.join(home_dir, '.config', 'autostart')
+    # autostart_dir_path      = os.path.join(home_dir, '.config', 'autostart')
     toshy_dt_files_path     = os.path.join(cnfg.toshy_dir_path, 'desktop')
-    dbus_svc_desktop_file   = os.path.join(toshy_dt_files_path, 'Toshy_KWIN_DBus_Service.desktop')
+    dbus_svc_desktop_file   = os.path.join(toshy_dt_files_path, 'Toshy_KWin_DBus_Service.desktop')
     start_dbus_svc_cmd      = os.path.join(home_dir, '.local', 'bin', 'toshy-kwin-dbus-service')
     replace_home_in_file(dbus_svc_desktop_file)
 
@@ -3115,7 +3136,7 @@ def setup_kwin_dbus_service():
     ensure_XDG_autostart_dir_exists()
 
     # try to delete old desktop entry file that would have been installed by older setup script
-    autostart_dbus_dt_file = os.path.join(autostart_dir_path, 'Toshy_KWIN_DBus_Service.desktop')
+    autostart_dbus_dt_file = os.path.join(autostart_dir_path, 'Toshy_KWin_DBus_Service.desktop')
     if os.path.isfile(autostart_dbus_dt_file):
         try:
             os.unlink(autostart_dbus_dt_file)
@@ -3123,7 +3144,7 @@ def setup_kwin_dbus_service():
         except subprocess.CalledProcessError as proc_err:
             debug(f'Problem removing old D-Bus service desktop entry autostart:\n\t{proc_err}')
 
-    print(f'Toshy KWIN D-Bus service should automatically start when needed.')
+    print(f'Toshy KWin D-Bus service should automatically start when needed.')
     show_task_completed_msg()
 
 
@@ -3148,7 +3169,7 @@ def autostart_systemd_kickstarter():
     svcs_kick_dt_file_name  = 'Toshy_Systemd_Service_Kickstart.desktop'
     toshy_dt_files_path     = os.path.join(cnfg.toshy_dir_path, 'desktop')
     svcs_kick_dt_file       = os.path.join(toshy_dt_files_path, svcs_kick_dt_file_name)
-    autostart_dir_path      = os.path.join(home_dir, '.config', 'autostart')
+    # autostart_dir_path      = os.path.join(home_dir, '.config', 'autostart')
     dest_link_file          = os.path.join(autostart_dir_path, svcs_kick_dt_file_name)
 
     cmd_lst                 = ['ln', '-sf', svcs_kick_dt_file, dest_link_file]
@@ -3643,20 +3664,20 @@ def uninstall_toshy():
             cmd_lst = ['pkill', '-u', cnfg.user_name, '-f', 'toshy_kwin_dbus_service']
             subprocess.run(cmd_lst, check=True)
         except subprocess.CalledProcessError as proc_err:
-            error(f'Problem terminating Toshy KWIN D-Bus service script:\n\t{proc_err}')
+            error(f'Problem terminating Toshy KWin D-Bus service script:\n\t{proc_err}')
 
     # try to remove the KDE D-Bus service autostart file
-    autostart_dir_path  = os.path.join(home_dir, '.config', 'autostart')
-    dbus_svc_dt_file    = os.path.join(autostart_dir_path, 'Toshy_KWIN_DBus_Service.desktop')
+    # autostart_dir_path  = os.path.join(home_dir, '.config', 'autostart')
+    dbus_svc_dt_file    = os.path.join(autostart_dir_path, 'Toshy_KWin_DBus_Service.desktop')
     dbus_svc_rm_cmd     = ['rm', '-f', dbus_svc_dt_file]
     try:
         # do not pass as list (brackets) since it is already a list
         subprocess.run(dbus_svc_rm_cmd, check=True)
     except subprocess.CalledProcessError as proc_err:
-        error(f'Problem removing Toshy KWIN D-Bus service autostart:\n\t{proc_err}')
+        error(f'Problem removing Toshy KWin D-Bus service autostart:\n\t{proc_err}')
 
     # try to remove the systemd services kickstart autostart file
-    autostart_dir_path  = os.path.join(home_dir, '.config', 'autostart')
+    # autostart_dir_path  = os.path.join(home_dir, '.config', 'autostart')
     svcs_kick_dt_file   = os.path.join(autostart_dir_path, 'Toshy_Systemd_Service_Kickstart.desktop')
     svcs_kick_rm_cmd    = ['rm', '-f', svcs_kick_dt_file]
     try:

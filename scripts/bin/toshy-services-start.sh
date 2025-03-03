@@ -48,14 +48,14 @@ fi
 echo -e "\nStarting Toshy systemd services..."
 
 systemctl --user start toshy-cosmic-dbus.service
-sleep 0.5
+sleep 0.1
 systemctl --user start toshy-kwin-dbus.service
-sleep 0.5
+sleep 0.1
 systemctl --user start toshy-wlroots-dbus.service
-sleep 0.5
+sleep 0.1
 systemctl --user start toshy-config.service
-sleep 0.5
+sleep 0.1
 systemctl --user start toshy-session-monitor.service
 
 echo -e "\nToshy systemd services started.\n\nRemember to tap a modifier key before trying shortcuts!\n"
-sleep 1
+sleep 0.1

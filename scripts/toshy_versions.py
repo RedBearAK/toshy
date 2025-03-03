@@ -7,6 +7,7 @@
 
 import os
 import sys
+from xwaykeyz.version import __version__ as xwaykeyz_ver
 
 home_dir                = os.path.expanduser('~')
 toshy_dir_path          = os.path.join(home_dir, '.config', 'toshy')
@@ -38,6 +39,7 @@ sys.path.insert(0, lib_dir_path)
 # ~/.config/toshy/lib/env_context.py
 # ~/.config/toshy/lib/machine_context.py
 # ~/.config/toshy/lib/notification_manager.py
+# ~/.config/toshy/lib/shared_device_context.py
 # ~/.config/toshy/lib/settings_class.py
 
 # ~/.config/toshy/cosmic-dbus-service/toshy_cosmic_dbus_service.py
@@ -54,6 +56,7 @@ file_paths = [
     os.path.join(lib_dir_path, 'env_context.py'),
     os.path.join(lib_dir_path, 'machine_context.py'),
     os.path.join(lib_dir_path, 'notification_manager.py'),
+    os.path.join(lib_dir_path, 'shared_device_context.py'),
     os.path.join(lib_dir_path, 'settings_class.py'),
     None,
     os.path.join(toshy_dir_path, 'cosmic-dbus-service', 'toshy_cosmic_dbus_service.py'),
@@ -87,6 +90,10 @@ max_file_name_length = max(len(os.path.basename(path)) for path in file_paths if
 
 # Print header
 print()             # Blank line to start output
+
+# Print the keymapper info
+print(f"Keymapper version:  xwaykeyz {xwaykeyz_ver}")
+print()             # Separation from Toshy files version output
 print(f"{'File Name'.ljust(max_file_name_length + 4)}Version")
 print('-' * (max_file_name_length + 14))
 

@@ -23,8 +23,8 @@ fi
 title="Toshy"
 icon_file="${HOME}/.local/share/icons/toshy_app_icon_rainbow.svg"
 icon_name="toshy_app_icon_rainbow"
-time1_s=2
-time2_s=3
+time1_s=3
+time2_s=4
 message="Kickstarting Toshy window context."
 
 

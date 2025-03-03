@@ -38,4 +38,4 @@ fi
 source "${VENV_PATH}/bin/activate"
 
 # start the script that will create the D-Bus object/interface
-"${VENV_PATH}/bin/python" "${TOSHY_COSMIC}/${FILE_NAME}.py"
+exec "${VENV_PATH}/bin/python" "${TOSHY_COSMIC}/${FILE_NAME}.py"

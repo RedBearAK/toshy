@@ -93,12 +93,16 @@ else:
     error(f'This is only meant to run on Linux. Exiting...')
     sys.exit(1)
 
+# Set the process name now that we know we are on Linux
+with open('/proc/self/comm', 'w') as f:
+    f.write('toshy-wlr-dbus')
+
 
 sep_reps        = 80
 sep_char        = '='
 separator       = sep_char * sep_reps
 
-LOG_PFX = 'TOSHY_WLROOTS_DBUS_SVC'
+LOG_PFX = 'TOSHY_WLR_DBUS_SVC'
 
 DISTRO_ID       = None
 DISTRO_VER      = None
@@ -169,11 +173,11 @@ def countdown_callback():
 def check_interface_availability():
     global interface_is_available
     if not wl_client.toplevel_manager:  # Check if the interface is still available
-        debug(f"{LOG_PFX}: The Wayland interface is no longer available. Exiting.")
+        debug(f"{LOG_PFX}: The Wayland interface is not available. Exiting.")
         interface_is_available = False
         clean_shutdown()  # Perform cleanup and shutdown
     if not wl_client.check_connection():  # Check if the connection to the Wayland server is still available
-        debug("Wayland interface is no longer available. Wlroots going dormant.")
+        debug("Wayland interface is not available. Wlroots going dormant.")
         interface_is_available = False
         clean_shutdown()  # Perform cleanup and shutdown
     return interface_is_available  # Continue calling this function if the interface is available
