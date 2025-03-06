@@ -8,7 +8,7 @@ __version__ = '20250301'
 ###      (https://kinto.sh)
 ###  
 ###  All credit for the basis of this config goes to Ben Reaves. 
-###      (https://github.com/rbreaves/)
+###      (https://github.com/rbreaves/kinto/)
 ###  
 ###  Much assistance was provided by Josh Goebel, the developer of the
 ###  `xkeysnail` fork `keyszer`, which is now forked into `xwaykeyz` to
