@@ -29,11 +29,13 @@ I don't really know many other places where it might be considered appropriate t
 
 # Current status: Stable Beta (Please Read)
 
-**2025-01-18 UPDATE**: Fixed some issues in the `wlroots` window context method, and verified the bulk of the available LXQt Wayland session options seem to work. That includes labwc, sway, Hyprland, niri, Wayfire, and river (tested on Tumbleweed). The kwin_wayland session option is still untested (unavailable on Tumbleweed for now).
+**2025-03-02 UPDATE**: The solution for working with Synergy as a server/host system was expanded to support Deskflow, Input Leap and Barrier. (Requires working log file for the KVM switch app in all cases.) Client systems are ignored because input cannot be detected by the keymapper.
 
-**2024-11-28 UPDATE**: Added support for Pantheon's Wayland session (elementary OS desktop environment).
+**2025-01-18 UPDATE**: Fixed some issues in the `wlroots` window context method, and verified the bulk of the available LXQt Wayland session options seem to work. That includes `labwc`, `sway`, `Hyprland`, `niri`, `wayfire`, and `river` (tested on Tumbleweed). The `kwin_wayland` session option is still untested (unavailable on Tumbleweed for now).
 
-**2024-10-03 UPDATE**: Fixed the broken COSMIC desktop environment support to work with COSMIC Alpha 2 or later (unless they change the relevant Wayland protocol again).
+**2024-11-28 UPDATE**: Added support for Pantheon's Wayland session in elementary OS 8.
+
+**2024-10-03 UPDATE**: Fixed the broken COSMIC desktop environment support to work with COSMIC alpha 2 or later (unless they change the relevant Wayland protocol again).
 
 **2024-07-28 UPDATE**: Some basic `wlroots` based Wayland compositor support has been added. See the [Wiki article](https://github.com/RedBearAK/toshy/wiki/Wlroots-Based-Wayland-Compositors).
 
