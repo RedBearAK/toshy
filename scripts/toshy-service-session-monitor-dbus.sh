@@ -117,14 +117,15 @@ LAST_STATE=""
 while true; do
     # Get session count and handle complete logout
     SESSION_COUNT=$(get_session_count)
-    
+
     [[ $DEBUG == 1 ]] && {
         echo "(DD) Session count check:
     USER:          '$USER'
     SESSION_COUNT: '$SESSION_COUNT'"
     }
-    
-    if [[ "$SESSION_COUNT" -eq 0 ]]; then
+
+    # if [[ "$SESSION_COUNT" -eq 0 ]]; then
+    if [[ "$SESSION_COUNT" == "0" ]]; then          # Use string comparison to prevent syntax error
         echo "SESSMON_SVC: No sessions found, stopping all services"
         [[ $DEBUG == 1 ]] && echo "(DD) Stopping all services"
         # Stop all services (session monitor last) if no sessions exist
@@ -138,7 +139,7 @@ while true; do
     # Get current session ID
     SESSION_ID="$(get_session_id)"
     [[ $DEBUG == 1 ]] && echo "(DD) Got session ID: '$SESSION_ID'"
-    
+
     if [[ -z "$SESSION_ID" ]]; then
         echo "SESSMON_SVC: No session ID found, waiting..."
         sleep 5
@@ -259,7 +260,8 @@ while true; do
                     SESSION_COUNT=$(get_session_count)
                     [[ $DEBUG == 1 ]] && echo "(DD) Checking session count during inactive state: $SESSION_COUNT"
 
-                    if [[ "$SESSION_COUNT" -eq 0 ]]; then
+                    # if [[ "$SESSION_COUNT" -eq 0 ]]; then
+                    if [[ "$SESSION_COUNT" == "0" ]]; then          # Use string comparison to prevent syntax error
                         echo "SESSMON_SVC: No sessions found, stopping session monitor"
                         systemctl --user stop toshy-session-monitor.service
                         break

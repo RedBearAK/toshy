@@ -83,8 +83,8 @@ while true; do
 
     # Get session count and handle complete logout
     SESSION_COUNT=$(loginctl list-sessions -p UserName 2>/dev/null | grep -c "${USER}" || echo "0")
-    
-    if [[ "$SESSION_COUNT" -eq 0 ]]; then
+
+    if [[ "$SESSION_COUNT" == "0" ]]; then          # Use string comparison to prevent syntax error
         systemctl --user stop toshy-config.service
         systemctl --user stop toshy-kwin-dbus.service
         systemctl --user stop toshy-cosmic-dbus.service
