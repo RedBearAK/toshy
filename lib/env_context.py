@@ -417,6 +417,7 @@ class EnvironmentInfo:
             'Cutefish':                 'cutefish',
             'DDE':                      'dde',
             'Deepin':                   'deepin',
+            'default':                  'trinity',      # strange thing encountered on Q4OS
             'Enlightenment':            'enlightenment',
             'GNOME':                    'gnome',
             'Hyprland':                 'hyprland',
