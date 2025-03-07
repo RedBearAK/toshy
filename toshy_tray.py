@@ -971,7 +971,7 @@ def main():
         cmd_lst = [
             "systemctl", "--user", "import-environment",
             "KDE_SESSION_VERSION",
-            "PATH",
+            # "PATH",               # Might be causing problem with venv injection in PATH everywhere
             "XDG_SESSION_TYPE",
             "XDG_SESSION_DESKTOP",
             "XDG_CURRENT_DESKTOP",
