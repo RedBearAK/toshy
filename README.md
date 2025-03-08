@@ -420,16 +420,18 @@ You will find these distro groupings in the Wiki article:
 
 - [Arch (... BTW) and variants](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#arch-arch-based-and-related-distros)
 
-
 - [Independent distros](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros#independent-distros)
 
 ◊  
 
 ## Currently working desktop environments or window managers
 
+> [!NOTE]  
+> What is meant in this section by a DE or WM "working" with Toshy is specifically that the keymapper Toshy uses has a method available, when operating in the listed X11/Xorg or Wayland environments, to acquire knowledge about the **_actively focused_** window's application class (e.g., `WM_CLASS` or `app_id` equivalent) and window name/title (e.g., `WM_NAME` or `title` equivalent). This information is **_essential_** to correctly apply app-specific modifier remaps and app-specific shortcut combo remaps. The keymapper may run without this context info, but the results will be very limited and [disappointing](https://github.com/RedBearAK/toshy/wiki/FAQ-(Frequently-Asked-Questions)#how-do-i-know-toshy-is-working-correctly--or-it-sort-of-works-but-sort-of-doesnt-whats-going-on).  
+
 - ### X11/Xorg sessions
 
-    - Any desktop environment should work
+    - Any desktop environment or window manager should work _[via `Xlib`]_
 
 - ### Wayland sessions
 
