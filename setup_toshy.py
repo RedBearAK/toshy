@@ -1697,14 +1697,36 @@ class PackageInstallDispatcher:
             cmd_lst = ['sudo', 'dnf', 'install', '-y']
             native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
+        is_CentOS_7         = cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '7'
+        is_CentOS_Stream_8  = cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '8'
+
+        is_RHEL_8_or_9      = (cnfg.DISTRO_ID in distro_groups_map['rhel-based']
+                                and cnfg.distro_mjr_ver in ['8', '9'])
+        is_RHEL_10          = (cnfg.DISTRO_ID in distro_groups_map['rhel-based']
+                                and cnfg.distro_mjr_ver in ['10'])
+
         def install_on_rhel_based():
-            if cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '7':
+
+            # Native package install command can immediately proceed after prepping CentOS 7, so
+            # this block that was all "if" layers has been changed to if/elif/elif logic. The
+            # handling of CentOS Stream 8 was logically embedded in the RHEL 8/9 elif branch.
+            # Changed because order-sensitive "if" layers could be broken by re-ordering. 
+
+            if   is_CentOS_7:
+                # Do prep steps specific to CentOS 7, then proceed to native install command
                 DistroQuirksHandler.handle_quirks_CentOS_7()
-            if cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '8':
-                DistroQuirksHandler.handle_quirks_CentOS_Stream_8()
-            if cnfg.distro_mjr_ver in ['8', '9']:
+
+            elif is_RHEL_8_or_9:
+
+                if is_CentOS_Stream_8:
+                    # Special prep steps must happen on CentOS Stream 8 before general RHEL 8 prep
+                    DistroQuirksHandler.handle_quirks_CentOS_Stream_8()
+
+                # Do prep steps for general RHEL 8/9 type distros (CentOS, AlmaLinux, Rocky, etc.)
                 DistroQuirksHandler.handle_quirks_RHEL_8_and_9()
-            if cnfg.distro_mjr_ver in ['10']:
+
+            elif is_RHEL_10:
+                # Do prep steps for general RHEL 10 type distros (CentOS, AlmaLinux, Rocky, etc.)
                 DistroQuirksHandler.handle_quirks_RHEL_10()
 
             # Package version repo conflict issues on CentOS 10 made installing difficult
@@ -1712,6 +1734,7 @@ class PackageInstallDispatcher:
                 cmd_lst = ['sudo', 'dnf', 'install', '-y', '--nobest']
             else:
                 cmd_lst = ['sudo', 'dnf', 'install', '-y']
+
             native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
         def install_on_fedora_based():
@@ -1720,7 +1743,7 @@ class PackageInstallDispatcher:
             native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
         # Dispatch installation sub-function based on DNF distro type
-        if cnfg.DISTRO_ID in distro_groups_map['mandriva-based']:
+        if   cnfg.DISTRO_ID in distro_groups_map['mandriva-based']:
             install_on_mandriva_based()
         elif cnfg.DISTRO_ID in distro_groups_map['rhel-based']:
             install_on_rhel_based()
