@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = '20250306'
+__version__ = '20250309'
 ###############################################################################
 ############################   Welcome to Toshy!   ############################
 ###  
@@ -4429,7 +4429,8 @@ if DESKTOP_ENV == 'xfce':
 keymap("General Terminals", {
 
     ### wordwise overrides of general GUI block
-    C("Alt-Backspace"):         C("Alt-Shift-Backspace"),       # Wordwise delete word left of cursor in terminals
+    C("Alt-Backspace"):         C("C-w"),                       # Wordwise delete word left of cursor in terminals
+    # C("Alt-Backspace"):         C("Alt-Shift-Backspace"),       # Wordwise delete word left of cursor in terminals
     C("Alt-Delete"):           [C("Esc"),C("d")],               # Wordwise delete word right of cursor in terminals
     C("RC-Backspace"):          C("C-u"),                       # Wordwise delete line left of cursor in terminals
     C("RC-Delete"):             C("C-k"),                       # Wordwise delete line right of cursor in terminals
