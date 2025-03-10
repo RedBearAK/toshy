@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20250307'                        # CLI option "--version" will print this out.
+__version__ = '20250308'                        # CLI option "--version" will print this out.
 
 import os
 os.environ['PYTHONDONTWRITEBYTECODE'] = '1'     # prevent this script from creating cache files
@@ -1452,7 +1452,14 @@ class DistroQuirksHandler:
             pkgs_to_remove = ["python3-devel", "python3-pip", "python3-tkinter"]
             cnfg.pkgs_for_distro = [pkg for pkg in cnfg.pkgs_for_distro if pkg not in pkgs_to_remove]
 
-        if cnfg.DISTRO_ID != 'centos' and cnfg.distro_mjr_ver in ['8']:
+        is_CentOS               = cnfg.DISTRO_ID == 'centos'
+
+        is_RHEL_8               = (cnfg.DISTRO_ID in distro_groups_map['rhel-based']
+                                    and cnfg.distro_mjr_ver in ['8'])
+        is_RHEL_9               = (cnfg.DISTRO_ID in distro_groups_map['rhel-based']
+                                    and cnfg.distro_mjr_ver in ['9'])
+
+        if is_RHEL_8 and not is_CentOS:
 
             # for libappindicator-gtk3: sudo dnf install -y epel-release
             if not is_dnf_repo_enabled("epel"):
@@ -1489,7 +1496,7 @@ class DistroQuirksHandler:
             # Get a much newer Python version than the default 3.6 currently on RHEL 8 and clones
             get_newest_python_version()
 
-        if cnfg.distro_mjr_ver in ['9']:
+        elif is_RHEL_9:
 
             print("Enabling CRB (CodeReady Builder) repo...")
             if not is_dnf_repo_enabled('crb'):
@@ -3873,13 +3880,13 @@ def handle_cli_arguments():
         parser.print_help()
         safe_shutdown(0)
 
-    if args.command == 'prep-only':
+    elif args.command == 'prep-only':
         cnfg.prep_only = True
 
         main(cnfg)
         safe_shutdown(0)    # redundant, but that's OK
 
-    if args.command == 'install':
+    elif args.command == 'install':
         if args.override_distro:
             cnfg.override_distro = args.override_distro
 
@@ -3903,7 +3910,7 @@ def handle_cli_arguments():
         main(cnfg)
         safe_shutdown(0)    # redundant, but that's OK
 
-    if args.command == 'list-distros':
+    elif args.command == 'list-distros':
         print(
             f'Index of distro IDs known to the Toshy installer:\n'
             f'\n(These can be tried with the "--override-distro" flag on unknown variants.)\n'
@@ -3914,11 +3921,11 @@ def handle_cli_arguments():
         )
         safe_shutdown(0)
 
-    if args.command == 'show-env':
+    elif args.command == 'show-env':
         get_environment_info()
         safe_shutdown(0)
 
-    if args.command == 'apply-tweaks':
+    elif args.command == 'apply-tweaks':
         if args.fancy_pants:
             cnfg.fancy_pants = True
         get_environment_info()
@@ -3934,18 +3941,18 @@ def handle_cli_arguments():
             print()
         safe_shutdown(0)
 
-    if args.command == 'remove-tweaks':
+    elif args.command == 'remove-tweaks':
         get_environment_info()
         remove_desktop_tweaks()
         safe_shutdown(0)
 
-    if args.command == 'install-font':
+    elif args.command == 'install-font':
         print(f'\n§  Installing coding/terminal font...\n{cnfg.separator}')
         install_coding_font()
         show_task_completed_msg()
         safe_shutdown(0)
 
-    if args.command == 'uninstall':
+    elif args.command == 'uninstall':
         uninstall_toshy()
         safe_shutdown(0)
 
