@@ -75,6 +75,7 @@ DOWNLOAD_DIR="$HOME/Downloads"
 
 # Get branch selection
 echo_unbuffered
+echo_unbuffered
 echo_unbuffered "Starting Toshy branch selection..."
 BRANCH=$(get_branch)
 
