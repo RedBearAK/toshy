@@ -232,6 +232,7 @@ done
 echo_unbuffered
 
 # Run the setup script with collected arguments
+# shellcheck disable=SC2086
 if ! ./setup_toshy.py $INSTALL_ARGS; then
     echo_unbuffered "Setup script execution failed."
     exit 1
