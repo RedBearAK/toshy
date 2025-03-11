@@ -124,7 +124,8 @@ fi
 ADD_OPTIONS=$(echo "$ADD_OPTIONS" | tr '[:upper:]' '[:lower:]')
 
 INSTALL_ARGS="install"
-if [[ "$ADD_OPTIONS" == "y" || "$ADD_OPTIONS" == "yes" ]]; then
+
+show_install_options() {
     echo_unbuffered
     echo_unbuffered "Available install options:"
     echo_unbuffered "  --override-distro=DISTRO  Override auto-detection of distro"
@@ -134,6 +135,10 @@ if [[ "$ADD_OPTIONS" == "y" || "$ADD_OPTIONS" == "yes" ]]; then
     echo_unbuffered "  --dev-keymapper[=BRANCH]  Install the development branch of the keymapper"
     echo_unbuffered "  --fancy-pants             See README for more info on this option"
     echo_unbuffered
+}
+
+if [[ "$ADD_OPTIONS" == "y" || "$ADD_OPTIONS" == "yes" ]]; then
+    show_install_options
     sleep 0.1
     
     if [ -t 0 ]; then
@@ -172,18 +177,58 @@ echo_unbuffered "  ./setup_toshy.py --help           (to see all available comma
 echo_unbuffered "==================================================================="
 echo_unbuffered
 
-# Countdown with option to proceed automatically
-echo_unbuffered "The installation will begin in 10 seconds..."
-echo_unbuffered "Press Ctrl+C now to stop and run the setup command manually"
+# Display command and confirmation prompt
+echo_unbuffered "Ready to execute:"
+echo_unbuffered "  ./setup_toshy.py $INSTALL_ARGS"
+echo_unbuffered
+echo_unbuffered "Options:"
+echo_unbuffered "  Y - Continue with installation (default)"
+echo_unbuffered "  e - Edit installation options"
+echo_unbuffered "  q - Quit without installing"
 echo_unbuffered
 
-# Countdown timer
-for i in {10..1}; do
-    echo -ne "\rStarting installation in $i seconds... " >&2
-    sleep 1
+# Simple confirmation prompt
+while true; do
+    if [ -t 0 ]; then
+        read -r -p "Continue? [Y/e/q]: " confirm
+    else
+        read -r -p "Continue? [Y/e/q]: " confirm </dev/tty
+    fi
+    
+    # Convert to lowercase
+    confirm=$(echo "$confirm" | tr '[:upper:]' '[:lower:]')
+    
+    # Default to yes if empty
+    if [ -z "$confirm" ] || [ "$confirm" = "y" ]; then
+        echo_unbuffered "Executing installation now..."
+        break
+    elif [ "$confirm" = "e" ]; then
+        show_install_options
+        
+        # Clear previous options and get new ones
+        if [ -t 0 ]; then
+            read -r -p "Enter options (separated by spaces): " USER_OPTIONS
+        else
+            read -r -p "Enter options (separated by spaces): " USER_OPTIONS </dev/tty
+        fi
+        
+        INSTALL_ARGS="install $USER_OPTIONS"
+        echo_unbuffered
+        echo_unbuffered "Updated command:"
+        echo_unbuffered "  ./setup_toshy.py $INSTALL_ARGS"
+        echo_unbuffered
+    elif [ "$confirm" = "q" ]; then
+        echo_unbuffered "Installation cancelled."
+        echo_unbuffered
+        echo_unbuffered "To navigate to the Toshy directory and run the setup manually, use:"
+        echo_unbuffered "  cd \"$TOSHY_DIR\""
+        echo_unbuffered
+        exit 0
+    else
+        echo_unbuffered "Invalid option. Please enter Y, e, or q."
+    fi
 done
 
-echo -e "\rExecuting installation now...      " >&2
 echo_unbuffered
 
 # Run the setup script with collected arguments
