@@ -63,6 +63,7 @@ get_branch() {
             ;;
     esac
     
+    echo_unbuffered
     echo_unbuffered "Selected branch: $branch"
     echo_unbuffered
     echo "$branch"
@@ -73,6 +74,7 @@ FILE_NAME="toshy_$(date +%Y%m%d_%H%M)"
 DOWNLOAD_DIR="$HOME/Downloads"
 
 # Get branch selection
+echo_unbuffered
 echo_unbuffered "Starting Toshy branch selection..."
 BRANCH=$(get_branch)
 
@@ -88,13 +90,16 @@ cd "$DOWNLOAD_DIR"
 
 # Download the zip file using curl or wget
 echo_unbuffered "Downloading Toshy from GitHub..."
+echo_unbuffered
 if ! (curl -L "$URL" -o "$FILE_NAME.zip" || wget "$URL" -O "$FILE_NAME.zip"); then
     echo_unbuffered "Download failed. Please check your internet connection or verify the branch name exists."
     exit 1
 fi
 
 # Create directory and extract the zip file
+echo_unbuffered
 echo_unbuffered "Extracting files..."
+echo_unbuffered
 mkdir -p "$FILE_NAME"
 if ! unzip -o "$FILE_NAME.zip" -d "$FILE_NAME"; then
     echo_unbuffered "Extraction failed. Please make sure 'unzip' is installed."
