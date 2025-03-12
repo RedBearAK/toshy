@@ -328,7 +328,8 @@ def get_environment_info():
         'upstart':              'Upstart',
         'openrc':               'OpenRC',
         'runit':                'Runit',
-        'initng':               'Initng'
+        'dinit':                'Dinit',
+        'initng':               'Initng',
     }
 
     try:
@@ -908,6 +909,8 @@ distro_groups_map: Dict[str, List[str]] = {
 
     'void-based':               ["void"],
 
+    'chimera-based':            ["chimera"],
+
     # Attempted to add and test KaOS Linux. Result:
     # KaOS is NOT compatible with this project. 
     # No packages provide "evtest", "libappindicator", "zenity". 
@@ -1085,6 +1088,14 @@ pkg_groups_map: Dict[str, List[str]] = {
                                 "python3-pkgconfig", "python3-tkinter",
                             "wayland-devel", "wget",
                             "xset",
+                            "zenity"],
+
+    'chimera-based':       ["cairo-dev",
+                            "dbus-dev", 
+                            "clang", "git", "gobject-introspection-dev",
+                            "libayatana-appindicator-dev", "libnotify", "libxkbcommon-dev",
+                            "python3-dev", "py3-pip", "py3-dbus", "py3-tk",
+                            "evdev", "input-utils",
                             "zenity"],
 
 }
@@ -1647,6 +1658,8 @@ class PackageInstallDispatcher:
         if cnfg.DISTRO_ID in distro_groups_map['microos-based']:
             print('Distro is openSUSE MicroOS/Aeon/Kalpa immutable. Using "transactional-update".')
 
+            call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+
             # Filter out packages that are already installed
             filtered_pkg_lst = []
             for pkg in cnfg.pkgs_for_distro:
@@ -1677,6 +1690,8 @@ class PackageInstallDispatcher:
         """utility function that gets dispatched for distros that use RPM-OSTree"""
         if cnfg.DISTRO_ID in distro_groups_map['fedora-immutables']:
             print('Distro is Fedora-type immutable. Using "rpm-ostree" instead of DNF.')
+
+            call_attn_to_pwd_prompt_if_sudo_tkt_exp()
 
             # Filter out packages that are already installed
             filtered_pkg_lst = []
@@ -1767,6 +1782,8 @@ class PackageInstallDispatcher:
     @staticmethod
     def install_on_zypper_distro():
         """utility function that gets dispatched for distros that use Zypper package manager"""
+        native_pkg_installer.check_for_pkg_mgr_cmd('zypper')
+        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
         cmd_lst = ['sudo', 'zypper', '--non-interactive', 'install']
         native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
@@ -1776,6 +1793,9 @@ class PackageInstallDispatcher:
     @staticmethod
     def install_on_apt_distro():
         """utility function that gets dispatched for distros that use APT package manager"""
+        native_pkg_installer.check_for_pkg_mgr_cmd('apt')
+        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+
         # Hasn't been working on several Debian/Ubuntu distros with broken dependencies.
         # So far: Deepin 25 beta, Linux Lite 7.2, Ubuntu Kylin 23.10, Zorin OS 16.x
         # There is no safe way to overcome the issue automatically. Repos are broken.
@@ -1789,6 +1809,7 @@ class PackageInstallDispatcher:
     def install_on_pacman_distro():
         """utility function that gets dispatched for distros that use Pacman package manager"""
         native_pkg_installer.check_for_pkg_mgr_cmd('pacman')
+        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
 
         def is_pkg_installed_pacman(package):
             """utility function to help avoid 'reinstalling' existing packages on Arch"""
@@ -1812,6 +1833,9 @@ class PackageInstallDispatcher:
     @staticmethod
     def install_on_eopkg_distro():
         """utility function that gets dispatched for distros that use Eopkg package manager"""
+        native_pkg_installer.check_for_pkg_mgr_cmd('eopkg')
+        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+
         dev_cmd_lst = ['sudo', 'eopkg', 'install', '-y', '-c']
         dev_pkg_lst = ['system.devel']
         native_pkg_installer.install_pkg_list(dev_cmd_lst, dev_pkg_lst)
@@ -1824,7 +1848,31 @@ class PackageInstallDispatcher:
     @staticmethod
     def install_on_xbps_distro():
         """utility function that gets dispatched for distros that use xbps-install package manager"""
+        native_pkg_installer.check_for_pkg_mgr_cmd('xbps-install')
+        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+
         cmd_lst = ['sudo', 'xbps-install', '-Sy']
+        native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+
+    ###########################################################################
+    ###  APK DISTROS  #########################################################
+    ###########################################################################
+    @staticmethod
+    def install_on_apk_distro():
+        """utility function that gets dispatched for distros that use APK package manager"""
+        native_pkg_installer.check_for_pkg_mgr_cmd('apk')
+        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+
+        # # User is asked to update system before installing Toshy, so this is redundant:
+        # # First update the package index
+        # try:
+        #     subprocess.run(['sudo', 'apk', 'update'], check=True)
+        # except subprocess.CalledProcessError as proc_err:
+        #     error(f'ERROR: Problem updating package index:\n\t{proc_err}')
+        #     safe_shutdown(1)
+
+        # Install packages with --no-cache to avoid prompts about cache management
+        cmd_lst = ['sudo', 'apk', 'add', '--no-cache']
         native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
 
@@ -1833,14 +1881,15 @@ class PackageManagerGroups:
     
     def __init__(self):
         # Initialize package manager distro lists
-        self.apt_distros        = []    # 'apt': Debian/Ubuntu
-        self.dnf_distros        = []    # 'dnf': Fedora/RHEL/OpenMandriva
-        self.eopkg_distros      = []    # 'eopkg': Solus
-        self.pacman_distros     = []    # 'pacman': Arch, BTW
-        self.rpmostree_distros  = []    # 'rpm-ostree': Fedora atomic/immutables
-        self.transupd_distros   = []    # 'transactional-update': openSUSE MicroOS/Aeon/Kalpa
-        self.xbps_distros       = []    # 'xbps-install': Void
-        self.zypper_distros     = []    # 'zypper': openSUSE Tumbleweed/Leap
+        self.apk_distros        = []    # 'apk':                    Alpine/Chimera
+        self.apt_distros        = []    # 'apt':                    Debian/Ubuntu
+        self.dnf_distros        = []    # 'dnf':                    Fedora/RHEL/OpenMandriva
+        self.eopkg_distros      = []    # 'eopkg':                  Solus
+        self.pacman_distros     = []    # 'pacman':                 Arch (BTW)
+        self.rpmostree_distros  = []    # 'rpm-ostree':             Fedora atomic/immutables
+        self.transupd_distros   = []    # 'transactional-update':   openSUSE Aeon/Kalpa/MicroOS
+        self.xbps_distros       = []    # 'xbps-install':           Void
+        self.zypper_distros     = []    # 'zypper':                 openSUSE Tumbleweed/Leap
         # Initialize package manager dispatch map
         self.dispatch_map       = None
         # Build the lists and map
@@ -1851,23 +1900,34 @@ class PackageManagerGroups:
         """Populate package manager distro lists from distro_groups_map"""
 
         try:
+
+            # 'apk': Alpine/Chimera
+            self.apk_distros            += distro_groups_map['chimera-based']
+
             # 'apt': Debian/Ubuntu
             self.apt_distros            += distro_groups_map['ubuntu-based']
             self.apt_distros            += distro_groups_map['debian-based']
+
             # 'dnf': Fedora/RHEL/OpenMandriva
             self.dnf_distros            += distro_groups_map['fedora-based']
             self.dnf_distros            += distro_groups_map['rhel-based']
             self.dnf_distros            += distro_groups_map['mandriva-based']
+
             # 'eopkg': Solus
             self.eopkg_distros          += distro_groups_map['solus-based']
+
             # 'pacman': Arch, BTW
             self.pacman_distros         += distro_groups_map['arch-based']
+
             # 'rpm-ostree': Fedora atomic/immutables
             self.rpmostree_distros      += distro_groups_map['fedora-immutables']
+
             # 'transactional-update': openSUSE MicroOS/Aeon/Kalpa
             self.transupd_distros       += distro_groups_map['microos-based']
+
             # 'xbps-install': Void
             self.xbps_distros           += distro_groups_map['void-based']
+
             # 'zypper': openSUSE Tumbleweed/Leap
             self.zypper_distros         += distro_groups_map['tumbleweed-based']
             self.zypper_distros         += distro_groups_map['leap-based']
@@ -1879,6 +1939,7 @@ class PackageManagerGroups:
     def create_dispatch_map(self):
         """Create mapping of distro lists to their installer methods"""
         self.dispatch_map = {
+            tuple(self.apk_distros):         PackageInstallDispatcher.install_on_apk_distro,
             tuple(self.apt_distros):         PackageInstallDispatcher.install_on_apt_distro,
             tuple(self.dnf_distros):         PackageInstallDispatcher.install_on_dnf_distro,
             tuple(self.eopkg_distros):       PackageInstallDispatcher.install_on_eopkg_distro,
