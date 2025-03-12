@@ -198,32 +198,75 @@ if [ "$KDE_ver" = "5" ] || [ "$KDE_ver" = "6" ]; then
         sleep 0.5
 
         kglobalaccel_cmd="kglobalaccel${KDE_ver}"
-        kstart_cmd_not_found=false
+        # kstart_cmd_not_found=false
         kstart_cmd="kstart${KDE_ver}"
 
+        # if command -v "$kglobalaccel_cmd" >/dev/null 2>&1; then
+
+        #     if ! command -v "$kstart_cmd" >/dev/null 2>&1; then
+        #         if ! command -v "kstart" > /dev/null 2>&1; then
+        #             kstart_cmd_not_found=true
+        #         else
+        #             kstart_cmd_not_found=false
+        #             kstart_cmd="kstart"
+        #         fi
+        #     fi
+
+        #     if ! $kstart_cmd_not_found && killall "$kglobalaccel_cmd" > /dev/null 2>&1; then
+        #         echo "Successfully killed ${kglobalaccel_cmd}."
+        #         sleep 2
+        #         # "$kstart_cmd" "$kglobalaccel_cmd"   # Causes error message? 
+        #         "$kstart_cmd" --windowclass kglobalaccel "$kglobalaccel_cmd"
+        #         echo "Restarted ${kglobalaccel_cmd}. If global shortcuts do not work, log out."
+        #     else
+        #         echo "Failed to kill ${kglobalaccel_cmd}. You may need to log out."
+        #     fi
+
+        # else
+        #     echo "The ${kglobalaccel_cmd}  command is not available."
+        #     echo "You must log out to activate modified shortcuts."
+        # fi
+
         if command -v "$kglobalaccel_cmd" >/dev/null 2>&1; then
-
-            if ! command -v "$kstart_cmd" >/dev/null 2>&1; then
-                if ! command -v "kstart" > /dev/null 2>&1; then
-                    kstart_cmd_not_found=true
+            echo "Attempting to restart $kglobalaccel_cmd..."
+            
+            # Check if the process is running before trying to kill it
+            if pgrep "$kglobalaccel_cmd" >/dev/null 2>&1; then
+                echo "Found running $kglobalaccel_cmd, attempting to stop it..."
+                
+                # Try SIGTERM first
+                if killall -TERM "$kglobalaccel_cmd" >/dev/null 2>&1; then
+                    echo "Successfully sent TERM signal to $kglobalaccel_cmd."
+                    sleep 2
                 else
-                    kstart_cmd_not_found=false
-                    kstart_cmd="kstart"
+                    # If TERM fails, try SIGKILL
+                    echo "TERM signal failed, trying KILL signal..."
+                    if killall -KILL "$kglobalaccel_cmd" >/dev/null 2>&1; then
+                        echo "Successfully sent KILL signal to $kglobalaccel_cmd."
+                        sleep 2
+                    else
+                        echo "Failed to kill $kglobalaccel_cmd. Will try to restart anyway."
+                    fi
                 fi
-            fi
-
-            if ! $kstart_cmd_not_found && killall "$kglobalaccel_cmd" > /dev/null 2>&1; then
-                echo "Successfully killed ${kglobalaccel_cmd}."
-                sleep 2
-                # "$kstart_cmd" "$kglobalaccel_cmd"   # Causes error message? 
-                "$kstart_cmd" --windowclass kglobalaccel "$kglobalaccel_cmd"
-                echo "Restarted ${kglobalaccel_cmd}. If global shortcuts do not work, log out."
             else
-                echo "Failed to kill ${kglobalaccel_cmd}. You may need to log out."
+                echo "$kglobalaccel_cmd does not appear to be running."
             fi
-
+            
+            # Start the process
+            if command -v "$kstart_cmd" >/dev/null 2>&1; then
+                echo "Starting $kglobalaccel_cmd with $kstart_cmd..."
+                "$kstart_cmd" --windowclass kglobalaccel --no-startup-id "$kglobalaccel_cmd" >/dev/null 2>&1
+                echo "Attempted to restart $kglobalaccel_cmd."
+            else
+                # Fallback approach
+                echo "Starting $kglobalaccel_cmd directly..."
+                nohup "$kglobalaccel_cmd" >/dev/null 2>&1 &
+                echo "Attempted to restart $kglobalaccel_cmd."
+            fi
+            
+            echo "If global shortcuts do not work, please log out and back in."
         else
-            echo "The ${kglobalaccel_cmd}  command is not available."
+            echo "The $kglobalaccel_cmd command is not available."
             echo "You must log out to activate modified shortcuts."
         fi
 
