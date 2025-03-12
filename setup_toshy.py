@@ -1049,6 +1049,7 @@ pkg_groups_map: Dict[str, List[str]] = {
     'debian-based':        ["curl",
                             "git", "gir1.2-ayatanaappindicator3-0.1",
                             "input-utils",
+                            "kwin-addons",
                             "libcairo2-dev", "libdbus-1-dev", "libgirepository1.0-dev",
                                 "libjpeg-dev", "libnotify-bin", "libsystemd-dev",
                                 "libwayland-dev", "libxkbcommon-dev",
