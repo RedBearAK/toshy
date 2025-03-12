@@ -215,7 +215,8 @@ if [ "$KDE_ver" = "5" ] || [ "$KDE_ver" = "6" ]; then
             if ! $kstart_cmd_not_found && killall "$kglobalaccel_cmd" > /dev/null 2>&1; then
                 echo "Successfully killed ${kglobalaccel_cmd}."
                 sleep 2
-                "$kstart_cmd" "$kglobalaccel_cmd"
+                # "$kstart_cmd" "$kglobalaccel_cmd"   # Causes error message? 
+                "$kstart_cmd" --windowclass kglobalaccel "$kglobalaccel_cmd"
                 echo "Restarted ${kglobalaccel_cmd}. If global shortcuts do not work, log out."
             else
                 echo "Failed to kill ${kglobalaccel_cmd}. You may need to log out."
