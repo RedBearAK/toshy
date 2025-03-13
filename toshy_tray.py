@@ -971,8 +971,7 @@ def main():
 
     # On distros known to not use 'systemd', use 'inverse' icon (except on COSMIC)
     elif not DESKTOP_ENV == 'cosmic' and not is_init_systemd():
-        icon_file_active        = "toshy_app_icon_rainbow_inverse"
-        icon_file_grayscale     = "toshy_app_icon_rainbow_inverse"
+        tray_indicator.set_icon_full(icon_file_inverse, "Toshy Tray Icon Inactive")
 
     if shutil.which('systemctl') and is_init_systemd():
         # help out the config file user service
