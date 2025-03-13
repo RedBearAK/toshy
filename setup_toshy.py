@@ -139,10 +139,10 @@ if sys.prefix != sys.base_prefix:
     sys.path = [p for p in sys.path if not p.startswith(sys.prefix)]
     sys.prefix = sys.base_prefix
 
-# Check if 'sudo' command is available to user
-if not shutil.which('sudo'):
-    print("Error: 'sudo' not found. Installer will fail without it. Exiting.")
-    sys.exit(1)
+# # Check if 'sudo' command is available to user      # Doesn't account for doas/run0
+# if not shutil.which('sudo'):
+#     print("Error: 'sudo' not found. Installer will fail without it. Exiting.")
+#     sys.exit(1)
 
 do_not_ask_about_path = None
 if home_local_bin in original_PATH_str:
@@ -186,6 +186,8 @@ class InstallerSettings:
 
         self.pkgs_for_distro        = None
 
+        self.priv_elev_cmd          = None
+        self.initial_pw_alert_shown = None
         self.qdbus                  = self.find_qdbus_command()
 
         # current stable Python release version (TODO: update when needed):
@@ -278,6 +280,21 @@ class InstallerSettings:
         print(f"Keymapper clone command:\n  {_clone_cmd}")
         return _clone_cmd
 
+    def detect_elevation_command(self):
+        """Detect the appropriate privilege elevation command"""
+        # Order of preference for elevation commands
+        elevation_cmds = ["sudo", "doas", "run0"]
+        print(f"Checking for the following commands: {elevation_cmds}")
+
+        for cmd in elevation_cmds:
+            if shutil.which(cmd):
+                print(f"Using {cmd} for privilege elevation")
+                return cmd
+
+        # If no elevation command found
+        error("No known privilege elevation command found. Cannot continue.")
+        safe_shutdown(1)
+
     def find_qdbus_command(self):
         # List of qdbus command names by preference
         commands = ['qdbus6', 'qdbus-qt6', 'qdbus-qt5', 'qdbus']
@@ -292,9 +309,11 @@ class InstallerSettings:
 def safe_shutdown(exit_code: int):
     """do some stuff on the way out"""
     # good place to do some file cleanup?
-    # 
-    # invalidate the sudo ticket, don't leave system in "superuser" state
-    subprocess.run(['sudo', '-k'])
+
+    # Only sudo has a standard way to invalidate tickets
+    if cnfg.priv_elev_cmd == 'sudo':
+        # invalidate the sudo ticket, don't leave system in "superuser" state
+        subprocess.run([cnfg.priv_elev_cmd, '-k'])
     print()                         # avoid crowding the prompt on exit
     sys.exit(exit_code)
 
@@ -485,24 +504,40 @@ def fancy_str(text, color_name, *, bold=False, color_supported=term_supports_col
         return text
 
 
-def call_attn_to_pwd_prompt_if_sudo_tkt_exp():
-    """Utility function to emphasize the sudo password prompt"""
-    try:
-        subprocess.run( ['sudo', '-n', 'true'], stdout=DEVNULL, stderr=DEVNULL, check=True)
-    except subprocess.CalledProcessError:
-        main_clr = 'blue'
-        alt_clr = 'magenta'
-        # sudo ticket not valid, requires a password, so get user attention
-        print()
-        print(fancy_str('  ----------------------------------------  ', main_clr, bold=True))
-        # print(fancy_str('  -- SUDO PASSWORD REQUIRED TO CONTINUE --  ', 'blue', bold=True))
-        print(
-            fancy_str('  -- ', main_clr, bold=True) +
-            fancy_str('SUDO PASSWORD REQUIRED TO CONTINUE', alt_clr, bold=True) +
-            fancy_str(' --  ', main_clr, bold=True)
-        )
-        print(fancy_str('  ----------------------------------------  ', main_clr, bold=True))
-        print()
+def call_attn_to_pwd_prompt_if_needed():
+    """Utility function to emphasize the admin/superuser password prompt"""
+
+    if cnfg.priv_elev_cmd is None or cnfg.unprivileged_user:
+        error("Attention function was called with no elevation command, or unprivileged user.")
+        return  # Skip if no elevation command or in unprivileged mode (should never happen)
+
+    # Only sudo has a reliable non-interactive check
+    if cnfg.priv_elev_cmd == "sudo":
+        try:
+            subprocess.run( [cnfg.priv_elev_cmd, '-n', 'true'], stdout=DEVNULL, stderr=DEVNULL, check=True)
+            return
+        except subprocess.CalledProcessError:
+            # Password is needed, show the warning
+            pass
+    else:
+        # For doas/run0, only show password warning once at the beginning of setup,
+        # and skip subsequent calls to avoid confusion
+        if cnfg.initial_pw_alert_shown:
+            return
+        cnfg.initial_pw_alert_shown = True
+
+    # Get user attention if sudo ticket expired, or initial usage of 'doas' or 'run0'
+    main_clr = 'blue'
+    alt_clr = 'magenta'
+    print()
+    print(fancy_str('  ----------------------------------------  ', main_clr, bold=True))
+    print(
+        fancy_str('  -- ', main_clr, bold=True) +
+        fancy_str('     PASSWORD REQUIRED TO CONTINUE', alt_clr, bold=True) +
+        fancy_str(' --  ', main_clr, bold=True)
+    )
+    print(fancy_str('  ----------------------------------------  ', main_clr, bold=True))
+    print()
 
 
 def enable_prompt_for_reboot():
@@ -799,10 +834,10 @@ def elevate_privileges():
     print()     # blank line to separate
     max_attempts = 3
 
-    # Ask politely if user is admin to avoid causing a sudo "incident" report unnecessarily
+    # Ask politely if user is admin to avoid causing an "incident" report unnecessarily
     for _ in range(max_attempts):
         response = input(
-            f'Is user "{cnfg.user_name}" an admin user that can run "sudo" commands? [y/n]: ')
+            f'Can user "{cnfg.user_name}" run admin commands (via sudo/doas/run0)? [y/n]: ')
         if response.casefold() in ['y', 'n']:
             # response is valid, so break loop and proceed with appropriate actions below
             break
@@ -812,21 +847,23 @@ def elevate_privileges():
             print()     # blank line for separation, then continue loop
     else:   # this "else" belongs to the "for" loop
         print()
-        error('Response invalid. Too many attempts.')
+        error('Response invalid. Max attempts reached.')
         safe_shutdown(1)
 
     if response.casefold() == 'y':
-        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+        cnfg.detect_elevation_command()     # Get the actual command for elevated privileges
+        call_attn_to_pwd_prompt_if_needed()
         try:
-            cmd_lst = ['sudo', 'bash', '-c', 'echo -e "\nUsing elevated privileges..."']
+            cmd_lst = [cnfg.priv_elev_cmd, 'bash', '-c', 'echo -e "\nUsing elevated privileges..."']
             subprocess.run(cmd_lst, check=True)
         except subprocess.CalledProcessError as proc_err:
             print()
             if cnfg.prep_only:
                 print()
-                error('ERROR: Problem invoking "sudo" command. Is this really an admin user?')
-                error('Only an admin user with sudo access can use "prep-only" command. Exiting.')
-            error('ERROR: Problem invoking "sudo" command. Try answering "n" to admin question.')
+                error(f'ERROR: Problem invoking "{cnfg.priv_elev_cmd}" command. Not an admin user?')
+                error(f'Only a user with "{cnfg.priv_elev_cmd}" access can use "prep-only" command.')
+            error(f'Problem invoking the "{cnfg.priv_elev_cmd}" command.')
+            print('Try answering "n" to admin question next time.')
             safe_shutdown(1)
     elif response.casefold() == 'n':
         secret_code = generate_secret_code()
@@ -853,10 +890,10 @@ def elevate_privileges():
         should also run when the admin user logs into a desktop session.
         When using "su --login adminuser", that user will also need to
         download an independent copy of the Toshy zip file to install from,
-        using a "wget" or "curl" command. Or use "sudo" to copy the zip
-        file from the unprivileged user's Downloads folder. See the Wiki
-        for a better example of the full "prep-only" sequence with a 
-        separate admin user.
+        using a "wget" or "curl" command. Or use "sudo/doas/run0" to copy
+        the zip file from the unprivileged user's Downloads folder.
+        See the Wiki for a better example of the full "prep-only" sequence
+        with a separate admin user.
         """)
         print(md_wrapped_str)
         print()
@@ -867,7 +904,7 @@ def elevate_privileges():
         """)
         response = input(md_wrapped_str)
         if response == secret_code:
-            # set a flag to bypass functions that do system "prep" work with `sudo`
+            # set a flag to bypass functions that do system "prep" work with elevated privileges
             cnfg.unprivileged_user = True
             print()
             print("Good code. Continuing with an unprivileged install of Toshy user components...")
@@ -875,7 +912,7 @@ def elevate_privileges():
         else:
             print()
             error('Code does not match! Try the installer again after installing Toshy \n'
-                    '     first using an admin user that has access to "sudo".')
+                    '     first using an admin user that has access to "sudo/doas/run0".')
             safe_shutdown(1)
 
 
@@ -1281,10 +1318,12 @@ class DistroQuirksHandler:
         """
 
         print('Updating CentOS repos to use the CentOS Vault...')
-        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+        call_attn_to_pwd_prompt_if_needed()
         repo_files              = glob.glob('/etc/yum.repos.d/*.repo')
         commands                = []
 
+        # Keep statically using 'sudo' here because this is only used on old CentOS distros
+        # No need to adapt to doas/run0 or Chimera's BSD userland utilities
         commands += [
             f"sudo sed -i 's/mirror.centos.org/vault.centos.org/g' {file_path}"
             for file_path in repo_files ]
@@ -1311,8 +1350,8 @@ class DistroQuirksHandler:
 
         if shutil.which('yum'):
             try:
-                subprocess.run(['sudo', 'yum', 'clean', 'all'], check=True)
-                subprocess.run(['sudo', 'yum', 'makecache'], check=True)
+                subprocess.run([cnfg.priv_elev_cmd, 'yum', 'clean', 'all'], check=True)
+                subprocess.run([cnfg.priv_elev_cmd, 'yum', 'makecache'], check=True)
                 print("Yum cache has been refreshed.")
             except subprocess.CalledProcessError as e:
                 error(f"Failed to refresh yum cache: \n\t{e}")
@@ -1320,8 +1359,8 @@ class DistroQuirksHandler:
 
         if shutil.which('dnf'):
             try:
-                subprocess.run(['sudo', 'dnf', 'clean', 'all'], check=True)
-                subprocess.run(['sudo', 'dnf', 'makecache'], check=True)
+                subprocess.run([cnfg.priv_elev_cmd, 'dnf', 'clean', 'all'], check=True)
+                subprocess.run([cnfg.priv_elev_cmd, 'dnf', 'makecache'], check=True)
                 print("DNF cache has been refreshed.")
             except subprocess.CalledProcessError as e:
                 error(f"Failed to refresh dnf cache: \n\t{e}")
@@ -1336,7 +1375,7 @@ class DistroQuirksHandler:
         cnfg.no_dbus_python = True
 
         native_pkg_installer.check_for_pkg_mgr_cmd('yum')
-        yum_cmd_lst = ['sudo', 'yum', 'install', '-y']
+        yum_cmd_lst = [cnfg.priv_elev_cmd, 'yum', 'install', '-y']
         if py_interp_ver_tup >= (3, 8):
             print(f"Good, Python version is 3.8 or later: "
                     f"'{cnfg.py_interp_ver_str}'")
@@ -1404,10 +1443,10 @@ class DistroQuirksHandler:
                 safe_shutdown(1)
         try:
             # for dbus-python
-            subprocess.run(['sudo', 'dnf', 'install', '-y',
+            subprocess.run([cnfg.priv_elev_cmd, 'dnf', 'install', '-y',
                             f'python{cnfg.py_interp_ver_str}-devel'], check=True)
             # for Toshy Preferences GUI app
-            subprocess.run(['sudo', 'dnf', 'install', '-y',
+            subprocess.run([cnfg.priv_elev_cmd, 'dnf', 'install', '-y',
                             f'python{cnfg.py_interp_ver_str}-tkinter'], check=True)
         except subprocess.CalledProcessError as proc_err:
             error(f'ERROR: Problem installing necessary packages on CentOS Stream 8:'
@@ -1430,7 +1469,7 @@ class DistroQuirksHandler:
                     cnfg.py_interp_ver_str  = version
                     break
                 # try to install the corresponding packages
-                cmd_lst = ['sudo', 'dnf', 'install', '-y']
+                cmd_lst = [cnfg.priv_elev_cmd, 'dnf', 'install', '-y']
                 pkg_lst = [
                     f'python{version}',
                     f'python{version}-devel',
@@ -1476,10 +1515,10 @@ class DistroQuirksHandler:
             # for libappindicator-gtk3: sudo dnf install -y epel-release
             if not is_dnf_repo_enabled("epel"):
                 try:
-                    cmd_lst = ['sudo', 'dnf', 'install', '-y', 'epel-release']
+                    cmd_lst = [cnfg.priv_elev_cmd, 'dnf', 'install', '-y', 'epel-release']
                     print("Installing and enabling EPEL repository...")
                     subprocess.run(cmd_lst, check=True)
-                    cmd_lst = ['sudo', 'dnf', 'makecache']
+                    cmd_lst = [cnfg.priv_elev_cmd, 'dnf', 'makecache']
                     subprocess.run(cmd_lst, check=True)
                 except subprocess.CalledProcessError as proc_err:
                     print()
@@ -1494,7 +1533,7 @@ class DistroQuirksHandler:
             print("Enabling CRB (CodeReady Builder) repo...")
             if not is_dnf_repo_enabled('powertools'):
                 # enable CRB repo on RHEL 8.x distros, but not CentOS Stream 8:
-                cmd_lst = ['sudo', '/usr/bin/crb', 'enable']
+                cmd_lst = [cnfg.priv_elev_cmd, '/usr/bin/crb', 'enable']
                 try:
                     subprocess.run(cmd_lst, check=True)
                     print("CRB (CodeReady Builder) repo now enabled. (Repo name: 'powertools'.)")
@@ -1515,7 +1554,7 @@ class DistroQuirksHandler:
                 # enable "CodeReady Builder" repo for 'gobject-introspection-devel' only on 
                 # RHEL 9.x and CentOS Stream 9:
                 # sudo dnf config-manager --set-enabled crb
-                cmd_lst = ['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb']
+                cmd_lst = [cnfg.priv_elev_cmd, 'dnf', 'config-manager', '--set-enabled', 'crb']
                 try:
                     subprocess.run(cmd_lst, check=True)
                     print("CRB (CodeReady Builder) repo now enabled.")
@@ -1530,10 +1569,10 @@ class DistroQuirksHandler:
             print("Installing and enabling EPEL repository...")
             if not is_dnf_repo_enabled("epel"):
                 try:
-                    cmd_lst = ['sudo', 'dnf', 'install', '-y', 'epel-release']
+                    cmd_lst = [cnfg.priv_elev_cmd, 'dnf', 'install', '-y', 'epel-release']
                     subprocess.run(cmd_lst, check=True)
                     print("EPEL repository is now enabled.")
-                    cmd_lst = ['sudo', 'dnf', 'makecache']
+                    cmd_lst = [cnfg.priv_elev_cmd, 'dnf', 'makecache']
                     subprocess.run(cmd_lst, check=True)
                 except subprocess.CalledProcessError as proc_err:
                     print()
@@ -1553,7 +1592,7 @@ class DistroQuirksHandler:
         print("Enabling CRB (CodeReady Builder) repo...")
         if not is_dnf_repo_enabled('crb'):
             try:
-                cmd_lst = ['sudo', 'dnf', 'config-manager', '--set-enabled', 'crb']
+                cmd_lst = [cnfg.priv_elev_cmd, 'dnf', 'config-manager', '--set-enabled', 'crb']
                 subprocess.run(cmd_lst, check=True)
                 print("CRB (CodeReady Builder) repo now enabled.")
             except subprocess.CalledProcessError as proc_err:
@@ -1571,7 +1610,7 @@ class DistroQuirksHandler:
         print("Installing and enabling EPEL 10 repository...")
         if not is_dnf_repo_enabled("epel"):
             try:
-                cmd_lst = ['sudo', 'dnf', 'install', '-y', epel_10_rpm_url]
+                cmd_lst = [cnfg.priv_elev_cmd, 'dnf', 'install', '-y', epel_10_rpm_url]
                 subprocess.run(cmd_lst, check=True)
                 print("EPEL repository is now enabled.")
             except subprocess.CalledProcessError as proc_err:
@@ -1593,7 +1632,7 @@ class NativePackageInstaller:
 
     def check_for_pkg_mgr_cmd(self, pkg_mgr_cmd: str):
         """Make sure native package installer command exists before using it, or exit"""
-        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+        call_attn_to_pwd_prompt_if_needed()
         if not shutil.which(pkg_mgr_cmd):
             print()
             error(f'Package manager command ({pkg_mgr_cmd}) not available. Unable to continue.')
@@ -1619,7 +1658,7 @@ class NativePackageInstaller:
             error(f'No valid package manager command in provided command list:\n\t{cmd_lst}')
             safe_shutdown(1)
         
-        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+        call_attn_to_pwd_prompt_if_needed()
         self.check_for_pkg_mgr_cmd(pkg_mgr_cmd)
         
         # Execute the package installation command
@@ -1658,7 +1697,7 @@ class PackageInstallDispatcher:
         if cnfg.DISTRO_ID in distro_groups_map['microos-based']:
             print('Distro is openSUSE MicroOS/Aeon/Kalpa immutable. Using "transactional-update".')
 
-            call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+            call_attn_to_pwd_prompt_if_needed()
 
             # Filter out packages that are already installed
             filtered_pkg_lst = []
@@ -1671,7 +1710,7 @@ class PackageInstallDispatcher:
 
             if filtered_pkg_lst:
                 print(f'Packages left to install:\n{filtered_pkg_lst}')
-                cmd_lst = ['sudo', 'transactional-update', '--non-interactive', 'pkg', 'in']
+                cmd_lst = [cnfg.priv_elev_cmd, 'transactional-update', '--non-interactive', 'pkg', 'in']
                 native_pkg_installer.install_pkg_list(cmd_lst, filtered_pkg_lst)
                 # might as well take care of user group and udev here, if rebooting is necessary. 
                 verify_user_groups()
@@ -1691,7 +1730,7 @@ class PackageInstallDispatcher:
         if cnfg.DISTRO_ID in distro_groups_map['fedora-immutables']:
             print('Distro is Fedora-type immutable. Using "rpm-ostree" instead of DNF.')
 
-            call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+            call_attn_to_pwd_prompt_if_needed()
 
             # Filter out packages that are already installed
             filtered_pkg_lst = []
@@ -1703,7 +1742,7 @@ class PackageInstallDispatcher:
                     print(fancy_str(f"Package '{pkg}' is already installed. Skipping.", "green"))
 
             if filtered_pkg_lst:
-                cmd_lst = ['sudo', 'rpm-ostree', 'install', '--idempotent',
+                cmd_lst = [cnfg.priv_elev_cmd, 'rpm-ostree', 'install', '--idempotent',
                             '--allow-inactive', '--apply-live', '-y']
                 native_pkg_installer.install_pkg_list(cmd_lst, filtered_pkg_lst)
 
@@ -1713,11 +1752,11 @@ class PackageInstallDispatcher:
     @staticmethod
     def install_on_dnf_distro():
         """Utility function that gets dispatched for distros that use DNF package manager."""
-        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+        call_attn_to_pwd_prompt_if_needed()
 
         # Define helper functions for specific distro installations
         def install_on_mandriva_based():
-            cmd_lst = ['sudo', 'dnf', 'install', '-y']
+            cmd_lst = [cnfg.priv_elev_cmd, 'dnf', 'install', '-y']
             native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
         is_CentOS_7         = cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '7'
@@ -1754,15 +1793,15 @@ class PackageInstallDispatcher:
 
             # Package version repo conflict issues on CentOS 10 made installing difficult
             if cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '10':
-                cmd_lst = ['sudo', 'dnf', 'install', '-y', '--nobest']
+                cmd_lst = [cnfg.priv_elev_cmd, 'dnf', 'install', '-y', '--nobest']
             else:
-                cmd_lst = ['sudo', 'dnf', 'install', '-y']
+                cmd_lst = [cnfg.priv_elev_cmd, 'dnf', 'install', '-y']
 
             native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
         def install_on_fedora_based():
             # TODO: insert check to see if Fedora distro is actually immutable/atomic (rpm-ostree)
-            cmd_lst = ['sudo', 'dnf', 'install', '-y']
+            cmd_lst = [cnfg.priv_elev_cmd, 'dnf', 'install', '-y']
             native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
         # Dispatch installation sub-function based on DNF distro type
@@ -1783,8 +1822,8 @@ class PackageInstallDispatcher:
     def install_on_zypper_distro():
         """utility function that gets dispatched for distros that use Zypper package manager"""
         native_pkg_installer.check_for_pkg_mgr_cmd('zypper')
-        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
-        cmd_lst = ['sudo', 'zypper', '--non-interactive', 'install']
+        call_attn_to_pwd_prompt_if_needed()
+        cmd_lst = [cnfg.priv_elev_cmd, 'zypper', '--non-interactive', 'install']
         native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
     ###########################################################################
@@ -1794,12 +1833,12 @@ class PackageInstallDispatcher:
     def install_on_apt_distro():
         """utility function that gets dispatched for distros that use APT package manager"""
         native_pkg_installer.check_for_pkg_mgr_cmd('apt')
-        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+        call_attn_to_pwd_prompt_if_needed()
 
         # Hasn't been working on several Debian/Ubuntu distros with broken dependencies.
         # So far: Deepin 25 beta, Linux Lite 7.2, Ubuntu Kylin 23.10, Zorin OS 16.x
         # There is no safe way to overcome the issue automatically. Repos are broken.
-        cmd_lst = ['sudo', 'apt', 'install', '-y']
+        cmd_lst = [cnfg.priv_elev_cmd, 'apt', 'install', '-y']
         native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
     ###########################################################################
@@ -1809,7 +1848,7 @@ class PackageInstallDispatcher:
     def install_on_pacman_distro():
         """utility function that gets dispatched for distros that use Pacman package manager"""
         native_pkg_installer.check_for_pkg_mgr_cmd('pacman')
-        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+        call_attn_to_pwd_prompt_if_needed()
 
         def is_pkg_installed_pacman(package):
             """utility function to help avoid 'reinstalling' existing packages on Arch"""
@@ -1824,7 +1863,7 @@ class PackageInstallDispatcher:
                 print(fancy_str(f"Package '{pkg}' is already installed. Skipping.", "green"))
 
         if pkgs_to_install:
-            cmd_lst = ['sudo', 'pacman', '-S', '--noconfirm']
+            cmd_lst = [cnfg.priv_elev_cmd, 'pacman', '-S', '--noconfirm']
             native_pkg_installer.install_pkg_list(cmd_lst, pkgs_to_install)
 
     ###########################################################################
@@ -1834,12 +1873,12 @@ class PackageInstallDispatcher:
     def install_on_eopkg_distro():
         """utility function that gets dispatched for distros that use Eopkg package manager"""
         native_pkg_installer.check_for_pkg_mgr_cmd('eopkg')
-        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+        call_attn_to_pwd_prompt_if_needed()
 
-        dev_cmd_lst = ['sudo', 'eopkg', 'install', '-y', '-c']
+        dev_cmd_lst = [cnfg.priv_elev_cmd, 'eopkg', 'install', '-y', '-c']
         dev_pkg_lst = ['system.devel']
         native_pkg_installer.install_pkg_list(dev_cmd_lst, dev_pkg_lst)
-        cmd_lst = ['sudo', 'eopkg', 'install', '-y']
+        cmd_lst = [cnfg.priv_elev_cmd, 'eopkg', 'install', '-y']
         native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
     ###########################################################################
@@ -1849,9 +1888,9 @@ class PackageInstallDispatcher:
     def install_on_xbps_distro():
         """utility function that gets dispatched for distros that use xbps-install package manager"""
         native_pkg_installer.check_for_pkg_mgr_cmd('xbps-install')
-        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+        call_attn_to_pwd_prompt_if_needed()
 
-        cmd_lst = ['sudo', 'xbps-install', '-Sy']
+        cmd_lst = [cnfg.priv_elev_cmd, 'xbps-install', '-Sy']
         native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
     ###########################################################################
@@ -1861,18 +1900,18 @@ class PackageInstallDispatcher:
     def install_on_apk_distro():
         """utility function that gets dispatched for distros that use APK package manager"""
         native_pkg_installer.check_for_pkg_mgr_cmd('apk')
-        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+        call_attn_to_pwd_prompt_if_needed()
 
         # # User is asked to update system before installing Toshy, so this is redundant:
         # # First update the package index
         # try:
-        #     subprocess.run(['sudo', 'apk', 'update'], check=True)
+        #     subprocess.run([cnfg.priv_elev_cmd, 'apk', 'update'], check=True)
         # except subprocess.CalledProcessError as proc_err:
         #     error(f'ERROR: Problem updating package index:\n\t{proc_err}')
         #     safe_shutdown(1)
 
         # Install packages with --no-cache to avoid prompts about cache management
-        cmd_lst = ['sudo', 'apk', 'add', '--no-cache']
+        cmd_lst = [cnfg.priv_elev_cmd, 'apk', 'add', '--no-cache']
         native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
 
@@ -2036,8 +2075,8 @@ def load_uinput_module():
         print('The "uinput" module is already loaded.')
     except subprocess.CalledProcessError:
         print('The "uinput" module is not loaded, loading now...')
-        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
-        subprocess.run(['sudo', 'modprobe', 'uinput'], check=True)
+        call_attn_to_pwd_prompt_if_needed()
+        subprocess.run([cnfg.priv_elev_cmd, 'modprobe', 'uinput'], check=True)
 
     # Check if /etc/modules-load.d/ directory exists
     if os.path.isdir("/etc/modules-load.d/"):
@@ -2045,7 +2084,7 @@ def load_uinput_module():
         if not os.path.exists("/etc/modules-load.d/uinput.conf"):
             # If not, create it and add "uinput"
             try:
-                call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+                call_attn_to_pwd_prompt_if_needed()
                 command = "echo 'uinput' | sudo tee /etc/modules-load.d/uinput.conf >/dev/null"
                 subprocess.run(command, shell=True, check=True)
             except subprocess.CalledProcessError as proc_err:
@@ -2061,7 +2100,7 @@ def load_uinput_module():
                 if "uinput" not in f.read():
                     # If "uinput" is not listed, append it
                     try:
-                        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+                        call_attn_to_pwd_prompt_if_needed()
                         command = "echo 'uinput' | sudo tee -a /etc/modules >/dev/null"
                         subprocess.run(command, shell=True, check=True)
                     except subprocess.CalledProcessError as proc_err:
@@ -2074,10 +2113,10 @@ def load_uinput_module():
 def reload_udev_rules():
     """utility function to reload udev rules in case of changes to rules file"""
     try:
-        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
-        cmd_lst_reload                 = ['sudo', 'udevadm', 'control', '--reload-rules']
+        call_attn_to_pwd_prompt_if_needed()
+        cmd_lst_reload                 = [cnfg.priv_elev_cmd, 'udevadm', 'control', '--reload-rules']
         subprocess.run(cmd_lst_reload, check=True)
-        cmd_lst_trigger                 = ['sudo', 'udevadm', 'trigger']
+        cmd_lst_trigger                 = [cnfg.priv_elev_cmd, 'udevadm', 'trigger']
         subprocess.run(cmd_lst_trigger, check=True)
         print('Reloaded the "udev" rules successfully.')
     except subprocess.CalledProcessError as proc_err:
@@ -2104,8 +2143,8 @@ def install_udev_rules():
     if not os.path.exists(rules_dir):
         print(f"Creating directory: '{rules_dir}'")
         try:
-            call_attn_to_pwd_prompt_if_sudo_tkt_exp()
-            cmd_lst = ['sudo', 'mkdir', '-p', rules_dir]
+            call_attn_to_pwd_prompt_if_needed()
+            cmd_lst = [cnfg.priv_elev_cmd, 'mkdir', '-p', rules_dir]
             subprocess.run(cmd_lst, check=True)
         except subprocess.CalledProcessError as proc_err:
             error(f"Problem while creating udev rules folder:\n\t{proc_err}")
@@ -2140,7 +2179,7 @@ def install_udev_rules():
     if rules_file_missing_or_content_differs():
         command_str             = f'sudo tee {rules_file_path}'
         try:
-            call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+            call_attn_to_pwd_prompt_if_needed()
             print(f'Using these "udev" rules for "uinput" device: ')
             print()
             subprocess.run(command_str, input=new_rules_content.encode(), shell=True, check=True)
@@ -2166,9 +2205,9 @@ def install_udev_rules():
     # remove older '90-' rules file (cannot use 'uaccess' tag unless processed earlier than '73-')
     if os.path.exists(old_rules_file_path):
         try:
-            call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+            call_attn_to_pwd_prompt_if_needed()
             print(f'Removing old udev rules file: {old_rules_file}')
-            subprocess.run(['sudo', 'rm', old_rules_file_path], check=True)
+            subprocess.run([cnfg.priv_elev_cmd, 'rm', old_rules_file_path], check=True)
         except subprocess.CalledProcessError as proc_err:
             error(f'ERROR: Problem while removing old udev rules file:\n\t{proc_err}')
 
@@ -2191,7 +2230,7 @@ def create_group(group_name):
         print(f'Group "{group_name}" already exists.')
     else:
         print(f'Creating "{group_name}" group...')
-        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
+        call_attn_to_pwd_prompt_if_needed()
         if cnfg.DISTRO_ID in distro_groups_map['fedora-immutables']:
             # Special handling for Fedora immutable distributions
             with open('/etc/group') as f:
@@ -2209,7 +2248,7 @@ def create_group(group_name):
                         safe_shutdown(1)
         else:
             try:
-                cmd_lst = ['sudo', 'groupadd', group_name]
+                cmd_lst = [cnfg.priv_elev_cmd, 'groupadd', group_name]
                 subprocess.run(cmd_lst, check=True)
                 print(f'Group "{group_name}" created successfully.')
             except subprocess.CalledProcessError as proc_err:
@@ -2224,8 +2263,8 @@ def create_group(group_name):
 def add_user_to_group(group_name: str, user_name: str) -> None:
     """Utility function to add a user to a system group, handling errors appropriately."""
     try:
-        call_attn_to_pwd_prompt_if_sudo_tkt_exp()
-        subprocess.run(['sudo', 'usermod', '-aG', group_name, user_name], check=True)
+        call_attn_to_pwd_prompt_if_needed()
+        subprocess.run([cnfg.priv_elev_cmd, 'usermod', '-aG', group_name, user_name], check=True)
     except subprocess.CalledProcessError as proc_err:
         print()
         error(f'ERROR: Problem when trying to add user "{user_name}" to '
@@ -3816,7 +3855,7 @@ def uninstall_toshy():
         udev_rules_file = '/etc/udev/rules.d/70-toshy-keymapper-input.rules'
         # remove the 'udev' rules file
         try:
-            subprocess.run(['sudo', 'rm', '-f', udev_rules_file], check=True)
+            subprocess.run([cnfg.priv_elev_cmd, 'rm', '-f', udev_rules_file], check=True)
         except subprocess.CalledProcessError as proc_err:
             error(f'Problem removing Toshy udev rules file:\n\t{proc_err}')
         # refresh the active 'udev' rules
@@ -4174,12 +4213,13 @@ if __name__ == '__main__':
 
     print()   # blank line in terminal to start things off
 
-    # Invalidate any `sudo` ticket that might be hanging around, to maximize 
-    # the length of time before `sudo` might demand the password again
-    try:
-        subprocess.run(['sudo', '-k'], check=True)
-    except subprocess.CalledProcessError as proc_err:
-        error(f"ERROR: 'sudo' found, but 'sudo -k' did not work. Very strange.\n\t{proc_err}")
+    # # We can't do this if we want to work on sudo/doas/run0 systems
+    # # Invalidate any `sudo` ticket that might be hanging around, to maximize 
+    # # the length of time before `sudo` might demand the password again
+    # try:
+    #     subprocess.run(['sudo', '-k'], check=True)
+    # except subprocess.CalledProcessError as proc_err:
+    #     error(f"ERROR: 'sudo' found, but 'sudo -k' did not work. Very strange.\n\t{proc_err}")
 
     # create the configuration settings class instance
     cnfg                        = InstallerSettings()
