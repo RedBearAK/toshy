@@ -964,17 +964,15 @@ def main():
     DESKTOP_ENV                 = str(env_info_dct.get('DESKTOP_ENV', None)).casefold()
     DE_MAJ_VER                  = str(env_info_dct.get('DE_MAJ_VER', None)).casefold()
 
-    non_sysd_distros = ['chimera', 'void']
-
     # COSMIC desktop environment messes with tray icon, so use 'grayscale' icon
     if DESKTOP_ENV == 'cosmic':
         icon_file_active        = icon_file_grayscale
         icon_file_inverse       = icon_file_grayscale
 
     # On distros known to not use 'systemd', use 'inverse' icon (except on COSMIC)
-    elif not DESKTOP_ENV == 'cosmic' and DISTRO_ID in non_sysd_distros:
-        icon_file_active        = icon_file_inverse
-        icon_file_grayscale     = icon_file_inverse
+    elif not DESKTOP_ENV == 'cosmic' and not is_init_systemd():
+        icon_file_active        = "toshy_app_icon_rainbow_inverse"
+        icon_file_grayscale     = "toshy_app_icon_rainbow_inverse"
 
     if shutil.which('systemctl') and is_init_systemd():
         # help out the config file user service
