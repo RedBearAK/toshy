@@ -1128,12 +1128,12 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "xset",
                             "zenity"],
 
-    'chimera-based':       ["cairo-dev",
-                            "dbus-dev", 
-                            "clang", "git", "gobject-introspection-dev",
-                            "libayatana-appindicator-dev", "libnotify", "libxkbcommon-dev",
-                            "python3-dev", "py3-pip", "py3-dbus", "py3-tk",
-                            "evdev", "input-utils",
+    'chimera-based':       ["cairo-devel", "clang",
+                            "dbus-devel", 
+                            "git", "gobject-introspection-devel",
+                            "libayatana-appindicator-devel", "libnotify", "libxkbcommon-devel",
+                            "python-dbus", "python-devel", "python-evdev", "python-pip",
+                            "tk",
                             "zenity"],
 
 }
