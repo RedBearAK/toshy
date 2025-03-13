@@ -950,13 +950,23 @@ menu.show_all()
 def main():
 
     global loop
+    global DISTRO_ID
     global DESKTOP_ENV
     global DE_MAJ_VER
 
     env_ctxt_getter             = EnvironmentInfo()
     env_info_dct                = env_ctxt_getter.get_env_info()
+    DISTRO_ID                   = str(env_info_dct.get('DISTRO_ID', None)).casefold()
     DESKTOP_ENV                 = str(env_info_dct.get('DESKTOP_ENV', None)).casefold()
     DE_MAJ_VER                  = str(env_info_dct.get('DE_MAJ_VER', None)).casefold()
+
+    # Chimera Linux uses 'dinit' instead of 'systemd', services won't run, so use 'inverse' icon
+    if DISTRO_ID == 'chimera' and not DESKTOP_ENV == 'cosmic':
+        # Use 'global' keyword since we need to change the global values here
+        global icon_file_active
+        global icon_file_grayscale
+        icon_file_active        = icon_file_inverse
+        icon_file_grayscale     = icon_file_inverse
 
     # COSMIC desktop environment messes with tray icon, so use 'grayscale' icon
     if DESKTOP_ENV == 'cosmic':
