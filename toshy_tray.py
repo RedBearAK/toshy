@@ -954,6 +954,10 @@ def main():
     global DESKTOP_ENV
     global DE_MAJ_VER
 
+    global icon_file_active
+    global icon_file_inverse
+    global icon_file_grayscale
+
     env_ctxt_getter             = EnvironmentInfo()
     env_info_dct                = env_ctxt_getter.get_env_info()
     DISTRO_ID                   = str(env_info_dct.get('DISTRO_ID', None)).casefold()
@@ -964,17 +968,11 @@ def main():
 
     # COSMIC desktop environment messes with tray icon, so use 'grayscale' icon
     if DESKTOP_ENV == 'cosmic':
-        # Use 'global' keyword since we need to change the global values here
-        global icon_file_active
-        global icon_file_inverse
         icon_file_active        = icon_file_grayscale
         icon_file_inverse       = icon_file_grayscale
 
     # On distros known to not use 'systemd', use 'inverse' icon (except on COSMIC)
     elif not DESKTOP_ENV == 'cosmic' and DISTRO_ID in non_sysd_distros:
-        # Use 'global' keyword since we need to change the global values here
-        global icon_file_active
-        global icon_file_grayscale
         icon_file_active        = icon_file_inverse
         icon_file_grayscale     = icon_file_inverse
 
