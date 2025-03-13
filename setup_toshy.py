@@ -2180,7 +2180,7 @@ def install_udev_rules():
 
     # Only write the file if it doesn't exist or its contents are different from current rule
     if rules_file_missing_or_content_differs():
-        command_str             = f'sudo tee {rules_file_path}'
+        command_str             = f'{cnfg.priv_elev_cmd} tee {rules_file_path}'
         try:
             call_attn_to_pwd_prompt_if_needed()
             print(f'Using these "udev" rules for "uinput" device: ')
@@ -2242,7 +2242,7 @@ def create_group(group_name):
                     # Special command to make Fedora Silverblue/uBlue work, or usermod will fail: 
                     # grep -E '^input:' /usr/lib/group | sudo tee -a /etc/group
                     command = (f"grep -E '^{group_name}:' /usr/lib/group | "
-                                "sudo tee -a /etc/group >/dev/null")
+                                f"{cnfg.priv_elev_cmd} tee -a /etc/group >/dev/null")
                     try:
                         subprocess.run(command, shell=True, check=True)
                         print(f"Added '{group_name}' group to system.")
@@ -3968,7 +3968,7 @@ def handle_cli_arguments():
 
     subparser_prep_only         = subparsers.add_parser(
         'prep-only',
-        help='Do only prep steps that require sudo/admin, no install'
+        help='Do only prep steps that require admin privileges, no install'
     )
 
     subparser_uninstall         = subparsers.add_parser(
@@ -4099,7 +4099,7 @@ def main(cnfg: InstallerSettings):
         install_distro_pkgs()
 
     if not cnfg.unprivileged_user:
-        # These things require 'sudo' (admin user)
+        # These things require 'sudo/doas/run0' (admin user)
         # Allow them to be skipped to support non-admin users
         # (An admin user would need to first do the "prep-only" command to support this)
         load_uinput_module()
