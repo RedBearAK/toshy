@@ -960,13 +960,7 @@ def main():
     DESKTOP_ENV                 = str(env_info_dct.get('DESKTOP_ENV', None)).casefold()
     DE_MAJ_VER                  = str(env_info_dct.get('DE_MAJ_VER', None)).casefold()
 
-    # Chimera Linux uses 'dinit' instead of 'systemd', services won't run, so use 'inverse' icon
-    if DISTRO_ID == 'chimera' and not DESKTOP_ENV == 'cosmic':
-        # Use 'global' keyword since we need to change the global values here
-        global icon_file_active
-        global icon_file_grayscale
-        icon_file_active        = icon_file_inverse
-        icon_file_grayscale     = icon_file_inverse
+    non_sysd_distros = ['chimera', 'void']
 
     # COSMIC desktop environment messes with tray icon, so use 'grayscale' icon
     if DESKTOP_ENV == 'cosmic':
@@ -975,6 +969,14 @@ def main():
         global icon_file_inverse
         icon_file_active        = icon_file_grayscale
         icon_file_inverse       = icon_file_grayscale
+
+    # On distros known to not use 'systemd', use 'inverse' icon (except on COSMIC)
+    elif not DESKTOP_ENV == 'cosmic' and DISTRO_ID in non_sysd_distros:
+        # Use 'global' keyword since we need to change the global values here
+        global icon_file_active
+        global icon_file_grayscale
+        icon_file_active        = icon_file_inverse
+        icon_file_grayscale     = icon_file_inverse
 
     if shutil.which('systemctl') and is_init_systemd():
         # help out the config file user service
