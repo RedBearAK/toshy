@@ -2086,7 +2086,8 @@ def load_uinput_module():
             # If not, create it and add "uinput"
             try:
                 call_attn_to_pwd_prompt_if_needed()
-                command = "echo 'uinput' | sudo tee /etc/modules-load.d/uinput.conf >/dev/null"
+                command = (f"echo 'uinput' | {cnfg.priv_elev_cmd} "
+                            "tee /etc/modules-load.d/uinput.conf >/dev/null")
                 subprocess.run(command, shell=True, check=True)
             except subprocess.CalledProcessError as proc_err:
                 error(f"Failed to create /etc/modules-load.d/uinput.conf:\n\t{proc_err}")
@@ -2102,7 +2103,8 @@ def load_uinput_module():
                     # If "uinput" is not listed, append it
                     try:
                         call_attn_to_pwd_prompt_if_needed()
-                        command = "echo 'uinput' | sudo tee -a /etc/modules >/dev/null"
+                        command = (f"echo 'uinput' | {cnfg.priv_elev_cmd} "
+                                    "tee -a /etc/modules >/dev/null")
                         subprocess.run(command, shell=True, check=True)
                     except subprocess.CalledProcessError as proc_err:
                         error(f"ERROR: Failed to append 'uinput' to /etc/modules:\n\t{proc_err}")
