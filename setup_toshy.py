@@ -614,6 +614,8 @@ def ask_add_home_local_bin():
         print()
         response = input('The "~/.local/bin" folder is not in PATH. OK to add it? [Y/n]: ') or 'y'
         if response in ['y', 'Y']:
+            # Let's prompt a reboot when we need to add local-bin to the PATH
+            cnfg.should_reboot = True
             # create temp file that will get script to add local bin to path without asking
             with open(fix_path_tmp_path, 'a') as file:
                 file.write('Nothing to see here.')
