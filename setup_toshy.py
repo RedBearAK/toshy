@@ -1128,11 +1128,11 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "xset",
                             "zenity"],
 
-    'chimera-based':       ["cairo-devel", "clang",
+    'chimera-based':       ["cairo-devel", "clang", "cmake",
                             "dbus-devel", 
                             "git", "gobject-introspection-devel",
                             "libayatana-appindicator-devel", "libnotify", "libxkbcommon-devel",
-                            "python-dbus", "python-devel", "python-evdev", "python-pip",
+                            "pkgconf", "python-dbus", "python-devel", "python-evdev", "python-pip",
                             "tk",
                             "zenity"],
 
@@ -1912,7 +1912,7 @@ class PackageInstallDispatcher:
         #     safe_shutdown(1)
 
         # Install packages with --no-cache to avoid prompts about cache management
-        cmd_lst = [cnfg.priv_elev_cmd, 'apk', 'add', '--no-cache']
+        cmd_lst = [cnfg.priv_elev_cmd, 'apk', 'add', '--no-cache', '--no-interactive']
         native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
 
