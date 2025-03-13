@@ -531,13 +531,13 @@ def call_attn_to_pwd_prompt_if_needed():
     main_clr = 'blue'
     alt_clr = 'magenta'
     print()
-    print(fancy_str('  ----------------------------------------  ', main_clr, bold=True))
+    print(fancy_str('  -----------------------------------------  ', main_clr, bold=True))
     print(
         fancy_str('  -- ', main_clr, bold=True) +
-        fancy_str('     PASSWORD REQUIRED TO CONTINUE', alt_clr, bold=True) +
+        fancy_str('   PASSWORD REQUIRED TO CONTINUE   ', alt_clr, bold=True) +
         fancy_str(' --  ', main_clr, bold=True)
     )
-    print(fancy_str('  ----------------------------------------  ', main_clr, bold=True))
+    print(fancy_str('  -----------------------------------------  ', main_clr, bold=True))
     print()
 
 
