@@ -607,7 +607,7 @@ def set_item_active_with_retry(menu_item, state=True, max_retries=5):
 
 # -------- MENU ITEMS --------------------------------------------------
 
-if not is_init_systemd():
+if is_init_systemd():
     services_label_item = Gtk.MenuItem(label=" ---- Services Status ---- ")
     services_label_item.set_sensitive(False)
     menu.append(services_label_item)
@@ -686,7 +686,7 @@ def fn_toggle_toshy_svcs_autostart(widget):
     ntfy.send_notification(_ntfy_msg, _ntfy_icon_file)
 
 
-if not is_init_systemd():
+if is_init_systemd():
     autostart_toshy_svcs_item = Gtk.CheckMenuItem(label="Autostart Toshy Services")
     autostart_toshy_svcs_item.set_active(   toshy_svc_sessmon_unit_enabled and 
                                             toshy_svc_config_unit_enabled       )
