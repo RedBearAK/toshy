@@ -607,17 +607,18 @@ def set_item_active_with_retry(menu_item, state=True, max_retries=5):
 
 # -------- MENU ITEMS --------------------------------------------------
 
-services_label_item = Gtk.MenuItem(label=" ---- Services Status ---- ")
-services_label_item.set_sensitive(False)
-menu.append(services_label_item)
+if not is_init_systemd():
+    services_label_item = Gtk.MenuItem(label=" ---- Services Status ---- ")
+    services_label_item.set_sensitive(False)
+    menu.append(services_label_item)
 
-toshy_config_status_item = Gtk.MenuItem(    label="      Config: (?)")
-toshy_config_status_item.set_sensitive(False)
-menu.append(toshy_config_status_item)
+    toshy_config_status_item = Gtk.MenuItem(    label="      Config: (?)")
+    toshy_config_status_item.set_sensitive(False)
+    menu.append(toshy_config_status_item)
 
-session_monitor_status_item = Gtk.MenuItem( label="     SessMon: (?)")
-session_monitor_status_item.set_sensitive(False)
-menu.append(session_monitor_status_item)
+    session_monitor_status_item = Gtk.MenuItem( label="     SessMon: (?)")
+    session_monitor_status_item.set_sensitive(False)
+    menu.append(session_monitor_status_item)
 
 
 def is_service_enabled(service_name):
@@ -685,25 +686,26 @@ def fn_toggle_toshy_svcs_autostart(widget):
     ntfy.send_notification(_ntfy_msg, _ntfy_icon_file)
 
 
-autostart_toshy_svcs_item = Gtk.CheckMenuItem(label="Autostart Toshy Services")
-autostart_toshy_svcs_item.set_active(   toshy_svc_sessmon_unit_enabled and 
-                                        toshy_svc_config_unit_enabled       )
-autostart_toshy_svcs_item.connect("toggled", fn_toggle_toshy_svcs_autostart)
-menu.append(autostart_toshy_svcs_item)
+if not is_init_systemd():
+    autostart_toshy_svcs_item = Gtk.CheckMenuItem(label="Autostart Toshy Services")
+    autostart_toshy_svcs_item.set_active(   toshy_svc_sessmon_unit_enabled and 
+                                            toshy_svc_config_unit_enabled       )
+    autostart_toshy_svcs_item.connect("toggled", fn_toggle_toshy_svcs_autostart)
+    menu.append(autostart_toshy_svcs_item)
 
-separator_above_svcs_item = Gtk.SeparatorMenuItem()
-menu.append(separator_above_svcs_item)  #-------------------------------------#
+    separator_above_svcs_item = Gtk.SeparatorMenuItem()
+    menu.append(separator_above_svcs_item)  #-------------------------------------#
 
-restart_toshy_svcs_item = Gtk.MenuItem(label="Re/Start Toshy Services")
-restart_toshy_svcs_item.connect("activate", fn_restart_toshy_services)
-menu.append(restart_toshy_svcs_item)
+    restart_toshy_svcs_item = Gtk.MenuItem(label="Re/Start Toshy Services")
+    restart_toshy_svcs_item.connect("activate", fn_restart_toshy_services)
+    menu.append(restart_toshy_svcs_item)
 
-quit_toshy_svcs_item = Gtk.MenuItem(label="Stop Toshy Services")
-quit_toshy_svcs_item.connect("activate", fn_stop_toshy_services)
-menu.append(quit_toshy_svcs_item)
+    quit_toshy_svcs_item = Gtk.MenuItem(label="Stop Toshy Services")
+    quit_toshy_svcs_item.connect("activate", fn_stop_toshy_services)
+    menu.append(quit_toshy_svcs_item)
 
-separator_below_svcs_item = Gtk.SeparatorMenuItem()
-menu.append(separator_below_svcs_item)  #-------------------------------------#
+    separator_below_svcs_item = Gtk.SeparatorMenuItem()
+    menu.append(separator_below_svcs_item)  #-------------------------------------#
 
 restart_toshy_script_item = Gtk.MenuItem(label="Re/Start Config-Only")
 restart_toshy_script_item.connect("activate", fn_restart_toshy_config_only)
