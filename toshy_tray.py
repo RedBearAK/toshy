@@ -889,9 +889,10 @@ open_config_folder_item = Gtk.MenuItem(label="Open Config Folder")
 open_config_folder_item.connect("activate", fn_open_config_folder)
 menu.append(open_config_folder_item)
 
-show_services_log_item = Gtk.MenuItem(label="Show Services Log")
-show_services_log_item.connect("activate", fn_show_services_log)
-menu.append(show_services_log_item)
+if is_init_systemd():
+    show_services_log_item = Gtk.MenuItem(label="Show Services Log")
+    show_services_log_item.connect("activate", fn_show_services_log)
+    menu.append(show_services_log_item)
 
 separator_above_remove_icon_item = Gtk.SeparatorMenuItem()
 menu.append(separator_above_remove_icon_item)  #-------------------------------------#
