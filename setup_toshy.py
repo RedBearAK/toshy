@@ -289,7 +289,7 @@ class InstallerSettings:
         for cmd in elevation_cmds:
             if shutil.which(cmd):
                 cnfg.priv_elev_cmd = cmd
-                print(f"Using {cmd} for privilege elevation")
+                print(f"Using the '{cmd}' command for privilege elevation.")
                 return
 
         # If no elevation command found
