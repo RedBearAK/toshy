@@ -25,7 +25,7 @@ import threading
 # import traceback
 import subprocess
 
-from subprocess import DEVNULL
+from subprocess import DEVNULL, PIPE
 from typing import List, Dict, Tuple
 
 # Local imports
@@ -473,8 +473,49 @@ def fn_stop_toshy_config_only(widget):
     subprocess.Popen([toshy_cfg_stop_cmd], stdout=DEVNULL, stderr=DEVNULL)
 
 
+# def fn_open_preferences(widget):
+#     subprocess.Popen(['toshy-gui'])
+
+
 def fn_open_preferences(widget):
-    subprocess.Popen(['toshy-gui'])
+    # First check if toshy-gui exists
+    toshy_gui_cmd = shutil.which('toshy-gui')
+    if not toshy_gui_cmd:
+        _ntfy_icon = icon_file_inverse
+        _ntfy_msg = ("The 'toshy-gui' utility is missing.\r"
+                    "Please check your installation.")
+        ntfy.send_notification(_ntfy_msg, _ntfy_icon, urgency='critical')
+        _error_msg = ("The 'toshy-gui' utility is missing.\n"
+                    "     Please check your installation.")
+        error(f"{_error_msg}")
+        return
+
+    # Launch the process
+    process = subprocess.Popen([toshy_gui_cmd], stdout=PIPE, stderr=PIPE)
+
+    # Wait a short time to see if it exits immediately
+    time.sleep(1)
+
+    # Check if it's still running
+    return_code = process.poll()
+
+    if return_code is not None:
+        # Process has already terminated
+        stderr = process.stderr.read().decode()
+        stdout = process.stdout.read().decode()
+
+        _ntfy_icon = icon_file_inverse
+        _ntfy_msg = (f"'toshy-gui' exited too quickly (code {return_code}).\r"
+                    f"Error: {stderr.strip() if stderr else 'No error output'}")
+        ntfy.send_notification(_ntfy_msg, _ntfy_icon, urgency='critical')
+
+        _error_msg = (f"'toshy-gui' exited too quickly with code {return_code}.\n"
+                    f"     Error: {stderr.strip() if stderr else 'No error output'}")
+        error(f"{_error_msg}")
+        return
+
+    # Process is running normally
+    return
 
 
 def fn_open_config_folder(widget):
