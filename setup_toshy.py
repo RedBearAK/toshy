@@ -1135,7 +1135,6 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "git", "gobject-introspection-devel",
                             "libayatana-appindicator-devel", "libnotify", "libxkbcommon-devel",
                             "pkgconf", "python-dbus", "python-devel", "python-evdev", "python-pip",
-                            "tk",
                             "zenity"],
 
 }
