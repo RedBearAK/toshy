@@ -245,12 +245,17 @@ There is a weird bug at times with searching for extensions by name, where you a
 > change at some point in the future, but ignore it for now.)
 
 > [!NOTE]  
-> Installer commands and options are now different from early Toshy releases.  
-> CentOS 7 and CentOS Stream 8 users: run `./prep_centos_before_setup.sh` first.  
+> Installer commands and options are now very different from early Toshy releases.  
+> **_CentOS 7 and CentOS Stream 8 users_**: run `./prep_centos_before_setup.sh` first.  
+> If the prep script doesn't completely work, run it a second time!
 
-0. _Verify that your specific distro or basic distro type is [supported](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros)_
+1. Verify that your specific distro or basic distro type is [supported](https://github.com/RedBearAK/toshy/wiki/Supported-Linux-distros) (most are now).  
 
-1. Click the big green **`  <> Code  ▼  `** button near the top of the page.
+1. Try the new [bootstrap command](https://github.com/RedBearAK/toshy/wiki/How-to-install-Toshy-with-a-single-command) that will auto-download the branch of your choice, and allow adding install option flags (see below for more info). Default choices are good for most users.  
+
+Or get the zip you want manually, and run the setup script yourself (almost as easy)...
+
+1. Click the big green **`  <> Code  ▼  `** button near the top of the page.  
 
 1. Download the latest zip file from the drop-down. ("Releases" are older.)  
 
