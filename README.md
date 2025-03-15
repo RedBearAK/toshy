@@ -29,9 +29,11 @@ I don't really know many other places where it might be considered appropriate t
 
 # Current status: Stable Beta (Please Read)
 
-**2025-03-13 UPDATE**: Added support for Chimera Linux, an independent distro with BSD userland utilities. GUI preferences app will not work until someone finds the Python Tkinter package.
+**2025-03-13 UPDATE**: The Chimera support required adapting the setup script to use `doas` or `run0` if `sudo` is not available to the user. So this is no longer an impedement to installing Toshy.
 
-**2025-03-02 UPDATE**: The solution for working with Synergy as a server/host system was expanded to support Deskflow, Input Leap and Barrier. (Requires working log file for the KVM switch app in all cases.) Client systems are ignored because input cannot be detected by the keymapper.
+**2025-03-13 UPDATE**: Added support for Chimera Linux, an independent distro with BSD userland utilities. GUI preferences app will not work until someone adds a Python Tkinter package to Chimera. The current maintainer of other Python packages in Chimera was not interested.
+
+**2025-03-02 UPDATE**: The solution for working with Synergy as a server/host network KVM switch system was expanded to support Deskflow, Input Leap and Barrier. (**_Requires working log file_** for the KVM switch app in all cases.) Client systems are ignored because input cannot be detected by the keymapper, so no remaps would ever be performed on incoming input from the server system, but the keymapper will still operate on a local input device on the client.
 
 **2025-01-18 UPDATE**: Fixed some issues in the `wlroots` window context method, and verified the bulk of the available LXQt Wayland session options seem to work. That includes `labwc`, `sway`, `Hyprland`, `niri`, `wayfire`, and `river` (tested on Tumbleweed). The `kwin_wayland` session option is still untested (unavailable on Tumbleweed for now).
 
