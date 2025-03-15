@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-__version__ = '20250227'
+__version__ = '20250313'
 
 # Indicator tray icon menu app for Toshy, using pygobject/gi
 TOSHY_PART      = 'tray'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
@@ -25,7 +25,7 @@ import threading
 # import traceback
 import subprocess
 
-from subprocess import DEVNULL
+from subprocess import DEVNULL, PIPE
 from typing import List, Dict, Tuple
 
 # Local imports
@@ -473,8 +473,49 @@ def fn_stop_toshy_config_only(widget):
     subprocess.Popen([toshy_cfg_stop_cmd], stdout=DEVNULL, stderr=DEVNULL)
 
 
+# def fn_open_preferences(widget):
+#     subprocess.Popen(['toshy-gui'])
+
+
 def fn_open_preferences(widget):
-    subprocess.Popen(['toshy-gui'])
+    # First check if toshy-gui exists
+    toshy_gui_cmd = shutil.which('toshy-gui')
+    if not toshy_gui_cmd:
+        _ntfy_icon = icon_file_inverse
+        _ntfy_msg = ("The 'toshy-gui' utility is missing.\r"
+                    "Please check your installation.")
+        ntfy.send_notification(_ntfy_msg, _ntfy_icon, urgency='critical')
+        _error_msg = ("The 'toshy-gui' utility is missing.\n"
+                    "     Please check your installation.")
+        error(f"{_error_msg}")
+        return
+
+    # Launch the process
+    process = subprocess.Popen([toshy_gui_cmd], stdout=PIPE, stderr=PIPE)
+
+    # Wait a short time to see if it exits immediately
+    time.sleep(1)
+
+    # Check if it's still running
+    return_code = process.poll()
+
+    if return_code is not None:
+        # Process has already terminated
+        stderr = process.stderr.read().decode()
+        stdout = process.stdout.read().decode()
+
+        _ntfy_icon = icon_file_inverse
+        _ntfy_msg = (f"'toshy-gui' exited too quickly (code {return_code}).\r"
+                    f"Error: {stderr.strip() if stderr else 'No error output'}")
+        ntfy.send_notification(_ntfy_msg, _ntfy_icon, urgency='critical')
+
+        _error_msg = (f"'toshy-gui' exited too quickly with code {return_code}.\n"
+                    f"     Error: {stderr.strip() if stderr else 'No error output'}")
+        error(f"{_error_msg}")
+        return
+
+    # Process is running normally
+    return
 
 
 def fn_open_config_folder(widget):
@@ -607,17 +648,18 @@ def set_item_active_with_retry(menu_item, state=True, max_retries=5):
 
 # -------- MENU ITEMS --------------------------------------------------
 
-services_label_item = Gtk.MenuItem(label=" ---- Services Status ---- ")
-services_label_item.set_sensitive(False)
-menu.append(services_label_item)
+if is_init_systemd():
+    services_label_item = Gtk.MenuItem(label=" ---- Services Status ---- ")
+    services_label_item.set_sensitive(False)
+    menu.append(services_label_item)
 
-toshy_config_status_item = Gtk.MenuItem(    label="      Config: (?)")
-toshy_config_status_item.set_sensitive(False)
-menu.append(toshy_config_status_item)
+    toshy_config_status_item = Gtk.MenuItem(    label="      Config: (?)")
+    toshy_config_status_item.set_sensitive(False)
+    menu.append(toshy_config_status_item)
 
-session_monitor_status_item = Gtk.MenuItem( label="     SessMon: (?)")
-session_monitor_status_item.set_sensitive(False)
-menu.append(session_monitor_status_item)
+    session_monitor_status_item = Gtk.MenuItem( label="     SessMon: (?)")
+    session_monitor_status_item.set_sensitive(False)
+    menu.append(session_monitor_status_item)
 
 
 def is_service_enabled(service_name):
@@ -685,25 +727,26 @@ def fn_toggle_toshy_svcs_autostart(widget):
     ntfy.send_notification(_ntfy_msg, _ntfy_icon_file)
 
 
-autostart_toshy_svcs_item = Gtk.CheckMenuItem(label="Autostart Toshy Services")
-autostart_toshy_svcs_item.set_active(   toshy_svc_sessmon_unit_enabled and 
-                                        toshy_svc_config_unit_enabled       )
-autostart_toshy_svcs_item.connect("toggled", fn_toggle_toshy_svcs_autostart)
-menu.append(autostart_toshy_svcs_item)
+if is_init_systemd():
+    autostart_toshy_svcs_item = Gtk.CheckMenuItem(label="Autostart Toshy Services")
+    autostart_toshy_svcs_item.set_active(   toshy_svc_sessmon_unit_enabled and 
+                                            toshy_svc_config_unit_enabled       )
+    autostart_toshy_svcs_item.connect("toggled", fn_toggle_toshy_svcs_autostart)
+    menu.append(autostart_toshy_svcs_item)
 
-separator_above_svcs_item = Gtk.SeparatorMenuItem()
-menu.append(separator_above_svcs_item)  #-------------------------------------#
+    separator_above_svcs_item = Gtk.SeparatorMenuItem()
+    menu.append(separator_above_svcs_item)  #-------------------------------------#
 
-restart_toshy_svcs_item = Gtk.MenuItem(label="Re/Start Toshy Services")
-restart_toshy_svcs_item.connect("activate", fn_restart_toshy_services)
-menu.append(restart_toshy_svcs_item)
+    restart_toshy_svcs_item = Gtk.MenuItem(label="Re/Start Toshy Services")
+    restart_toshy_svcs_item.connect("activate", fn_restart_toshy_services)
+    menu.append(restart_toshy_svcs_item)
 
-quit_toshy_svcs_item = Gtk.MenuItem(label="Stop Toshy Services")
-quit_toshy_svcs_item.connect("activate", fn_stop_toshy_services)
-menu.append(quit_toshy_svcs_item)
+    quit_toshy_svcs_item = Gtk.MenuItem(label="Stop Toshy Services")
+    quit_toshy_svcs_item.connect("activate", fn_stop_toshy_services)
+    menu.append(quit_toshy_svcs_item)
 
-separator_below_svcs_item = Gtk.SeparatorMenuItem()
-menu.append(separator_below_svcs_item)  #-------------------------------------#
+    separator_below_svcs_item = Gtk.SeparatorMenuItem()
+    menu.append(separator_below_svcs_item)  #-------------------------------------#
 
 restart_toshy_script_item = Gtk.MenuItem(label="Re/Start Config-Only")
 restart_toshy_script_item.connect("activate", fn_restart_toshy_config_only)
@@ -887,9 +930,10 @@ open_config_folder_item = Gtk.MenuItem(label="Open Config Folder")
 open_config_folder_item.connect("activate", fn_open_config_folder)
 menu.append(open_config_folder_item)
 
-show_services_log_item = Gtk.MenuItem(label="Show Services Log")
-show_services_log_item.connect("activate", fn_show_services_log)
-menu.append(show_services_log_item)
+if is_init_systemd():
+    show_services_log_item = Gtk.MenuItem(label="Show Services Log")
+    show_services_log_item.connect("activate", fn_show_services_log)
+    menu.append(show_services_log_item)
 
 separator_above_remove_icon_item = Gtk.SeparatorMenuItem()
 menu.append(separator_above_remove_icon_item)  #-------------------------------------#
@@ -950,21 +994,28 @@ menu.show_all()
 def main():
 
     global loop
+    global DISTRO_ID
     global DESKTOP_ENV
     global DE_MAJ_VER
 
+    global icon_file_active
+    global icon_file_inverse
+    global icon_file_grayscale
+
     env_ctxt_getter             = EnvironmentInfo()
     env_info_dct                = env_ctxt_getter.get_env_info()
+    DISTRO_ID                   = str(env_info_dct.get('DISTRO_ID', None)).casefold()
     DESKTOP_ENV                 = str(env_info_dct.get('DESKTOP_ENV', None)).casefold()
     DE_MAJ_VER                  = str(env_info_dct.get('DE_MAJ_VER', None)).casefold()
 
     # COSMIC desktop environment messes with tray icon, so use 'grayscale' icon
     if DESKTOP_ENV == 'cosmic':
-        # Use 'global' keyword since we need to change the global values here
-        global icon_file_active
-        global icon_file_inverse
         icon_file_active        = icon_file_grayscale
         icon_file_inverse       = icon_file_grayscale
+
+    # On distros known to not use 'systemd', use 'inverse' icon (except on COSMIC)
+    elif not DESKTOP_ENV == 'cosmic' and not is_init_systemd():
+        tray_indicator.set_icon_full(icon_file_inverse, "Toshy Tray Icon Inactive")
 
     if shutil.which('systemctl') and is_init_systemd():
         # help out the config file user service

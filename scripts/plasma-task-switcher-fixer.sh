@@ -266,8 +266,10 @@ if [ "$KDE_ver" = "5" ] || [ "$KDE_ver" = "6" ]; then
             
             echo "If global shortcuts do not work, please log out and back in."
         else
-            echo "The $kglobalaccel_cmd command is not available."
-            echo "You must log out to activate modified shortcuts."
+            if [ "$KDE_ver" = "5" ] || [ "$KDE_ver" = "4" ]; then
+                echo "The $kglobalaccel_cmd command is not available."
+            fi
+            echo "You MUST log out to activate modified shortcuts."
         fi
 
     fi

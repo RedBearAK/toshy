@@ -29,6 +29,8 @@ I don't really know many other places where it might be considered appropriate t
 
 # Current status: Stable Beta (Please Read)
 
+**2025-03-13 UPDATE**: Added support for Chimera Linux, an independent distro with BSD userland utilities. GUI preferences app will not work until someone finds the Python Tkinter package.
+
 **2025-03-02 UPDATE**: The solution for working with Synergy as a server/host system was expanded to support Deskflow, Input Leap and Barrier. (Requires working log file for the KVM switch app in all cases.) Client systems are ignored because input cannot be detected by the keymapper.
 
 **2025-01-18 UPDATE**: Fixed some issues in the `wlroots` window context method, and verified the bulk of the available LXQt Wayland session options seem to work. That includes `labwc`, `sway`, `Hyprland`, `niri`, `wayfire`, and `river` (tested on Tumbleweed). The `kwin_wayland` session option is still untested (unavailable on Tumbleweed for now).
@@ -536,6 +538,7 @@ See above section for the GUI tools and preferences explanations. This section i
 
 Toshy does its best to set itself up automatically on any Linux system that uses `systemd` and that is a "known" Linux distro type that the installer knows how to deal with (i.e., has a list of the correct native support packages to install, and knows how to use the package manager). Generally this means distros that use one of these package managers:  
 
+- `apk`
 - `apt`
 - `dnf`
 - `eopkg`
