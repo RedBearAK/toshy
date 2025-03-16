@@ -447,7 +447,10 @@ def fn_restart_toshy_services(widget):
     subprocess.Popen([toshy_svcs_restart_cmd], stdout=DEVNULL, stderr=DEVNULL)
     time.sleep(3)
     _ntfy_icon_file = icon_file_active
-    _ntfy_msg = 'Toshy systemd services (re)started.\nIn X11, tap a modifier key before trying shortcuts.'
+    # The keymapper's problem with ignoring the first modifier key press after startup
+    # was fixed in 'xwaykeyz' 1.5.4, so we don't need to have these reminders anymore!
+    # _ntfy_msg = 'Toshy systemd services (re)started.\nIn X11, tap a modifier key before trying shortcuts.'
+    _ntfy_msg = 'Toshy systemd services (re)started.'
     ntfy.send_notification(_ntfy_msg, _ntfy_icon_file)
 
 

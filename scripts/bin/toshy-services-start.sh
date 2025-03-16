@@ -57,5 +57,8 @@ systemctl --user start toshy-config.service
 sleep 0.1
 systemctl --user start toshy-session-monitor.service
 
-echo -e "\nToshy systemd services started.\n\nRemember to tap a modifier key before trying shortcuts!\n"
+# The keymapper's problem with ignoring the first modifier key press after startup
+# was fixed in 'xwaykeyz' 1.5.4, so we don't need to have these reminders anymore!
+# echo -e "\nToshy systemd services restarted.\n\nRemember to tap a modifier key before trying shortcuts!\n"
+echo -e "\nToshy systemd services restarted.\n"
 sleep 0.1
