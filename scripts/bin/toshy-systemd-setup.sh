@@ -120,5 +120,8 @@ systemctl --user status toshy-config.service
 
 sleep $DELAY
 
-echo -e "\nFinished installing Toshy systemd services..."
-echo -e "\nHINT: In X11, tap a modifier key before trying shortcuts.\n"
+echo -e "\nFinished installing Toshy systemd services.\n"
+
+# The keymapper's problem with ignoring the first modifier key press after startup
+# was fixed in 'xwaykeyz' 1.5.4, so we don't need to have these reminders anymore!
+# echo -e "\nHINT: In X11, tap a modifier key before trying shortcuts.\n"
