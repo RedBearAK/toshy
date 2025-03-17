@@ -284,6 +284,7 @@ class InstallerSettings:
         """Detect the appropriate privilege elevation command"""
         # Order of preference for elevation commands
         elevation_cmds = ["sudo", "doas", "run0"]
+        print()
         print(f"Checking for the following commands: {elevation_cmds}")
 
         for cmd in elevation_cmds:
@@ -2285,6 +2286,7 @@ def add_user_to_group(group_name: str, user_name: str) -> None:
 
     print(f'User "{user_name}" added to group "{group_name}".')
     enable_prompt_for_reboot()
+
 
 def verify_user_groups():
     """
