@@ -1834,13 +1834,17 @@ class PackageInstallDispatcher:
     @staticmethod
     def install_on_apt_distro():
         """utility function that gets dispatched for distros that use APT package manager"""
-        native_pkg_installer.check_for_pkg_mgr_cmd('apt')
-        call_attn_to_pwd_prompt_if_needed()
 
-        # Hasn't been working on several Debian/Ubuntu distros with broken dependencies.
+        # Install has been failing on several Debian/Ubuntu distros with broken dependencies.
         # So far: Deepin 25 beta, Linux Lite 7.2, Ubuntu Kylin 23.10, Zorin OS 16.x
         # There is no safe way to overcome the issue automatically. Repos are broken.
-        cmd_lst = [cnfg.priv_elev_cmd, 'apt', 'install', '-y']
+
+        # 'apt' command warns about "unstable CLI interface", so let's try 'apt-get'
+        pkg_mgr_cmd = 'apt-get'
+        native_pkg_installer.check_for_pkg_mgr_cmd(pkg_mgr_cmd)
+        call_attn_to_pwd_prompt_if_needed()
+
+        cmd_lst = [cnfg.priv_elev_cmd, pkg_mgr_cmd, 'install', '-y']
         native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
     ###########################################################################
