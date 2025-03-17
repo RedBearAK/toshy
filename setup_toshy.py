@@ -2304,6 +2304,7 @@ def verify_user_groups():
 
     # Handle 'systemd-journal' group for specific distributions
     systemd_journal_grp_distros = [
+        *distro_groups_map['debian-based'],
         *distro_groups_map['leap-based'],
         *distro_groups_map['microos-based'],
         *distro_groups_map['rhel-based'],
