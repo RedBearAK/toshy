@@ -210,7 +210,7 @@ class InstallerSettings:
         self.pkgs_for_distro        = None
 
         self.priv_elev_cmd          = None
-        self.initial_pw_alert_shown = None
+        # self.initial_pw_alert_shown = None
         self.qdbus                  = self.find_qdbus_command()
 
         # current stable Python release version (TODO: update when needed):
@@ -536,22 +536,31 @@ def call_attn_to_pwd_prompt_if_needed():
         error("Attention function was called with no elevation command, or unprivileged user.")
         return  # Skip if no elevation command or in unprivileged mode (should never happen)
 
-    # Only sudo has a reliable non-interactive check
-    if cnfg.priv_elev_cmd == "sudo":
+    if cnfg.priv_elev_cmd in ['sudo', 'doas']:
         try:
-            subprocess.run( [cnfg.priv_elev_cmd, '-n', 'true'], stdout=DEVNULL, stderr=DEVNULL, check=True)
+            subprocess.run( [cnfg.priv_elev_cmd, '-n', 'true'],
+                            stdout=DEVNULL, stderr=DEVNULL, check=True)
             return
         except subprocess.CalledProcessError:
-            # Password is needed, show the warning
+            # Password is needed, show the alert
             pass
-    else:
-        # For doas/run0, only show password warning once at the beginning of setup,
-        # and skip subsequent calls to avoid confusion
-        if cnfg.initial_pw_alert_shown:
-            return
-        cnfg.initial_pw_alert_shown = True
 
-    # Get user attention if sudo ticket expired, or initial usage of 'doas' or 'run0'
+    elif cnfg.priv_elev_cmd == 'run0':
+        try:
+            subprocess.run( [cnfg.priv_elev_cmd, '--no-ask-password', 'true'],
+                            stdout=DEVNULL, stderr=DEVNULL, check=True)
+            return
+        except subprocess.CalledProcessError:
+            # Password is needed, show the alert
+            pass
+
+    else:
+        print()
+        error(f"Privilege elevation command '{cnfg.priv_elev_cmd}' is not handled in the\n"
+                "      attention function. Please notify the dev to fix this error.\n")
+        return
+
+    # Get user attention if there is a password needed (prompt will appear after this)
     main_clr = 'blue'
     alt_clr = 'magenta'
     print()
@@ -2105,50 +2114,75 @@ def install_distro_pkgs():
 #####################################################################################################
 
 
-def load_uinput_module():
-    """Check to see if `uinput` kernel module is loaded"""
-
+def setup_uinput_module():
+    """Check if uinput module is loaded and make it persistent if needed"""
     print(f'\n\n§  Checking status of "uinput" kernel module...\n{cnfg.separator}')
 
+    # Check if already loaded
+    we_loaded_uinput_module = False
     try:
         subprocess.check_output("lsmod | grep uinput", shell=True)
-        print('The "uinput" module is already loaded.')
+        print('The "uinput" module is already loaded. Assuming auto-load persistence!')
     except subprocess.CalledProcessError:
         print('The "uinput" module is not loaded, loading now...')
         call_attn_to_pwd_prompt_if_needed()
         subprocess.run([cnfg.priv_elev_cmd, 'modprobe', 'uinput'], check=True)
+        we_loaded_uinput_module = True
 
-    # Check if /etc/modules-load.d/ directory exists
-    if os.path.isdir("/etc/modules-load.d/"):
-        # Check if /etc/modules-load.d/uinput.conf exists
-        if not os.path.exists("/etc/modules-load.d/uinput.conf"):
-            # If not, create it and add "uinput"
-            try:
-                call_attn_to_pwd_prompt_if_needed()
-                command = (f"echo 'uinput' | {cnfg.priv_elev_cmd} "
-                            "tee /etc/modules-load.d/uinput.conf >/dev/null")
-                subprocess.run(command, shell=True, check=True)
-            except subprocess.CalledProcessError as proc_err:
-                error(f"Failed to create /etc/modules-load.d/uinput.conf:\n\t{proc_err}")
-                error(f'ERROR: Install failed.')
-                safe_shutdown(1)
+    # Only check persistence if we had to load it ourselves
+    if we_loaded_uinput_module:
+        # Check for udev static_node rule
+        udev_rule_autoloads_uinput = False
+        for udev_file in ["/usr/lib/udev/rules.d/50-udev-default.rules", 
+                            "/lib/udev/rules.d/50-udev-default.rules"]:
+            if os.path.exists(udev_file):
+                try:
+                    result = subprocess.run(["grep", "static_node=uinput", udev_file],
+                                            capture_output=True, text=True)
+                    if result.returncode == 0:
+                        print('The uinput module appears to be auto-loaded by a udev rule in:\n  '
+                                f'{udev_file}')
+                        udev_rule_autoloads_uinput = True
+                        break
+                except (FileNotFoundError, PermissionError, subprocess.CalledProcessError) as e:
+                    pass
+                except Exception as e:
+                    error(f"Something really unexpected happened reading udev file:\n{e}")
+                    pass
 
-    else:
-        # Check if /etc/modules file exists
-        if os.path.isfile("/etc/modules"):
-            # If it exists, check if "uinput" is already listed in it
-            with open("/etc/modules", "r") as f:
-                if "uinput" not in f.read():
-                    # If "uinput" is not listed, append it
+        # Configure persistence if needed
+        if not udev_rule_autoloads_uinput:
+            # Check if /etc/modules-load.d/ directory exists
+            if os.path.isdir("/etc/modules-load.d/"):
+                # Check if /etc/modules-load.d/uinput.conf exists
+                if not os.path.exists("/etc/modules-load.d/uinput.conf"):
+                    # If not, create it and add "uinput"
                     try:
                         call_attn_to_pwd_prompt_if_needed()
                         command = (f"echo 'uinput' | {cnfg.priv_elev_cmd} "
-                                    "tee -a /etc/modules >/dev/null")
+                                    "tee /etc/modules-load.d/uinput.conf >/dev/null")
                         subprocess.run(command, shell=True, check=True)
                     except subprocess.CalledProcessError as proc_err:
-                        error(f"ERROR: Failed to append 'uinput' to /etc/modules:\n\t{proc_err}")
+                        error(f"Failed to create /etc/modules-load.d/uinput.conf:\n\t{proc_err}")
                         error(f'ERROR: Install failed.')
                         safe_shutdown(1)
+            else:
+                # Check if /etc/modules file exists, as a backup to /etc/modules.d/
+                if os.path.isfile("/etc/modules"):
+                    # If it exists, check if "uinput" is already listed in it
+                    with open("/etc/modules", "r") as f:
+                        if "uinput" not in f.read():
+                            # If "uinput" is not listed, append it
+                            try:
+                                call_attn_to_pwd_prompt_if_needed()
+                                command = (f"echo 'uinput' | {cnfg.priv_elev_cmd} "
+                                            "tee -a /etc/modules >/dev/null")
+                                subprocess.run(command, shell=True, check=True)
+                            except subprocess.CalledProcessError as proc_err:
+                                error(f"ERROR: Failed to append 'uinput' to /etc/modules:\n\t{proc_err}")
+                                error(f'ERROR: Install failed.')
+                                safe_shutdown(1)
+
     show_task_completed_msg()
 
 
@@ -4143,7 +4177,10 @@ def main(cnfg: InstallerSettings):
         # These things require 'sudo/doas/run0' (admin user)
         # Allow them to be skipped to support non-admin users
         # (An admin user would need to first do the "prep-only" command to support this)
-        load_uinput_module()
+
+        # load_uinput_module()
+        setup_uinput_module()
+
         install_udev_rules()
         if not cnfg.prep_only:
             # We don't need to check the user group for admin doing prep-only command
