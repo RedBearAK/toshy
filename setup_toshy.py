@@ -69,7 +69,7 @@ def is_script_running_as_root():
 
 
 if is_script_running_as_root():
-    error("This setup script should not be run as root/superuser. Exiting.")
+    error("\nThis setup script should not be run as root/superuser. Exiting.\n")
     sys.exit(1)
 
 
