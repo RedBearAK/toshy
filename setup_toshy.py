@@ -49,27 +49,29 @@ def is_script_running_as_root():
     """Utility function to catch the user running the entire script as superuser/root,
         which is undesirable since it is so user-oriented in nature. A simple check of
         EUID == 0 does not cover non-sudo setups well."""
+
     # Check environment indicators first (most reliable)
     env_indicators = [
         # Direct privilege elevation indicators
         'SUDO_USER' in os.environ,
         'DOAS_USER' in os.environ,
-        
+
         # Root user indicators
         os.environ.get('USER')      == 'root',
         os.environ.get('LOGNAME')   == 'root',
         os.environ.get('HOME')      == '/root',
     ]
-    
+
     if any(env_indicators):
         return True
-        
+
     # Fall back to UID checks if environment doesn't indicate elevation
     return os.geteuid() == 0 or os.getuid() == 0
 
 
 if is_script_running_as_root():
-    error("\nThis setup script should not be run as root/superuser. Exiting.\n")
+    print()
+    error("This setup script should not be run as root/superuser. Exiting.\n")
     sys.exit(1)
 
 
