@@ -44,9 +44,34 @@ def print(*args, **kwargs):
 # Replace the built-in print with our custom print (where flush is always True)
 builtins.print = print
 
-if os.name == 'posix' and os.geteuid() == 0:
-    error("This app should not be run as root/superuser. Exiting.")
+
+def is_script_running_as_root():
+    """Utility function to catch the user running the entire script as superuser/root,
+        which is undesirable since it is so user-oriented in nature. A simple check of
+        EUID == 0 does not cover non-sudo setups well."""
+    # Check environment indicators first (most reliable)
+    env_indicators = [
+        # Direct privilege elevation indicators
+        'SUDO_USER' in os.environ,
+        'DOAS_USER' in os.environ,
+        
+        # Root user indicators
+        os.environ.get('USER')      == 'root',
+        os.environ.get('LOGNAME')   == 'root',
+        os.environ.get('HOME')      == '/root',
+    ]
+    
+    if any(env_indicators):
+        return True
+        
+    # Fall back to UID checks if environment doesn't indicate elevation
+    return os.geteuid() == 0 or os.getuid() == 0
+
+
+if is_script_running_as_root():
+    error("This setup script should not be run as root/superuser. Exiting.")
     sys.exit(1)
+
 
 def signal_handler(sig, frame):
     """Handle signals like Ctrl+C"""
@@ -56,6 +81,7 @@ def signal_handler(sig, frame):
         print('\n')
         debug(f'SIGINT or SIGQUIT received. Exiting.\n')
         sys.exit(1)
+
 
 if platform.system() != 'Windows':
     signal.signal(signal.SIGINT,    signal_handler)
@@ -131,18 +157,13 @@ fix_path_tmp_file       = 'toshy_installer_says_fix_path'
 fix_path_tmp_path       = os.path.join(run_tmp_dir, fix_path_tmp_file)
 
 # set a standard path for duration of script run, to avoid issues with user customized paths
-os.environ['PATH']  = '/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin'
+os.environ['PATH']      = '/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin'
 
 # deactivate Python virtual environment, if one is active, to avoid issues with sys.executable
 if sys.prefix != sys.base_prefix:
     os.environ["VIRTUAL_ENV"] = ""
     sys.path = [p for p in sys.path if not p.startswith(sys.prefix)]
     sys.prefix = sys.base_prefix
-
-# # Check if 'sudo' command is available to user      # Doesn't account for doas/run0
-# if not shutil.which('sudo'):
-#     print("Error: 'sudo' not found. Installer will fail without it. Exiting.")
-#     sys.exit(1)
 
 do_not_ask_about_path = None
 if home_local_bin in original_PATH_str:
@@ -283,11 +304,11 @@ class InstallerSettings:
     def detect_elevation_command(self):
         """Detect the appropriate privilege elevation command"""
         # Order of preference for elevation commands
-        elevation_cmds = ["sudo", "doas", "run0"]
+        known_privilege_elevation_cmds = ["sudo", "doas", "run0"]
         print()
-        print(f"Checking for the following commands: {elevation_cmds}")
+        print(f"Checking for the following commands: {known_privilege_elevation_cmds}")
 
-        for cmd in elevation_cmds:
+        for cmd in known_privilege_elevation_cmds:
             if shutil.which(cmd):
                 cnfg.priv_elev_cmd = cmd
                 print(f"Using the '{cmd}' command for privilege elevation.")
@@ -856,6 +877,16 @@ def elevate_privileges():
 
     if response.casefold() == 'y':
         cnfg.detect_elevation_command()     # Get the actual command for elevated privileges
+
+        # Do this here, only if the privilege elevation command is 'sudo':
+        # Invalidate any `sudo` ticket that might be hanging around, to maximize 
+        # the length of time before `sudo` might demand the password again
+        if cnfg.priv_elev_cmd == 'sudo':
+            try:
+                subprocess.run(['sudo', '-k'], check=True)
+            except subprocess.CalledProcessError as proc_err:
+                error(f"ERROR: 'sudo' found, but 'sudo -k' did not work. Very strange.\n{proc_err}")
+
         call_attn_to_pwd_prompt_if_needed()
         try:
             cmd_lst = [cnfg.priv_elev_cmd, 'bash', '-c', 'echo -e "\nUsing elevated privileges..."']
@@ -4223,14 +4254,6 @@ def main(cnfg: InstallerSettings):
 if __name__ == '__main__':
 
     print()   # blank line in terminal to start things off
-
-    # # We can't do this if we want to work on sudo/doas/run0 systems
-    # # Invalidate any `sudo` ticket that might be hanging around, to maximize 
-    # # the length of time before `sudo` might demand the password again
-    # try:
-    #     subprocess.run(['sudo', '-k'], check=True)
-    # except subprocess.CalledProcessError as proc_err:
-    #     error(f"ERROR: 'sudo' found, but 'sudo -k' did not work. Very strange.\n\t{proc_err}")
 
     # create the configuration settings class instance
     cnfg                        = InstallerSettings()
