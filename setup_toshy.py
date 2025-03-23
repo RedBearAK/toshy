@@ -313,7 +313,7 @@ class InstallerSettings:
         for cmd in known_privilege_elevation_cmds:
             if shutil.which(cmd):
                 cnfg.priv_elev_cmd = cmd
-                print(f"Using the '{cmd}' command for privilege elevation.")
+                print(f"Using the '{cmd}' command for privilege elevation (if needed).")
                 return
 
         # If no elevation command found
@@ -2140,8 +2140,8 @@ def setup_uinput_module():
                     result = subprocess.run(["grep", "static_node=uinput", udev_file],
                                             capture_output=True, text=True)
                     if result.returncode == 0:
-                        print('The uinput module appears to be auto-loaded by a udev rule in:\n  '
-                                f'{udev_file}')
+                        print('The uinput module appears to be auto-loaded by a udev rule in:\n'
+                                f'  {udev_file}')
                         udev_rule_autoloads_uinput = True
                         break
                 except (FileNotFoundError, PermissionError, subprocess.CalledProcessError) as e:
