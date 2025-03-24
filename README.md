@@ -456,7 +456,7 @@ You will find these distro groupings in the Wiki article:
     - **Qtile** - _[via `wlroots` method]_
     - **Sway** - _[currently uses `ipc` Python module]_
     - **Wayland compositors with `zwlr_foreign_toplevel_manager_v1` interface**
-        - See [Wiki article](https://github.com/RedBearAK/toshy/wiki/Wlroots-Based-Wayland-Compositors.md) for usage of this method with unknown compositors that may be compatible
+        - See [Wiki article](https://github.com/RedBearAK/toshy/wiki/Wlroots-Based-Wayland-Compositors) for usage of this method with unknown compositors that may be compatible
 
 If you are in an X11/Xorg login session, the desktop environment or window manager doesn't really matter. The keymapper gets the window class/name/title information directly from the X server using functionality available in the `Xlib` Python module.  
 
