@@ -29,7 +29,7 @@ I don't really know many other places where it might be considered appropriate t
 
 # Current status: Stable Beta (Please Read)
 
-**2025-03-13 UPDATE**: The Chimera support required adapting the setup script to use `doas` or `run0` if `sudo` is not available to the user. So this is no longer an impedement to installing Toshy.
+**2025-03-13 UPDATE**: The Chimera support required adapting the setup script to use `doas` or `run0` if `sudo` is not available to the user. So this is no longer an impediment to installing Toshy.
 
 **2025-03-13 UPDATE**: Added support for Chimera Linux, an independent distro with BSD userland utilities. GUI preferences app will not work until someone adds a Python Tkinter package to Chimera. The current maintainer of other Python packages in Chimera was not interested.
 
