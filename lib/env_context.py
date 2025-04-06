@@ -449,7 +449,7 @@ class EnvironmentInfo:
             'Wayfire':                  'wayfire',
             'WindowMaker':              'wmaker',
             'Xfce':                     'xfce',
-            'Zorin':                    'zorin',
+            'Zorin':                    'gnome',    # Hopefully Zorin OS will only call GNOME "zorin"
         }
 
         if not self.DESKTOP_ENV:
