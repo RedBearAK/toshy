@@ -449,6 +449,7 @@ class EnvironmentInfo:
             'Wayfire':                  'wayfire',
             'WindowMaker':              'wmaker',
             'Xfce':                     'xfce',
+            'Zorin':                    'zorin',
         }
 
         if not self.DESKTOP_ENV:
