@@ -4967,6 +4967,14 @@ if DESKTOP_ENV == 'unity':
         matchProps(not_clas=remoteStr)(ctx)
     )
 
+if DESKTOP_ENV == 'xfce' and DISTRO_ID == 'zorin':
+    keymap("GenGUI overrides: Zorin Xfce", {
+        C("RC-Space"):             [iEF2NT(),C("Alt-Pause")],     # "Launch and switch applications" (Xfce on Zorin)
+    }, when = lambda ctx:
+        cnfg.screen_has_focus and
+        matchProps(not_clas=remoteStr)(ctx)
+    )
+
 if DESKTOP_ENV == 'xfce':
     keymap("GenGUI overrides: Xfce4", {
         C("RC-Grave"):             [bind,C("Super-Tab")],           # xfce4 Switch within app group
