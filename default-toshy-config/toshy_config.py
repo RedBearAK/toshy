@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = '20250407'
+__version__ = '20250409'
 ###############################################################################
 ############################   Welcome to Toshy!   ############################
 ###  
@@ -4513,14 +4513,25 @@ if DESKTOP_ENV == 'gnome':
         matchProps(clas=termStr)(ctx)
     )
 
+if DESKTOP_ENV == 'kde' and DE_MAJ_VER == '5':
+    keymap("GenTerms overrides: KDE 5", {
+        # F10 key was designated an accessibility key for opening the window/app menu in KDE 6.
+        # This will override the newer remap in the keymap below. This keymap must come first. 
+        C("LC-RC-f"):               C("Alt-F10"),                   # Toggle window maximized state (pre-Plasma 6)
+    }, when = lambda ctx:
+        cnfg.screen_has_focus and
+        matchProps(clas=termStr)(ctx)
+    )
+
 if DESKTOP_ENV == 'kde':
     keymap("GenTerms overrides: KDE", {
         ### Keyboard input source (language/layout) switching in KDE Plasma
         C("LC-Space"):              [bind,C("Super-Alt-L")],        # keyboard input source (layout) switching (Last-Used) (kde)
         C("Shift-LC-Space"):        [bind,C("Super-Alt-K")],        # keyboard input source (layout) switching (Next) (kde)
         C("RC-H"):                  C("Super-Page_Down"),           # Hide Window/Minimize app (KDE Plasma)
+
         # C("LC-RC-f"):               C("Alt-F10"),                   # Toggle window maximized state (pre-Plasma 6)
-        # F10 key was designated an accessibility key for opening the window/app menu in KDE.
+        # F10 key was designated an accessibility key for opening the window/app menu in KDE 6.
         # The shortcut for toggling window maximization state is now Meta+PgUp (so, Super-Page_Up).
         C("LC-RC-f"):               C("Super-Page_Up"),             # Toggle window maximized state
 
@@ -4775,7 +4786,6 @@ if DISTRO_ID == 'ubuntu':
     )
 
 
-
 # Overrides to General GUI shortcuts for specific desktop environments
 
 if DESKTOP_ENV == 'budgie':
@@ -4878,6 +4888,16 @@ if DESKTOP_ENV == 'icewm':
         matchProps(not_clas=remoteStr)(ctx)
     )
 
+if DESKTOP_ENV == 'kde' and DE_MAJ_VER == '5':
+    keymap("GenGUI overrides: KDE 5", {
+        # F10 key was designated an accessibility key for opening the window/app menu in KDE 6.
+        # This will override the newer remap in the keymap below. This keymap must come first. 
+        C("Super-RC-f"):            C("Alt-F10"),                   # Toggle window maximized state (pre-Plasma 6)
+    }, when = lambda ctx:
+        cnfg.screen_has_focus and
+        matchProps(not_clas=remoteStr)(ctx)
+    )
+
 if DESKTOP_ENV == 'kde':
     keymap("GenGUI overrides: KDE", {
 
@@ -4894,8 +4914,8 @@ if DESKTOP_ENV == 'kde':
         C("Super-Left"):            C("C-Super-Left"),              # Switch one desktop to the left
         C("Super-Right"):           C("C-Super-Right"),             # Switch one desktop to the right
 
-        # C("Super-RC-f"):               C("Alt-F10"),                   # Toggle window maximized state (pre-Plasma 6)
-        # F10 key was designated an accessibility key for opening the window/app menu in KDE.
+        # C("Super-RC-f"):            C("Alt-F10"),                   # Toggle window maximized state (pre-Plasma 6)
+        # F10 key was designated an accessibility key for opening the window/app menu in KDE 6.
         # The shortcut for toggling window maximization state is now Meta+PgUp (so, Super-Page_Up).
         C("Super-RC-f"):            C("Super-Page_Up"),             # Toggle window maximized state
 
