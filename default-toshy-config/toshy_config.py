@@ -4513,16 +4513,6 @@ if DESKTOP_ENV == 'gnome':
         matchProps(clas=termStr)(ctx)
     )
 
-if DESKTOP_ENV == 'kde' and DE_MAJ_VER == '5':
-    keymap("GenTerms overrides: KDE 5", {
-        # F10 key was designated an accessibility key for opening the window/app menu in KDE 6.
-        # This will override the newer remap in the keymap below. This keymap must come first. 
-        C("LC-RC-f"):               C("Alt-F10"),                   # Toggle window maximized state (pre-Plasma 6)
-    }, when = lambda ctx:
-        cnfg.screen_has_focus and
-        matchProps(clas=termStr)(ctx)
-    )
-
 if DESKTOP_ENV == 'kde':
     keymap("GenTerms overrides: KDE", {
         ### Keyboard input source (language/layout) switching in KDE Plasma
@@ -4531,7 +4521,7 @@ if DESKTOP_ENV == 'kde':
         C("RC-H"):                  C("Super-Page_Down"),           # Hide Window/Minimize app (KDE Plasma)
 
         # C("LC-RC-f"):               C("Alt-F10"),                   # Toggle window maximized state (pre-Plasma 6)
-        # F10 key was designated an accessibility key for opening the window/app menu in KDE 6.
+        # F10 key was designated an accessibility key for opening the window/app menu in KDE.
         # The shortcut for toggling window maximization state is now Meta+PgUp (so, Super-Page_Up).
         C("LC-RC-f"):               C("Super-Page_Up"),             # Toggle window maximized state
 
@@ -4888,16 +4878,6 @@ if DESKTOP_ENV == 'icewm':
         matchProps(not_clas=remoteStr)(ctx)
     )
 
-if DESKTOP_ENV == 'kde' and DE_MAJ_VER == '5':
-    keymap("GenGUI overrides: KDE 5", {
-        # F10 key was designated an accessibility key for opening the window/app menu in KDE 6.
-        # This will override the newer remap in the keymap below. This keymap must come first. 
-        C("Super-RC-f"):            C("Alt-F10"),                   # Toggle window maximized state (pre-Plasma 6)
-    }, when = lambda ctx:
-        cnfg.screen_has_focus and
-        matchProps(not_clas=remoteStr)(ctx)
-    )
-
 if DESKTOP_ENV == 'kde':
     keymap("GenGUI overrides: KDE", {
 
@@ -4915,7 +4895,7 @@ if DESKTOP_ENV == 'kde':
         C("Super-Right"):           C("C-Super-Right"),             # Switch one desktop to the right
 
         # C("Super-RC-f"):            C("Alt-F10"),                   # Toggle window maximized state (pre-Plasma 6)
-        # F10 key was designated an accessibility key for opening the window/app menu in KDE 6.
+        # F10 key was designated an accessibility key for opening the window/app menu in KDE.
         # The shortcut for toggling window maximization state is now Meta+PgUp (so, Super-Page_Up).
         C("Super-RC-f"):            C("Super-Page_Up"),             # Toggle window maximized state
 
