@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = '20250407'
+__version__ = '20250409'
 ###############################################################################
 ############################   Welcome to Toshy!   ############################
 ###  
@@ -4519,6 +4519,7 @@ if DESKTOP_ENV == 'kde':
         C("LC-Space"):              [bind,C("Super-Alt-L")],        # keyboard input source (layout) switching (Last-Used) (kde)
         C("Shift-LC-Space"):        [bind,C("Super-Alt-K")],        # keyboard input source (layout) switching (Next) (kde)
         C("RC-H"):                  C("Super-Page_Down"),           # Hide Window/Minimize app (KDE Plasma)
+
         # C("LC-RC-f"):               C("Alt-F10"),                   # Toggle window maximized state (pre-Plasma 6)
         # F10 key was designated an accessibility key for opening the window/app menu in KDE.
         # The shortcut for toggling window maximization state is now Meta+PgUp (so, Super-Page_Up).
@@ -4775,7 +4776,6 @@ if DISTRO_ID == 'ubuntu':
     )
 
 
-
 # Overrides to General GUI shortcuts for specific desktop environments
 
 if DESKTOP_ENV == 'budgie':
@@ -4894,7 +4894,7 @@ if DESKTOP_ENV == 'kde':
         C("Super-Left"):            C("C-Super-Left"),              # Switch one desktop to the left
         C("Super-Right"):           C("C-Super-Right"),             # Switch one desktop to the right
 
-        # C("Super-RC-f"):               C("Alt-F10"),                   # Toggle window maximized state (pre-Plasma 6)
+        # C("Super-RC-f"):            C("Alt-F10"),                   # Toggle window maximized state (pre-Plasma 6)
         # F10 key was designated an accessibility key for opening the window/app menu in KDE.
         # The shortcut for toggling window maximization state is now Meta+PgUp (so, Super-Page_Up).
         C("Super-RC-f"):            C("Super-Page_Up"),             # Toggle window maximized state
