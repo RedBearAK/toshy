@@ -319,10 +319,6 @@ If you go through this process I hope you'll keep track of exactly what packages
 
 One pitfall that is hard to avoid in this process is installing packages that don't actually solve any issue, and then not removing them to verify whether they are truly dependencies. Be careful about that.  
 
-#### Avoiding package layering on Fedora atomic/immutable distros  
-
-I've also recently found the `--skip-native` option to be useful on Fedora atomic/immutable distros, after running the installer initially inside a distrobox Fedora container (same version as the host). This is potentially a way to get Toshy's `venv` working without needing to use package layering on the host immutable. But the process of installing inside the container would probably need to be repeated any time the packages downloaded with `pip` change versions, because that process relies on some native packages to complete the build/caching step.  
-
 Last, but definitely not least, the "extra" install option:  
 
 ```sh
