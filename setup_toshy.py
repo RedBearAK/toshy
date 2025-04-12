@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20250317'                        # CLI option "--version" will print this out.
+__version__ = '20250412'                        # CLI option "--version" will print this out.
 
 import os
 os.environ['PYTHONDONTWRITEBYTECODE'] = '1'     # prevent this script from creating cache files
@@ -1135,7 +1135,7 @@ pkg_groups_map: Dict[str, List[str]] = {
     'debian-based':        ["curl",
                             "git", "gir1.2-ayatanaappindicator3-0.1",
                             "input-utils",
-                            "kwin-addons",
+                            # "kwin-addons", # Need this package for "Large Icons" task switcher UI
                             "libcairo2-dev", "libdbus-1-dev", "libgirepository1.0-dev",
                                 "libjpeg-dev", "libnotify-bin", "libsystemd-dev",
                                 "libwayland-dev", "libxkbcommon-dev",
@@ -1497,6 +1497,13 @@ class DistroQuirksHandler:
             error(f'ERROR: Problem installing necessary packages on CentOS Stream 8:'
                     f'\n\t{proc_err}')
             safe_shutdown(1)
+
+    @staticmethod
+    def handle_quirks_Debian():
+        print('Doing prep/checks for Debian...')
+        if cnfg.DISTRO_ID == 'debian' and cnfg.DESKTOP_ENV == 'kde':
+            # Need to add 'kwin-addons' package for "Large Icons" task switcher UI in KDE
+            cnfg.pkgs_for_distro += ['kwin-addons']
 
     @staticmethod
     def handle_quirks_RHEL_8_and_9():
@@ -1886,6 +1893,9 @@ class PackageInstallDispatcher:
         pkg_mgr_cmd = 'apt-get'
         native_pkg_installer.check_for_pkg_mgr_cmd(pkg_mgr_cmd)
         call_attn_to_pwd_prompt_if_needed()
+
+        if cnfg.DISTRO_ID == 'debian':
+            DistroQuirksHandler.handle_quirks_Debian()
 
         cmd_lst = [cnfg.priv_elev_cmd, pkg_mgr_cmd, 'install', '-y']
         native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
