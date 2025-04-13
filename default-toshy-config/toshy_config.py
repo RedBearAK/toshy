@@ -4913,10 +4913,19 @@ if DESKTOP_ENV == 'kde':
         matchProps(not_clas=remoteStr)(ctx)
     )
 
-if DESKTOP_ENV == 'mate':
-    keymap("GenGUI overrides: MATE", {
-        # Right click, configure Mint menu shortcut to match `Alt+Space` shortcut
-        C("RC-Space"):             [iEF2NT(),C("Alt-Space")],       # Open Mint app menu
+if DESKTOP_ENV == 'mate' and DISTRO_ID == 'mint':
+    keymap("GenGUI overrides: MATE on Mint", {
+        # Right click, configure Mint menu shortcut to match `Alt+Space` shortcut to make this work
+        C("RC-Space"):             [iEF2NT(), C("Alt-Space")],       # Open Mint app menu
+    }, when = lambda ctx:
+        cnfg.screen_has_focus and
+        matchProps(not_clas=remoteStr)(ctx)
+    )
+
+if DESKTOP_ENV == 'mate' and DISTRO_ID == 'ubuntu':
+    keymap("GenGUI overrides: MATE on Ubuntu", {
+        # No way to reconfigure the shortcut for Brisk Menu Launcher?
+        C("RC-Space"):             [iEF2NT(), Key.LEFT_META],       # Open Brisk Menu Launcher
     }, when = lambda ctx:
         cnfg.screen_has_focus and
         matchProps(not_clas=remoteStr)(ctx)
