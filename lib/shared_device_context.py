@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20250227'
+__version__ = '20250415'
 
 # NOTE: This new context module for monitoring keyboard-mouse sharing software was
 # originally produced by Claude 3.7 Sonnet, based on the window_context module in
@@ -27,7 +27,7 @@ class SharedDeviceMonitorInterface(abc.ABC):
     def get_supported_software(cls):
         """
         Returns a list of software names this monitor supports.
-        
+
         :returns: A list of strings, each representing a software name
                     (e.g., 'synergy', 'input-leap', 'deskflow')
         """
@@ -37,7 +37,7 @@ class SharedDeviceMonitorInterface(abc.ABC):
     def is_running(self):
         """
         Checks if the software is currently running.
-        
+
         :returns: True if the software is running, False otherwise
         """
         pass
@@ -46,7 +46,7 @@ class SharedDeviceMonitorInterface(abc.ABC):
     def get_log_file_path(self):
         """
         Returns the path to the log file for this software.
-        
+
         :returns: String path to the log file, or None if not available
         """
         pass
@@ -55,7 +55,7 @@ class SharedDeviceMonitorInterface(abc.ABC):
     def parse_log_line(self, line: str) -> Optional[bool]:
         """
         Parses a line from the log file to determine if it indicates a focus change.
-        
+
         :param line: A line from the log file
         :returns: True if focus entered, False if focus left, None if not a focus change event
         """
@@ -65,7 +65,7 @@ class SharedDeviceMonitorInterface(abc.ABC):
     def is_server(self) -> bool:
         """
         Determines if this system is running as a server/host for the shared device software.
-        
+
         :returns: True if this is a server, False if it's a client or undetermined
         """
         pass
@@ -73,7 +73,7 @@ class SharedDeviceMonitorInterface(abc.ABC):
     def get_active_log_file_paths(self, max_age_hours=8) -> List[Tuple[str, float]]:
         """
         Returns all existing log file paths sorted by likelihood of being active.
-        
+
         :param max_age_hours: Maximum age in hours for a log to be considered possibly active
         :returns: List of tuples (path, score) sorted by score (higher is more likely active)
         """
@@ -119,7 +119,7 @@ class SharedDeviceMonitorInterface(abc.ABC):
     def check_log_file_activity(self, log_path, max_age_hours=8) -> float:
         """
         Check if log file contains recent entries and return an activity score.
-        
+
         :param log_path: Path to the log file
         :param max_age_hours: Maximum age in hours for log entries to be considered recent
         :returns: Activity score between 0.0 (inactive) and 1.0 (very active)
@@ -129,16 +129,16 @@ class SharedDeviceMonitorInterface(abc.ABC):
                 # Read last 20 lines
                 f.seek(0, os.SEEK_END)
                 file_size = f.tell()
-                
+
                 # If file is empty, return 0
                 if file_size == 0:
                     return 0.0
-                    
+
                 # Read at most the last 4KB
                 read_size = min(4096, file_size)
                 f.seek(file_size - read_size)
                 chunk = f.read(read_size)
-                
+
                 # Get last 20 lines
                 lines = chunk.splitlines()[-20:]
 
@@ -152,7 +152,7 @@ class SharedDeviceMonitorInterface(abc.ABC):
                         format_str = "%Y-%m-%d %H:%M:%S" if " " in line_time_str else "%Y-%m-%dT%H:%M:%S"
                         line_time = time.strptime(line_time_str, format_str)
                         line_timestamp = time.mktime(line_time)
-                        
+
                         if newest_timestamp is None or line_timestamp > newest_timestamp:
                             newest_timestamp = line_timestamp
                     except ValueError:
@@ -161,7 +161,7 @@ class SharedDeviceMonitorInterface(abc.ABC):
             if newest_timestamp is None:
                 debug(f"No valid timestamps found in log file {log_path}")
                 return 0.1  # Very low but non-zero score
-                
+
             # Calculate age in hours
             age_hours = (time.time() - newest_timestamp) / 3600
 
@@ -232,23 +232,23 @@ class DeskflowMonitor(SharedDeviceMonitorInterface):
     def is_server(self) -> bool:
         """
         Determine if this system is running Deskflow as a server.
-        
+
         Checks:
         1. If 'deskflows' process is running
         2. If log file contains server initialization messages
         3. If 'deskflow' is running with server arguments
-        
+
         Returns True if any check suggests this is a server, False otherwise.
         """
         if self._server_status is not None:
             return self._server_status
-            
+
         # Check if server process is running
         for process_name in self.server_process_names:
             try:
                 # Use -f flag to match full command line arguments for 'deskflow'
                 cmd = 'pgrep' 
-                args = ['-x', process_name] if process_name == 'deskflows' else ['-f', f'^{process_name}.*--server']
+                args = ['-x', process_name] if process_name == 'deskflows' else ['-f', f'(^|/){process_name}.*--server']
                 result = subprocess.run([cmd] + args, capture_output=True, text=True)
                 if result.returncode == 0:
                     self._server_status = True
@@ -256,25 +256,25 @@ class DeskflowMonitor(SharedDeviceMonitorInterface):
                     return True
             except subprocess.SubprocessError:
                 pass
-                
+
         # Check if only client process is running (definitively a client)
         client_only = False
         for process_name in self.client_process_names:
             try:
                 cmd = 'pgrep'
-                args = ['-x', process_name] if process_name == 'deskflowc' else ['-f', f'^{process_name}.*--client']
+                args = ['-x', process_name] if process_name == 'deskflowc' else ['-f', f'(^|/){process_name}.*--client']
                 result = subprocess.run([cmd] + args, capture_output=True, text=True)
                 if result.returncode == 0:
                     client_only = True
                     break
             except subprocess.SubprocessError:
                 pass
-                
+
         if client_only:
             self._server_status = False
             debug("Deskflow client process detected")
             return False
-                
+
         # Check log file for server messages
         log_path = self.get_log_file_path()
         if log_path and os.path.exists(log_path):
@@ -282,7 +282,7 @@ class DeskflowMonitor(SharedDeviceMonitorInterface):
                 file_size = os.path.getsize(log_path)
                 if file_size < 50:  # Less than 50 bytes
                     warn(f"Found empty/minimal log file: {log_path}. Server detection may be unreliable.")
-                
+
                 # Only check the first 50 lines for server initialization messages
                 with open(log_path, 'r') as f:
                     lines = [f.readline() for _ in range(50)]
@@ -296,7 +296,7 @@ class DeskflowMonitor(SharedDeviceMonitorInterface):
                             return True
             except Exception as e:
                 error(f"Error reading Deskflow log file: {e}")
-                
+
         # Default assumption: if Deskflow is running but we couldn't determine, assume client
         self._server_status = False
         return False
@@ -358,22 +358,22 @@ class SynergyMonitor(SharedDeviceMonitorInterface):
     def is_server(self) -> bool:
         """
         Determine if this system is running Synergy as a server.
-        
+
         Checks:
         1. If 'synergys' process is running
         2. If log file contains server initialization messages
         3. If configuration is set up for server mode
-        
+
         Returns True if any check suggests this is a server, False otherwise.
         """
         if self._server_status is not None:
             return self._server_status
-            
+
         # Check if server process is running
         for process_name in self.server_process_names:
             try:
                 # Use -f flag to match full command line arguments
-                result = subprocess.run(['pgrep', '-f', f'^{process_name}.*server'], 
+                result = subprocess.run(['pgrep', '-f', f'(^|/){process_name}.*server'], 
                                         capture_output=True, text=True)
                 if result.returncode == 0:
                     self._server_status = True
@@ -381,24 +381,24 @@ class SynergyMonitor(SharedDeviceMonitorInterface):
                     return True
             except subprocess.SubprocessError:
                 pass
-                
+
         # Check if only client process is running (definitively a client)
         client_only = False
         for process_name in self.client_process_names:
             try:
-                result = subprocess.run(['pgrep', '-f', f'^{process_name}.*client'], 
+                result = subprocess.run(['pgrep', '-f', f'(^|/){process_name}.*client'], 
                                         capture_output=True, text=True)
                 if result.returncode == 0:
                     client_only = True
                     break
             except subprocess.SubprocessError:
                 pass
-                
+
         if client_only:
             self._server_status = False
             debug("Synergy client process detected")
             return False
-                
+
         # Check log file for server messages
         log_path = self.get_log_file_path()
         if log_path and os.path.exists(log_path):
@@ -406,7 +406,7 @@ class SynergyMonitor(SharedDeviceMonitorInterface):
                 file_size = os.path.getsize(log_path)
                 if file_size < 50:  # Less than 50 bytes
                     warn(f"Found empty/minimal log file: {log_path}. Server detection may be unreliable.")
-                
+
                 # Only check the first 50 lines for server initialization messages
                 with open(log_path, 'r') as f:
                     lines = [f.readline() for _ in range(50)]
@@ -420,7 +420,7 @@ class SynergyMonitor(SharedDeviceMonitorInterface):
                             return True
             except Exception as e:
                 error(f"Error reading Synergy log file: {e}")
-                
+
         # Default assumption: if Synergy is running but we couldn't determine, assume client
         self._server_status = False
         return False
@@ -481,23 +481,23 @@ class InputLeapMonitor(SharedDeviceMonitorInterface):
     def is_server(self) -> bool:
         """
         Determine if this system is running Input Leap as a server.
-        
+
         Checks:
         1. If 'input-leaps' process is running
         2. If log file contains server initialization messages
         3. If 'input-leap' is running with server arguments
-        
+
         Returns True if any check suggests this is a server, False otherwise.
         """
         if self._server_status is not None:
             return self._server_status
-            
+
         # Check if server process is running
         for process_name in self.server_process_names:
             try:
                 # Use -f flag to match full command line arguments for 'input-leap'
                 cmd = 'pgrep' 
-                args = ['-x', process_name] if process_name == 'input-leaps' else ['-f', f'^{process_name}.*--server']
+                args = ['-x', process_name] if process_name == 'input-leaps' else ['-f', f'(^|/){process_name}.*--server']
                 result = subprocess.run([cmd] + args, capture_output=True, text=True)
                 if result.returncode == 0:
                     self._server_status = True
@@ -505,25 +505,25 @@ class InputLeapMonitor(SharedDeviceMonitorInterface):
                     return True
             except subprocess.SubprocessError:
                 pass
-                
+
         # Check if only client process is running (definitively a client)
         client_only = False
         for process_name in self.client_process_names:
             try:
                 cmd = 'pgrep'
-                args = ['-x', process_name] if process_name == 'input-leapc' else ['-f', f'^{process_name}.*--client']
+                args = ['-x', process_name] if process_name == 'input-leapc' else ['-f', f'(^|/){process_name}.*--client']
                 result = subprocess.run([cmd] + args, capture_output=True, text=True)
                 if result.returncode == 0:
                     client_only = True
                     break
             except subprocess.SubprocessError:
                 pass
-                
+
         if client_only:
             self._server_status = False
             debug("Input Leap client process detected")
             return False
-                
+
         # Check log file for server messages
         log_path = self.get_log_file_path()
         if log_path and os.path.exists(log_path):
@@ -531,7 +531,7 @@ class InputLeapMonitor(SharedDeviceMonitorInterface):
                 file_size = os.path.getsize(log_path)
                 if file_size < 50:  # Less than 50 bytes
                     warn(f"Found empty/minimal log file: {log_path}. Server detection may be unreliable.")
-                
+
                 # Only check the first 50 lines for server initialization messages
                 with open(log_path, 'r') as f:
                     lines = [f.readline() for _ in range(50)]
@@ -545,7 +545,7 @@ class InputLeapMonitor(SharedDeviceMonitorInterface):
                             return True
             except Exception as e:
                 error(f"Error reading Input Leap log file: {e}")
-                
+
         # Default assumption: if Input Leap is running but we couldn't determine, assume client
         self._server_status = False
         return False
@@ -554,7 +554,7 @@ class InputLeapMonitor(SharedDeviceMonitorInterface):
 class BarrierMonitor(SharedDeviceMonitorInterface):
     """
     Monitor for Barrier software
-    
+
     Note: This implementation is based on expected similarities with Input Leap,
     as Input Leap is a fork of Barrier. The log parsing may need refinement
     if Barrier's logging format differs significantly.
@@ -611,7 +611,7 @@ class BarrierMonitor(SharedDeviceMonitorInterface):
     def parse_log_line(self, line: str) -> Optional[bool]:
         """
         Parse Barrier log line for focus events
-        
+
         Assumes logging format similar to Input Leap and Synergy.
         May need adjustment if actual format differs.
         """
@@ -624,23 +624,23 @@ class BarrierMonitor(SharedDeviceMonitorInterface):
     def is_server(self) -> bool:
         """
         Determine if this system is running Barrier as a server.
-        
+
         Checks:
         1. If 'barriers' process is running
         2. If log file contains server initialization messages
         3. If 'barrier' is running with server arguments
-        
+
         Returns True if any check suggests this is a server, False otherwise.
         """
         if self._server_status is not None:
             return self._server_status
-            
+
         # Check if server process is running
         for process_name in self.server_process_names:
             try:
                 # Use -f flag to match full command line arguments for 'barrier'
                 cmd = 'pgrep' 
-                args = ['-x', process_name] if process_name == 'barriers' else ['-f', f'^{process_name}.*--server']
+                args = ['-x', process_name] if process_name == 'barriers' else ['-f', f'(^|/){process_name}.*--server']
                 result = subprocess.run([cmd] + args, capture_output=True, text=True)
                 if result.returncode == 0:
                     self._server_status = True
@@ -648,25 +648,25 @@ class BarrierMonitor(SharedDeviceMonitorInterface):
                     return True
             except subprocess.SubprocessError:
                 pass
-                
+
         # Check if only client process is running (definitively a client)
         client_only = False
         for process_name in self.client_process_names:
             try:
                 cmd = 'pgrep'
-                args = ['-x', process_name] if process_name == 'barrierc' else ['-f', f'^{process_name}.*--client']
+                args = ['-x', process_name] if process_name == 'barrierc' else ['-f', f'(^|/){process_name}.*--client']
                 result = subprocess.run([cmd] + args, capture_output=True, text=True)
                 if result.returncode == 0:
                     client_only = True
                     break
             except subprocess.SubprocessError:
                 pass
-                
+
         if client_only:
             self._server_status = False
             debug("Barrier client process detected")
             return False
-                
+
         # Check log file for server messages
         log_path = self.get_log_file_path()
         if log_path and os.path.exists(log_path):
@@ -674,7 +674,7 @@ class BarrierMonitor(SharedDeviceMonitorInterface):
                 file_size = os.path.getsize(log_path)
                 if file_size < 50:  # Less than 50 bytes
                     warn(f"Found empty/minimal log file: {log_path}. Server detection may be unreliable.")
-                
+
                 # Only check the first 50 lines for server initialization messages
                 with open(log_path, 'r') as f:
                     lines = [f.readline() for _ in range(50)]
@@ -688,7 +688,7 @@ class BarrierMonitor(SharedDeviceMonitorInterface):
                             return True
             except Exception as e:
                 error(f"Error reading Barrier log file: {e}")
-                
+
         # Default assumption: if Barrier is running but we couldn't determine, assume client
         self._server_status = False
         return False
@@ -736,24 +736,24 @@ class LogWatcherHandler(FileSystemEventHandler):
 
             lines = f.readlines()
             new_position = f.tell()
-            
+
             # If we got new content, update last activity time
             if new_position > self.last_position:
                 self.last_activity_time = time.time()
                 self.activity_counter += 1
-                
+
             self.last_position = new_position
 
             # Process lines to find focus changes
             most_recent_state = None
             newest_timestamp = None
-            
+
             for line in lines:
                 line_to_process = line.strip()
-                
+
                 # Try to extract a timestamp from the log line
                 timestamp_match = re.search(r'(?:.*\[|\[)?(\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2})(?:\])?', line_to_process)
-                
+
                 if timestamp_match:
                     line_time_str = timestamp_match.group(1)
                     try:
@@ -761,11 +761,11 @@ class LogWatcherHandler(FileSystemEventHandler):
                         format_str = "%Y-%m-%d %H:%M:%S" if " " in line_time_str else "%Y-%m-%dT%H:%M:%S"
                         line_time = time.strptime(line_time_str, format_str)
                         line_timestamp = time.mktime(line_time)
-                        
+
                         # Update newest timestamp
                         if newest_timestamp is None or line_timestamp > newest_timestamp:
                             newest_timestamp = line_timestamp
-                        
+
                         # Ignore entries from before we started monitoring
                         if line_timestamp < self.startup_time:
                             debug(f"Ignoring focus event from before monitor startup: {line_to_process}")
@@ -773,7 +773,7 @@ class LogWatcherHandler(FileSystemEventHandler):
                     except ValueError:
                         # If we can't parse the timestamp, process the line anyway
                         pass
-                
+
                 # Process the line for focus change events
                 state = self.parse_func(line_to_process)
                 if state is not None:
@@ -786,7 +786,7 @@ class LogWatcherHandler(FileSystemEventHandler):
     def is_active(self, max_inactive_hours=8) -> bool:
         """
         Check if this log file shows signs of activity.
-        
+
         :param max_inactive_hours: Maximum hours of inactivity before considering inactive
         :returns: True if the log file shows recent activity, False otherwise
         """
@@ -798,7 +798,7 @@ class LogWatcherHandler(FileSystemEventHandler):
                 return hours_since_mod <= max_inactive_hours
             except Exception:
                 return False
-                
+
         # If we've seen activity, check how long it's been
         hours_since_activity = (time.time() - self.last_activity_time) / 3600
         return hours_since_activity <= max_inactive_hours
@@ -830,12 +830,12 @@ class SharedDeviceContext:
     def detect_active_software(self) -> Set[str]:
         """
         Detects which shared device software is currently running
-        
+
         :returns: Set of software names that are currently running
         """
         active_software = set()
         self.is_server_system = False  # Reset server status for fresh detection
-        
+
         for monitor in self.monitors:
             if monitor.is_running():
                 active_software.update(monitor.get_supported_software())
@@ -857,7 +857,7 @@ class SharedDeviceContext:
             return
 
         debug(f"Detected active shared device software: {', '.join(active_software)}")
-        
+
         # If we're on a client system, don't bother monitoring logs
         # Always keep screen_has_focus as True
         if not self.is_server_system:
@@ -875,23 +875,23 @@ class SharedDeviceContext:
 
             # Get all potential log files sorted by activity likelihood
             active_logs = monitor.get_active_log_file_paths()
-            
+
             if not active_logs:
                 warn(f"No log files found for {', '.join(supported_software)}")
                 continue
-                
+
             # Check if all logs have low activity scores
             all_inactive = all(score < 0.5 for _, score in active_logs)
             if all_inactive:
                 warn(f"WARNING: All detected log files for {', '.join(supported_software)} appear to be inactive!")
                 warn(f"Focus detection may not work correctly. Check software configuration.")
-                
+
             # If we have multiple potential log files, log them with their scores
             if len(active_logs) > 1:
                 debug(f"Found multiple potential log files for {', '.join(supported_software)}:")
                 for path, score in active_logs:
                     debug(f"  - {path} (activity score: {score:.2f})")
-            
+
             # Monitor all potential log files, but prefer the most likely active ones
             for log_path, score in active_logs:
                 log_dir = os.path.dirname(log_path)
@@ -928,29 +928,29 @@ class SharedDeviceContext:
             for log_path, handler in self.handlers.items():
                 if os.path.exists(log_path):
                     handler.handle_log_file_change()
-                    
+
         # Initialize health check timer
         self.last_health_check = time.time()
 
     def check_health(self) -> bool:
         """
         Check if our monitoring is healthy and working properly.
-        
+
         :returns: True if healthy, False if we need to refresh monitoring
         """
         # Only run health check every 5 minutes
         current_time = time.time()
         if current_time - self.last_health_check < 300:  # 5 minutes in seconds
             return True
-            
+
         self.last_health_check = current_time
-        
+
         # Verify monitored software is still running
         active_software = self.detect_active_software()
         if not active_software:
             debug("Health check: No active shared device software detected")
             return False
-            
+
         # For servers, check if log files are still active
         if self.is_server_system:
             # Check if any handlers are showing activity
@@ -959,17 +959,17 @@ class SharedDeviceContext:
                 if os.path.exists(log_path) and handler.is_active():
                     any_active = True
                     break
-                    
+
             if not any_active and self.handlers:
                 warn("Health check: No active log files detected, refreshing monitoring")
                 warn("Focus detection may not be working! Check KVM software configuration.")
                 return False
-                
+
             # Check if any new log files have appeared that might be more active
             for monitor in self.monitors:
                 if not set(monitor.get_supported_software()).intersection(active_software):
                     continue
-                    
+
                 active_logs = monitor.get_active_log_file_paths()
                 if active_logs:
                     top_path, top_score = active_logs[0]
@@ -982,16 +982,16 @@ class SharedDeviceContext:
             for monitor in self.monitors:
                 if not monitor.is_running():
                     continue
-                    
+
                 # Reset cached server status to force fresh detection
                 monitor._server_status = None
-                
+
                 # If any monitor is now detected as a server, refresh monitoring
                 if monitor.is_server():
                     debug(f"Health check: Detected change from client to server mode for {monitor.get_supported_software()[0]}")
                     self.is_server_system = True
                     return False  # Trigger a refresh
-        
+
         return True
 
     def stop_monitoring(self):
@@ -1002,14 +1002,14 @@ class SharedDeviceContext:
             self.observer.stop()
             self.observer.join()
             debug("Log file monitoring stopped")
-            
+
         self.handlers.clear()
         self.active_monitors.clear()
 
     def on_focus_change(self, has_focus: bool):
         """
         Callback function for when focus changes
-        
+
         :param has_focus: True if the screen has focus, False otherwise
         """
         if has_focus != self.screen_has_focus:
@@ -1021,18 +1021,18 @@ class SharedDeviceContext:
     def get_focus_state(self) -> bool:
         """
         Returns the current focus state
-        
+
         :returns: True if the screen has focus, False otherwise
         """
         # Periodically check health of our monitoring
         if not self.check_health():
             debug("Health check failed, refreshing monitoring")
             self.refresh_monitoring()
-            
+
         # Client systems always have focus for keymapping purposes
         if not self.is_server_system:
             return True
-            
+
         return self.screen_has_focus
 
     def refresh_monitoring(self):
