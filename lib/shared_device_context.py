@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20250227'
+__version__ = '20250415'
 
 # NOTE: This new context module for monitoring keyboard-mouse sharing software was
 # originally produced by Claude 3.7 Sonnet, based on the window_context module in
@@ -248,7 +248,7 @@ class DeskflowMonitor(SharedDeviceMonitorInterface):
             try:
                 # Use -f flag to match full command line arguments for 'deskflow'
                 cmd = 'pgrep' 
-                args = ['-x', process_name] if process_name == 'deskflows' else ['-f', f'^{process_name}.*--server']
+                args = ['-x', process_name] if process_name == 'deskflows' else ['-f', f'(^|/){process_name}.*--server']
                 result = subprocess.run([cmd] + args, capture_output=True, text=True)
                 if result.returncode == 0:
                     self._server_status = True
@@ -262,7 +262,7 @@ class DeskflowMonitor(SharedDeviceMonitorInterface):
         for process_name in self.client_process_names:
             try:
                 cmd = 'pgrep'
-                args = ['-x', process_name] if process_name == 'deskflowc' else ['-f', f'^{process_name}.*--client']
+                args = ['-x', process_name] if process_name == 'deskflowc' else ['-f', f'(^|/){process_name}.*--client']
                 result = subprocess.run([cmd] + args, capture_output=True, text=True)
                 if result.returncode == 0:
                     client_only = True
@@ -373,7 +373,7 @@ class SynergyMonitor(SharedDeviceMonitorInterface):
         for process_name in self.server_process_names:
             try:
                 # Use -f flag to match full command line arguments
-                result = subprocess.run(['pgrep', '-f', f'^{process_name}.*server'], 
+                result = subprocess.run(['pgrep', '-f', f'(^|/){process_name}.*server'], 
                                         capture_output=True, text=True)
                 if result.returncode == 0:
                     self._server_status = True
@@ -386,7 +386,7 @@ class SynergyMonitor(SharedDeviceMonitorInterface):
         client_only = False
         for process_name in self.client_process_names:
             try:
-                result = subprocess.run(['pgrep', '-f', f'^{process_name}.*client'], 
+                result = subprocess.run(['pgrep', '-f', f'(^|/){process_name}.*client'], 
                                         capture_output=True, text=True)
                 if result.returncode == 0:
                     client_only = True
@@ -497,7 +497,7 @@ class InputLeapMonitor(SharedDeviceMonitorInterface):
             try:
                 # Use -f flag to match full command line arguments for 'input-leap'
                 cmd = 'pgrep' 
-                args = ['-x', process_name] if process_name == 'input-leaps' else ['-f', f'^{process_name}.*--server']
+                args = ['-x', process_name] if process_name == 'input-leaps' else ['-f', f'(^|/){process_name}.*--server']
                 result = subprocess.run([cmd] + args, capture_output=True, text=True)
                 if result.returncode == 0:
                     self._server_status = True
@@ -511,7 +511,7 @@ class InputLeapMonitor(SharedDeviceMonitorInterface):
         for process_name in self.client_process_names:
             try:
                 cmd = 'pgrep'
-                args = ['-x', process_name] if process_name == 'input-leapc' else ['-f', f'^{process_name}.*--client']
+                args = ['-x', process_name] if process_name == 'input-leapc' else ['-f', f'(^|/){process_name}.*--client']
                 result = subprocess.run([cmd] + args, capture_output=True, text=True)
                 if result.returncode == 0:
                     client_only = True
@@ -640,7 +640,7 @@ class BarrierMonitor(SharedDeviceMonitorInterface):
             try:
                 # Use -f flag to match full command line arguments for 'barrier'
                 cmd = 'pgrep' 
-                args = ['-x', process_name] if process_name == 'barriers' else ['-f', f'^{process_name}.*--server']
+                args = ['-x', process_name] if process_name == 'barriers' else ['-f', f'(^|/){process_name}.*--server']
                 result = subprocess.run([cmd] + args, capture_output=True, text=True)
                 if result.returncode == 0:
                     self._server_status = True
@@ -654,7 +654,7 @@ class BarrierMonitor(SharedDeviceMonitorInterface):
         for process_name in self.client_process_names:
             try:
                 cmd = 'pgrep'
-                args = ['-x', process_name] if process_name == 'barrierc' else ['-f', f'^{process_name}.*--client']
+                args = ['-x', process_name] if process_name == 'barrierc' else ['-f', f'(^|/){process_name}.*--client']
                 result = subprocess.run([cmd] + args, capture_output=True, text=True)
                 if result.returncode == 0:
                     client_only = True
