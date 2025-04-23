@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20250412'                        # CLI option "--version" will print this out.
+__version__ = '20250422'                        # CLI option "--version" will print this out.
 
 import os
 os.environ['PYTHONDONTWRITEBYTECODE'] = '1'     # prevent this script from creating cache files
@@ -1512,7 +1512,8 @@ class DistroQuirksHandler:
         def get_newest_python_version():
             """Utility function to find the latest Python available on RHEL 8 and 9 distro types"""
             # TODO: Add higher version if ever necessary (keep minimum 3.8)
-            potential_versions = ['3.15', '3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
+            potential_versions = ['3.17', '3.16', '3.15', '3.14', '3.13',
+                                    '3.12', '3.11', '3.10', '3.9', '3.8']
 
             for version in potential_versions:
                 # check if the version is already installed
@@ -2795,7 +2796,8 @@ class PythonVenvQuirksHandler():
     def handle_venv_quirks_RHEL(self):
         print('Handling Python virtual environment quirks in RHEL-type distros...')
         # TODO: Add higher version if ever necessary (keep minimum 3.8)
-        potential_versions = ['3.15', '3.14', '3.13', '3.12', '3.11', '3.10', '3.9', '3.8']
+        potential_versions = ['3.17', '3.16', '3.15', '3.14', '3.13',
+                                '3.12', '3.11', '3.10', '3.9', '3.8']
         for version in potential_versions:
             # check if the version is already installed
             if shutil.which(f'python{version}'):
