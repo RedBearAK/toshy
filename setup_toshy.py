@@ -771,6 +771,7 @@ def check_gnome_indicator_ext():
         'appindicatorsupport@rgcjonas.gmail.com',
         'TopIcons@phocean.net', 
         'top-icons-redux@pop-planet.info',
+        'trayIconsReloaded@selfmade.pl',
     ]
 
     # Check for installed extensions
