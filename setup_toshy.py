@@ -1979,7 +1979,7 @@ class PackageManagerGroups:
     """Container for package manager distro groupings and dispatch map"""
     
     def __init__(self):
-        # Initialize package manager distro lists
+        # Initialize empty package manager distro lists
         self.apk_distros        = []    # 'apk':                    Alpine/Chimera
         self.apt_distros        = []    # 'apt':                    Debian/Ubuntu
         self.dnf_distros        = []    # 'dnf':                    Fedora/RHEL/OpenMandriva
@@ -1989,10 +1989,9 @@ class PackageManagerGroups:
         self.transupd_distros   = []    # 'transactional-update':   openSUSE Aeon/Kalpa/MicroOS
         self.xbps_distros       = []    # 'xbps-install':           Void
         self.zypper_distros     = []    # 'zypper':                 openSUSE Tumbleweed/Leap
-        # Initialize package manager dispatch map
+        # Initialize empty package manager dispatch map
         self.dispatch_map       = None
-        # Build the lists and map
-        self.populate_lists()
+        # Dispatch map method ensures lists are populated before creating map
         self.create_dispatch_map()
 
     def populate_lists(self):
@@ -2037,6 +2036,7 @@ class PackageManagerGroups:
 
     def create_dispatch_map(self):
         """Create mapping of distro lists to their installer methods"""
+        self.populate_lists()       # Make sure lists contain correct info before creating map
         self.dispatch_map = {
             tuple(self.apk_distros):         PackageInstallDispatcher.install_on_apk_distro,
             tuple(self.apt_distros):         PackageInstallDispatcher.install_on_apt_distro,
