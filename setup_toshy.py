@@ -1185,8 +1185,8 @@ pkg_groups_map: Dict[str, List[str]] = {
 
     'alt-based':           ["evtest",
                             "gcc", "git", "gobject-introspection-devel",
-                            "libappindicator-gtk3", "libcairo-devel", "libdbus-devel", "libnotify", 
-                                "libxkbcommon-devel",
+                            "libappindicator-gtk3", "libcairo-devel", "libcairo-gobject-devel",
+                                "libdbus-devel", "libnotify", "libxkbcommon-devel",
                             "python3-dev", "python3-module-dbus", "python3-module-pip",
                                 "python3-modules-tkinter",
                             "systemd-devel",
