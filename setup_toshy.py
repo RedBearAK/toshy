@@ -1187,7 +1187,7 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "gcc", "git", "gobject-introspection-devel",
                             "libappindicator-gtk3", "libcairo-devel", "libdbus-devel", "libnotify", 
                                 "libxkbcommon-devel",
-                            "python3-dev", "python3-modules-dbus", "python3-modules-pip",
+                            "python3-dev", "python3-module-dbus", "python3-module-pip",
                                 "python3-modules-tkinter",
                             "systemd-devel",
                             "xset",
