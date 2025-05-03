@@ -87,6 +87,7 @@ echo ""
 
 
 PROFILE="${HOME}/.profile"
+BASH_PROFILE="${HOME}/.bash_profile"
 LOCAL_BIN="${HOME}/.local/bin"
 PATH_LINE="PATH=\"\${HOME}/.local/bin:\${PATH}\""
 RUN_TMP_DIR="${XDG_RUNTIME_DIR:-/tmp}"
@@ -97,10 +98,12 @@ FIX_PATH_TMP="${RUN_TMP_DIR}/toshy_installer_says_fix_path"
 
 mkdir -p "${LOCAL_BIN}"
 [ ! -f "${PROFILE}" ] && touch "${PROFILE}"
+[ ! -f "${BASH_PROFILE}" ] && touch "${BASH_PROFILE}"
 
 path_contains_local_bin() {
-    grep -q "PATH=.*\${HOME}/.local/bin" "${PROFILE}" || \
-    grep -q "PATH=.*${LOCAL_BIN}" "${PROFILE}"
+    local file="$1"
+    grep -q "PATH=.*\${HOME}/.local/bin" "${file}" || \
+    grep -q "PATH=.*${LOCAL_BIN}" "${file}"
 }
 
 check_rc_files() {
@@ -113,7 +116,23 @@ check_rc_files() {
     done
 }
 
-if ! path_contains_local_bin; then
+# Function to add path to a specified file
+add_path_to_file() {
+    local file="$1"
+    local file_name
+    file_name="$(basename "$file")"
+
+    {
+        echo -e "\n# Add ~/.local/bin to PATH if not already present"
+        echo "if [ -d \"\${HOME}/.local/bin\" ] && [[ \":\${PATH}:\" != *\":\${HOME}/.local/bin:\"* ]]; then"
+        echo "    ${PATH_LINE}"
+        echo "fi"
+    } >> "${file}"
+    echo "Added PATH modification to ~/${file_name}"
+}
+
+# Handle .profile
+if ! path_contains_local_bin "${PROFILE}"; then
     if [ -f "${FIX_PATH_TMP}" ]; then
         response="y"
     else
@@ -123,17 +142,29 @@ if ! path_contains_local_bin; then
     case $response in
         [Nn]* ) 
             echo "Skipped modifying ~/.profile"
-            exit 0
+            ;;
+        * )
+            add_path_to_file "${PROFILE}"
             ;;
     esac
+fi
 
-    {
-        echo -e "\n# Add ~/.local/bin to PATH if not already present"
-        echo "if [ -d \"\${HOME}/.local/bin\" ] && [[ \":\${PATH}:\" != *\":\${HOME}/.local/bin:\"* ]]; then"
-        echo "    ${PATH_LINE}"
-        echo "fi"
-    } >> "${PROFILE}"
-    echo "Added PATH modification to ~/.profile"
+# Handle .bash_profile
+if ! path_contains_local_bin "${BASH_PROFILE}"; then
+    if [ -f "${FIX_PATH_TMP}" ]; then
+        response="y"
+    else
+        read -r -p "Add ~/.local/bin to PATH in ~/.bash_profile? [Y/n] " response
+    fi
+    
+    case $response in
+        [Nn]* ) 
+            echo "Skipped modifying ~/.bash_profile"
+            ;;
+        * )
+            add_path_to_file "${BASH_PROFILE}"
+            ;;
+    esac
 fi
 
 check_rc_files
