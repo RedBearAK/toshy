@@ -995,6 +995,8 @@ distro_groups_map: Dict[str, List[str]] = {
 
     'chimera-based':            ["chimera"],
 
+    'alt-based':                ["altlinux"],
+
     # Attempted to add and test KaOS Linux. Result:
     # KaOS is NOT compatible with this project. 
     # No packages provide "evtest", "libappindicator", "zenity". 
@@ -1179,6 +1181,16 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "git", "gobject-introspection-devel",
                             "libayatana-appindicator-devel", "libnotify", "libxkbcommon-devel",
                             "pkgconf", "python-dbus", "python-devel", "python-evdev", "python-pip",
+                            "zenity"],
+
+    'alt-based':           ["evtest",
+                            "gcc", "git", "gobject-introspection-devel",
+                            "libappindicator-gtk3", "libcairo-devel", "libcairo-gobject-devel",
+                                "libdbus-devel", "libnotify", "libxkbcommon-devel",
+                            "python3-dev", "python3-module-dbus", "python3-module-pip",
+                                "python3-modules-tkinter",
+                            "systemd-devel",
+                            "xset",
                             "zenity"],
 
 }
@@ -2003,9 +2015,10 @@ class PackageManagerGroups:
             # 'apk': Alpine/Chimera
             self.apk_distros            += distro_groups_map['chimera-based']
 
-            # 'apt': Debian/Ubuntu
+            # 'apt': Debian/Ubuntu, ALT Linux (uses APT-RPM)
             self.apt_distros            += distro_groups_map['ubuntu-based']
             self.apt_distros            += distro_groups_map['debian-based']
+            self.apt_distros            += distro_groups_map['alt-based']
 
             # 'dnf': Fedora/RHEL/OpenMandriva
             self.dnf_distros            += distro_groups_map['fedora-based']
