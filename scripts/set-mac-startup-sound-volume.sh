@@ -19,13 +19,15 @@ clean_exit() {
 usage() {
     echo "Usage: $0 [-d|-b|-x] <volume>"
     echo "       $0 mute"
+    echo "       $0 unmute"
     echo "       $0 reset"
     echo "       $0 info"
     echo ""
     echo "Special commands:"
-    echo "  info:  Display current startup volume setting"
-    echo "  mute:  Set the startup volume to muted"
-    echo "  reset: Delete the EFI variable (simulate NVRAM/PRAM reset)"
+    echo "  info:   Display current startup volume setting"
+    echo "  mute:   Set the startup volume to muted"
+    echo "  unmute: Restore previous startup volume (if preserved)"
+    echo "  reset:  Delete the EFI variable (simulate NVRAM/PRAM reset)"
     echo ""
     echo "Format options:"
     echo "  -d: Decimal format (default)"
@@ -38,6 +40,13 @@ usage() {
     echo "  Hex: 00-7F for volume, 80 to mute"
     clean_exit 1
 }
+
+# Notify user if efivar command is not available
+if ! command -v efivar >/dev/null 2>&1; then
+    echo "There is no 'efivar' command on this system. Cannot continue."
+    echo "Try installing 'efivar' package. Exiting..."
+    clean_exit 0
+fi
 
 # Function to display info about current volume setting
 show_info() {
@@ -108,21 +117,40 @@ show_info() {
 # Check for special commands first
 if [ $# -eq 1 ]; then
     case "${1,,}" in  # Convert to lowercase for case-insensitive matching
+
         "info")
             show_info
             clean_exit 0
             ;;
-            
+
         "mute")
             echo "Setting startup volume to: MUTED"
             echo "----------------------------------------------------------------"
-            echo "Before: $(efivar -n "7c436110-ab2a-4bbb-a880-fe41995c9f82-SystemAudioVolume" -d 2>/dev/null || echo "Not set")"
+            
+            # Get current volume (if it exists)
+            CURRENT_VALUE=$(efivar -n "7c436110-ab2a-4bbb-a880-fe41995c9f82-SystemAudioVolume" -d 2>/dev/null || echo "7 0 0 0 64")
+            CURRENT_DEC=$(echo "$CURRENT_VALUE" | awk '{print $NF}')
+            
+            # Extract the current volume (lower 7 bits only, removing mute bit if present)
+            CURRENT_VOLUME=$((CURRENT_DEC & 0x7F))
+            
+            # If current volume is 0, use a reasonable default to preserve
+            if [ "$CURRENT_VOLUME" -eq 0 ]; then
+                CURRENT_VOLUME=64  # Default to 50%
+            fi
+            
+            # Create muted value preserving the current volume
+            MUTED_VALUE=$((128 + CURRENT_VOLUME))
+            
+            echo "Before: $CURRENT_VALUE"
+            echo "Preserving volume level: $CURRENT_VOLUME"
             
             # Remove the immutable flag before writing
             chattr -i "/sys/firmware/efi/efivars/SystemAudioVolume-7c436110-ab2a-4bbb-a880-fe41995c9f82" 2>/dev/null
             
-            # Set to mute (128)
-            printf "\x07\x00\x00\x00\x80" > "/sys/firmware/efi/efivars/SystemAudioVolume-7c436110-ab2a-4bbb-a880-fe41995c9f82"
+            # Set to mute with preserved volume
+            MUTE_HEX=$(printf "%02x" "$MUTED_VALUE")
+            printf '%b' "\x07\x00\x00\x00\x${MUTE_HEX}" > "/sys/firmware/efi/efivars/SystemAudioVolume-7c436110-ab2a-4bbb-a880-fe41995c9f82"
             
             # Make it immutable again
             chattr +i "/sys/firmware/efi/efivars/SystemAudioVolume-7c436110-ab2a-4bbb-a880-fe41995c9f82"
@@ -131,7 +159,57 @@ if [ $# -eq 1 ]; then
             echo "----------------------------------------------------------------"
             clean_exit 0
             ;;
+
+            "unmute")
+            echo "Restoring previous startup volume..."
+            echo "----------------------------------------------------------------"
             
+            # Check if the EFI variable exists
+            if ! efivar -n "7c436110-ab2a-4bbb-a880-fe41995c9f82-SystemAudioVolume" -p >/dev/null 2>&1; then
+                echo "SystemAudioVolume EFI variable not found."
+                echo "Creating with default volume: 64 (50%)"
+                PRESERVED_VOLUME=64
+            else
+                # Get the current value
+                CURRENT_VALUE=$(efivar -n "7c436110-ab2a-4bbb-a880-fe41995c9f82-SystemAudioVolume" -d 2>/dev/null)
+                CURRENT_DEC=$(echo "$CURRENT_VALUE" | awk '{print $NF}')
+                
+                # Check if it's actually muted
+                if [ "$CURRENT_DEC" -lt 128 ]; then
+                    echo "System is not currently muted (value: $CURRENT_DEC)."
+                    clean_exit 0
+                fi
+                
+                # Extract the preserved volume (lower 7 bits)
+                PRESERVED_VOLUME=$((CURRENT_DEC & 0x7F))
+                
+                # If the preserved volume is 0, set to a reasonable default
+                if [ "$PRESERVED_VOLUME" -eq 0 ]; then
+                    echo "No preserved volume found (was muted at 0)."
+                    echo "Setting to default volume level: 64 (50%)"
+                    PRESERVED_VOLUME=64
+                fi
+                
+                echo "Current state: MUTED (value: $CURRENT_DEC)"
+                echo "Preserved volume: $PRESERVED_VOLUME"
+            fi
+            
+            # Remove the immutable flag before writing
+            chattr -i "/sys/firmware/efi/efivars/SystemAudioVolume-7c436110-ab2a-4bbb-a880-fe41995c9f82" 2>/dev/null
+            
+            # Write the preserved volume (without mute bit)
+            VOLUME_HEX=$(printf "%02x" "$PRESERVED_VOLUME")
+            printf '%b' "\x07\x00\x00\x00\x${VOLUME_HEX}" > "/sys/firmware/efi/efivars/SystemAudioVolume-7c436110-ab2a-4bbb-a880-fe41995c9f82"
+            
+            # Make it immutable again
+            chattr +i "/sys/firmware/efi/efivars/SystemAudioVolume-7c436110-ab2a-4bbb-a880-fe41995c9f82"
+            
+            echo "After: $(efivar -n "7c436110-ab2a-4bbb-a880-fe41995c9f82-SystemAudioVolume" -d)"
+            echo "----------------------------------------------------------------"
+            echo "Volume restored to: $PRESERVED_VOLUME"
+            clean_exit 0
+            ;;
+
         "reset")
             echo "Resetting SystemAudioVolume EFI variable..."
             echo "----------------------------------------------------------------"
@@ -157,6 +235,7 @@ if [ $# -eq 1 ]; then
             echo "Note: The system will use the default volume on next boot."
             clean_exit 0
             ;;
+
     esac
 fi
 
@@ -186,6 +265,7 @@ VOLUME=0
 
 # Parse and validate based on format
 case $FORMAT in
+
     decimal)
         # Check if it's a valid decimal number
         if ! [[ "$INPUT_VALUE" =~ ^[0-9]+$ ]]; then
@@ -194,7 +274,7 @@ case $FORMAT in
         fi
         VOLUME=$INPUT_VALUE
         ;;
-    
+
     binary)
         # Check if it's a valid binary number (only 0s and 1s)
         if ! [[ "$INPUT_VALUE" =~ ^[01]+$ ]]; then
@@ -209,7 +289,7 @@ case $FORMAT in
         # Convert binary to decimal
         VOLUME=$((2#$INPUT_VALUE))
         ;;
-    
+
     hex)
         # Remove optional 0x prefix
         HEX_VALUE="${INPUT_VALUE#0x}"
@@ -228,6 +308,7 @@ case $FORMAT in
         # Convert hex to decimal
         VOLUME=$((16#$HEX_VALUE))
         ;;
+
 esac
 
 # Validate volume range
