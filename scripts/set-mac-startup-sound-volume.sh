@@ -231,7 +231,7 @@ if [ "$VOLUME" -lt 0 ] || [ "$VOLUME" -gt 128 ]; then
 fi
 
 # Convert to hex for writing
-VOLUME_HEX=$(printf "\\x%02x" "$VOLUME")
+VOLUME_HEX=$(printf "%02x" "$VOLUME")
 
 echo "Setting startup volume to:"
 echo "  Input: $INPUT_VALUE ($FORMAT)"
@@ -248,7 +248,7 @@ chattr -i "/sys/firmware/efi/efivars/SystemAudioVolume-7c436110-ab2a-4bbb-a880-f
 
 # Write the new value
 # The '%b' format specifier prevents shellcheck warning SC2059 (variable directly in printf string)
-printf '%b' "\x07\x00\x00\x00${VOLUME_HEX}" > "/sys/firmware/efi/efivars/SystemAudioVolume-7c436110-ab2a-4bbb-a880-fe41995c9f82"
+printf '%b' "\x07\x00\x00\x00\x${VOLUME_HEX}" > "/sys/firmware/efi/efivars/SystemAudioVolume-7c436110-ab2a-4bbb-a880-fe41995c9f82"
 
 # Make it immutable again
 chattr +i "/sys/firmware/efi/efivars/SystemAudioVolume-7c436110-ab2a-4bbb-a880-fe41995c9f82"
