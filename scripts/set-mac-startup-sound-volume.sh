@@ -15,6 +15,22 @@ clean_exit() {
     exit "${1:-0}"  # Default to exit code 0 if not specified
 }
 
+# Check if this is an Apple system
+if [ -f /sys/class/dmi/id/sys_vendor ]; then
+    VENDOR=$(cat /sys/class/dmi/id/sys_vendor)
+    if [[ "$VENDOR" != *"Apple"* ]]; then
+        echo "Warning: This does not appear to be an Apple system."
+        echo "System vendor: $VENDOR"
+        echo "This script is designed for Apple computers and will have no effect on other systems."
+        echo
+        read -p "Continue anyway? (y/N): " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            clean_exit 0
+        fi
+    fi
+fi
+
 # Function to display usage
 usage() {
     echo "Usage: $0 [-d|-b|-x] <volume>"
