@@ -1,10 +1,19 @@
 #!/usr/bin/env bash
 
+echo    # blank line to start things off
+
 # Ensure that we are root
 if [ "$EUID" -ne 0 ]; then
     echo "Please run as root"
+    echo
     exit 1
 fi
+
+# Function to exit with a blank line for cleaner output
+clean_exit() {
+    echo
+    exit "${1:-0}"  # Default to exit code 0 if not specified
+}
 
 # Function to display usage
 usage() {
@@ -27,7 +36,7 @@ usage() {
     echo "  Decimal: 0-127 for volume levels, 128 to mute"
     echo "  Binary: 00000000-01111111 for volume, 10000000 to mute"
     echo "  Hex: 00-7F for volume, 80 to mute"
-    exit 1
+    clean_exit 1
 }
 
 # Function to display info about current volume setting
@@ -44,7 +53,7 @@ show_info() {
         echo "  - The system is using default volume settings"
         echo "  - This is not an Apple system"
         echo "  - NVRAM/PRAM has been reset"
-        exit 0
+        clean_exit 0
     fi
     
     # Get the raw value
@@ -101,7 +110,7 @@ if [ $# -eq 1 ]; then
     case "${1,,}" in  # Convert to lowercase for case-insensitive matching
         "info")
             show_info
-            exit 0
+            clean_exit 0
             ;;
             
         "mute")
@@ -120,7 +129,7 @@ if [ $# -eq 1 ]; then
             
             echo "After: $(efivar -n "7c436110-ab2a-4bbb-a880-fe41995c9f82-SystemAudioVolume" -d)"
             echo "----------------------------------------------------------------"
-            exit 0
+            clean_exit 0
             ;;
             
         "reset")
@@ -146,7 +155,7 @@ if [ $# -eq 1 ]; then
             echo "After: $(efivar -n "7c436110-ab2a-4bbb-a880-fe41995c9f82-SystemAudioVolume" -d 2>/dev/null || echo "Not set")"
             echo "----------------------------------------------------------------"
             echo "Note: The system will use the default volume on next boot."
-            exit 0
+            clean_exit 0
             ;;
     esac
 fi
@@ -181,7 +190,7 @@ case $FORMAT in
         # Check if it's a valid decimal number
         if ! [[ "$INPUT_VALUE" =~ ^[0-9]+$ ]]; then
             echo "Error: Invalid decimal format. Use only digits 0-9."
-            exit 1
+            clean_exit 1
         fi
         VOLUME=$INPUT_VALUE
         ;;
@@ -190,12 +199,12 @@ case $FORMAT in
         # Check if it's a valid binary number (only 0s and 1s)
         if ! [[ "$INPUT_VALUE" =~ ^[01]+$ ]]; then
             echo "Error: Invalid binary format. Use only 0 and 1."
-            exit 1
+            clean_exit 1
         fi
         # Check if it's not more than 8 bits
         if [ ${#INPUT_VALUE} -gt 8 ]; then
             echo "Error: Binary value must be 8 bits or less."
-            exit 1
+            clean_exit 1
         fi
         # Convert binary to decimal
         VOLUME=$((2#$INPUT_VALUE))
@@ -209,12 +218,12 @@ case $FORMAT in
         # Check if it's a valid hex number
         if ! [[ "$HEX_VALUE" =~ ^[0-9A-Fa-f]+$ ]]; then
             echo "Error: Invalid hexadecimal format. Use only 0-9, A-F, a-f."
-            exit 1
+            clean_exit 1
         fi
         # Check if it's not more than 2 hex digits (1 byte)
         if [ ${#HEX_VALUE} -gt 2 ]; then
             echo "Error: Hexadecimal value must be 2 digits or less (one byte)."
-            exit 1
+            clean_exit 1
         fi
         # Convert hex to decimal
         VOLUME=$((16#$HEX_VALUE))
@@ -227,7 +236,7 @@ if [ "$VOLUME" -lt 0 ] || [ "$VOLUME" -gt 128 ]; then
     echo "  Decimal: 0-128"
     echo "  Binary: 00000000-10000000"
     echo "  Hex: 00-80"
-    exit 1
+    clean_exit 1
 fi
 
 # Convert to hex for writing
@@ -255,3 +264,4 @@ chattr +i "/sys/firmware/efi/efivars/SystemAudioVolume-7c436110-ab2a-4bbb-a880-f
 
 echo "After: $(efivar -n "7c436110-ab2a-4bbb-a880-fe41995c9f82-SystemAudioVolume" -d)"
 echo "----------------------------------------------------------------"
+clean_exit 0
