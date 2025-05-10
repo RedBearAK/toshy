@@ -31,6 +31,20 @@ if [ -f /sys/class/dmi/id/sys_vendor ]; then
     fi
 fi
 
+# Check if this is an Intel Mac (not Apple Silicon)
+if [ -f /proc/cpuinfo ] && grep -q "GenuineIntel" /proc/cpuinfo; then
+    : # Intel Mac, proceed
+elif [[ "$(uname -m)" == "arm64" ]] || [[ "$(uname -m)" == "aarch64" ]]; then
+    echo "Warning: This appears to be an Apple Silicon Mac."
+    echo "This script was designed for Intel-based Macs and likely won't work on Apple Silicon."
+    echo
+    read -p "Continue anyway? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        clean_exit 0
+    fi
+fi
+
 # Function to display usage
 usage() {
     echo "Usage: $0 [-d|-b|-x] <volume>"
