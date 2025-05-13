@@ -4277,6 +4277,8 @@ def main(cnfg: InstallerSettings):
 
             if is_extension_enabled("appindicatorsupport@rgcjonas.gmail.com"):
                 print("AppIndicator extension is enabled. Tray icon should work.")
+            elif is_extension_enabled("ubuntu-appindicators@ubuntu.com"):
+                print("AppIndicator extension is enabled. Tray icon should work.")
             else:
                 print()
                 debug(f"RECOMMENDATION: Install 'AppIndicator' GNOME extension\n"
