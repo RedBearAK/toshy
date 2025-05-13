@@ -306,7 +306,7 @@ class InstallerSettings:
     def detect_elevation_command(self):
         """Detect the appropriate privilege elevation command"""
         # Order of preference for elevation commands
-        known_privilege_elevation_cmds = ["sudo", "doas", "run0"]
+        known_privilege_elevation_cmds = ["sudo", "doas", "run0", "sudo-rs"]
         print()
         print(f"Checking for the following commands: {known_privilege_elevation_cmds}")
 
@@ -336,7 +336,7 @@ def safe_shutdown(exit_code: int):
     # good place to do some file cleanup?
 
     # Only sudo has a standard way to invalidate tickets
-    if cnfg.priv_elev_cmd == 'sudo':
+    if cnfg.priv_elev_cmd in ['sudo', 'sudo-rs']:
         # invalidate the sudo ticket, don't leave system in "superuser" state
         subprocess.run([cnfg.priv_elev_cmd, '-k'])
     print()                         # avoid crowding the prompt on exit
@@ -536,7 +536,7 @@ def call_attn_to_pwd_prompt_if_needed():
         error("Attention function was called with no elevation command, or unprivileged user.")
         return  # Skip if no elevation command or in unprivileged mode (should never happen)
 
-    if cnfg.priv_elev_cmd in ['sudo', 'doas']:
+    if cnfg.priv_elev_cmd in ['sudo', 'doas', 'sudo-rs']:
         try:
             subprocess.run( [cnfg.priv_elev_cmd, '-n', 'true'],
                             stdout=DEVNULL, stderr=DEVNULL, check=True)
