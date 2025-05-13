@@ -411,6 +411,7 @@ class EnvironmentInfo:
 
         # Produce a simplified desktop environment name
         desktop_env_names = {
+            'AnduinOS':                 'gnome',
             'Budgie':                   'budgie',
             'Cinnamon':                 'cinnamon',
             'COSMIC':                   'cosmic',
