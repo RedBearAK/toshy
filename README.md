@@ -484,7 +484,7 @@ In the tray icon menu, you'll find a number of useful functions:
 - Items to (re)start or stop the services
 - Items to (re)start or stop just the config script
 - Preferences submenu
-- OptSpect Layout submenu
+- OptSpec Layout submenu
 - Keyboard Type submenu
 - Item to open the GUI app
 - Item to open the Toshy config folder
