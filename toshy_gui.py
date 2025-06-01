@@ -223,14 +223,25 @@ def get_settings_list(settings_obj):
 last_settings_list = get_settings_list(cnfg)
 
 
+# def fn_monitor_internal_settings():
+#     global last_settings_list
+#     while True:
+#         time.sleep(1)
+#         if last_settings_list != get_settings_list(cnfg):
+#             # debug(f'Updating GUI preferences switch settings...')
+#             load_radio_btn_settings(cnfg, optspec_var, "optspec_layout")
+#             load_switch_settings(cnfg)
+#             last_settings_list = get_settings_list(cnfg)
+
+
 def fn_monitor_internal_settings():
     global last_settings_list
     while True:
         time.sleep(1)
         if last_settings_list != get_settings_list(cnfg):
-            # debug(f'Updating GUI preferences switch settings...')
-            load_radio_btn_settings(cnfg, optspec_var, "optspec_layout")
-            load_switch_settings(cnfg)
+            # Schedule GUI updates on main thread
+            root.after(0, lambda: load_radio_btn_settings(cnfg, optspec_var, "optspec_layout"))
+            root.after(0, lambda: load_switch_settings(cnfg))
             last_settings_list = get_settings_list(cnfg)
 
 
@@ -331,12 +342,25 @@ def fn_monitor_toshy_services():
         else:
             svc_status_sessmon = svc_status_glyph_unknown
 
+        # if curr_svcs_state_tup != last_svcs_state_tup:
+        #     try:
+        #         for _ in range(3):
+        #             svc_status_lbl_config.config(   text=f'Toshy Config: {svc_status_config}')
+        #             time.sleep(0.05)
+        #             svc_status_lbl_sessmon.config(  text=f'Session Monitor: {svc_status_sessmon} ')
+        #             time.sleep(0.05)
+        #     except NameError: pass  # Let it pass if menu item not ready yet
+
+        # Fix thread safety issue by using root.after()?
         if curr_svcs_state_tup != last_svcs_state_tup:
             try:
+                # Schedule GUI updates on main thread
+                def update_labels():
+                    svc_status_lbl_config.config(text=f'Toshy Config: {svc_status_config}')
+                    svc_status_lbl_sessmon.config(text=f'Session Monitor: {svc_status_sessmon} ')
+                
                 for _ in range(3):
-                    svc_status_lbl_config.config(   text=f'Toshy Config: {svc_status_config}')
-                    time.sleep(0.05)
-                    svc_status_lbl_sessmon.config(  text=f'Session Monitor: {svc_status_sessmon} ')
+                    root.after(0, update_labels)
                     time.sleep(0.05)
             except NameError: pass  # Let it pass if menu item not ready yet
 
@@ -384,8 +408,10 @@ TOSHY_GUI_APP_CLASSNAME = 'Toshy-Prefs'
 
 # className is what appears in task switcher (only first letter will be capitalized)
 root = tk.Tk(className=f'{TOSHY_GUI_APP_CLASSNAME}') # tkinter window object instantiated, now put stuff in it
+
 # Set what displays in the window title bar (not in task switcher)
 root.title("Toshy Preferences")
+
 # Set WM_CLASS for additional Toplevel windows
 root.option_add("*Toplevel.className", f'{TOSHY_GUI_APP_CLASSNAME}')
 
@@ -407,25 +433,53 @@ icon_file = os.path.join(current_folder_path, 'assets', 'toshy_app_icon_rainbow_
 # root.wm_iconphoto(False, app_icon_image_path)
 
 # Use Pillow to open the image, to make it work on CentOS 7
-image = Image.open(icon_file)
-app_icon_image = ImageTk.PhotoImage(image)
+image                           = Image.open(icon_file)
+app_icon_image                  = ImageTk.PhotoImage(image)
 root.wm_iconphoto(False, app_icon_image)
 
 # Set a font style to use for switch text
-switch_text_font_dict = {"family": "Helvetica", "size": 13}
-sw_txt_font = tkfont.Font(**switch_text_font_dict)
+switch_text_font_dict           = {"family": "Helvetica", "size": 13}
+sw_txt_font                     = tkfont.Font(**switch_text_font_dict)
 
 # Set a font style to use for switch description labels
-switch_label_font_dict = {"family": "Helvetica", "size": 12, "slant": "italic"}
-sw_lbl_font = tkfont.Font(**switch_label_font_dict)
-sw_lbl_font_color = 'gray'
+switch_label_font_dict          = {"family": "Helvetica", "size": 12, "slant": "italic"}
+sw_lbl_font                     = tkfont.Font(**switch_label_font_dict)
+sw_lbl_font_color               = 'gray'
 
 # adjustments for switch description labels
-sw_lbl_indent   = 50
-btn_lbl_pady     = (0, 10)
-sw_padx         = 0
-btn_pady         = 0
-wrap_len        = 380
+sw_lbl_indent                   = 50
+btn_lbl_pady                    = (0, 10)
+sw_padx                         = 0
+btn_pady                        = 0
+wrap_len                        = 380
+
+
+# Monkey patching to prevent Tk version error with sv_ttk theme on Tk 9.0 systems
+tk_version = root.tk.eval('info patchlevel')
+if tk_version.startswith('9.'):
+    try:
+        original_load_theme = sv_ttk._load_theme
+        
+        def patched_load_theme(style):
+            if not isinstance(style.master, tk.Tk):
+                raise TypeError("root must be a `tkinter.Tk` instance!")
+            
+            if not hasattr(style.master, "_sv_ttk_loaded"):
+                sv_ttk_dir = os.path.dirname(sv_ttk.__file__)
+                tcl_path = os.path.join(sv_ttk_dir, "sv.tcl")
+                
+                with open(tcl_path, 'r') as f:
+                    tcl_content = f.read()
+                
+                tcl_content = tcl_content.replace('package require Tk 8.6', 'package require Tk 8.6-')
+                style.tk.eval(tcl_content)
+                style.master._sv_ttk_loaded = True
+        
+        sv_ttk._load_theme = patched_load_theme
+        debug("Monkey-patched sv_ttk for Tk 9.0 compatibility")
+    except Exception as e:
+        error(f"Failed to patch sv_ttk for Tk 9.0: {e}")
+        # The app will likely fail later, but at least we logged the issue
 
 
 ####################################################
