@@ -454,32 +454,35 @@ btn_pady                        = 0
 wrap_len                        = 380
 
 
-# Monkey patching to prevent Tk version error with sv_ttk theme on Tk 9.0 systems
-tk_version = root.tk.eval('info patchlevel')
-if tk_version.startswith('9.'):
-    try:
-        original_load_theme = sv_ttk._load_theme
-        
-        def patched_load_theme(style):
-            if not isinstance(style.master, tk.Tk):
-                raise TypeError("root must be a `tkinter.Tk` instance!")
-            
-            if not hasattr(style.master, "_sv_ttk_loaded"):
-                sv_ttk_dir = os.path.dirname(sv_ttk.__file__)
-                tcl_path = os.path.join(sv_ttk_dir, "sv.tcl")
+# # Monkey patching to prevent Tk version error with sv_ttk theme on Tk 9.0 systems
+# tk_version = root.tk.eval('info patchlevel')
+# if tk_version.startswith('9.'):
+#     try:
+#         original_load_theme = sv_ttk._load_theme
+
+#         def patched_load_theme(style):
+#             if not isinstance(style.master, tk.Tk):
+#                 raise TypeError("root must be a `tkinter.Tk` instance!")
+
+#             if not hasattr(style.master, "_sv_ttk_loaded"):
+#                 sv_ttk_dir = os.path.dirname(sv_ttk.__file__)
+#                 tcl_path = os.path.join(sv_ttk_dir, "sv.tcl")
                 
-                with open(tcl_path, 'r') as f:
-                    tcl_content = f.read()
-                
-                tcl_content = tcl_content.replace('package require Tk 8.6', 'package require Tk 8.6-')
-                style.tk.eval(tcl_content)
-                style.master._sv_ttk_loaded = True
-        
-        sv_ttk._load_theme = patched_load_theme
-        debug("Monkey-patched sv_ttk for Tk 9.0 compatibility")
-    except Exception as e:
-        error(f"Failed to patch sv_ttk for Tk 9.0: {e}")
-        # The app will likely fail later, but at least we logged the issue
+#                 with open(tcl_path, 'r') as f:
+#                     tcl_content = f.read()
+
+#                 # Only patch if it needs patching
+#                 if 'package require Tk 8.6' in tcl_content and 'package require Tk 8.6-' not in tcl_content:
+#                     tcl_content = tcl_content.replace('package require Tk 8.6', 'package require Tk 8.6-')
+
+#                 style.tk.eval(tcl_content)
+#                 style.master._sv_ttk_loaded = True
+
+#         sv_ttk._load_theme = patched_load_theme
+#         debug("Monkey-patched sv_ttk for Tk 9.0 compatibility")
+#     except Exception as e:
+#         error(f"Failed to patch sv_ttk for Tk 9.0: {e}")
+#         # The app will likely fail later, but at least we logged the issue
 
 
 ####################################################
