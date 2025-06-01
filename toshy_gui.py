@@ -236,12 +236,17 @@ last_settings_list = get_settings_list(cnfg)
 
 def fn_monitor_internal_settings():
     global last_settings_list
+    
+    def update_gui():
+        """GUI updates grouped together"""
+        load_radio_btn_settings(cnfg, optspec_var, "optspec_layout")
+        load_switch_settings(cnfg)
+    
     while True:
         time.sleep(1)
         if last_settings_list != get_settings_list(cnfg):
-            # Schedule GUI updates on main thread
-            root.after(0, lambda: load_radio_btn_settings(cnfg, optspec_var, "optspec_layout"))
-            root.after(0, lambda: load_switch_settings(cnfg))
+            # Use named function and small delay
+            root.after(10, update_gui)
             last_settings_list = get_settings_list(cnfg)
 
 
@@ -322,6 +327,13 @@ def fn_monitor_toshy_services():
                 'org.freedesktop.systemd1.Unit', 'ActiveState'))
         return (toshy_svc_config_unit_state, toshy_svc_sessmon_unit_state)
 
+
+    def update_service_labels():
+        """Update both service labels"""
+        svc_status_lbl_config.config(text=f'Toshy Config: {svc_status_config}')
+        svc_status_lbl_sessmon.config(text=f'Session Monitor: {svc_status_sessmon} ')
+
+
     time.sleep(0.1)   # wait a bit before starting the loop
 
     while True:
@@ -352,18 +364,13 @@ def fn_monitor_toshy_services():
         #     except NameError: pass  # Let it pass if menu item not ready yet
 
         # Fix thread safety issue by using root.after()?
+
         if curr_svcs_state_tup != last_svcs_state_tup:
             try:
-                # Schedule GUI updates on main thread
-                def update_labels():
-                    svc_status_lbl_config.config(text=f'Toshy Config: {svc_status_config}')
-                    svc_status_lbl_sessmon.config(text=f'Session Monitor: {svc_status_sessmon} ')
-                
-                for _ in range(3):
-                    root.after(0, update_labels)
-                    time.sleep(0.05)
-            except NameError: pass  # Let it pass if menu item not ready yet
-
+                # Single update with reasonable delay
+                root.after(50, update_service_labels)
+            except NameError:
+                pass  # Let it pass if menu item not ready yet
         last_svcs_state_tup = curr_svcs_state_tup
 
         time.sleep(1)     # pause before next loop cycle
@@ -454,35 +461,36 @@ btn_pady                        = 0
 wrap_len                        = 380
 
 
-# # Monkey patching to prevent Tk version error with sv_ttk theme on Tk 9.0 systems
-# tk_version = root.tk.eval('info patchlevel')
-# if tk_version.startswith('9.'):
-#     try:
-#         original_load_theme = sv_ttk._load_theme
-
-#         def patched_load_theme(style):
-#             if not isinstance(style.master, tk.Tk):
-#                 raise TypeError("root must be a `tkinter.Tk` instance!")
-
-#             if not hasattr(style.master, "_sv_ttk_loaded"):
-#                 sv_ttk_dir = os.path.dirname(sv_ttk.__file__)
-#                 tcl_path = os.path.join(sv_ttk_dir, "sv.tcl")
-                
-#                 with open(tcl_path, 'r') as f:
-#                     tcl_content = f.read()
-
-#                 # Only patch if it needs patching
-#                 if 'package require Tk 8.6' in tcl_content and 'package require Tk 8.6-' not in tcl_content:
-#                     tcl_content = tcl_content.replace('package require Tk 8.6', 'package require Tk 8.6-')
-
-#                 style.tk.eval(tcl_content)
-#                 style.master._sv_ttk_loaded = True
-
-#         sv_ttk._load_theme = patched_load_theme
-#         debug("Monkey-patched sv_ttk for Tk 9.0 compatibility")
-#     except Exception as e:
-#         error(f"Failed to patch sv_ttk for Tk 9.0: {e}")
-#         # The app will likely fail later, but at least we logged the issue
+# Monkey patch the Sun Valley theme to work with Tk 9.0
+tk_version = root.tk.eval('info patchlevel')
+if tk_version.startswith('9.'):
+    original_load_theme = sv_ttk._load_theme
+    
+    def patched_load_theme(style):
+        if not isinstance(style.master, tk.Tk):
+            raise TypeError("root must be a `tkinter.Tk` instance!")
+        
+        if not hasattr(style.master, "_sv_ttk_loaded"):
+            sv_ttk_dir = os.path.dirname(sv_ttk.__file__)
+            tcl_path = os.path.join(sv_ttk_dir, "sv.tcl")
+            
+            with open(tcl_path, 'r') as f:
+                tcl_content = f.read()
+            
+            tcl_content = tcl_content.replace('package require Tk 8.6', 'package require Tk 8.6-')
+            
+            # Fix relative paths
+            tcl_content = tcl_content.replace(
+                '[file dirname [info script]]',
+                f'"{sv_ttk_dir}"'
+            )
+            
+            style.tk.eval(tcl_content)
+            style.master._sv_ttk_loaded = True
+    
+    # This line does the "magic" - replaces the function
+    sv_ttk._load_theme = patched_load_theme
+    debug("Monkey-patched sv_ttk for Tk 9.0 compatibility")
 
 
 ####################################################
