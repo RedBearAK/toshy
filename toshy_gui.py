@@ -234,20 +234,48 @@ last_settings_list = get_settings_list(cnfg)
 #             last_settings_list = get_settings_list(cnfg)
 
 
+# def fn_monitor_internal_settings():
+#     global last_settings_list
+    
+#     def update_gui():
+#         """GUI updates grouped together"""
+#         load_radio_btn_settings(cnfg, optspec_var, "optspec_layout")
+#         load_switch_settings(cnfg)
+    
+#     while True:
+#         time.sleep(1)
+#         if last_settings_list != get_settings_list(cnfg):
+#             # Use named function and small delay
+#             root.after(10, update_gui)
+#             last_settings_list = get_settings_list(cnfg)
+
+
+
 def fn_monitor_internal_settings():
     global last_settings_list
     
     def update_gui():
         """GUI updates grouped together"""
+        debug("!!! update_gui() ACTUALLY CALLED !!!")  # ADD THIS
         load_radio_btn_settings(cnfg, optspec_var, "optspec_layout")
         load_switch_settings(cnfg)
+        debug("!!! update_gui() FINISHED !!!")  # ADD THIS
     
     while True:
         time.sleep(1)
-        if last_settings_list != get_settings_list(cnfg):
+        current_settings = get_settings_list(cnfg)
+        
+        # Debug output
+        if last_settings_list != current_settings:
+            debug(f"!!! Settings change detected in monitor thread !!!")
+            # Show what changed
+            for (old_name, old_val), (new_name, new_val) in zip(last_settings_list, current_settings):
+                if old_val != new_val and old_name == new_name:
+                    debug(f"  {old_name}: {old_val} -> {new_val}")
+            
             # Use named function and small delay
             root.after(10, update_gui)
-            last_settings_list = get_settings_list(cnfg)
+            last_settings_list = current_settings
 
 
 sysctl_cmd      = f"{shutil.which('systemctl')}"
