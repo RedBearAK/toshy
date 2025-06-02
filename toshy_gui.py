@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-__version__ = '20250123'
+__version__ = '20250601'
 
 # Preferences app for Toshy, using tkinter GUI and "Sun Valley" theme
 TOSHY_PART      = 'gui'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
