@@ -250,32 +250,83 @@ last_settings_list = get_settings_list(cnfg)
 #             last_settings_list = get_settings_list(cnfg)
 
 
+# def fn_monitor_internal_settings():
+#     global last_settings_list
+    
+#     def update_gui():
+#         """GUI updates grouped together"""
+#         debug("!!! update_gui() ACTUALLY CALLED !!!")  # ADD THIS
+#         load_radio_btn_settings(cnfg, optspec_var, "optspec_layout")
+#         load_switch_settings(cnfg)
+#         debug("!!! update_gui() FINISHED !!!")  # ADD THIS
+    
+#     while True:
+#         time.sleep(1)
+#         current_settings = get_settings_list(cnfg)
+        
+#         # Debug output
+#         if last_settings_list != current_settings:
+#             debug(f"!!! Settings change detected in monitor thread !!!")
+#             # Show what changed
+#             for (old_name, old_val), (new_name, new_val) in zip(last_settings_list, current_settings):
+#                 if old_val != new_val and old_name == new_name:
+#                     debug(f"  {old_name}: {old_val} -> {new_val}")
+            
+#             # Use named function and small delay
+#             root.after(10, update_gui)
+#             last_settings_list = current_settings
+
+
+import queue
+
+# At the top level
+gui_update_queue = queue.Queue()
 
 def fn_monitor_internal_settings():
     global last_settings_list
-    
-    def update_gui():
-        """GUI updates grouped together"""
-        debug("!!! update_gui() ACTUALLY CALLED !!!")  # ADD THIS
-        load_radio_btn_settings(cnfg, optspec_var, "optspec_layout")
-        load_switch_settings(cnfg)
-        debug("!!! update_gui() FINISHED !!!")  # ADD THIS
     
     while True:
         time.sleep(1)
         current_settings = get_settings_list(cnfg)
         
-        # Debug output
         if last_settings_list != current_settings:
             debug(f"!!! Settings change detected in monitor thread !!!")
-            # Show what changed
+            # Show changes
             for (old_name, old_val), (new_name, new_val) in zip(last_settings_list, current_settings):
                 if old_val != new_val and old_name == new_name:
                     debug(f"  {old_name}: {old_val} -> {new_val}")
             
-            # Use named function and small delay
-            root.after(10, update_gui)
+            # Queue the update
+            gui_update_queue.put("update_settings")
             last_settings_list = current_settings
+
+
+# Process queue from main thread
+def process_gui_queue():
+    """Check for pending GUI updates"""
+    try:
+        while True:
+            item = gui_update_queue.get_nowait()
+            
+            if item == "update_settings":
+                debug("!!! Processing settings update from queue !!!")
+                load_radio_btn_settings(cnfg, optspec_var, "optspec_layout")
+                load_switch_settings(cnfg)
+                
+            elif isinstance(item, tuple) and item[0] == "service_status":
+                _, config_status, sessmon_status = item
+                debug("!!! Processing service status update from queue !!!")
+                try:
+                    svc_status_lbl_config.config(text=f'Toshy Config: {config_status}')
+                    svc_status_lbl_sessmon.config(text=f'Session Monitor: {sessmon_status} ')
+                except NameError:
+                    pass  # Labels might not exist yet
+                    
+    except queue.Empty:
+        pass
+    finally:
+        # Schedule next check
+        root.after(100, process_gui_queue)
 
 
 sysctl_cmd      = f"{shutil.which('systemctl')}"
@@ -356,12 +407,6 @@ def fn_monitor_toshy_services():
         return (toshy_svc_config_unit_state, toshy_svc_sessmon_unit_state)
 
 
-    def update_service_labels():
-        """Update both service labels"""
-        svc_status_lbl_config.config(text=f'Toshy Config: {svc_status_config}')
-        svc_status_lbl_sessmon.config(text=f'Session Monitor: {svc_status_sessmon} ')
-
-
     time.sleep(0.1)   # wait a bit before starting the loop
 
     while True:
@@ -394,11 +439,9 @@ def fn_monitor_toshy_services():
         # Fix thread safety issue by using root.after()?
 
         if curr_svcs_state_tup != last_svcs_state_tup:
-            try:
-                # Single update with reasonable delay
-                root.after(50, update_service_labels)
-            except NameError:
-                pass  # Let it pass if menu item not ready yet
+            # Queue the service status update
+            gui_update_queue.put(("service_status", svc_status_config, svc_status_sessmon))
+
         last_svcs_state_tup = curr_svcs_state_tup
 
         time.sleep(1)     # pause before next loop cycle
@@ -1057,6 +1100,10 @@ if __name__ == "__main__":
 
     # Apply the offsets
     root.geometry(f"+{offset_x}+{offset_y}")
+
+    # For thread safety, update GUI only from main thread
+    # Place before root.mainloop():
+    root.after(100, process_gui_queue)
 
     # This actually creates the tkinter GUI window, runs until window is closed
     # Nothing below this should be able to run until root window is closed
