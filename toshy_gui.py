@@ -18,6 +18,7 @@ try:
 except ModuleNotFoundError:
     dbus = None
 import fcntl
+import queue
 import psutil
 import shutil
 import signal
@@ -222,80 +223,24 @@ def get_settings_list(settings_obj):
 # Monitor from a separate thread.
 last_settings_list = get_settings_list(cnfg)
 
-
-# def fn_monitor_internal_settings():
-#     global last_settings_list
-#     while True:
-#         time.sleep(1)
-#         if last_settings_list != get_settings_list(cnfg):
-#             # debug(f'Updating GUI preferences switch settings...')
-#             load_radio_btn_settings(cnfg, optspec_var, "optspec_layout")
-#             load_switch_settings(cnfg)
-#             last_settings_list = get_settings_list(cnfg)
-
-
-# def fn_monitor_internal_settings():
-#     global last_settings_list
-    
-#     def update_gui():
-#         """GUI updates grouped together"""
-#         load_radio_btn_settings(cnfg, optspec_var, "optspec_layout")
-#         load_switch_settings(cnfg)
-    
-#     while True:
-#         time.sleep(1)
-#         if last_settings_list != get_settings_list(cnfg):
-#             # Use named function and small delay
-#             root.after(10, update_gui)
-#             last_settings_list = get_settings_list(cnfg)
-
-
-# def fn_monitor_internal_settings():
-#     global last_settings_list
-    
-#     def update_gui():
-#         """GUI updates grouped together"""
-#         debug("!!! update_gui() ACTUALLY CALLED !!!")  # ADD THIS
-#         load_radio_btn_settings(cnfg, optspec_var, "optspec_layout")
-#         load_switch_settings(cnfg)
-#         debug("!!! update_gui() FINISHED !!!")  # ADD THIS
-    
-#     while True:
-#         time.sleep(1)
-#         current_settings = get_settings_list(cnfg)
-        
-#         # Debug output
-#         if last_settings_list != current_settings:
-#             debug(f"!!! Settings change detected in monitor thread !!!")
-#             # Show what changed
-#             for (old_name, old_val), (new_name, new_val) in zip(last_settings_list, current_settings):
-#                 if old_val != new_val and old_name == new_name:
-#                     debug(f"  {old_name}: {old_val} -> {new_val}")
-            
-#             # Use named function and small delay
-#             root.after(10, update_gui)
-#             last_settings_list = current_settings
-
-
-import queue
-
-# At the top level
+# Prepare a queue for updates of the GUI (switches, radio buttons, labels)
 gui_update_queue = queue.Queue()
+
 
 def fn_monitor_internal_settings():
     global last_settings_list
-    
+
     while True:
         time.sleep(1)
         current_settings = get_settings_list(cnfg)
-        
+
         if last_settings_list != current_settings:
             debug(f"!!! Settings change detected in monitor thread !!!")
             # Show changes
             for (old_name, old_val), (new_name, new_val) in zip(last_settings_list, current_settings):
                 if old_val != new_val and old_name == new_name:
                     debug(f"  {old_name}: {old_val} -> {new_val}")
-            
+
             # Queue the update
             gui_update_queue.put("update_settings")
             last_settings_list = current_settings
@@ -307,12 +252,12 @@ def process_gui_queue():
     try:
         while True:
             item = gui_update_queue.get_nowait()
-            
+
             if item == "update_settings":
                 debug("!!! Processing settings update from queue !!!")
                 load_radio_btn_settings(cnfg, optspec_var, "optspec_layout")
                 load_switch_settings(cnfg)
-                
+
             elif isinstance(item, tuple) and item[0] == "service_status":
                 _, config_status, sessmon_status = item
                 debug("!!! Processing service status update from queue !!!")
@@ -321,7 +266,7 @@ def process_gui_queue():
                     svc_status_lbl_sessmon.config(text=f'Session Monitor: {sessmon_status} ')
                 except NameError:
                     pass  # Labels might not exist yet
-                    
+
     except queue.Empty:
         pass
     finally:
@@ -426,17 +371,6 @@ def fn_monitor_toshy_services():
             svc_status_sessmon = svc_status_glyph_inactive
         else:
             svc_status_sessmon = svc_status_glyph_unknown
-
-        # if curr_svcs_state_tup != last_svcs_state_tup:
-        #     try:
-        #         for _ in range(3):
-        #             svc_status_lbl_config.config(   text=f'Toshy Config: {svc_status_config}')
-        #             time.sleep(0.05)
-        #             svc_status_lbl_sessmon.config(  text=f'Session Monitor: {svc_status_sessmon} ')
-        #             time.sleep(0.05)
-        #     except NameError: pass  # Let it pass if menu item not ready yet
-
-        # Fix thread safety issue by using root.after()?
 
         if curr_svcs_state_tup != last_svcs_state_tup:
             # Queue the service status update
