@@ -252,16 +252,29 @@ def get_settings_list(settings_obj):
 last_settings_list = get_settings_list(cnfg)
 
 
+# def fn_monitor_internal_settings():
+#     global last_settings_list
+#     while True:
+#         time.sleep(1)
+#         if last_settings_list != get_settings_list(cnfg):
+#             # debug(f'settings list changed...')
+#             last_settings_list = get_settings_list(cnfg)
+#             load_prefs_submenu_settings()
+#             load_optspec_layout_submenu_settings()
+#             load_kbtype_submenu_settings()
+
+
 def fn_monitor_internal_settings():
     global last_settings_list
     while True:
         time.sleep(1)
         if last_settings_list != get_settings_list(cnfg):
-            # debug(f'settings list changed...')
             last_settings_list = get_settings_list(cnfg)
-            load_prefs_submenu_settings()
-            load_optspec_layout_submenu_settings()
-            load_kbtype_submenu_settings()
+            
+            # Schedule GUI updates on main thread
+            GLib.idle_add(load_prefs_submenu_settings)
+            GLib.idle_add(load_optspec_layout_submenu_settings)
+            GLib.idle_add(load_kbtype_submenu_settings)
 
 
 sysctl_cmd      = f"{shutil.which('systemctl')}"
@@ -381,17 +394,26 @@ def fn_monitor_toshy_services():
             svc_status_sessmon = svc_status_glyph_unknown
 
         time.sleep(0.1)
+
+        # curr_icon = tray_indicator.get_property('icon-name')
+        # if curr_svcs_state_tup == ('active', 'active') and curr_icon != icon_file_active:
+        #     # debug(f'Toshy services active, but active icon not set! Fixing.')
+        #     tray_indicator.set_icon_full(icon_file_active, "Toshy Tray Icon Active")
+        # elif curr_svcs_state_tup == ('inactive', 'inactive') and curr_icon != icon_file_inverse:
+        #     # debug(f'Toshy services inactive, but inactive icon not set! Fixing.')
+        #     tray_indicator.set_icon_full(icon_file_inverse, "Toshy Tray Icon Inactive")
+        # elif curr_svcs_state_tup not in [('active', 'active'), ('inactive', 'inactive')]:
+        #     # debug(f'\nToshy services status unknown. Setting grayscale/undefined icon.')
+        #     # debug(f'{curr_svcs_state_tup = }\n')
+        #     tray_indicator.set_icon_full(icon_file_grayscale, "Toshy Tray Icon Undefined")
+
         curr_icon = tray_indicator.get_property('icon-name')
         if curr_svcs_state_tup == ('active', 'active') and curr_icon != icon_file_active:
-            # debug(f'Toshy services active, but active icon not set! Fixing.')
-            tray_indicator.set_icon_full(icon_file_active, "Toshy Tray Icon Active")
+            GLib.idle_add(tray_indicator.set_icon_full, icon_file_active, "Toshy Tray Icon Active")
         elif curr_svcs_state_tup == ('inactive', 'inactive') and curr_icon != icon_file_inverse:
-            # debug(f'Toshy services inactive, but inactive icon not set! Fixing.')
-            tray_indicator.set_icon_full(icon_file_inverse, "Toshy Tray Icon Inactive")
+            GLib.idle_add(tray_indicator.set_icon_full, icon_file_inverse, "Toshy Tray Icon Inactive")
         elif curr_svcs_state_tup not in [('active', 'active'), ('inactive', 'inactive')]:
-            # debug(f'\nToshy services status unknown. Setting grayscale/undefined icon.')
-            # debug(f'{curr_svcs_state_tup = }\n')
-            tray_indicator.set_icon_full(icon_file_grayscale, "Toshy Tray Icon Undefined")
+            GLib.idle_add(tray_indicator.set_icon_full, icon_file_grayscale, "Toshy Tray Icon Undefined")
 
         max_attempts = 5
         
@@ -408,30 +430,45 @@ def fn_monitor_toshy_services():
             time.sleep(2)
             continue
 
+        # if curr_svcs_state_tup != last_svcs_state_tup:
+        #     config_label_text = f'       Config: {svc_status_config}'
+        #     sessmon_label_text = f'     SessMon: {svc_status_sessmon}'
+        #     for attempt in range(max_attempts):
+        #         try:
+        #             toshy_config_status_item.set_label(config_label_text)
+        #             time.sleep(0.05) # give the event loop time to complete set_label
+        #             if toshy_config_status_item.get_label() == config_label_text:
+        #                 break
+        #         except NameError: pass  # Let it pass if menu item not ready yet
+        #         time.sleep(0.01)  # Add a small delay between attempts
+        #     else:
+        #         error(f"Error: Failed to update Config label after {max_attempts} attempts")
+
+        #     for attempt in range(max_attempts):
+        #         try:
+        #             session_monitor_status_item.set_label(sessmon_label_text)
+        #             time.sleep(0.05) # give the event loop time to complete set_label
+        #             if session_monitor_status_item.get_label() == sessmon_label_text:
+        #                 break
+        #         except NameError: pass  # Let it pass if menu item not ready yet
+        #         time.sleep(0.01)  # Add a small delay between attempts
+        #     else:
+        #         error(f"Error: Failed to update SessMon label after {max_attempts} attempts")
+
         if curr_svcs_state_tup != last_svcs_state_tup:
             config_label_text = f'       Config: {svc_status_config}'
             sessmon_label_text = f'     SessMon: {svc_status_sessmon}'
-            for attempt in range(max_attempts):
+            
+            # Schedule GUI updates on main thread
+            def update_labels():
                 try:
                     toshy_config_status_item.set_label(config_label_text)
-                    time.sleep(0.05) # give the event loop time to complete set_label
-                    if toshy_config_status_item.get_label() == config_label_text:
-                        break
-                except NameError: pass  # Let it pass if menu item not ready yet
-                time.sleep(0.01)  # Add a small delay between attempts
-            else:
-                error(f"Error: Failed to update Config label after {max_attempts} attempts")
-
-            for attempt in range(max_attempts):
-                try:
                     session_monitor_status_item.set_label(sessmon_label_text)
-                    time.sleep(0.05) # give the event loop time to complete set_label
-                    if session_monitor_status_item.get_label() == sessmon_label_text:
-                        break
-                except NameError: pass  # Let it pass if menu item not ready yet
-                time.sleep(0.01)  # Add a small delay between attempts
-            else:
-                error(f"Error: Failed to update SessMon label after {max_attempts} attempts")
+                    return False  # Don't repeat
+                except:
+                    return False
+            
+            GLib.idle_add(update_labels)
 
         last_svcs_state_tup = curr_svcs_state_tup
 
@@ -635,18 +672,33 @@ def fn_remove_tray_icon(widget):
     sys.exit(0)
 
 
-def set_item_active_with_retry(menu_item, state=True, max_retries=5):
-    """Attempt to set the menu item's active state with retries."""
+# def set_item_active_with_retry(menu_item, state=True, max_retries=5):
+#     """Attempt to set the menu item's active state with retries."""
 
-    # This function is necessary to set the items active state when another app changes the setting.
-    for _ in range(max_retries):
+#     # This function is necessary to set the items active state when another app changes the setting.
+#     for _ in range(max_retries):
+#         menu_item.set_active(state)
+#         time.sleep(0.1)
+#         if menu_item.get_active() == state:
+#             return
+#         time.sleep(0.1)
+#     if not menu_item.get_active() == state:
+#         error(f"ERROR: Failed to set item '{menu_item.get_label()}' to state '{state}'.")
+
+
+def set_item_active_thread_safe(menu_item, state=True):
+    """Set menu item's active state (thread-safe version)"""
+    
+    def do_set_active():
         menu_item.set_active(state)
-        time.sleep(0.1)
-        if menu_item.get_active() == state:
-            return
-        time.sleep(0.1)
-    if not menu_item.get_active() == state:
-        error(f"ERROR: Failed to set item '{menu_item.get_label()}' to state '{state}'.")
+        return False  # Don't repeat
+    
+    # If we're in the main thread, set directly
+    if threading.current_thread() is threading.main_thread():
+        menu_item.set_active(state)
+    else:
+        # Schedule for main thread
+        GLib.idle_add(do_set_active)
 
 
 # -------- MENU ITEMS --------------------------------------------------
@@ -766,13 +818,13 @@ if not barebones_config:
 
     def load_prefs_submenu_settings():
         cnfg.load_settings()
-        set_item_active_with_retry(forced_numpad_item, cnfg.forced_numpad)
-        set_item_active_with_retry(media_arrows_fix_item, cnfg.media_arrows_fix)
-        set_item_active_with_retry(multi_lang_item, cnfg.multi_lang)
-        set_item_active_with_retry(ST3_in_VSCode_item, cnfg.ST3_in_VSCode)
-        set_item_active_with_retry(Caps2Cmd_item, cnfg.Caps2Cmd)
-        set_item_active_with_retry(Caps2Esc_Cmd_item, cnfg.Caps2Esc_Cmd)
-        set_item_active_with_retry(Enter2Ent_Cmd_item, cnfg.Enter2Ent_Cmd)
+        set_item_active_thread_safe(forced_numpad_item, cnfg.forced_numpad)
+        set_item_active_thread_safe(media_arrows_fix_item, cnfg.media_arrows_fix)
+        set_item_active_thread_safe(multi_lang_item, cnfg.multi_lang)
+        set_item_active_thread_safe(ST3_in_VSCode_item, cnfg.ST3_in_VSCode)
+        set_item_active_thread_safe(Caps2Cmd_item, cnfg.Caps2Cmd)
+        set_item_active_thread_safe(Caps2Esc_Cmd_item, cnfg.Caps2Esc_Cmd)
+        set_item_active_thread_safe(Enter2Ent_Cmd_item, cnfg.Enter2Ent_Cmd)
 
     def save_prefs_settings(widget):
         cnfg.forced_numpad      = forced_numpad_item.get_active()
@@ -834,9 +886,9 @@ if not barebones_config:
     def load_optspec_layout_submenu_settings():
         cnfg.load_settings()
         layout = cnfg.optspec_layout
-        if   layout == 'US':            set_item_active_with_retry(optspec_us_item, True)
-        elif layout == 'ABC':           set_item_active_with_retry(optspec_abc_extended_item, True)
-        elif layout == 'Disabled':      set_item_active_with_retry(optspec_disabled_item, True)
+        if   layout == 'US':            set_item_active_thread_safe(optspec_us_item, True)
+        elif layout == 'ABC':           set_item_active_thread_safe(optspec_abc_extended_item, True)
+        elif layout == 'Disabled':      set_item_active_thread_safe(optspec_disabled_item, True)
 
     def save_optspec_layout_setting(menu_item, layout):
         if not menu_item.get_active():
@@ -871,11 +923,11 @@ if not barebones_config:
     def load_kbtype_submenu_settings():
         cnfg.load_settings()
         kbtype = cnfg.override_kbtype
-        if kbtype == 'Auto-Adapt':      set_item_active_with_retry(kbtype_auto_adapt_item, True)
-        elif kbtype == 'Apple':         set_item_active_with_retry(kbtype_apple_item, True)
-        elif kbtype == 'Chromebook':    set_item_active_with_retry(kbtype_chromebook_item, True)
-        elif kbtype == 'IBM':           set_item_active_with_retry(kbtype_ibm_item, True)
-        elif kbtype == 'Windows':       set_item_active_with_retry(kbtype_windows_item, True)
+        if kbtype == 'Auto-Adapt':      set_item_active_thread_safe(kbtype_auto_adapt_item, True)
+        elif kbtype == 'Apple':         set_item_active_thread_safe(kbtype_apple_item, True)
+        elif kbtype == 'Chromebook':    set_item_active_thread_safe(kbtype_chromebook_item, True)
+        elif kbtype == 'IBM':           set_item_active_thread_safe(kbtype_ibm_item, True)
+        elif kbtype == 'Windows':       set_item_active_thread_safe(kbtype_windows_item, True)
 
     def save_kbtype_setting(menu_item, kbtype):
         if not menu_item.get_active():
