@@ -1672,19 +1672,20 @@ class DistroQuirksHandler:
         # sudo dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm
         epel_10_rpm_url = 'https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm'
 
-        # Normal 'epel-release' install command should work now on AlmaLinux 10, so
-        # we will substitute the standard package name for the URL. (Since June 2025)
-        if cnfg.DISTRO_ID in ['almalinux']:
-            epel_10_rpm = 'epel-release'
-            print("Using standard 'epel-release' package install command...")
-        else:
-            epel_10_rpm = epel_10_rpm_url
-            print("Using URL at fedoraproject.org to install 'epel-release' package...")
+        # # DOES NOT WORK! The package is not found (yet)
+        # # Normal 'epel-release' install command should work now on AlmaLinux 10, so
+        # # we will substitute the standard package name for the URL. (Since June 2025)
+        # if cnfg.DISTRO_ID in ['almalinux']:
+        #     epel_10_rpm = 'epel-release'
+        #     print("Using standard 'epel-release' package install command...")
+        # else:
+        #     epel_10_rpm = epel_10_rpm_url
+        #     print("Using URL at fedoraproject.org to install 'epel-release' package...")
 
         print("Installing and enabling EPEL 10 repository...")
         if not is_dnf_repo_enabled("epel"):
             try:
-                cmd_lst = [cnfg.priv_elev_cmd, 'dnf', 'install', '-y', epel_10_rpm]
+                cmd_lst = [cnfg.priv_elev_cmd, 'dnf', 'install', '-y', epel_10_rpm_url]
                 subprocess.run(cmd_lst, check=True)
                 print("EPEL repository is now enabled.")
             except subprocess.CalledProcessError as proc_err:
