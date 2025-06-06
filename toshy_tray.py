@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-__version__ = '20250603'
+__version__ = '20250605'
 
 # Indicator tray icon menu app for Toshy, using pygobject/gi
 TOSHY_PART      = 'tray'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
@@ -783,11 +783,11 @@ def fn_toggle_toshy_svcs_autostart(widget):
 
 
 if is_init_systemd():
-    autostart_toshy_svcs_item = Gtk.CheckMenuItem(label="Autostart Toshy Services")
-    autostart_toshy_svcs_item.set_active(   toshy_svc_sessmon_unit_enabled and 
-                                            toshy_svc_config_unit_enabled       )
-    autostart_toshy_svcs_item.connect("toggled", fn_toggle_toshy_svcs_autostart)
-    menu.append(autostart_toshy_svcs_item)
+    # autostart_toshy_svcs_item = Gtk.CheckMenuItem(label="Autostart Toshy Services")
+    # autostart_toshy_svcs_item.set_active(   toshy_svc_sessmon_unit_enabled and 
+    #                                         toshy_svc_config_unit_enabled       )
+    # autostart_toshy_svcs_item.connect("toggled", fn_toggle_toshy_svcs_autostart)
+    # menu.append(autostart_toshy_svcs_item)
 
     separator_above_svcs_item = Gtk.SeparatorMenuItem()
     menu.append(separator_above_svcs_item)  #-------------------------------------#
@@ -1034,7 +1034,14 @@ def fn_save_autostart_tray_icon_setting(widget):
             error(f'Problem disabling tray icon autostart:\n\t{proc_err}')
 
 
-autostart_tray_icon_item = Gtk.CheckMenuItem(label="Autostart Tray Icon")
+if is_init_systemd():
+    autostart_toshy_svcs_item = Gtk.CheckMenuItem(label="Autostart Toshy Services")
+    autostart_toshy_svcs_item.set_active(   toshy_svc_sessmon_unit_enabled and 
+                                            toshy_svc_config_unit_enabled       )
+    autostart_toshy_svcs_item.connect("toggled", fn_toggle_toshy_svcs_autostart)
+    menu.append(autostart_toshy_svcs_item)
+
+autostart_tray_icon_item = Gtk.CheckMenuItem(label="Autoload Tray Icon")
 autostart_tray_icon_item.set_active(cnfg.autostart_tray_icon)
 autostart_tray_icon_item.connect("toggled", fn_save_autostart_tray_icon_setting)
 menu.append(autostart_tray_icon_item)
