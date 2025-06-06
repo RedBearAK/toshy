@@ -1055,6 +1055,10 @@ if is_init_systemd():
                                             toshy_svc_config_unit_enabled       )
     autostart_toshy_svcs_item.connect("toggled", fn_toggle_toshy_svcs_autostart)
     autostart_submenu.append(autostart_toshy_svcs_item)
+else:
+    autostart_toshy_svcs_item = Gtk.MenuItem(label="(Non-systemd init)")
+    autostart_toshy_svcs_item.set_sensitive(False)  # Makes it dimmed/disabled
+    autostart_submenu.append(autostart_toshy_svcs_item)
 
 autostart_tray_icon_item = Gtk.CheckMenuItem(label="Autoload Tray Icon")
 autostart_tray_icon_item.set_active(cnfg.autostart_tray_icon)
