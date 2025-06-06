@@ -1034,17 +1034,35 @@ def fn_save_autostart_tray_icon_setting(widget):
             error(f'Problem disabling tray icon autostart:\n\t{proc_err}')
 
 
+# if is_init_systemd():
+#     autostart_toshy_svcs_item = Gtk.CheckMenuItem(label="Autostart Toshy Services")
+#     autostart_toshy_svcs_item.set_active(   toshy_svc_sessmon_unit_enabled and 
+#                                             toshy_svc_config_unit_enabled       )
+#     autostart_toshy_svcs_item.connect("toggled", fn_toggle_toshy_svcs_autostart)
+#     menu.append(autostart_toshy_svcs_item)
+
+# autostart_tray_icon_item = Gtk.CheckMenuItem(label="Autoload Tray Icon")
+# autostart_tray_icon_item.set_active(cnfg.autostart_tray_icon)
+# autostart_tray_icon_item.connect("toggled", fn_save_autostart_tray_icon_setting)
+# menu.append(autostart_tray_icon_item)
+
+autostart_submenu_item = Gtk.MenuItem(label="Autostart Options")
+autostart_submenu = Gtk.Menu()
+
 if is_init_systemd():
     autostart_toshy_svcs_item = Gtk.CheckMenuItem(label="Autostart Toshy Services")
     autostart_toshy_svcs_item.set_active(   toshy_svc_sessmon_unit_enabled and 
                                             toshy_svc_config_unit_enabled       )
     autostart_toshy_svcs_item.connect("toggled", fn_toggle_toshy_svcs_autostart)
-    menu.append(autostart_toshy_svcs_item)
+    autostart_submenu.append(autostart_toshy_svcs_item)
 
 autostart_tray_icon_item = Gtk.CheckMenuItem(label="Autoload Tray Icon")
 autostart_tray_icon_item.set_active(cnfg.autostart_tray_icon)
 autostart_tray_icon_item.connect("toggled", fn_save_autostart_tray_icon_setting)
-menu.append(autostart_tray_icon_item)
+autostart_submenu.append(autostart_tray_icon_item)
+
+autostart_submenu_item.set_submenu(autostart_submenu)
+menu.append(autostart_submenu_item)
 
 remove_tray_icon_item = Gtk.MenuItem(label="Remove Icon from Tray")
 remove_tray_icon_item.connect("activate", fn_remove_tray_icon)
