@@ -3776,9 +3776,9 @@ keymap("General File Managers - Finder Mods", {
 ####################################################################################
 
 keymap("Firefox Browsers Overrides", {
-    C("C-comma"):              [C("C-t"), sleep(0.1),
+    C("C-comma"):              [C("C-t"), sleep(0.2),
                                 ST("about:preferences"),
-                                sleep(0.1), C("Enter")],            # Open preferences
+                                sleep(0.2), C("Enter")],            # Open preferences (Settings)
     C("Shift-RC-N"):            C("Shift-C-P"),                     # Open private window with Cmd+Shift+N like other browsers
     C("RC-Backspace"):         [C("Shift-Home"), C("Backspace")],   # Delete Entire Line Left of Cursor
     C("RC-Delete"):            [C("Shift-End"), C("Delete")],       # Delete Entire Line Right of Cursor
@@ -3797,25 +3797,62 @@ keymap("Zotero", {
     cnfg.screen_has_focus and
     matchProps(clas="^.*Zotero.*$")(ctx) )
 
+
+keymap("Vivaldi browser - Settings dialog", {
+    # This will only work if window title is accurate
+    # (Unreliable in Plasma unless a window activation event happens after Settings dialog appears)
+    C("Esc"):                   C("Alt-F4"),                    # Close Settings dialog with Escape
+}, when = lambda ctx:
+    cnfg.screen_has_focus and
+    matchProps(clas="^Vivaldi.*$", name="^Vivaldi Settings:.*Vivaldi$")(ctx) )
+
 # Vivaldi is a Chromium based web browser
 keymap("Overrides for Vivaldi browser", {
-    C("RC-comma"):              C("C-F12"),                     # Open preferences
+
+    # These get caught by the shell in KDE Plasma!!! (Show Desktop and Go to Desktop 1 shortcuts):
+    # C("RC-comma"):              C("C-F12"),                     # Open preferences (Settings)
+    # C("RC-Slash"):              C("C-F1"),                      # Keyboard Cheat Sheet (shortcuts)
+
+    # This only opens the normal Chrome-like settings page, not the special Vivaldi settings dialog:
+    # C("C-comma"):              [C("C-t"), sleep(0.1),
+    #                             ST("chrome://settings"),
+    #                             sleep(0.1), C("Enter")],        # Open preferences (Settings)
+
+    # Alternatives using macros to avoid issues with KDE Plasma global shortcuts (see above):
+    C("RC-Slash"):             [C("F10"),
+                                sleep(0.2), C("H"),
+                                sleep(0.2), C("K")],            # Keyboard Cheat Sheet (shortcuts)
+
+    C("C-comma"):              [C("F10"),
+                                sleep(0.2), C("S")],            # Open preferences (Settings)
+
+    # Browser tab switching
+    C("RC-1"):                  C("C-1"),                       # Jump to Tab #1
+    C("RC-2"):                  C("C-2"),                       # Jump to Tab #2
+    C("RC-3"):                  C("C-3"),                       # Jump to Tab #3
+    C("RC-4"):                  C("C-4"),                       # Jump to Tab #4
+    C("RC-5"):                  C("C-5"),                       # Jump to Tab #5
+    C("RC-6"):                  C("C-6"),                       # Jump to Tab #6
+    C("RC-7"):                  C("C-7"),                       # Jump to Tab #7
+    C("RC-8"):                  C("C-8"),                       # Jump to Tab #8
+    C("RC-9"):                  C("C-9"),                       # Jump to last tab
+
 }, when = lambda ctx:
     cnfg.screen_has_focus and
     matchProps(clas="^Vivaldi.*$")(ctx) )
 
 # Falkon is a Chromium based web browser
 keymap("Overrides for Falkon browser", {
-    C("RC-comma"):              C("Shift-C-comma"),             # Open preferences
+    C("RC-comma"):              C("Shift-C-comma"),             # Open preferences (Settings)
 }, when = lambda ctx:
     cnfg.screen_has_focus and
     matchProps(clas="^org.kde.falkon$|^Falkon$")(ctx) )
 
 keymap("Chrome Browsers Overrides", {
-    # C("C-comma"):              [C("Alt-e"), C("s"),C("Enter")], # Open preferences
-    C("C-comma"):              [C("C-t"), sleep(0.1),
+    # C("C-comma"):              [C("Alt-e"), C("s"),C("Enter")], # Open preferences (Settings)
+    C("C-comma"):              [C("C-t"), sleep(0.2),
                                 ST("chrome://settings"),
-                                sleep(0.1), C("Enter")],        # Open preferences
+                                sleep(0.2), C("Enter")],        # Open preferences (Settings)
     C("RC-q"):                  C("Alt-F4"),                    # Quit Chrome(s) browsers with Cmd+Q
     # C("RC-Left"):               C("Alt-Left"),                  # Page nav: Back to prior page in history (conflict with wordwise)
     # C("RC-Right"):              C("Alt-Right"),                 # Page nav: Forward to next page in history (conflict with wordwise)
@@ -3834,15 +3871,15 @@ keymap("General Web Browsers", {
     C("RC-Q"):                  C("C-Q"),                       # Close all browsers Instances
     C("Alt-RC-I"):              C("Shift-C-I"),                 # Dev tools
     C("Alt-RC-J"):              C("Shift-C-J"),                 # Dev tools
-    C("RC-Key_1"):              C("Alt-Key_1"),                 # Jump to Tab #1-#8
-    C("RC-Key_2"):              C("Alt-Key_2"),
-    C("RC-Key_3"):              C("Alt-Key_3"),
-    C("RC-Key_4"):              C("Alt-Key_4"),
-    C("RC-Key_5"):              C("Alt-Key_5"),
-    C("RC-Key_6"):              C("Alt-Key_6"),
-    C("RC-Key_7"):              C("Alt-Key_7"),
-    C("RC-Key_8"):              C("Alt-Key_8"),
-    C("RC-Key_9"):              C("Alt-Key_9"),                 # Jump to last tab
+    C("RC-1"):                  C("Alt-1"),                     # Jump to Tab #1
+    C("RC-2"):                  C("Alt-2"),                     # Jump to Tab #2
+    C("RC-3"):                  C("Alt-3"),                     # Jump to Tab #3
+    C("RC-4"):                  C("Alt-4"),                     # Jump to Tab #4
+    C("RC-5"):                  C("Alt-5"),                     # Jump to Tab #5
+    C("RC-6"):                  C("Alt-6"),                     # Jump to Tab #6
+    C("RC-7"):                  C("Alt-7"),                     # Jump to Tab #7
+    C("RC-8"):                  C("Alt-8"),                     # Jump to Tab #8
+    C("RC-9"):                  C("Alt-9"),                     # Jump to last tab
     # Enable Cmd+Shift+Braces for tab navigation (redundant with General GUI)
     # C("Shift-RC-Left_Brace"):   C("C-Page_Up"),                 # Go to prior tab
     # C("Shift-RC-Right_Brace"):  C("C-Page_Down"),               # Go to next tab
