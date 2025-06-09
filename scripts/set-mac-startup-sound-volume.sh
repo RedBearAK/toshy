@@ -405,6 +405,7 @@ elif [ "$VOLUME" -ge 128 ]; then
     PRESERVED_VOL=$((VOLUME & 0x7F))
     echo "Note: Value $VOLUME will mute startup sound and preserve volume level $PRESERVED_VOL"
     echo "      Use 'unmute' command to restore to volume level $PRESERVED_VOL"
+    echo ""
 fi
 
 # Convert to hex for writing
