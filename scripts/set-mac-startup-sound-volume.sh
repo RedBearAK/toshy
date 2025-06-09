@@ -76,15 +76,15 @@ usage() {
     echo "  -x:  Hexadecimal format (e.g., 40 or 0x40)"
     echo ""
     echo "Volume ranges:"
-    echo "  Decimal:  0-127 for volume levels, 128-255 to mute*"
-    echo "  Binary:   00000000-01111111 for volume, 10000000-11111111 to mute*"
-    echo "  Hex:      00-7F for volume, 80-FF to mute*"
+    echo "  Decimal:  0-127 for volume level, 128-255 to mute^"
+    echo "  Binary:   00000000-01111111 for volume, 10000000-11111111 to mute^"
+    echo "  Hex:      00-7F for volume level, 80-FF to mute^"
     echo ""
-    echo " *Values >128 (dec) preserve a volume level that 'unmute' will restore"
+    echo "^ Values >128 (dec) preserve a volume level that 'unmute' will restore"
     clean_exit 1
 }
 
-# Notify user if efivar command is not available
+# Notify user if 'efivar' command is not available
 if ! command -v efivar >/dev/null 2>&1; then
     echo "There is no 'efivar' command on this system. Cannot continue."
     echo
