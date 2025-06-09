@@ -4731,7 +4731,7 @@ keymap("GenGUI overrides: not Chromebook", {
 
 if DISTRO_ID in ['almalinux', 'rhel', 'rocky'] and DESKTOP_ENV == 'xfce':
     keymap("GenGUI overrides: Alma/Rocky Xfce4", {
-        C("RC-Space"):             [iEF2NT(),C("C-Esc")],       # Launch Application Menu xfce4 (AlmaLinux/Rocky)
+        C("RC-Space"):             [iEF2NT(),C("Alt-F3")],       # Launch App Finder xfce4 (AlmaLinux/Rocky)
     }, when = lambda ctx:
         cnfg.screen_has_focus and
         matchProps(not_clas=remoteStr)(ctx)
