@@ -179,9 +179,9 @@ show_after_value() {
 
         if [ "$VOLUME_DEC" -ge 128 ]; then
             PRESERVED_VOL=$((VOLUME_DEC & 0x7F))
-            echo "After: $VOLUME_DEC (128 + $PRESERVED_VOL)"
+            echo "After:  $VOLUME_DEC (128 + $PRESERVED_VOL)"
         else
-            echo "After: $VOLUME_DEC"
+            echo "After:  $VOLUME_DEC"
         fi
         echo "Binary: $VOLUME_BIN"
     fi
@@ -411,10 +411,10 @@ fi
 VOLUME_HEX=$(printf "%02x" "$VOLUME")
 
 echo "Setting startup volume to:"
-echo "  Input: $INPUT_VALUE ($FORMAT)"
-echo "  Decimal: $VOLUME"
-echo "  Hex: $(printf "0x%02x" "$VOLUME")"
-echo "  Binary: $(printf "%08d" "$(echo "obase=2; $VOLUME" | bc)")"
+echo "  Input:    $INPUT_VALUE ($FORMAT)"
+echo "  Decimal:  $VOLUME"
+echo "  Hex:      $(printf "0x%02x" "$VOLUME")"
+echo "  Binary:  $(printf "%08d" "$(echo "obase=2; $VOLUME" | bc)")"
 echo "----------------------------------------------------------------"
 
 # Print current value
