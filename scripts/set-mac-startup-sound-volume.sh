@@ -31,7 +31,7 @@ if [ -f /sys/class/dmi/id/sys_vendor ]; then
     fi
 fi
 
-# Check if this is an Intel Mac (not Apple Silicon)
+# Check if this is an Intel Mac (not Apple Silicon or something unknown)
 if [ -f /proc/cpuinfo ] && grep -q "GenuineIntel" /proc/cpuinfo; then
     : # Intel Mac, proceed
 elif [[ "$(uname -m)" == "arm64" ]] || [[ "$(uname -m)" == "aarch64" ]]; then
@@ -43,37 +43,51 @@ elif [[ "$(uname -m)" == "arm64" ]] || [[ "$(uname -m)" == "aarch64" ]]; then
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         clean_exit 0
     fi
+else
+    echo "Warning: Unknown processor architecture: $(uname -m)"
+    echo "This script was designed for Intel-based Macs and may not work on this system."
+    echo
+    read -p "Continue anyway? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        clean_exit 0
+    fi
 fi
 
 # Function to display usage
 usage() {
-    echo "Usage: $0 [-d|-b|-x] <volume>"
-    echo "       $0 mute"
-    echo "       $0 unmute"
-    echo "       $0 reset"
-    echo "       $0 info"
+    SCRIPT_NAME=$(basename "$0")
+    echo "Usage: "
+    echo "  $SCRIPT_NAME [-d|-b|-x] <volume>"
+    echo "  $SCRIPT_NAME info"
+    echo "  $SCRIPT_NAME mute"
+    echo "  $SCRIPT_NAME unmute"
+    echo "  $SCRIPT_NAME reset"
     echo ""
     echo "Special commands:"
-    echo "  info:   Display current startup volume setting"
-    echo "  mute:   Set the startup volume to muted"
-    echo "  unmute: Restore previous startup volume (if preserved)"
-    echo "  reset:  Delete the EFI variable (simulate NVRAM/PRAM reset)"
+    echo "  info:    Display current startup volume setting"
+    echo "  mute:    Set the startup volume to muted"
+    echo "  unmute:  Restore previous startup volume (if preserved)"
+    echo "  reset:   Delete the EFI variable (simulate NVRAM/PRAM reset)"
     echo ""
     echo "Format options:"
-    echo "  -d: Decimal format (default)"
-    echo "  -b: Binary format (e.g., 01000000)"
-    echo "  -x: Hexadecimal format (e.g., 40 or 0x40)"
+    echo "  -d:  Decimal format (default)"
+    echo "  -b:  Binary format (e.g., 01000000)"
+    echo "  -x:  Hexadecimal format (e.g., 40 or 0x40)"
     echo ""
     echo "Volume ranges:"
-    echo "  Decimal: 0-127 for volume levels, 128 to mute"
-    echo "  Binary: 00000000-01111111 for volume, 10000000 to mute"
-    echo "  Hex: 00-7F for volume, 80 to mute"
+    echo "  Decimal:  0-127 for volume level, 128-255 to mute^"
+    echo "  Binary:   00000000-01111111 for volume, 10000000-11111111 to mute^"
+    echo "  Hex:      00-7F for volume level, 80-FF to mute^"
+    echo ""
+    echo "^ Values >128 (dec) preserve a volume level that 'unmute' will restore"
     clean_exit 1
 }
 
-# Notify user if efivar command is not available
+# Notify user if 'efivar' command is not available
 if ! command -v efivar >/dev/null 2>&1; then
     echo "There is no 'efivar' command on this system. Cannot continue."
+    echo
     echo "Try installing 'efivar' package. Exiting..."
     clean_exit 0
 fi
@@ -104,10 +118,14 @@ show_info() {
     # Convert to other formats
     VOLUME_HEX=$(printf "0x%02x" "$VOLUME_DEC")
     VOLUME_BIN=$(printf "%08d" "$(echo "obase=2; $VOLUME_DEC" | bc)")
-    
+
     # Determine the meaning
     if [ "$VOLUME_DEC" -eq 128 ]; then
         STATUS="MUTED"
+        PERCENTAGE="N/A"
+    elif [ "$VOLUME_DEC" -gt 128 ] && [ "$VOLUME_DEC" -le 255 ]; then
+        PRESERVED_VOL=$((VOLUME_DEC & 0x7F))
+        STATUS="MUTED (with preserved volume: $PRESERVED_VOL)"
         PERCENTAGE="N/A"
     elif [ "$VOLUME_DEC" -ge 0 ] && [ "$VOLUME_DEC" -le 127 ]; then
         STATUS="Volume Level"
@@ -116,7 +134,7 @@ show_info() {
         STATUS="Unknown/Invalid"
         PERCENTAGE="N/A"
     fi
-    
+
     echo "Status: Found and readable"
     echo ""
     echo "Current Value:"
@@ -141,6 +159,31 @@ show_info() {
         echo "  Immutable flag: Set (protected from modification)"
     else
         echo "  Immutable flag: Not set"
+    fi
+}
+
+# Function to display "After" value with breakdown and binary representation
+show_after_value() {
+    local RAW_VALUE
+    RAW_VALUE=$(efivar -n "7c436110-ab2a-4bbb-a880-fe41995c9f82-SystemAudioVolume" -d 2>/dev/null || echo "Not set")
+
+    if [[ "$RAW_VALUE" == "Not set" ]]; then
+        echo "After: Not set"
+    else
+        local VOLUME_DEC
+        local VOLUME_BIN
+        local PRESERVED_VOL
+
+        VOLUME_DEC=$(echo "$RAW_VALUE" | awk '{print $NF}')
+        VOLUME_BIN=$(printf "%08d" "$(echo "obase=2; $VOLUME_DEC" | bc)")
+
+        if [ "$VOLUME_DEC" -ge 128 ]; then
+            PRESERVED_VOL=$((VOLUME_DEC & 0x7F))
+            echo "After:  $VOLUME_DEC (128 + $PRESERVED_VOL)"
+        else
+            echo "After:  $VOLUME_DEC"
+        fi
+        echo "Binary: $VOLUME_BIN"
     fi
 }
 
@@ -185,12 +228,13 @@ if [ $# -eq 1 ]; then
             # Make it immutable again
             chattr +i "/sys/firmware/efi/efivars/SystemAudioVolume-7c436110-ab2a-4bbb-a880-fe41995c9f82"
             
-            echo "After: $(efivar -n "7c436110-ab2a-4bbb-a880-fe41995c9f82-SystemAudioVolume" -d)"
+            # echo "After: $(efivar -n "7c436110-ab2a-4bbb-a880-fe41995c9f82-SystemAudioVolume" -d)"
+            show_after_value
             echo "----------------------------------------------------------------"
             clean_exit 0
             ;;
 
-            "unmute")
+        "unmute")
             echo "Restoring previous startup volume..."
             echo "----------------------------------------------------------------"
             
@@ -234,7 +278,8 @@ if [ $# -eq 1 ]; then
             # Make it immutable again
             chattr +i "/sys/firmware/efi/efivars/SystemAudioVolume-7c436110-ab2a-4bbb-a880-fe41995c9f82"
             
-            echo "After: $(efivar -n "7c436110-ab2a-4bbb-a880-fe41995c9f82-SystemAudioVolume" -d)"
+            # echo "After: $(efivar -n "7c436110-ab2a-4bbb-a880-fe41995c9f82-SystemAudioVolume" -d)"
+            show_after_value
             echo "----------------------------------------------------------------"
             echo "Volume restored to: $PRESERVED_VOLUME"
             clean_exit 0
@@ -260,7 +305,8 @@ if [ $# -eq 1 ]; then
                 fi
             fi
             
-            echo "After: $(efivar -n "7c436110-ab2a-4bbb-a880-fe41995c9f82-SystemAudioVolume" -d 2>/dev/null || echo "Not set")"
+            # echo "After: $(efivar -n "7c436110-ab2a-4bbb-a880-fe41995c9f82-SystemAudioVolume" -d 2>/dev/null || echo "Not set")"
+            show_after_value
             echo "----------------------------------------------------------------"
             echo "Note: The system will use the default volume on next boot."
             clean_exit 0
@@ -341,23 +387,35 @@ case $FORMAT in
 
 esac
 
-# Validate volume range
-if [ "$VOLUME" -lt 0 ] || [ "$VOLUME" -gt 128 ]; then
+# # Validate volume range
+# if [ "$VOLUME" -lt 0 ] || [ "$VOLUME" -gt 128 ]; then
+#     echo "Error: Volume value out of range."
+#     echo "  Decimal:  0-128"
+#     echo "  Binary:   00000000-10000000"
+#     echo "  Hex:      00-80"
+#     clean_exit 1
+# fi
+
+# Validate volume range and explain behavior for mute values
+if [ "$VOLUME" -lt 0 ] || [ "$VOLUME" -gt 255 ]; then
     echo "Error: Volume value out of range."
-    echo "  Decimal: 0-128"
-    echo "  Binary: 00000000-10000000"
-    echo "  Hex: 00-80"
+    echo "  Valid range: 0-255 (128-255 mutes startup sound)"
     clean_exit 1
+elif [ "$VOLUME" -ge 128 ]; then
+    PRESERVED_VOL=$((VOLUME & 0x7F))
+    echo "Note: Value $VOLUME will mute startup sound and preserve volume level $PRESERVED_VOL"
+    echo "      Use 'unmute' command to restore to volume level $PRESERVED_VOL"
+    echo ""
 fi
 
 # Convert to hex for writing
 VOLUME_HEX=$(printf "%02x" "$VOLUME")
 
 echo "Setting startup volume to:"
-echo "  Input: $INPUT_VALUE ($FORMAT)"
-echo "  Decimal: $VOLUME"
-echo "  Hex: $(printf "0x%02x" "$VOLUME")"
-echo "  Binary: $(printf "%08d" "$(echo "obase=2; $VOLUME" | bc)")"
+echo "  Input:    $INPUT_VALUE ($FORMAT)"
+echo "  Decimal:  $VOLUME"
+echo "  Hex:      $(printf "0x%02x" "$VOLUME")"
+echo "  Binary:  $(printf "%08d" "$(echo "obase=2; $VOLUME" | bc)")"
 echo "----------------------------------------------------------------"
 
 # Print current value
@@ -373,6 +431,7 @@ printf '%b' "\x07\x00\x00\x00\x${VOLUME_HEX}" > "/sys/firmware/efi/efivars/Syste
 # Make it immutable again
 chattr +i "/sys/firmware/efi/efivars/SystemAudioVolume-7c436110-ab2a-4bbb-a880-fe41995c9f82"
 
-echo "After: $(efivar -n "7c436110-ab2a-4bbb-a880-fe41995c9f82-SystemAudioVolume" -d)"
+# echo "After: $(efivar -n "7c436110-ab2a-4bbb-a880-fe41995c9f82-SystemAudioVolume" -d)"
+show_after_value
 echo "----------------------------------------------------------------"
 clean_exit 0
