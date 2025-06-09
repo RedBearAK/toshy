@@ -56,11 +56,13 @@ fi
 
 # Function to display usage
 usage() {
-    echo "Usage: $0 [-d|-b|-x] <volume>"
-    echo "       $0 info"
-    echo "       $0 mute"
-    echo "       $0 unmute"
-    echo "       $0 reset"
+    SCRIPT_NAME=$(basename "$0")
+    echo "Usage: "
+    echo "  $SCRIPT_NAME [-d|-b|-x] <volume>"
+    echo "  $SCRIPT_NAME info"
+    echo "  $SCRIPT_NAME mute"
+    echo "  $SCRIPT_NAME unmute"
+    echo "  $SCRIPT_NAME reset"
     echo ""
     echo "Special commands:"
     echo "  info:    Display current startup volume setting"
@@ -74,10 +76,11 @@ usage() {
     echo "  -x:  Hexadecimal format (e.g., 40 or 0x40)"
     echo ""
     echo "Volume ranges:"
-    echo "  Decimal:  0-127 for volume levels, 128-255 to mute"
-    echo "  Binary:   00000000-01111111 for volume, 10000000-11111111 to mute"
-    echo "  Hex:      00-7F for volume, 80-FF to mute"
-    echo "*Values >128 (dec) preserve a volume level that 'unmute' will restore"
+    echo "  Decimal:  0-127 for volume levels, 128-255 to mute*"
+    echo "  Binary:   00000000-01111111 for volume, 10000000-11111111 to mute*"
+    echo "  Hex:      00-7F for volume, 80-FF to mute*"
+    echo ""
+    echo " *Values >128 (dec) preserve a volume level that 'unmute' will restore"
     clean_exit 1
 }
 
@@ -384,13 +387,24 @@ case $FORMAT in
 
 esac
 
-# Validate volume range
-if [ "$VOLUME" -lt 0 ] || [ "$VOLUME" -gt 128 ]; then
+# # Validate volume range
+# if [ "$VOLUME" -lt 0 ] || [ "$VOLUME" -gt 128 ]; then
+#     echo "Error: Volume value out of range."
+#     echo "  Decimal:  0-128"
+#     echo "  Binary:   00000000-10000000"
+#     echo "  Hex:      00-80"
+#     clean_exit 1
+# fi
+
+# Validate volume range and explain behavior for mute values
+if [ "$VOLUME" -lt 0 ] || [ "$VOLUME" -gt 255 ]; then
     echo "Error: Volume value out of range."
-    echo "  Decimal: 0-128"
-    echo "  Binary: 00000000-10000000"
-    echo "  Hex: 00-80"
+    echo "  Valid range: 0-255 (128-255 mutes startup sound)"
     clean_exit 1
+elif [ "$VOLUME" -ge 128 ]; then
+    PRESERVED_VOL=$((VOLUME & 0x7F))
+    echo "Note: Value $VOLUME will mute startup sound and preserve volume level $PRESERVED_VOL"
+    echo "      Use 'unmute' command to restore to volume level $PRESERVED_VOL"
 fi
 
 # Convert to hex for writing
