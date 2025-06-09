@@ -54,33 +54,65 @@ else
     fi
 fi
 
+# # Function to display usage
+# usage() {
+#     SCRIPT_NAME=$(basename "$0")
+#     echo "Usage: "
+#     echo "  $SCRIPT_NAME [-d|-b|-x] <volume>"
+#     echo "  $SCRIPT_NAME info"
+#     echo "  $SCRIPT_NAME mute"
+#     echo "  $SCRIPT_NAME unmute"
+#     echo "  $SCRIPT_NAME reset"
+#     echo ""
+#     echo "Special commands:"
+#     echo "  info:    Display current startup volume setting"
+#     echo "  mute:    Set the startup volume to muted"
+#     echo "  unmute:  Restore previous startup volume (if preserved)"
+#     echo "  reset:   Delete the EFI variable (simulate NVRAM/PRAM reset)"
+#     echo ""
+#     echo "Format options:"
+#     echo "  -d:  Decimal format (default)"
+#     echo "  -b:  Binary format (e.g., 01000000)"
+#     echo "  -x:  Hexadecimal format (e.g., 40 or 0x40)"
+#     echo ""
+#     echo "Volume ranges:"
+#     echo "  Decimal:  0-127 for volume level, 128-255 to mute^"
+#     echo "  Binary:   00000000-01111111 for volume, 10000000-11111111 to mute^"
+#     echo "  Hex:      00-7F for volume level, 80-FF to mute^"
+#     echo ""
+#     echo "^ Values >128 (dec) preserve a volume level that 'unmute' will restore"
+#     clean_exit 1
+# }
+
 # Function to display usage
 usage() {
     SCRIPT_NAME=$(basename "$0")
-    echo "Usage: "
-    echo "  $SCRIPT_NAME [-d|-b|-x] <volume>"
-    echo "  $SCRIPT_NAME info"
-    echo "  $SCRIPT_NAME mute"
-    echo "  $SCRIPT_NAME unmute"
-    echo "  $SCRIPT_NAME reset"
-    echo ""
-    echo "Special commands:"
-    echo "  info:    Display current startup volume setting"
-    echo "  mute:    Set the startup volume to muted"
-    echo "  unmute:  Restore previous startup volume (if preserved)"
-    echo "  reset:   Delete the EFI variable (simulate NVRAM/PRAM reset)"
-    echo ""
-    echo "Format options:"
-    echo "  -d:  Decimal format (default)"
-    echo "  -b:  Binary format (e.g., 01000000)"
-    echo "  -x:  Hexadecimal format (e.g., 40 or 0x40)"
-    echo ""
-    echo "Volume ranges:"
-    echo "  Decimal:  0-127 for volume level, 128-255 to mute^"
-    echo "  Binary:   00000000-01111111 for volume, 10000000-11111111 to mute^"
-    echo "  Hex:      00-7F for volume level, 80-FF to mute^"
-    echo ""
-    echo "^ Values >128 (dec) preserve a volume level that 'unmute' will restore"
+    cat << EOF
+Usage: 
+    $SCRIPT_NAME [-d|-b|-x] <volume>
+    $SCRIPT_NAME info
+    $SCRIPT_NAME mute
+    $SCRIPT_NAME unmute
+    $SCRIPT_NAME reset
+
+Special commands:
+    info:    Display current startup volume setting
+    mute:    Set the startup volume to muted
+    unmute:  Restore previous startup volume (if preserved)
+    reset:   Delete the EFI variable (simulate NVRAM/PRAM reset)
+
+Format options:
+    -d:  Decimal format (default)
+    -b:  Binary format (e.g., 01000000)
+    -x:  Hexadecimal format (e.g., 40 or 0x40)
+
+Volume ranges:
+    Decimal:  0-127 for volume level, 128-255 to mute^
+    Binary:   00000000-01111111 for volume, 10000000-11111111 to mute^
+    Hex:      00-7F for volume level, 80-FF to mute^
+
+^ Values of 129-255 preserve a volume level that 'unmute' will restore
+EOF
     clean_exit 1
 }
 
