@@ -51,21 +51,23 @@ echo -e "\nRestarting Toshy systemd services..."
 systemctl --user stop toshy-cosmic-dbus.service
 systemctl --user stop toshy-kwin-dbus.service
 systemctl --user stop toshy-wlroots-dbus.service
+
 sleep 0.1
 
 systemctl --user start toshy-cosmic-dbus.service
 systemctl --user start toshy-kwin-dbus.service
 systemctl --user start toshy-wlroots-dbus.service
+
 sleep 0.1
 
 systemctl --user stop toshy-session-monitor.service
 sleep 0.1
-
 systemctl --user stop toshy-config.service
-sleep 0.1
+
+sleep 0.3
+
 systemctl --user start toshy-config.service
 sleep 0.1
-
 systemctl --user start toshy-session-monitor.service
 
 # The keymapper's problem with ignoring the first modifier key press after startup
