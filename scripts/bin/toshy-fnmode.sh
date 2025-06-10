@@ -38,7 +38,7 @@ else
     curr_fnmode="N/A"
     echo ""
     echo "ERROR: Unable to read current function keys mode:"
-    echo "          '$fnmode_file' is not a valid file."
+    echo "        '$fnmode_file' is not a valid file."
 fi
 
 curr_mode_str="Current function keys mode for the 'hid_apple' driver:"
@@ -230,14 +230,15 @@ fn_check_preconditions() {
     # Check if the hid_apple module is loaded
     if ! lsmod | grep -q '^hid_apple'; then
         echo ""
-        echo "ERROR: 'hid_apple' module is not loaded. The script cannot proceed."
-        echo "          Unlikely that any attached keyboard device uses 'hid_apple'."
+        echo "ERROR: The 'hid_apple' module is not loaded. The script cannot proceed."
+        echo "        It is unlikely that any attached keyboard device uses 'hid_apple'."
         safe_shutdown 1
     fi
     # Check if the fnmode file exists (unlikely if 'hid_apple' module is loaded)
     if [[ ! -f "$fnmode_file" ]]; then
         echo ""
-        echo "ERROR: '$fnmode_file' does not exist. The script cannot proceed."
+        echo "ERROR: The script cannot proceed. Reason:"
+        echo "       '$fnmode_file' does not exist."
         safe_shutdown 1
     fi
 }
