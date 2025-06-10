@@ -45,23 +45,50 @@ if ! systemctl --user list-unit-files &>/dev/null; then
     exit 1
 fi
 
+show_progress() {
+    echo -n "  ."
+}
 
 echo -e "\nRestarting Toshy systemd services..."
 
-systemctl --user restart toshy-cosmic-dbus.service
+systemctl --user stop toshy-cosmic-dbus.service
+show_progress
+systemctl --user stop toshy-kwin-dbus.service
+show_progress
+systemctl --user stop toshy-wlroots-dbus.service
+show_progress
+
 sleep 0.1
-systemctl --user restart toshy-kwin-dbus.service
+
+systemctl --user start toshy-cosmic-dbus.service
+show_progress
+systemctl --user start toshy-kwin-dbus.service
+show_progress
+systemctl --user start toshy-wlroots-dbus.service
+show_progress
+
 sleep 0.1
-systemctl --user restart toshy-wlroots-dbus.service
-sleep 0.1
+
 systemctl --user stop toshy-session-monitor.service
+show_progress
+
 sleep 0.1
-systemctl --user restart toshy-config.service
+
+systemctl --user stop toshy-config.service
+show_progress
+
+sleep 0.3
+
+systemctl --user start toshy-config.service
+show_progress
+
 sleep 0.1
+
 systemctl --user start toshy-session-monitor.service
+show_progress
 
 # The keymapper's problem with ignoring the first modifier key press after startup
 # was fixed in 'xwaykeyz' 1.5.4, so we don't need to have these reminders anymore!
 # echo -e "\nToshy systemd services restarted.\n\nRemember to tap a modifier key before trying shortcuts!\n"
-echo -e "\nToshy systemd services restarted.\n"
+echo -e "  done.\nToshy systemd services restarted.\n"
 sleep 0.1
