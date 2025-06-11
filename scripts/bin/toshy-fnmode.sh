@@ -238,7 +238,7 @@ fn_check_preconditions() {
     if [[ ! -f "$fnmode_file" ]]; then
         echo ""
         echo "ERROR: The script cannot proceed. Reason:"
-        echo "       '$fnmode_file' does not exist."
+        echo "        '$fnmode_file' does not exist."
         safe_shutdown 1
     fi
 }
