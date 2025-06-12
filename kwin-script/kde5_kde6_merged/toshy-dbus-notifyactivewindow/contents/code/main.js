@@ -1,6 +1,6 @@
 /*
 KWin Script Toshy D-Bus Notify Active Window - Enhanced with Title Change Detection
-(C) 2023-25 RedBearAK <64876997+RedBearAK@users.noreply.github.com>
+(C) 2023-24 RedBearAK <64876997+RedBearAK@users.noreply.github.com>
 GNU General Public License v3.0
 */
 
@@ -20,14 +20,14 @@ let activeWindow;
 
 if (isKDE6) {
     // For KDE 6
-    connectWindowActivated  = (handler) => workspace.windowActivated.connect(handler);
-    connectWindowClosed     = (handler) => workspace.windowRemoved.connect(handler);
-    activeWindow            = () => workspace.activeWindow;
+    connectWindowActivated = (handler) => workspace.windowActivated.connect(handler);
+    connectWindowClosed = (handler) => workspace.windowRemoved.connect(handler);
+    activeWindow = () => workspace.activeWindow;
 } else {
     // For KDE 5
-    connectWindowActivated  = (handler) => workspace.clientActivated.connect(handler);
-    connectWindowClosed     = (handler) => workspace.clientRemoved.connect(handler);
-    activeWindow            = () => workspace.activeClient;
+    connectWindowActivated = (handler) => workspace.clientActivated.connect(handler);
+    connectWindowClosed = (handler) => workspace.clientRemoved.connect(handler);
+    activeWindow = () => workspace.activeClient;
 }
 
 function notifyActiveWindow(window){
@@ -75,8 +75,18 @@ function onWindowActivated(window) {
         window.captionChanged.connect(() => {
             // Only notify if this window is still the active one
             if (window === currentActiveWindow) {
-                debug("Active window caption changed:", window.caption);
-                notifyActiveWindow(window);
+                debug("=== CAPTION CHANGE DEBUG ===");
+                debug("Signal window caption:", window.caption);
+                
+                const currentActive = activeWindow();
+                debug("Active window caption:", currentActive ? currentActive.caption : "null");
+                debug("Same window object?", window === currentActive);
+                debug("=============================");
+                
+                // Always read from the currently active window, not the signal window
+                if (currentActive) {
+                    notifyActiveWindow(currentActive);
+                }
             } else {
                 debug("Ignoring caption change from inactive window:", window.caption);
             }
@@ -100,6 +110,11 @@ function onWindowClosed(window) {
 // Connect the main event handlers
 connectWindowActivated(onWindowActivated);
 connectWindowClosed(onWindowClosed);
+
+// That's it! No startup code that might not work - purely event-driven.
+
+// Complete solution: Caption changes detected, Set cleaned up automatically,
+// and only active window info sent to DBus. No memory leaks!
 
 
 
