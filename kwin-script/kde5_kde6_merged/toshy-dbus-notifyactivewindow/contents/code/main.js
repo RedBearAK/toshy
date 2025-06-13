@@ -1,5 +1,5 @@
 /*
-KWin Script Toshy D-Bus Notify Active Window - Enhanced with Title Change Detection
+KWin Script Toshy D-Bus Notify Active Window - Minimal Enhancement
 (C) 2023-24 RedBearAK <64876997+RedBearAK@users.noreply.github.com>
 GNU General Public License v3.0
 */
@@ -15,20 +15,19 @@ const isKDE6 = typeof workspace.windowList === 'function';
 
 // Abstraction for connecting to window activation event
 let connectWindowActivated;
-let connectWindowClosed;
 let activeWindow;
-
 if (isKDE6) {
     // For KDE 6
     connectWindowActivated = (handler) => workspace.windowActivated.connect(handler);
-    connectWindowClosed = (handler) => workspace.windowRemoved.connect(handler);
     activeWindow = () => workspace.activeWindow;
 } else {
     // For KDE 5
     connectWindowActivated = (handler) => workspace.clientActivated.connect(handler);
-    connectWindowClosed = (handler) => workspace.clientRemoved.connect(handler);
     activeWindow = () => workspace.activeClient;
 }
+
+// Track which windows we've connected to (to avoid duplicates)
+let trackedWindows = new Set();
 
 function notifyActiveWindow(window){
     // Check if the window object is null (might be null when task switcher dialog has focus)
@@ -41,7 +40,7 @@ function notifyActiveWindow(window){
     var resourceClass   = window.hasOwnProperty('resourceClass')    ? window.resourceClass : "UNDEF";
     var resourceName    = window.hasOwnProperty('resourceName')     ? window.resourceName : "UNDEF";
 
-    debug("Notifying DBus - Caption:", caption, "Class:", resourceClass, "Name:", resourceName);
+    debug("Notifying DBus - Caption:", caption, "Class:", resourceClass);
 
     callDBus(
         "org.toshy.Plasma",
@@ -54,68 +53,30 @@ function notifyActiveWindow(window){
     );
 }
 
-// Track which windows already have caption change listeners (avoids duplicates)
-let trackedWindows = new Set();
-// Track the currently active window for caption changes
-let currentActiveWindow = null;
-
-// Enhanced window activation handler
 function onWindowActivated(window) {
     debug("Window activated:", window ? window.caption : "null");
     notifyActiveWindow(window);
     
-    // Update which window we're tracking for caption changes
-    currentActiveWindow = window;
-    
-    // Set up caption change tracking for this window (only once per window)
+    // Set up caption change tracking for this window (avoid duplicates)
     if (window && window.captionChanged && !trackedWindows.has(window)) {
         debug("Setting up caption tracking for:", window.caption);
         trackedWindows.add(window);
         
         window.captionChanged.connect(() => {
-            // Only notify if this window is still the active one
-            if (window === currentActiveWindow) {
-                debug("=== CAPTION CHANGE DEBUG ===");
-                debug("Signal window caption:", window.caption);
-                
-                const currentActive = activeWindow();
-                debug("Active window caption:", currentActive ? currentActive.caption : "null");
-                debug("Same window object?", window === currentActive);
-                debug("=============================");
-                
-                // Always read from the currently active window, not the signal window
-                if (currentActive) {
-                    notifyActiveWindow(currentActive);
-                }
-            } else {
-                debug("Ignoring caption change from inactive window:", window.caption);
+            // Only notify if this is still the active window
+            const current = activeWindow();
+            if (window === current) {
+                debug("Caption changed for active window:", window.caption);
+                notifyActiveWindow(current);  // Use current activeWindow(), not signal window
             }
         });
     }
 }
 
-// Clean up the Set when windows are closed
-function onWindowClosed(window) {
-    if (window && trackedWindows.has(window)) {
-        debug("Removing closed window from tracking:", window.caption);
-        trackedWindows.delete(window);
-        
-        // Clear currentActiveWindow if it was the one that closed
-        if (window === currentActiveWindow) {
-            currentActiveWindow = null;
-        }
-    }
-}
-
-// Connect the main event handlers
+// Connect the event with the handler using the abstraction
 connectWindowActivated(onWindowActivated);
-connectWindowClosed(onWindowClosed);
 
-// That's it! No startup code that might not work - purely event-driven.
-
-// Complete solution: Caption changes detected, Set cleaned up automatically,
-// and only active window info sent to DBus. No memory leaks!
-
+debug("Script loaded and connected");
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
