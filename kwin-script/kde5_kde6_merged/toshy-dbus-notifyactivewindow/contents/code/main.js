@@ -1,5 +1,5 @@
 /*
-KWin Script Toshy D-Bus Notify Active Window - Direct Signal Approach
+KWin Script Toshy D-Bus Notify Active Window - Caption Change Implementation
 (C) 2023-25 RedBearAK <64876997+RedBearAK@users.noreply.github.com>
 GNU General Public License v3.0
 */
@@ -18,16 +18,21 @@ const isKDE6 = typeof workspace.windowList === 'function';
 // Set up aliases just like the working app switcher script
 let activeWindow;
 let connectWindowActivated;
+let connectWindowClosed;
 if (isKDE6) {
     activeWindow = () => workspace.activeWindow;
     connectWindowActivated = (handler) => workspace.windowActivated.connect(handler);
+    connectWindowClosed = (handler) => workspace.windowRemoved.connect(handler);
 } else {
     activeWindow = () => workspace.activeClient;
     connectWindowActivated = (handler) => workspace.clientActivated.connect(handler);
+    connectWindowClosed = (handler) => workspace.clientRemoved.connect(handler);
 }
 
-// Track last known window info
-let lastWindowInfo = "";
+// Track which windows already have caption change listeners to avoid duplicates
+let trackedWindows = new Set();
+// Track the currently active window for caption changes
+let currentActiveWindow = null;
 
 function notifyActiveWindow(window) {
     if (!window) {
@@ -52,35 +57,49 @@ function notifyActiveWindow(window) {
     );
 }
 
-function checkForTitleChange() {
-    const current = activeWindow();
-    if (current) {
-        const currentTitle = current.caption || "";
-        if (currentTitle !== lastWindowInfo) {
-            debug("title changed from", lastWindowInfo, "to", currentTitle);
-            lastWindowInfo = currentTitle;
-            notifyActiveWindow(current);
+// Enhanced window activation handler
+function onWindowActivated(window) {
+    debug("window activated:", window ? window.caption : "null");
+    notifyActiveWindow(window);
+    
+    // Update which window we're tracking for caption changes
+    currentActiveWindow = window;
+    
+    // Set up caption change tracking for this window (only once per window)
+    if (window && window.captionChanged && !trackedWindows.has(window)) {
+        debug("setting up caption tracking for:", window.caption);
+        trackedWindows.add(window);
+        
+        window.captionChanged.connect(() => {
+            // Only notify if this window is still the active one
+            if (window === currentActiveWindow) {
+                debug("active window caption changed:", window.caption);
+                notifyActiveWindow(window);
+            } else {
+                debug("ignoring caption change from inactive window:", window.caption);
+            }
+        });
+    }
+}
+
+// Clean up the Set when windows are closed
+function onWindowClosed(window) {
+    if (window && trackedWindows.has(window)) {
+        debug("removing closed window from tracking:", window.caption);
+        trackedWindows.delete(window);
+        
+        // Clear currentActiveWindow if it was the one that closed
+        if (window === currentActiveWindow) {
+            currentActiveWindow = null;
         }
     }
 }
 
-function onWindowActivated(window) {
-    debug("window activated:", window ? window.caption : "null");
-    if (window) {
-        lastWindowInfo = window.caption || "";
-    }
-    notifyActiveWindow(window);
-}
-
-// Connect to window activation - this definitely works
+// Connect the main event handlers
 connectWindowActivated(onWindowActivated);
+connectWindowClosed(onWindowClosed);
 
-// Try direct connections to input signals
-debug("attempting to connect input signals");
-workspace.pointerButtonStateChanged.connect(checkForTitleChange);
-workspace.keyboardModifiersChanged.connect(checkForTitleChange);
-
-debug("script loaded with direct signal connections");
+debug("script loaded - caption changes detected, Set cleaned up automatically");
 
 
 
