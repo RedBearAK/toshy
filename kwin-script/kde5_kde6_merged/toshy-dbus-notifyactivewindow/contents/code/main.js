@@ -4,7 +4,9 @@ KWin Script Toshy D-Bus Notify Active Window - (With caption change detection)
 GNU General Public License v3.0
 */
 
-const debugMode = readConfig("debugMode", true);
+// const debugMode = readConfig("debugMode", true);
+const debugMode = readConfig("debugMode", false);
+
 
 function debug(...args) {
     if (debugMode) { console.debug("toshy-dbus-notifyactivewindow:", ...args); }
