@@ -3799,8 +3799,6 @@ keymap("Zotero", {
 
 
 keymap("Vivaldi browser - Settings dialog", {
-    # This will only work if window title is accurate
-    # (Unreliable in Plasma unless a window activation event happens after Settings dialog appears)
     C("Esc"):                   C("Alt-F4"),                    # Close Settings dialog with Escape
 }, when = lambda ctx:
     cnfg.screen_has_focus and
