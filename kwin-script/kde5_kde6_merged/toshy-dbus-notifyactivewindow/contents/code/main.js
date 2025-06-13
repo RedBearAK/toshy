@@ -1,17 +1,15 @@
 /*
 KWin Script Toshy D-Bus Notify Active Window - Direct Signal Approach
-(C) 2023-24 RedBearAK <64876997+RedBearAK@users.noreply.github.com>
+(C) 2023-25 RedBearAK <64876997+RedBearAK@users.noreply.github.com>
 GNU General Public License v3.0
 */
 
-// const debugMode = readConfig("debugMode", true);
-const debugMode = true
+const debugMode = readConfig("debugMode", true);
 
 function debug(...args) {
     if (debugMode) { console.debug("toshy-dbus-notifyactivewindow:", ...args); }
 }
 
-debug("FORCED DEBUG MODE - bypassing readConfig");
 debug("initializing toshy-dbus-notifyactivewindow");
 
 // Detect KDE version

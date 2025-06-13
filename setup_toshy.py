@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20250604'                        # CLI option "--version" will print this out.
+__version__ = '20250612'                        # CLI option "--version" will print this out.
 
 import os
 os.environ['PYTHONDONTWRITEBYTECODE'] = '1'     # prevent this script from creating cache files
@@ -3246,7 +3246,8 @@ def setup_kwin_dbus_script():
     kwin_script_name        = 'toshy-dbus-notifyactivewindow'
     kwin_script_path        = os.path.join( cnfg.toshy_dir_path,
                                             'kwin-script',
-                                            f'kde{KDE_ver}',
+                                            # f'kde{KDE_ver}',
+                                            'kde5_kde6_merged',
                                             kwin_script_name)
     kwin_script_tmp_file    = f'{cnfg.run_tmp_dir}/{kwin_script_name}.kwinscript'
     curr_script_path        = os.path.join( home_dir,
