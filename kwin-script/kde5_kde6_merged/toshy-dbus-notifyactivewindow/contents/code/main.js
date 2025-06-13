@@ -1,5 +1,5 @@
 /*
-KWin Script Toshy D-Bus Notify Active Window - Caption Change Implementation
+KWin Script Toshy D-Bus Notify Active Window - (With caption change detection)
 (C) 2023-25 RedBearAK <64876997+RedBearAK@users.noreply.github.com>
 GNU General Public License v3.0
 */
@@ -10,7 +10,7 @@ function debug(...args) {
     if (debugMode) { console.debug("toshy-dbus-notifyactivewindow:", ...args); }
 }
 
-debug("initializing toshy-dbus-notifyactivewindow");
+debug("Initializing");
 
 // Detect KDE version
 const isKDE6 = typeof workspace.windowList === 'function';
@@ -35,16 +35,14 @@ let trackedWindows = new Set();
 let currentActiveWindow = null;
 
 function notifyActiveWindow(window) {
-    if (!window) {
-        debug("window object is null");
-        return;
-    }
+    // Silently skip DBus notification for null windows
+    if (!window) return;
 
     var caption = window.hasOwnProperty('caption') ? window.caption : "UNDEF";
     var resourceClass = window.hasOwnProperty('resourceClass') ? window.resourceClass : "UNDEF";
     var resourceName = window.hasOwnProperty('resourceName') ? window.resourceName : "UNDEF";
 
-    debug("notifying DBus - Caption:", caption, "Class:", resourceClass);
+    debug("Notifying DBus", "| Caption:", caption, "| Class:", resourceClass);
 
     callDBus(
         "org.toshy.Plasma",
@@ -59,24 +57,27 @@ function notifyActiveWindow(window) {
 
 // Enhanced window activation handler
 function onWindowActivated(window) {
-    debug("window activated:", window ? window.caption : "null");
+    // Silently ignore null windows (task switcher, desktop focus, etc.)
+    if (!window) return;
+    
+    debug("Window activated:", window.caption);
     notifyActiveWindow(window);
     
     // Update which window we're tracking for caption changes
     currentActiveWindow = window;
     
     // Set up caption change tracking for this window (only once per window)
-    if (window && window.captionChanged && !trackedWindows.has(window)) {
-        debug("setting up caption tracking for:", window.caption);
+    if (window.captionChanged && !trackedWindows.has(window)) {
+        debug("Setting up caption tracking for:", window.caption);
         trackedWindows.add(window);
         
         window.captionChanged.connect(() => {
             // Only notify if this window is still the active one
             if (window === currentActiveWindow) {
-                debug("active window caption changed:", window.caption);
+                debug("Active window caption changed:", window.caption);
                 notifyActiveWindow(window);
             } else {
-                debug("ignoring caption change from inactive window:", window.caption);
+                debug("Ignoring caption change from inactive window:", window.caption);
             }
         });
     }
@@ -84,8 +85,10 @@ function onWindowActivated(window) {
 
 // Clean up the Set when windows are closed
 function onWindowClosed(window) {
-    if (window && trackedWindows.has(window)) {
-        debug("removing closed window from tracking:", window.caption);
+    if (!window) return;
+    
+    if (trackedWindows.has(window)) {
+        debug("Removing closed window from tracking:", window.caption || "unnamed");
         trackedWindows.delete(window);
         
         // Clear currentActiveWindow if it was the one that closed
@@ -99,7 +102,7 @@ function onWindowClosed(window) {
 connectWindowActivated(onWindowActivated);
 connectWindowClosed(onWindowClosed);
 
-debug("script loaded - caption changes detected, Set cleaned up automatically");
+debug("Script loaded");
 
 
 
