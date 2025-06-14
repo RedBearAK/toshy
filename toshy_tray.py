@@ -614,7 +614,6 @@ def run_cmd_lst_in_terminal(command_list: List[str]):
         ('terminology',             ['-e'],     ['enlightenment']                           ),
         ('cosmic-term',             ['-e'],     ['cosmic']                                  ),
         ('io.elementary.terminal',  ['-e'],     ['pantheon']                                ),
-        ('deepin-terminal',         ['-e'],     ['deepin']                                  ),
         ('kitty',                   ['-e'],     []                                          ),
         ('alacritty',               ['-e'],     []                                          ),
         ('tilix',                   ['-e'],     []                                          ),
@@ -625,6 +624,9 @@ def run_cmd_lst_in_terminal(command_list: List[str]):
         ('st',                      ['-e'],     []                                          ),
         # 'kgx' is short for "King's Cross" and represents GNOME Console
         ('kgx',                     ['-e'],     []                                          ),
+        # deepin-terminal is extremely buggy, including but not marking for 'dde'
+        # Using "-C" (--run-script) option instead of "-e" which FAILS!
+        ('deepin-terminal',         ['-C'],     []                                          ),
     ]
 
     def _run_cmd_lst_in_term(term_app_cmd_path, term_app_args_lst, command_list: List[str]):
