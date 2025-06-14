@@ -51,6 +51,11 @@ show_progress() {
 
 echo -e "\nRestarting Toshy systemd services..."
 
+# Ran into a bunch of errors for some reason when running this script on Deepin for
+# the first time after a fresh Toshy install on fresh VM, so to prevent...
+systemctl --user daemon-reload
+
+
 systemctl --user stop toshy-cosmic-dbus.service
 show_progress
 systemctl --user stop toshy-kwin-dbus.service
