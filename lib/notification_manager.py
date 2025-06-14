@@ -19,17 +19,28 @@ class NotificationManager:
         self.ntfy_id_new    = None
         self.ntfy_id_last   = '0'
 
+    # @staticmethod
+    # def check_p_option():
+    #     """check that notify-send command supports -p flag"""
+    #     try:
+    #         subprocess.run(['notify-send', '-p'], check=True, capture_output=True)
+    #     except subprocess.CalledProcessError as e:
+    #         # Check if the error message contains "Unknown option" for -p flag
+    #         error_output: bytes = e.stderr  # type hint to validate decode()
+    #         if 'Unknown option' in error_output.decode('utf-8'):
+    #             return False
+    #     return True
+
     @staticmethod
     def check_p_option():
         """check that notify-send command supports -p flag"""
         try:
-            subprocess.run(['notify-send', '-p'], check=True, capture_output=True)
-        except subprocess.CalledProcessError as e:
-            # Check if the error message contains "Unknown option" for -p flag
-            error_output: bytes = e.stderr  # type hint to validate decode()
-            if 'Unknown option' in error_output.decode('utf-8'):
-                return False
-        return True
+            result = subprocess.run(['notify-send', '-p'], 
+                                capture_output=True, 
+                                check=False)
+            return result.returncode == 0  # Only return True if command succeeds
+        except:
+            return False
 
     def send_notification(self, message: str, icon_file: str=None, 
                                 urgency: str=None, replace_previous=True):
