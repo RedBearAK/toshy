@@ -31,16 +31,50 @@ class NotificationManager:
     #             return False
     #     return True
 
+    # @staticmethod
+    # def check_p_option():
+    #     """check that notify-send command supports -p flag"""
+    #     try:
+    #         result = subprocess.run(['notify-send', '-p'], 
+    #                             capture_output=True, 
+    #                             check=False)
+    #         return result.returncode == 0  # Only return True if command succeeds
+    #     except:
+    #         return False
+
     @staticmethod
     def check_p_option():
         """check that notify-send command supports -p flag"""
+        print("DEBUG: Starting check_p_option()")
         try:
-            result = subprocess.run(['notify-send', '-p'], 
-                                capture_output=True, 
-                                check=False)
-            return result.returncode == 0  # Only return True if command succeeds
-        except:
-            return False
+            print("DEBUG: About to run notify-send -p")
+            result = subprocess.run(['notify-send', '-p'], check=True, capture_output=True)
+            print(f"DEBUG: Command succeeded! returncode={result.returncode}")
+            print(f"DEBUG: stdout={result.stdout}")
+            print(f"DEBUG: stderr={result.stderr}")
+            return True
+        except subprocess.CalledProcessError as e:
+            print(f"DEBUG: CalledProcessError caught! returncode={e.returncode}")
+            print(f"DEBUG: stderr type: {type(e.stderr)}")
+            print(f"DEBUG: stderr raw: {e.stderr}")
+            
+            # Check if the error message contains "Unknown option" for -p flag
+            error_output: bytes = e.stderr  # type hint to validate decode()
+            if error_output:
+                decoded_error = error_output.decode('utf-8')
+                print(f"DEBUG: decoded stderr: '{decoded_error}'")
+                if 'Unknown option' in decoded_error:
+                    print("DEBUG: Found 'Unknown option' in stderr, returning False")
+                    return False
+                else:
+                    print("DEBUG: 'Unknown option' NOT found in stderr")
+            else:
+                print("DEBUG: stderr is empty/None")
+        except Exception as e:
+            print(f"DEBUG: Other exception caught: {type(e).__name__}: {e}")
+        
+        print("DEBUG: Reached end of function, returning True")
+        return True
 
     def send_notification(self, message: str, icon_file: str=None, 
                                 urgency: str=None, replace_previous=True):
