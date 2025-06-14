@@ -609,6 +609,7 @@ def run_cmd_lst_in_terminal(command_list: List[str]):
         ('terminology',             ['-e'],     ['enlightenment']                           ),
         ('cosmic-term',             ['-e'],     ['cosmic']                                  ),
         ('io.elementary.terminal',  ['-e'],     ['pantheon']                                ),
+        ('deepin-terminal',         ['-e'],     ['deepin']                                  ),
         ('kitty',                   ['-e'],     []                                          ),
         ('alacritty',               ['-e'],     []                                          ),
         ('tilix',                   ['-e'],     []                                          ),
