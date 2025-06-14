@@ -441,7 +441,7 @@ terminals = [
     "MateTerminal",
     "org.codeberg.dnkl.foot.desktop",
     "org.gnome.Console",
-    # "org.gnome.Ptyxis.*",
+    # "org.gnome.Ptyxis.*",             # Replaced by double-wildcard entry
     "org.gnome.Terminal",
     "org.kde.konsole",
     "org.kde.yakuake",
