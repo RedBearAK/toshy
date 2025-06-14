@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-__version__ = '20250605'
+__version__ = '20250613'
 
 # Indicator tray icon menu app for Toshy, using pygobject/gi
 TOSHY_PART      = 'tray'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
@@ -47,6 +47,10 @@ local_site_packages_dir = os.path.join(home_dir, f".local/lib/python{sys.version
 # parent_folder_path  = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 current_folder_path = os.path.abspath(os.path.dirname(__file__))
 
+env = os.environ.copy()
+env['PATH'] = f"{home_local_bin}:{env.get('PATH', '')}"
+
+
 def pattern_found_in_module(pattern, module_path):
     try:
         with open(module_path, 'r', encoding='utf-8') as file:
@@ -58,6 +62,7 @@ def pattern_found_in_module(pattern, module_path):
     except IOError as io_err:
         print(f"Error: An issue occurred while reading the file {module_path}.\n\t {io_err}")
         return False
+
 
 pattern = 'SLICE_MARK_START: barebones_user_cfg'
 module_path = os.path.abspath(os.path.join(current_folder_path, 'toshy_config.py'))
@@ -619,6 +624,9 @@ def run_cmd_lst_in_terminal(command_list: List[str]):
         ('st',                      ['-e'],     []                                          ),
         # 'kgx' is short for "King's Cross" and represents GNOME Console
         ('kgx',                     ['-e'],     []                                          ),
+        # deepin-terminal is extremely buggy, including but not marking for 'dde'
+        # Using "-C" (--run-script) option instead of "-e" which FAILS!
+        ('deepin-terminal',         ['-C'],     []                                          ),
     ]
 
     def _run_cmd_lst_in_term(term_app_cmd_path, term_app_args_lst, command_list: List[str]):
@@ -628,7 +636,8 @@ def run_cmd_lst_in_terminal(command_list: List[str]):
         cmd_lst_for_Popen: List[str] = [term_app_cmd_path] + term_app_args_lst + command_list
         try:
             # run the terminal emulator and give it the provided command list argument
-            subprocess.Popen(cmd_lst_for_Popen)
+            # Use the globally prepared environment with corrected PATH
+            subprocess.Popen(cmd_lst_for_Popen, env=env)
             return True
         except subprocess.SubprocessError as proc_err:
             debug(f'Error opening terminal to run command list:\n\t{proc_err}')
