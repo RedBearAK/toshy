@@ -86,6 +86,142 @@ echo "run 'hash -r', or source your shell RC file to refresh executable hash tab
 echo ""
 
 
+
+
+####################################################################################################
+####################################################################################################
+####################################################################################################
+####################################################################################################
+
+# Current generation of code that tries to make sure ~/.local/bin/ is in the user's PATH
+
+
+LOCAL_BIN="${HOME}/.local/bin"
+RUN_TMP_DIR="${XDG_RUNTIME_DIR:-/tmp}"
+GOOD_PATH_TMP="${RUN_TMP_DIR}/toshy_installer_says_path_is_good"
+FIX_PATH_TMP="${RUN_TMP_DIR}/toshy_installer_says_fix_path"
+
+# Exit early if path is already confirmed good
+[ -f "${GOOD_PATH_TMP}" ] && exit 0
+
+mkdir -p "${LOCAL_BIN}"
+
+# Function to check if a file contains the PATH modification
+path_contains_local_bin() {
+    local file="$1"
+    [ ! -f "${file}" ] && return 1
+    
+    grep -q "PATH=.*\${HOME}/.local/bin" "${file}" || \
+    grep -q "PATH=.*${LOCAL_BIN}" "${file}" || \
+    grep -q "fish_add_path.*\.local/bin" "${file}"
+}
+
+# Function to check if ~/.local/bin is currently in PATH
+is_local_bin_in_current_path() {
+    echo "${PATH}" | grep -q -E "(^|:)${LOCAL_BIN}(:|$)"
+}
+
+# Function to add path to a specified file
+add_path_to_file() {
+    local file="$1"
+    
+    # Create file if it doesn't exist
+    [ ! -f "${file}" ] && touch "${file}"
+
+    # Special handling for fish shell
+    if [[ "${file}" == *"fish"* ]]; then
+        {
+            echo ""
+            echo "# Add ~/.local/bin to PATH"
+            echo "if test -d \"\$HOME/.local/bin\""
+            echo "    fish_add_path \$HOME/.local/bin"
+            echo "end"
+        } >> "${file}"
+    else
+        {
+            echo ""
+            echo "# Add ~/.local/bin to PATH"
+            echo "if [ -d \"\${HOME}/.local/bin\" ] && [[ \":\${PATH}:\" != *\":\${HOME}/.local/bin:\"* ]]; then"
+            echo "    PATH=\"\${HOME}/.local/bin:\${PATH}\""
+            echo "fi"
+        } >> "${file}"
+    fi
+}
+
+# Main PATH setup logic
+setup_path() {
+    # Check if ~/.local/bin is already in current PATH
+    if is_local_bin_in_current_path; then
+        echo "${HOME}/.local/bin is already in PATH"
+        touch "${GOOD_PATH_TMP}"
+        return 0
+    fi
+
+    # Define all relevant shell files to check
+    local shell_files=(
+        "${HOME}/.profile"
+        "${HOME}/.bash_profile" 
+        "${HOME}/.bashrc"
+        "${HOME}/.zshrc"
+        "${HOME}/.zprofile"
+        "${HOME}/.config/fish/config.fish"
+    )
+    
+    # Find files that need the PATH modification
+    local files_needing_path=()
+    
+    for file in "${shell_files[@]}"; do
+        # Check all existing files, plus always include .profile for universal compatibility
+        if [ -f "${file}" ] || [[ "${file}" == *"profile"* ]]; then
+            if ! path_contains_local_bin "${file}"; then
+                files_needing_path+=("${file}")
+            fi
+        fi
+    done
+    
+    # If no files need modification, we're done
+    if [ ${#files_needing_path[@]} -eq 0 ]; then
+        echo "PATH is already configured in shell files"
+        touch "${GOOD_PATH_TMP}"
+        return 0
+    fi
+    
+    # Ask once if we should add to PATH
+    local response
+    if [ -f "${FIX_PATH_TMP}" ]; then
+        response="y"
+    else
+        read -r -p "Add ~/.local/bin to PATH for Toshy commands? [Y/n] " response
+    fi
+    
+    case $response in
+        [Nn]* ) 
+            echo "Skipped PATH configuration"
+            return 0
+            ;;
+        * )
+            # Add to all files that need it
+            for file in "${files_needing_path[@]}"; do
+                add_path_to_file "${file}"
+            done
+            echo "Added ~/.local/bin to PATH in ${#files_needing_path[@]} shell file(s)"
+            echo "Restart your terminal or source your shell RC file to refresh commands"
+            ;;
+    esac
+}
+
+# Run the setup
+setup_path
+
+
+
+####################################################################################################
+####################################################################################################
+####################################################################################################
+####################################################################################################
+
+# Last generation of code that tries to make sure ~/.local/bin/ is in PATH (was failing sometimes)
+
 PROFILE="${HOME}/.profile"
 BASH_PROFILE="${HOME}/.bash_profile"
 LOCAL_BIN="${HOME}/.local/bin"
@@ -171,7 +307,10 @@ check_rc_files
 
 exit 0
 
-
+####################################################################################################
+####################################################################################################
+####################################################################################################
+####################################################################################################
 # Previous code that tried to update shell RC files: 
 
 
