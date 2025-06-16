@@ -29,7 +29,9 @@ I don't really know many other places where it might be considered appropriate t
 
 # Current status: Stable Beta (Please Read)
 
-**2025-06-13 UPDATE**: The window context provider KWin script component (for Plasma Wayland) has always had a significant defect in seeing window title changes, such as what happens in apps with a tabbed UI (browsers, file managers, terminals, code editors, etc.). That KWin script has been updated to follow the window title changes via the `captionChanged()` signal, from the KWin API. Now the window title (name) can be added to app class conditionals in the config file, to invoke custom remaps or actions on specific tabs or sub-dialogs with wonky titles. And it will work in Plasma just as reliably as in all other Wayland environments (and X11). 
+**2025-06-15 UPDATE**: Added support for Mageia (similar to OpenMandriva and descended from Mandrake/Mandriva distros).
+
+**2025-06-13 UPDATE**: The window context provider KWin script component (for Plasma Wayland) has always had a significant defect in seeing window title changes, such as what happens in apps with a tabbed UI (browsers, file managers, terminals, code editors, etc.). That KWin script has been updated to follow the window title changes via the `captionChanged()` signal, from the KWin API. Now the window title (name) can be added to app class conditionals in the config file, to invoke custom remaps or actions on specific tabs or sub-dialogs with wonky titles. And it will work in Plasma just as reliably as in all other Wayland environments (and X11).
 
 **2025-05-03 UPDATE**: Added support for ALT Linux, another independent distro type. Required prerequisite: Install the 'python3-modules-sqlite3' package, or the setup script will fail immediately with a ModuleNotFoundError. This is unusual, since `sqlite3` is normally part of the standard Python library, but ALT seems to keep some of the standard modules in separate packages.
 
