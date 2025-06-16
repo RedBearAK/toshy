@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20250612'                        # CLI option "--version" will print this out.
+__version__ = '20250615'                        # CLI option "--version" will print this out.
 
 import os
 os.environ['PYTHONDONTWRITEBYTECODE'] = '1'     # prevent this script from creating cache files
@@ -984,6 +984,8 @@ distro_groups_map: Dict[str, List[str]] = {
 
     'mandriva-based':           ["openmandriva"],
 
+    'mageia-based':             ["mageia"],
+
     'ubuntu-based':             ["elementary", "mint", "neon", "pop", "tuxedo", "ubuntu", "zorin"],
     'debian-based':             ["debian", "deepin", "kali", "lmde", "peppermint", "q4os"],
 
@@ -1123,6 +1125,18 @@ pkg_groups_map: Dict[str, List[str]] = {
                             "python-dbus", "python-dbus-devel", "python-ensurepip", "python3-pip",
                             "task-devel", "tkinter",
                             "xset",
+                            "zenity"],
+
+    'mageia-based':        ["cairo-devel",
+                            "dbus-devel",
+                            "evtest", 
+                            "gcc", "git", "gobject-introspection-devel",
+                            "libappindicator-gtk3", "lib64ayatanaappindicator3-gir0.1",
+                                "lib64cairo-gir1.0", "libnotify", "libxkbcommon-devel",
+                            "python3-dbus", "python3-devel", "python3-pip", "python3-tkinter",
+                            "systemd-devel",
+                            "wayland-devel",
+                            "xset", 
                             "zenity"],
 
     'ubuntu-based':        ["curl",
@@ -1842,6 +1856,10 @@ class PackageInstallDispatcher:
         is_RHEL_10          = (cnfg.DISTRO_ID in distro_groups_map['rhel-based']
                                 and cnfg.distro_mjr_ver in ['10'])
 
+        def install_on_mageia_based():
+            cmd_lst = [cnfg.priv_elev_cmd, 'dnf', 'install', '-y']
+            native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+
         def install_on_rhel_based():
 
             # Native package install command can immediately proceed after prepping CentOS 7, so
@@ -1882,6 +1900,8 @@ class PackageInstallDispatcher:
         # Dispatch installation sub-function based on DNF distro type
         if   cnfg.DISTRO_ID in distro_groups_map['mandriva-based']:
             install_on_mandriva_based()
+        elif cnfg.DISTRO_ID in distro_groups_map['mageia-based']:
+            install_on_mageia_based()
         elif cnfg.DISTRO_ID in distro_groups_map['rhel-based']:
             install_on_rhel_based()
         elif cnfg.DISTRO_ID in distro_groups_map['fedora-based']:
@@ -2033,6 +2053,7 @@ class PackageManagerGroups:
             self.dnf_distros            += distro_groups_map['fedora-based']
             self.dnf_distros            += distro_groups_map['rhel-based']
             self.dnf_distros            += distro_groups_map['mandriva-based']
+            self.dnf_distros            += distro_groups_map['mageia-based']
 
             # 'eopkg': Solus
             self.eopkg_distros          += distro_groups_map['solus-based']
