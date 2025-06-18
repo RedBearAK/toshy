@@ -1898,17 +1898,42 @@ class PackageInstallDispatcher:
         # Dispatch installation sub-function based on DNF distro type
         if True is False:
             pass
+
         elif cnfg.DISTRO_ID in distro_groups_map['fedora-based']:
+            print("Calling installer dispatcher sub-method:"
+                    f"\n  {install_on_fedora_based.__name__}")
             install_on_fedora_based()
         elif cnfg.DISTRO_ID in distro_groups_map['mageia-based']:
+            print("Calling installer dispatcher sub-method:"
+                    f"\n  {install_on_mageia_based.__name__}")
             install_on_mageia_based()
         elif cnfg.DISTRO_ID in distro_groups_map['mandriva-based']:
+            print("Calling installer dispatcher sub-method:"
+                    f"\n  {install_on_mandriva_based.__name__}")
             install_on_mandriva_based()
         elif cnfg.DISTRO_ID in distro_groups_map['rhel-based']:
+            print("Calling installer dispatcher sub-method:"
+                    f"\n  {install_on_rhel_based.__name__}")
             install_on_rhel_based()
+
         else:
             error(f"Distro {cnfg.DISTRO_ID} is not supported by this installation script.")
             safe_shutdown(1)
+
+        # # Dispatch installation sub-function based on DNF distro type
+        # if True is False:
+        #     pass
+        # elif cnfg.DISTRO_ID in distro_groups_map['fedora-based']:
+        #     install_on_fedora_based()
+        # elif cnfg.DISTRO_ID in distro_groups_map['mageia-based']:
+        #     install_on_mageia_based()
+        # elif cnfg.DISTRO_ID in distro_groups_map['mandriva-based']:
+        #     install_on_mandriva_based()
+        # elif cnfg.DISTRO_ID in distro_groups_map['rhel-based']:
+        #     install_on_rhel_based()
+        # else:
+        #     error(f"Distro {cnfg.DISTRO_ID} is not supported by this installation script.")
+        #     safe_shutdown(1)
 
     ###########################################################################
     ###  ZYPPER DISTROS  ######################################################
