@@ -1920,21 +1920,6 @@ class PackageInstallDispatcher:
             error(f"Distro {cnfg.DISTRO_ID} is not supported by this installation script.")
             safe_shutdown(1)
 
-        # # Dispatch installation sub-function based on DNF distro type
-        # if True is False:
-        #     pass
-        # elif cnfg.DISTRO_ID in distro_groups_map['fedora-based']:
-        #     install_on_fedora_based()
-        # elif cnfg.DISTRO_ID in distro_groups_map['mageia-based']:
-        #     install_on_mageia_based()
-        # elif cnfg.DISTRO_ID in distro_groups_map['mandriva-based']:
-        #     install_on_mandriva_based()
-        # elif cnfg.DISTRO_ID in distro_groups_map['rhel-based']:
-        #     install_on_rhel_based()
-        # else:
-        #     error(f"Distro {cnfg.DISTRO_ID} is not supported by this installation script.")
-        #     safe_shutdown(1)
-
     ###########################################################################
     ###  ZYPPER DISTROS  ######################################################
     ###########################################################################
@@ -1954,7 +1939,7 @@ class PackageInstallDispatcher:
         """utility function that gets dispatched for distros that use APT package manager"""
 
         # Install has been failing on several Debian/Ubuntu distros with broken dependencies.
-        # So far: Deepin 25 beta, Linux Lite 7.2, Ubuntu Kylin 23.10, Zorin OS 16.x
+        # So far: Deepin 25 alpha/preview, Linux Lite 7.2, Ubuntu Kylin 23.10, Zorin OS 16.x
         # There is no safe way to overcome the issue automatically. Repos are broken.
 
         # 'apt' command warns about "unstable CLI interface", so let's try 'apt-get'
