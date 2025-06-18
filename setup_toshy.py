@@ -1843,43 +1843,46 @@ class PackageInstallDispatcher:
         """Utility function that gets dispatched for distros that use DNF package manager."""
         call_attn_to_pwd_prompt_if_needed()
 
-        # Define helper functions for specific distro installations
-        def install_on_mandriva_based():
+        def install_on_fedora_based():
+            # TODO: insert check to see if Fedora distro is actually immutable/atomic (rpm-ostree)
             cmd_lst = [cnfg.priv_elev_cmd, 'dnf', 'install', '-y']
             native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
-
-        is_CentOS_7         = cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '7'
-        is_CentOS_Stream_8  = cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '8'
-
-        is_RHEL_8_or_9      = (cnfg.DISTRO_ID in distro_groups_map['rhel-based']
-                                and cnfg.distro_mjr_ver in ['8', '9'])
-        is_RHEL_10          = (cnfg.DISTRO_ID in distro_groups_map['rhel-based']
-                                and cnfg.distro_mjr_ver in ['10'])
 
         def install_on_mageia_based():
             cmd_lst = [cnfg.priv_elev_cmd, 'dnf', 'install', '-y']
             native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
+        # Define helper functions for specific distro installations
+        def install_on_mandriva_based():
+            cmd_lst = [cnfg.priv_elev_cmd, 'dnf', 'install', '-y']
+            native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+
         def install_on_rhel_based():
+
+            is_CentOS_7         = cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '7'
+            is_CentOS_Stream_8  = cnfg.DISTRO_ID == 'centos' and cnfg.distro_mjr_ver == '8'
+
+            is_RHEL_8_or_9      = (cnfg.DISTRO_ID in distro_groups_map['rhel-based']
+                                    and cnfg.distro_mjr_ver in ['8', '9'])
+            is_RHEL_10          = (cnfg.DISTRO_ID in distro_groups_map['rhel-based']
+                                    and cnfg.distro_mjr_ver in ['10'])
 
             # Native package install command can immediately proceed after prepping CentOS 7, so
             # this block that was all "if" layers has been changed to if/elif/elif logic. The
             # handling of CentOS Stream 8 was logically embedded in the RHEL 8/9 elif branch.
             # Changed because order-sensitive "if" layers could be broken by re-ordering. 
 
-            if   is_CentOS_7:
+            if True is False: pass
+
+            elif is_CentOS_7:
                 # Do prep steps specific to CentOS 7, then proceed to native install command
                 DistroQuirksHandler.handle_quirks_CentOS_7()
-
             elif is_RHEL_8_or_9:
-
                 if is_CentOS_Stream_8:
                     # Special prep steps must happen on CentOS Stream 8 before general RHEL 8 prep
                     DistroQuirksHandler.handle_quirks_CentOS_Stream_8()
-
                 # Do prep steps for general RHEL 8/9 type distros (CentOS, AlmaLinux, Rocky, etc.)
                 DistroQuirksHandler.handle_quirks_RHEL_8_and_9()
-
             elif is_RHEL_10:
                 # Do prep steps for general RHEL 10 type distros (CentOS, AlmaLinux, Rocky, etc.)
                 DistroQuirksHandler.handle_quirks_RHEL_10()
@@ -1892,23 +1895,45 @@ class PackageInstallDispatcher:
 
             native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
-        def install_on_fedora_based():
-            # TODO: insert check to see if Fedora distro is actually immutable/atomic (rpm-ostree)
-            cmd_lst = [cnfg.priv_elev_cmd, 'dnf', 'install', '-y']
-            native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
-
         # Dispatch installation sub-function based on DNF distro type
-        if   cnfg.DISTRO_ID in distro_groups_map['mandriva-based']:
-            install_on_mandriva_based()
-        elif cnfg.DISTRO_ID in distro_groups_map['mageia-based']:
-            install_on_mageia_based()
-        elif cnfg.DISTRO_ID in distro_groups_map['rhel-based']:
-            install_on_rhel_based()
+        if True is False:
+            pass
+
         elif cnfg.DISTRO_ID in distro_groups_map['fedora-based']:
+            print("Calling installer dispatcher sub-method:"
+                    f"\n  {install_on_fedora_based.__name__}")
             install_on_fedora_based()
+        elif cnfg.DISTRO_ID in distro_groups_map['mageia-based']:
+            print("Calling installer dispatcher sub-method:"
+                    f"\n  {install_on_mageia_based.__name__}")
+            install_on_mageia_based()
+        elif cnfg.DISTRO_ID in distro_groups_map['mandriva-based']:
+            print("Calling installer dispatcher sub-method:"
+                    f"\n  {install_on_mandriva_based.__name__}")
+            install_on_mandriva_based()
+        elif cnfg.DISTRO_ID in distro_groups_map['rhel-based']:
+            print("Calling installer dispatcher sub-method:"
+                    f"\n  {install_on_rhel_based.__name__}")
+            install_on_rhel_based()
+
         else:
             error(f"Distro {cnfg.DISTRO_ID} is not supported by this installation script.")
             safe_shutdown(1)
+
+        # # Dispatch installation sub-function based on DNF distro type
+        # if True is False:
+        #     pass
+        # elif cnfg.DISTRO_ID in distro_groups_map['fedora-based']:
+        #     install_on_fedora_based()
+        # elif cnfg.DISTRO_ID in distro_groups_map['mageia-based']:
+        #     install_on_mageia_based()
+        # elif cnfg.DISTRO_ID in distro_groups_map['mandriva-based']:
+        #     install_on_mandriva_based()
+        # elif cnfg.DISTRO_ID in distro_groups_map['rhel-based']:
+        #     install_on_rhel_based()
+        # else:
+        #     error(f"Distro {cnfg.DISTRO_ID} is not supported by this installation script.")
+        #     safe_shutdown(1)
 
     ###########################################################################
     ###  ZYPPER DISTROS  ######################################################
