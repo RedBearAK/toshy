@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20250615'                        # CLI option "--version" will print this out.
+__version__ = '20250617'                        # CLI option "--version" will print this out.
 
 import os
 os.environ['PYTHONDONTWRITEBYTECODE'] = '1'     # prevent this script from creating cache files
@@ -2024,7 +2024,7 @@ class PackageManagerGroups:
         # Initialize empty package manager distro lists
         self.apk_distros        = []    # 'apk':                    Alpine/Chimera
         self.apt_distros        = []    # 'apt':                    Debian/Ubuntu
-        self.dnf_distros        = []    # 'dnf':                    Fedora/RHEL/OpenMandriva
+        self.dnf_distros        = []    # 'dnf':                    Fedora/Mageia/OpenMandriva/RHEL
         self.eopkg_distros      = []    # 'eopkg':                  Solus
         self.pacman_distros     = []    # 'pacman':                 Arch (BTW)
         self.rpmostree_distros  = []    # 'rpm-ostree':             Fedora atomic/immutables
@@ -2045,15 +2045,15 @@ class PackageManagerGroups:
             self.apk_distros            += distro_groups_map['chimera-based']
 
             # 'apt': Debian/Ubuntu, ALT Linux (uses APT-RPM)
-            self.apt_distros            += distro_groups_map['ubuntu-based']
-            self.apt_distros            += distro_groups_map['debian-based']
             self.apt_distros            += distro_groups_map['alt-based']
+            self.apt_distros            += distro_groups_map['debian-based']
+            self.apt_distros            += distro_groups_map['ubuntu-based']
 
             # 'dnf': Fedora/RHEL/OpenMandriva
             self.dnf_distros            += distro_groups_map['fedora-based']
-            self.dnf_distros            += distro_groups_map['rhel-based']
-            self.dnf_distros            += distro_groups_map['mandriva-based']
             self.dnf_distros            += distro_groups_map['mageia-based']
+            self.dnf_distros            += distro_groups_map['mandriva-based']
+            self.dnf_distros            += distro_groups_map['rhel-based']
 
             # 'eopkg': Solus
             self.eopkg_distros          += distro_groups_map['solus-based']
@@ -2071,8 +2071,8 @@ class PackageManagerGroups:
             self.xbps_distros           += distro_groups_map['void-based']
 
             # 'zypper': openSUSE Tumbleweed/Leap
-            self.zypper_distros         += distro_groups_map['tumbleweed-based']
             self.zypper_distros         += distro_groups_map['leap-based']
+            self.zypper_distros         += distro_groups_map['tumbleweed-based']
 
         except (KeyError, TypeError) as key_err:
             error(f'Problem setting up package manager distro lists:\n\t{key_err}')
