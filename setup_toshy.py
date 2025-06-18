@@ -1939,7 +1939,7 @@ class PackageInstallDispatcher:
         """utility function that gets dispatched for distros that use APT package manager"""
 
         # Install has been failing on several Debian/Ubuntu distros with broken dependencies.
-        # So far: Deepin 25 beta, Linux Lite 7.2, Ubuntu Kylin 23.10, Zorin OS 16.x
+        # So far: Deepin 25 alpha/preview, Linux Lite 7.2, Ubuntu Kylin 23.10, Zorin OS 16.x
         # There is no safe way to overcome the issue automatically. Repos are broken.
 
         # 'apt' command warns about "unstable CLI interface", so let's try 'apt-get'
