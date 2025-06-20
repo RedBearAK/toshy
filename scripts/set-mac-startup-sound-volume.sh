@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Last updated: 2025-06-19
+
+
 echo    # blank line to start things off
 
 # Ensure that we are root
@@ -53,36 +56,6 @@ else
         clean_exit 0
     fi
 fi
-
-# # Function to display usage
-# usage() {
-#     SCRIPT_NAME=$(basename "$0")
-#     echo "Usage: "
-#     echo "  $SCRIPT_NAME [-d|-b|-x] <volume>"
-#     echo "  $SCRIPT_NAME info"
-#     echo "  $SCRIPT_NAME mute"
-#     echo "  $SCRIPT_NAME unmute"
-#     echo "  $SCRIPT_NAME reset"
-#     echo ""
-#     echo "Special commands:"
-#     echo "  info:    Display current startup volume setting"
-#     echo "  mute:    Set the startup volume to muted"
-#     echo "  unmute:  Restore previous startup volume (if preserved)"
-#     echo "  reset:   Delete the EFI variable (simulate NVRAM/PRAM reset)"
-#     echo ""
-#     echo "Format options:"
-#     echo "  -d:  Decimal format (default)"
-#     echo "  -b:  Binary format (e.g., 01000000)"
-#     echo "  -x:  Hexadecimal format (e.g., 40 or 0x40)"
-#     echo ""
-#     echo "Volume ranges:"
-#     echo "  Decimal:  0-127 for volume level, 128-255 to mute^"
-#     echo "  Binary:   00000000-01111111 for volume, 10000000-11111111 to mute^"
-#     echo "  Hex:      00-7F for volume level, 80-FF to mute^"
-#     echo ""
-#     echo "^ Values >128 (dec) preserve a volume level that 'unmute' will restore"
-#     clean_exit 1
-# }
 
 # Function to display usage
 usage() {
@@ -161,7 +134,9 @@ show_info() {
         PERCENTAGE="N/A"
     elif [ "$VOLUME_DEC" -ge 0 ] && [ "$VOLUME_DEC" -le 127 ]; then
         STATUS="Volume Level"
-        PERCENTAGE=$(awk "BEGIN {printf \"%.1f%%\", ($VOLUME_DEC / 127.0) * 100}")
+        # PERCENTAGE=$(awk "BEGIN {printf \"%.1f%%\", ($VOLUME_DEC / 127.0) * 100}")
+        # Round to nearest percent instead of tenths of a percent:
+        PERCENTAGE=$(awk "BEGIN {printf \"%.0f%%\", ($VOLUME_DEC / 127.0) * 100}")
     else
         STATUS="Unknown/Invalid"
         PERCENTAGE="N/A"
@@ -418,15 +393,6 @@ case $FORMAT in
         ;;
 
 esac
-
-# # Validate volume range
-# if [ "$VOLUME" -lt 0 ] || [ "$VOLUME" -gt 128 ]; then
-#     echo "Error: Volume value out of range."
-#     echo "  Decimal:  0-128"
-#     echo "  Binary:   00000000-10000000"
-#     echo "  Hex:      00-80"
-#     clean_exit 1
-# fi
 
 # Validate volume range and explain behavior for mute values
 if [ "$VOLUME" -lt 0 ] || [ "$VOLUME" -gt 255 ]; then
