@@ -2,7 +2,7 @@
 
 # Accept a repository path as an optional argument
 LOCAL_REPO="${1:-$(pwd)}"
-FOLDER_NAME="`basename $LOCAL_REPO`"
+FOLDER_NAME="$(basename "$LOCAL_REPO")"
 
 # Define the branches
 DEV_BRANCH="dev_beta"
