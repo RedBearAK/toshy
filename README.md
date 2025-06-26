@@ -678,7 +678,7 @@ https://github.com/RedBearAK/toshy/wiki/FAQ-(Frequently-Asked-Questions)
 
 This type of project takes extraordinary amounts of time and effort to work around weird problems in different distros and develop the methods to allow the keymapper to perform app-specific remapping in all the different Wayland environments. If you feel like I did something useful by creating this, and you'd like me to be able to spend time maintaining and improving it, throw some money at me via one of these platforms:  
 
-<script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="RedBearAK" data-color="#865e3c" data-emoji=""  data-font="Poppins" data-text="Buy me a coffee" data-outline-color="#ffffff" data-font-color="#ffffff" data-coffee-color="#FFDD00" ></script>
+<a href="https://www.buymeacoffee.com/RedBearAK"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=RedBearAK&button_colour=865e3c&font_colour=ffffff&font_family=Bree&outline_colour=ffffff&coffee_colour=FFDD00" /></a>
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/G2G34VVZW)
 
