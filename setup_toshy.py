@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20250617'                        # CLI option "--version" will print this out.
+__version__ = '20250625'                        # CLI option "--version" will print this out.
 
 import os
 os.environ['PYTHONDONTWRITEBYTECODE'] = '1'     # prevent this script from creating cache files
@@ -4034,196 +4034,7 @@ def uninstall_toshy():
     print()
 
 
-def handle_cli_arguments():
-    """Deal with CLI arguments given to installer script"""
-    parser = argparse.ArgumentParser(
-        description='Toshy Installer - commands are mutually exclusive',
-        epilog=f'Check install options with "./{this_file_name} install --help"',
-        allow_abbrev=False
-    )
-
-    parser.add_argument(
-        '--version',
-        action='version',
-        version=f'%(prog)s version: {__version__}',
-        help='Show the version of the installer and exit'
-    )
-
-    subparsers = parser.add_subparsers(dest='command', help='Available commands')
-
-
-    subparser_install           = subparsers.add_parser(
-        'install',
-        help='Install Toshy (see options to modify install actions)'
-    )
-
-    subparser_install.add_argument(
-        '--override-distro',
-        type=str,
-        help=f'Override auto-detection of distro. See "list-distros" command.'
-    )
-    subparser_install.add_argument(
-        '--barebones-config',
-        action='store_true',
-        help='Install with mostly empty/blank keymapper config file.'
-    )
-    subparser_install.add_argument(
-        '--skip-native',
-        action='store_true',
-        help='Skip the install of native packages (for debugging installer).'
-    )
-    subparser_install.add_argument(
-        '--no-dbus-python',
-        action='store_true',
-        help='Avoid installing "dbus-python" pip package (breaks some stuff).'
-    )
-    subparser_install.add_argument(
-        '--dev-keymapper',
-        nargs='?',          # Makes the argument optional
-        const=True,         # Value if flag is present but no branch specified
-        default=False,
-        metavar='BRANCH',
-        help='Install the development branch of the keymapper. '
-                'Optionally specify a custom branch name.'
-    )
-    subparser_install.add_argument(
-        '--fancy-pants',
-        action='store_true',
-        help='See README for more info on this option.'
-    )
-
-
-    subparser_list_distros      = subparsers.add_parser(
-        'list-distros',
-        help='Display list of distros to use with "--override-distro"'
-    )
-
-    subparser_show_env          = subparsers.add_parser(
-        'show-env',
-        help='Show the environment the installer detects, and exit'
-    )
-
-
-    subparser_apply_tweaks      = subparsers.add_parser(
-        'apply-tweaks',
-        help='Apply desktop environment tweaks only, no install'
-    )
-
-    subparser_apply_tweaks.add_argument(
-        '--fancy-pants',
-        action='store_true',
-        help='See README for more info on this option.'
-    )
-
-    subparser_remove_tweaks     = subparsers.add_parser(
-        'remove-tweaks',
-        help='Remove desktop environment tweaks only, no install'
-    )
-
-    subparser_install_font      = subparsers.add_parser(
-        'install-font',
-        help='Install Fantasque Sans Mono coding/terminal font'
-    )
-
-    subparser_prep_only         = subparsers.add_parser(
-        'prep-only',
-        help='Do only prep steps that require admin privileges, no install'
-    )
-
-    subparser_uninstall         = subparsers.add_parser(
-        'uninstall',
-        help='Uninstall Toshy'
-    )
-
-
-    args = parser.parse_args()
-
-    # show help output if no command given
-    if args.command is None:
-        parser.print_help()
-        safe_shutdown(0)
-
-    elif args.command == 'prep-only':
-        cnfg.prep_only = True
-
-        main(cnfg)
-        safe_shutdown(0)    # redundant, but that's OK
-
-    elif args.command == 'install':
-        if args.override_distro:
-            cnfg.override_distro = args.override_distro
-
-        if args.barebones_config:
-            cnfg.barebones_config = True
-
-        if args.skip_native:
-            cnfg.skip_native = True
-
-        if args.no_dbus_python:
-            cnfg.no_dbus_python = True
-
-        if args.dev_keymapper:
-            cnfg.use_dev_keymapper = True
-            if isinstance(args.dev_keymapper, str):
-                cnfg.keymapper_cust_branch = args.dev_keymapper
-
-        if args.fancy_pants:
-            cnfg.fancy_pants = True
-
-        main(cnfg)
-        safe_shutdown(0)    # redundant, but that's OK
-
-    elif args.command == 'list-distros':
-        print(
-            f'Index of distro IDs known to the Toshy installer:\n'
-            f'\n(These can be tried with the "--override-distro" flag on unknown variants.)\n'
-            f'\n{get_supported_distro_ids_idx()}\n'
-            f'\n Total supported package managers:      {get_supported_pkg_managers_cnt()}'
-            f'\n Total supported basic distro types:    {get_supported_distro_types_cnt()}'
-            f'\n Total supported popular distro IDs:    {get_supported_distro_ids_cnt()} *'
-            f'\n'
-            f'\n * Number of supported variants of base distros is higher than IDs.'
-            f'\n   Many variants still use the same distro ID as their base distro.'
-        )
-        safe_shutdown(0)
-
-    elif args.command == 'show-env':
-        get_environment_info()
-        safe_shutdown(0)
-
-    elif args.command == 'apply-tweaks':
-        if args.fancy_pants:
-            cnfg.fancy_pants = True
-        get_environment_info()
-        apply_desktop_tweaks()
-        if cnfg.should_reboot:
-            lb = cnfg.sep_char * 2      # shorter variable name for left border chars
-            show_reboot_prompt()
-            print(f'{lb}  Tweaks application complete. Report issues on the GitHub repo.')
-            print(f'{lb}  https://github.com/RedBearAK/toshy/issues/')
-            print(f'{lb}  >>  ALERT: Something odd happened. You should probably reboot.')
-            print(cnfg.separator)
-            print(cnfg.separator)
-            print()
-        safe_shutdown(0)
-
-    elif args.command == 'remove-tweaks':
-        get_environment_info()
-        remove_desktop_tweaks()
-        safe_shutdown(0)
-
-    elif args.command == 'install-font':
-        print(f'\n§  Installing coding/terminal font...\n{cnfg.separator}')
-        install_coding_font()
-        show_task_completed_msg()
-        safe_shutdown(0)
-
-    elif args.command == 'uninstall':
-        uninstall_toshy()
-        safe_shutdown(0)
-
-
-def main(cnfg: InstallerSettings):
+def run_install_sequence(cnfg: InstallerSettings):
     """Main installer function to call specific functions in proper sequence"""
 
     if not cnfg.prep_only:
@@ -4379,6 +4190,195 @@ def main(cnfg: InstallerSettings):
     safe_shutdown(0)
 
 
+def main():
+    """Deal with CLI arguments given to installer script"""
+    parser = argparse.ArgumentParser(
+        description='Toshy Installer - commands are mutually exclusive',
+        epilog=f'Check install options with "./{this_file_name} install --help"',
+        allow_abbrev=False
+    )
+
+    parser.add_argument(
+        '--version',
+        action='version',
+        version=f'%(prog)s version: {__version__}',
+        help='Show the version of the installer and exit'
+    )
+
+    subparsers = parser.add_subparsers(dest='command', help='Available commands')
+
+
+    subparser_install           = subparsers.add_parser(
+        'install',
+        help='Install Toshy (see options to modify install actions)'
+    )
+
+    subparser_install.add_argument(
+        '--override-distro',
+        type=str,
+        help=f'Override auto-detection of distro. See "list-distros" command.'
+    )
+    subparser_install.add_argument(
+        '--barebones-config',
+        action='store_true',
+        help='Install with mostly empty/blank keymapper config file.'
+    )
+    subparser_install.add_argument(
+        '--skip-native',
+        action='store_true',
+        help='Skip the install of native packages (for debugging installer).'
+    )
+    subparser_install.add_argument(
+        '--no-dbus-python',
+        action='store_true',
+        help='Avoid installing "dbus-python" pip package (breaks some stuff).'
+    )
+    subparser_install.add_argument(
+        '--dev-keymapper',
+        nargs='?',          # Makes the argument optional
+        const=True,         # Value if flag is present but no branch specified
+        default=False,
+        metavar='BRANCH',
+        help='Install the development branch of the keymapper. '
+                'Optionally specify a custom branch name.'
+    )
+    subparser_install.add_argument(
+        '--fancy-pants',
+        action='store_true',
+        help='See README for more info on this option.'
+    )
+
+
+    subparser_list_distros      = subparsers.add_parser(
+        'list-distros',
+        help='Display list of distros to use with "--override-distro"'
+    )
+
+    subparser_show_env          = subparsers.add_parser(
+        'show-env',
+        help='Show the environment the installer detects, and exit'
+    )
+
+
+    subparser_apply_tweaks      = subparsers.add_parser(
+        'apply-tweaks',
+        help='Apply desktop environment tweaks only, no install'
+    )
+
+    subparser_apply_tweaks.add_argument(
+        '--fancy-pants',
+        action='store_true',
+        help='See README for more info on this option.'
+    )
+
+    subparser_remove_tweaks     = subparsers.add_parser(
+        'remove-tweaks',
+        help='Remove desktop environment tweaks only, no install'
+    )
+
+    subparser_install_font      = subparsers.add_parser(
+        'install-font',
+        help='Install Fantasque Sans Mono coding/terminal font'
+    )
+
+    subparser_prep_only         = subparsers.add_parser(
+        'prep-only',
+        help='Do only prep steps that require admin privileges, no install'
+    )
+
+    subparser_uninstall         = subparsers.add_parser(
+        'uninstall',
+        help='Uninstall Toshy'
+    )
+
+
+    args = parser.parse_args()
+
+    # show help output if no command given
+    if args.command is None:
+        parser.print_help()
+        safe_shutdown(0)
+
+    elif args.command == 'prep-only':
+        cnfg.prep_only = True
+
+        run_install_sequence(cnfg)
+        safe_shutdown(0)    # redundant, but that's OK
+
+    elif args.command == 'install':
+        if args.override_distro:
+            cnfg.override_distro = args.override_distro
+
+        if args.barebones_config:
+            cnfg.barebones_config = True
+
+        if args.skip_native:
+            cnfg.skip_native = True
+
+        if args.no_dbus_python:
+            cnfg.no_dbus_python = True
+
+        if args.dev_keymapper:
+            cnfg.use_dev_keymapper = True
+            if isinstance(args.dev_keymapper, str):
+                cnfg.keymapper_cust_branch = args.dev_keymapper
+
+        if args.fancy_pants:
+            cnfg.fancy_pants = True
+
+        run_install_sequence(cnfg)
+        safe_shutdown(0)    # redundant, but that's OK
+
+    elif args.command == 'list-distros':
+        print(
+            f'Index of distro IDs known to the Toshy installer:\n'
+            f'\n(These can be tried with the "--override-distro" flag on unknown variants.)\n'
+            f'\n{get_supported_distro_ids_idx()}\n'
+            f'\n Total supported package managers:      {get_supported_pkg_managers_cnt()}'
+            f'\n Total supported basic distro types:    {get_supported_distro_types_cnt()}'
+            f'\n Total supported popular distro IDs:    {get_supported_distro_ids_cnt()} *'
+            f'\n'
+            f'\n * Number of supported variants of base distros is higher than IDs.'
+            f'\n   Many variants still use the same distro ID as their base distro.'
+        )
+        safe_shutdown(0)
+
+    elif args.command == 'show-env':
+        get_environment_info()
+        safe_shutdown(0)
+
+    elif args.command == 'apply-tweaks':
+        if args.fancy_pants:
+            cnfg.fancy_pants = True
+        get_environment_info()
+        apply_desktop_tweaks()
+        if cnfg.should_reboot:
+            lb = cnfg.sep_char * 2      # shorter variable name for left border chars
+            show_reboot_prompt()
+            print(f'{lb}  Tweaks application complete. Report issues on the GitHub repo.')
+            print(f'{lb}  https://github.com/RedBearAK/toshy/issues/')
+            print(f'{lb}  >>  ALERT: Something odd happened. You should probably reboot.')
+            print(cnfg.separator)
+            print(cnfg.separator)
+            print()
+        safe_shutdown(0)
+
+    elif args.command == 'remove-tweaks':
+        get_environment_info()
+        remove_desktop_tweaks()
+        safe_shutdown(0)
+
+    elif args.command == 'install-font':
+        print(f'\n§  Installing coding/terminal font...\n{cnfg.separator}')
+        install_coding_font()
+        show_task_completed_msg()
+        safe_shutdown(0)
+
+    elif args.command == 'uninstall':
+        uninstall_toshy()
+        safe_shutdown(0)
+
+
 if __name__ == '__main__':
 
     print()   # blank line in terminal to start things off
@@ -4389,5 +4389,5 @@ if __name__ == '__main__':
     # create the native package installer class instance
     native_pkg_installer        = NativePackageInstaller()
 
-    # first parse the CLI arguments
-    handle_cli_arguments()
+    # main() will parse the CLI arguments and dispatch the install sequence if appropriate
+    main()
