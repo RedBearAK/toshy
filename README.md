@@ -680,7 +680,11 @@ This type of project takes extraordinary amounts of time and effort to work arou
 
 <a href="https://www.buymeacoffee.com/RedBearAK"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=RedBearAK&button_colour=865e3c&font_colour=ffffff&font_family=Bree&outline_colour=ffffff&coffee_colour=FFDD00" /></a>
 
+https://buymeacoffee.com/RedBearAK
+
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/G2G34VVZW)
+
+https://ko-fi.com/RedBearAK
 
 Thanks for checking out Toshy!  
 
