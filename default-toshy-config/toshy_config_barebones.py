@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
-__version__ = '20250306'
+__version__ = '20250628'
 ###############################################################################
 ############################   Welcome to Toshy!   ############################
-###  
-###  This is a highly customized fork of the config file that powers 
+###
+###  This is a highly customized fork of the config file that powers
 ###  Kinto.sh, by Ben Reaves
 ###      (https://kinto.sh)
-###  
-###  All credit for the basis of this config goes to Ben Reaves. 
+###
+###  All credit for the basis of this config goes to Ben Reaves.
 ###      (https://github.com/rbreaves/kinto/)
-###  
+###
 ###  Much assistance was provided by Josh Goebel, the developer of the
 ###  `xkeysnail` fork `keyszer`, which is now forked into `xwaykeyz` to
 ###  provide support for some (most?) Wayland environments.
 ###      (http://github.com/joshgoebel/keyszer)
-###  
+###
 ###############################################################################
 
 import re
@@ -22,11 +22,12 @@ import os
 import sys
 import time
 import shutil
+import asyncio
 import inspect
 import subprocess
 
 from subprocess import DEVNULL
-from typing import Callable, List, Dict, Tuple, Union
+from typing import Any, Callable, List, Dict, Optional, Tuple, Union
 
 from xwaykeyz.config_api import *
 from xwaykeyz.lib.key_context import KeyContext
@@ -53,8 +54,8 @@ throttle_delays(
 )
 
 devices_api(
-    # Only the specified devices will be "grabbed" and watched for during 
-    # device connections/disconnections. 
+    # Only the specified devices will be "grabbed" and watched for during
+    # device connections/disconnections.
     only_devices = [
         # 'Example Disconnected Keyboard',
         # 'Example Connected Keyboard',
@@ -62,7 +63,7 @@ devices_api(
 )
 
 ###########################################################
-# If you need to use something like the wordwise 'emacs' 
+# If you need to use something like the wordwise 'emacs'
 # style shortcuts, and want them to be repeatable, use
 # the API call below to stop the keymapper from ignoring
 # "repeat" key events. This will use a bit more CPU while
@@ -138,9 +139,9 @@ OVERRIDE_WINDOW_MGR             = None
 
 wlroots_compositors             = [
     # Comma-separated list of Wayland desktop environments or window managers
-    # that should try to use the 'wlroots' window context provider. Use the 
+    # that should try to use the 'wlroots' window context provider. Use the
     # 'WINDOW_MGR' name that appears when running `toshy-env`, or 'DESKTOP_ENV'
-    # if the window manager name is not identified. 
+    # if the window manager name is not identified.
     # 'obscurewm',
     # 'unknown-wm',
 
@@ -149,7 +150,7 @@ wlroots_compositors             = [
 ###  SLICE_MARK_END: env_overrides  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 ###################################################################################################
 
-# Leave all of this alone! Don't try to override values here. 
+# Leave all of this alone! Don't try to override values here.
 DISTRO_ID                       = None
 DISTRO_VER                      = None
 VARIANT_ID                      = None
@@ -196,7 +197,7 @@ known_wlroots_compositors = [
 ]
 
 # Make sure the 'wlroots_compositors' list variable exists before checking it.
-# Older config files won't have it in the 'env_overrides' slice. 
+# Older config files won't have it in the 'env_overrides' slice.
 wlroots_compositors = locals().get('wlroots_compositors', [])
 
 all_wlroots_compositors = known_wlroots_compositors + wlroots_compositors
@@ -268,10 +269,10 @@ UC = unicode_keystrokes
 ignore_combo = ComboHint.IGNORE
 
 ###############################################################################
-# This is a "trick" to negate the need to put quotes around all the key labels 
+# This is a "trick" to negate the need to put quotes around all the key labels
 # inside the "lists of dicts" to be given to the matchProps() function.
-# Makes the variables evaluate to equivalent strings inside the dicts. 
-# Provides for nice syntax highlighting and visual separation of key:value. 
+# Makes the variables evaluate to equivalent strings inside the dicts.
+# Provides for nice syntax highlighting and visual separation of key:value.
 clas        = 'clas'        # key label for matchProps() arg to match: wm_class
 name        = 'name'        # key label for matchProps() arg to match: wm_name
 devn        = 'devn'        # key label for matchProps() arg to match: device_name
@@ -390,7 +391,7 @@ kbds_Chromebook_rgx = [re.compile(kb.replace(" ", ".*"), re.I) for kb in keyboar
 kbds_Windows_rgx    = [re.compile(kb.replace(" ", ".*"), re.I) for kb in keyboards_Windows]
 kbds_Apple_rgx      = [re.compile(kb.replace(" ", ".*"), re.I) for kb in keyboards_Apple]
 
-# Dict mapping keyboard type keywords onto 
+# Dict mapping keyboard type keywords onto
 kbtype_lists_rgx    = {
     'IBM':          kbds_IBM_rgx,
     'Chromebook':   kbds_Chromebook_rgx,
@@ -449,13 +450,13 @@ kbtype_cache_dct = {}
 def getKBtype():
     """
     ### Get the keyboard type string for the current device
-    
+
     #### Valid Types
-    
+
     - IBM | Chromebook | Windows | Apple
-    
+
     #### Hierarchy of validations:
-    
+
     - Check if a forced override of keyboard type is applied by user preference.
     - Check cache dictionary for device name stored from previous run of function.
     - Check if the device name is in the keyboards_UserCustom_dct dictionary.
@@ -514,8 +515,8 @@ def getKBtype():
                 return
 
         # Check if the device name indicates a "Windows" keyboard
-        if ('windows' not in kbd_dev_name_cf 
-            and not not_win_type_rgx.search(kbd_dev_name_cf) 
+        if ('windows' not in kbd_dev_name_cf
+            and not not_win_type_rgx.search(kbd_dev_name_cf)
             and not all_kbds_rgx.search(kbd_dev_name_cf) ):
             KBTYPE = 'Windows'
             log_kbtype('Default type for dev', cache_dev=True)
@@ -531,27 +532,27 @@ def getKBtype():
 def isDoubleTap(dt_combo):
     """
     VERY EXPERIMENTAL!!!
-    
+
     Simplistic detection of double-tap of a key or combo.
-    
+
     BLOCKS single-tap function, if used with a single key as the input, but the
-    'normal' (non-modifier) key of a combo will still be usable when used by 
+    'normal' (non-modifier) key of a combo will still be usable when used by
     itself as a non-double-tapped key press.
-    
+
     Example: 'RC-CapsLock' will respond when "Cmd" key (under Toshy remapping)
-    is held and CapsLock key is double-tapped. Nothing will happen if 
+    is held and CapsLock key is double-tapped. Nothing will happen if
     Cmd+CapsLock is pressed without double-tapping CapsLock key within the
     configured time interval. But the CapsLock key will still work by itself.
-    
+
     If double-tap input "combo" is just 'CapsLock', the functioning of a single-tap
-    CapsLock key press will be BLOCKED. Nothing will happen unless the key is 
+    CapsLock key press will be BLOCKED. Nothing will happen unless the key is
     double-tapped within the configured time interval.
-    
+
     Only cares about the 'real' key in a combo of Mods+key, like in the example
-    above with 'RC-CapsLock'. 
-    
+    above with 'RC-CapsLock'.
+
     The proper way to do this would be inside the keymapper, in the async event loop
-    that deals with input/output functions. 
+    that deals with input/output functions.
     """
     def _isDoubleTap():
         global tapTime1
@@ -570,7 +571,7 @@ def isDoubleTap(dt_combo):
             debug(f'## isDoubleTap: \n\tTime diff (too long): \n\t{_tapTime - tapTime1=}')
             tapCount = 0
         # Try to keep held key from producing repeats of dt_combo.
-        # If repeat rate very slow or delay very short, this won't work well. 
+        # If repeat rate very slow or delay very short, this won't work well.
         if tapCount == 1 and _tapTime - tapTime1 < 0.07:
             debug(f'## isDoubleTap: \n\tTime diff (too short): \n\t{_tapTime - tapTime1=}')
             tapCount = 0
@@ -581,7 +582,7 @@ def isDoubleTap(dt_combo):
             tapCount = 0
             tapTime1 = 0.0
             return dt_combo
-        # New cycle? Set count = 1, tapTime1 = now. Send nothing. 
+        # New cycle? Set count = 1, tapTime1 = now. Send nothing.
         if tapCount == 0:
             debug(f'## isDoubleTap: \n\tTime diff (1st cycle): \n\t{_tapTime - tapTime1=}')
             last_dt_combo = dt_combo
@@ -619,7 +620,7 @@ def matchProps(*,
     - To negate/invert regex pattern match use:                     \n
         - `not_clas` `not_name` `not_devn` params or...             \n
         - "^(?:(?!^pattern$).)*$"                                   \n
-    - To force case insensitive pattern match use:                  \n 
+    - To force case insensitive pattern match use:                  \n
         - "^(?i:pattern)$" or...                                    \n
         - "^(?i)pattern$"                                           \n
 
@@ -637,7 +638,7 @@ def matchProps(*,
     `not_lst`  = `lst` but inverted, matches when "not"             \n
     `dbg`      = Debugging info             (string)                \n
 
-    ### Negative match parameters: 
+    ### Negative match parameters:
     - `not_clas`|`not_name`|`not_devn`                              \n
     Parameters take same regex patterns as `clas`|`name`|`devn`     \n
     but result in a True condition only if pattern is NOT found.    \n
@@ -654,7 +655,7 @@ def matchProps(*,
     help identify origin of logging output.                         \n
     -                                                               \n
     """
-    # Reference for successful negative lookahead pattern, and 
+    # Reference for successful negative lookahead pattern, and
     # explanation of why it works:
     # https://stackoverflow.com/questions/406230/\
         # regular-expression-to-match-a-line-that-doesnt-contain-a-word
@@ -679,25 +680,25 @@ def matchProps(*,
         # 'STARTUP_TIMESTAMP' is a global variable, set when config is executed
         time_elapsed = current_timestamp - STARTUP_TIMESTAMP
 
-        # Bypass all guard clauses if more than a few seconds have passed since keymapper 
-        # started and loaded the config file. Inputs never change until keymapper 
+        # Bypass all guard clauses if more than a few seconds have passed since keymapper
+        # started and loaded the config file. Inputs never change until keymapper
         # restarts and reloads the config file, so we don't need to keep checking.
         bypass_guard_clauses = time_elapsed > 6
 
     logging_enabled = False
 
-    allowed_params  = (clas, name, devn, not_clas, not_name, not_devn, 
+    allowed_params  = (clas, name, devn, not_clas, not_name, not_devn,
                         numlk, capslk, cse, lst, not_lst, dbg)
-    lst_dct_params  = (clas, name, devn, not_clas, not_name, not_devn, 
+    lst_dct_params  = (clas, name, devn, not_clas, not_name, not_devn,
                         numlk, capslk, cse)
     string_params   = (clas, name, devn, not_clas, not_name, not_devn, dbg)
 
-    # This was using up a lot of CPU time, actually. Bad idea. 
+    # This was using up a lot of CPU time, actually. Bad idea.
     # dct_param_strs  = list(inspect.signature(matchProps).parameters.keys())
 
-    # Static list of parameter names. Using this instead of `inspect` cuts CPU 
+    # Static list of parameter names. Using this instead of `inspect` cuts CPU
     # usage considerably, for reasons I don't yet understand. Apparently the
-    # keymapper is actually running the entire function again on each key 
+    # keymapper is actually running the entire function again on each key
     # press and release, rather than just re-evaluating the inner closure.
     dct_param_strs = [
         'clas', 'name', 'devn', 'not_clas', 'not_name', 'not_devn',
@@ -705,9 +706,9 @@ def matchProps(*,
     ]
 
     if not MAX_MATCHPROPS_ITERATIONS_REACHED or not bypass_guard_clauses:
-        if all([x is None for x in allowed_params]): 
+        if all([x is None for x in allowed_params]):
             raise ValueError(f"\n\n(EE) matchProps(): Received no valid argument\n")
-        if any([x not in (True, False, None) for x in (numlk, capslk, cse)]): 
+        if any([x not in (True, False, None) for x in (numlk, capslk, cse)]):
             raise TypeError(f"\n\n(EE) matchProps(): Params 'numlk|capslk|cse' are bools\n")
         if any([x is not None and not isinstance(x, str) for x in string_params]):
             raise TypeError(    f"\n\n(EE) matchProps(): These parameters must be strings:"
@@ -727,9 +728,9 @@ def matchProps(*,
     if _lst is not None:
 
         if not MAX_MATCHPROPS_ITERATIONS_REACHED or not bypass_guard_clauses:
-            if any([x is not None for x in lst_dct_params]): 
+            if any([x is not None for x in lst_dct_params]):
                 raise TypeError(f"\n\n(EE) matchProps(): Param 'lst|not_lst' must be used alone\n")
-            if not isinstance(_lst, list) or not all(isinstance(item, dict) for item in _lst): 
+            if not isinstance(_lst, list) or not all(isinstance(item, dict) for item in _lst):
                 raise TypeError(
                     f"\n\n(EE) matchProps(): Param 'lst|not_lst' wants a [list] of {{dicts}}\n")
             # verify that every {dict} in [list of dicts] only contains valid parameter names
@@ -792,16 +793,16 @@ def matchProps(*,
 
 # Boolean variable to toggle Enter key state between F2 and Enter
 # True = Enter key sends F2, False = Enter key sends Enter
-_enter_is_F2 = True     # DON'T CHANGE THIS! Must be set to True here. 
+_enter_is_F2 = True     # DON'T CHANGE THIS! Must be set to True here.
 
 
-def iEF2(combo_if_true, latch_or_combo_if_false, 
+def iEF2(combo_if_true, latch_or_combo_if_false,
                 keep_value_if_true=False, keep_value_if_false=False):
     """
     Formerly 'is_Enter_F2'
     Send a different combo for the Enter key based on the state of the _enter_is_F2 variable,
     or latch the variable to True or False to control the Enter key output on the next use.
-    
+
     Args:
         combo_if_true:              The combo to send if _enter_is_F2 is True.
         latch_or_combo_if_false:    The combo to send if _enter_is_F2 is False, or
@@ -810,12 +811,12 @@ def iEF2(combo_if_true, latch_or_combo_if_false,
                                     If False, _enter_is_F2 will be set to False if it is currently True.
         keep_value_if_false (opt.): If True, _enter_is_F2 will be kept False if it is currently False.
                                     If False, _enter_is_F2 will be set to True if it is currently False.
-    
+
     Returns:
         A function that, when called, returns the appropriate combo based on the current
         state of _enter_is_F2 and the provided parameters, and updates _enter_is_F2
         based on the provided parameters.
-    
+
     This enables a simulation of the Finder "Enter to rename" capability, allowing
     for complex control over the Enter key's behavior in various scenarios.
     """
@@ -854,7 +855,7 @@ def macro_tester():
                     ST(f"Keyboard type: '{KBTYPE}'"), C("Enter"),
                     ST("Next test should come out on ONE LINE!"), C("Enter"),
                     ST("Unicode and Shift Test: 🌹—€—\u2021—ÿ—\U00002021 12345 !@#$% |\\ !!!!!!"),
-                    C("Enter")
+                    C("Enter"), C("Enter"),
         ]
     return _macro_tester
 
@@ -927,7 +928,7 @@ def notify_context():
         ctx_name        = ctx.wm_name
         ctx_devn        = ctx.device_name
 
-        message         = ( 
+        message         = (
             f"<tt>"
             f"<b>Class:</b> '{escape_markup(ctx_clas)}' {nwln_str}"
             f"<b>Title:</b> '{escape_markup(ctx_name)}' {nwln_str}"
@@ -951,7 +952,7 @@ def notify_context():
             f"</tt>"
         )
 
-        zenity_cmd_lst = [  zenity_cmd, '--info', '--no-wrap', 
+        zenity_cmd_lst = [  zenity_cmd, '--info', '--no-wrap',
                             '--title=Toshy Context Info',
                             '--text=' + message ]
 
@@ -976,6 +977,342 @@ def notify_context():
 
 
 
+# Suggested location for adding custom functions for personal use.
+###################################################################################################
+###  SLICE_MARK_START: user_custom_functions  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
+
+
+
+###  SLICE_MARK_END: user_custom_functions  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
+###################################################################################################
+
+
+
+###################################  MULTI-TAP  ####################################
+###                                                                              ###
+###                                                                              ###
+###    ███    ███ ██    ██ ██      ████████ ██       ████████  █████  ██████     ###
+###    ████  ████ ██    ██ ██         ██    ██          ██    ██   ██ ██   ██    ###
+###    ██ ████ ██ ██    ██ ██         ██    ██ █████    ██    ███████ ██████     ###
+###    ██  ██  ██ ██    ██ ██         ██    ██          ██    ██   ██ ██         ###
+###    ██      ██  ██████  ███████    ██    ██          ██    ██   ██ ██         ###
+###                                                                              ###
+###                                                                              ###
+####################################################################################
+# Functions to support proper asyncio time-based multi-tap actions, without
+# blocking the single-tap usage of the same combo (unless desired).
+#
+# Until this EXPERIMENTAL feature moves into the keymapper, the API function
+# `multitap_config()` will need to be called from a section lower down, like
+# the "user_apps" editable slice, if user wants custom multi-tap timings.
+
+
+# Multi-tap configuration storage
+_MULTITAP_CONFIG = {
+    'tap_interval': 0.25,     # Default: 250ms between taps
+    'min_tap_delay': 0.07,    # Default: 70ms repeat protection
+}
+
+
+def get_output():
+    """Get the main keymapper's output instance"""
+    try:
+        # Access the transform module's _output at runtime
+        if 'xwaykeyz.transform' in sys.modules:
+            transform_module = sys.modules['xwaykeyz.transform']
+            if hasattr(transform_module, '_output'):
+                debug("## multitap: Using main keymapper's _output instance")
+                return transform_module._output
+    except Exception as e:
+        debug(f"## multitap: Error accessing output: {e}")
+    return None
+
+
+def process_multitap_command(command, ctx):
+    """Simplified recursive command processor based on handle_commands logic"""
+    debug(f"## multitap: Processing command: {type(command)}")
+
+    if callable(command):
+        # Handle functions like ST(), notify_context, etc.
+        cmd_param_cnt = len(inspect.signature(command).parameters)
+        debug(f"## multitap: Callable with {cmd_param_cnt} parameters")
+
+        if cmd_param_cnt == 0:
+            result = command()
+        else:
+            result = command(ctx)
+
+        debug(f"## multitap: Callable returned: {type(result)}")
+
+        # Recursively process the result
+        if result is not None:
+            process_multitap_command(result, ctx)
+
+    elif isinstance(command, list):
+        # Recursively process each item in the list
+        debug(f"## multitap: Processing list with {len(command)} items")
+        for i, item in enumerate(command):
+            debug(f"## multitap: Processing list item {i+1}: {type(item)}")
+            process_multitap_command(item, ctx)
+
+    else:
+        # Handle direct objects (Combo, Key, etc.)
+        output = get_output()
+        if output and hasattr(command, '__class__'):
+            class_name = command.__class__.__name__
+            debug(f"## multitap: Direct object class: {class_name}")
+
+            if 'Combo' in class_name:
+                output.send_combo(command)
+                debug(f"## multitap: Sent Combo object")
+            elif 'Key' in class_name:
+                output.send_key(command)
+                debug(f"## multitap: Sent Key object")
+            elif command is not None:
+                debug(f"## multitap: Unknown command type: {class_name}")
+        elif not output:
+            debug(f"## multitap: No output available for command: {type(command)}")
+        else:
+            debug(f"## multitap: Command has no __class__: {command}")
+
+
+# Per-combo state tracking using action tuple as key
+tap_states: Dict[tuple, Dict[str, Any]] = {}
+
+event_loop: Optional[asyncio.AbstractEventLoop] = None
+
+
+def get_loop() -> Optional[asyncio.AbstractEventLoop]:
+    global event_loop
+    if event_loop is None or event_loop.is_closed():
+        try:
+            event_loop = asyncio.get_running_loop()
+        except RuntimeError:
+            event_loop = None
+    return event_loop
+
+
+def multitap_config(tap_interval=None, min_tap_delay=None):
+    """
+    Configure global multi-tap timing settings.
+
+    Args:
+        tap_interval: Maximum time between taps in seconds (0.15 to 1.5)
+        min_tap_delay: Minimum time between taps to avoid repeats (0.05 to 0.5)
+
+    Example:
+        multitap_config(
+            tap_interval=0.3,    # 300ms between taps
+            min_tap_delay=0.10   # 100ms repeat protection
+        )
+    """
+    global _MULTITAP_CONFIG
+
+    if tap_interval is not None:
+        if isinstance(tap_interval, (int, float)) and 0.15 <= tap_interval <= 1.5:
+            _MULTITAP_CONFIG['tap_interval'] = float(tap_interval)
+            debug(f"## multitap_config: Set tap_interval to {tap_interval}s")
+        else:
+            debug(f"## multitap_config: Invalid tap_interval {tap_interval}, must be 0.15-1.5 sec")
+
+    if min_tap_delay is not None:
+        if isinstance(min_tap_delay, (int, float)) and 0.05 <= min_tap_delay <= 0.5:
+            _MULTITAP_CONFIG['min_tap_delay'] = float(min_tap_delay)
+            debug(f"## multitap_config: Set min_tap_delay to {min_tap_delay}s")
+        else:
+            debug(f"## multitap_config: Invalid min_tap_delay {min_tap_delay}, must be 0.05-0.5 sec")
+
+    # Ensure ignore time is less than interval time
+    if _MULTITAP_CONFIG['min_tap_delay'] >= _MULTITAP_CONFIG['tap_interval']:
+        original_delay = _MULTITAP_CONFIG['min_tap_delay']
+        _MULTITAP_CONFIG['min_tap_delay'] = _MULTITAP_CONFIG['tap_interval'] * 0.25
+        debug(f"## multitap_config: min_tap_delay ({original_delay}s) >= tap_interval, "
+                f"adjusted to {_MULTITAP_CONFIG['min_tap_delay']:.3f}s")
+
+
+def isMultiTap( tap_1_action: Optional[Callable] = None,
+                tap_2_action: Optional[Callable] = None,
+                tap_3_action: Optional[Callable] = None,
+                tap_4_action: Optional[Callable] = None,
+                tap_5_action: Optional[Callable] = None,
+                tap_interval: float = None,
+                min_tap_delay: float = None) -> Callable:
+    """
+    Multi-tap handler that supports 1-5 taps with asyncio.
+
+    Args:
+        tap_1_action: Function to call on single tap (can be None to block single-tap)
+        tap_2_action: Function to call on double tap
+        tap_3_action: Function to call on triple tap
+        tap_4_action: Function to call on quadruple tap
+        tap_5_action: Function to call on quintuple tap
+        tap_interval: Max time between taps (None = use global config)
+        min_tap_delay: Min time between taps to avoid key repeat (None = use global config)
+
+    Returns:
+        Function that handles the tap detection
+    """
+
+    # Use global config values if not explicitly provided
+    if tap_interval is None:
+        tap_interval = _MULTITAP_CONFIG['tap_interval']
+    if min_tap_delay is None:
+        min_tap_delay = _MULTITAP_CONFIG['min_tap_delay']
+
+    # Use action tuple as unique identifier, converting lists to tuples for hashability
+    def make_hashable(action):
+        if isinstance(action, list):
+            return tuple(make_hashable(item) for item in action)
+        return action
+
+    action_key = (
+        make_hashable(tap_1_action),
+        make_hashable(tap_2_action),
+        make_hashable(tap_3_action),
+        make_hashable(tap_4_action),
+        make_hashable(tap_5_action)
+    )
+
+    def execute_action_for_tap_count(   tap_count: int,
+                                        captured_ctx,
+                                        tap_1_action,
+                                        tap_2_action,
+                                        tap_3_action,
+                                        tap_4_action,
+                                        tap_5_action):
+        """Execute the appropriate action based on tap count."""
+        actions = {
+            1: tap_1_action,
+            2: tap_2_action,
+            3: tap_3_action,
+            4: tap_4_action,
+            5: tap_5_action
+        }
+
+        action = actions.get(tap_count)
+        if action is not None:
+            try:
+                debug(f"## isMultiTap: Executing {tap_count}-tap action for {action_key}")
+                process_multitap_command(action, captured_ctx)
+                debug(f"## isMultiTap: Completed {tap_count}-tap action for {action_key}")
+            except Exception as e:
+                debug(f"## isMultiTap: Error executing {tap_count}-tap action: {e}")
+        else:
+            debug(f"## isMultiTap: No action defined for {tap_count} taps on {action_key}")
+
+    def finalize_taps(action_key: tuple, captured_ctx):
+        """Called when tap sequence is finalized."""
+        if action_key in tap_states:
+            state = tap_states[action_key]
+            tap_count = state['count']
+            debug(f"## isMultiTap: Finalizing {tap_count} taps for {action_key}")
+
+            # Get the actions before cleaning up state
+            stored_tap_1_action = state['tap_1_action']
+            stored_tap_2_action = state['tap_2_action']
+            stored_tap_3_action = state['tap_3_action']
+            stored_tap_4_action = state['tap_4_action']
+            stored_tap_5_action = state['tap_5_action']
+
+            # Clean up state
+            del tap_states[action_key]
+
+            # Execute appropriate action with captured context
+            execute_action_for_tap_count(   tap_count,
+                                            captured_ctx,
+                                            stored_tap_1_action,
+                                            stored_tap_2_action,
+                                            stored_tap_3_action,
+                                            stored_tap_4_action,
+                                            stored_tap_5_action)
+
+    def _isMultiTap(ctx) -> None:
+        loop = get_loop()
+        if loop is None:
+            debug(f"## isMultiTap: No event loop available for {action_key}")
+            return None
+
+        current_time = time.time()
+
+        # Initialize or get existing state
+        if action_key not in tap_states:
+            tap_states[action_key] = {
+                'count': 0,
+                'last_tap_time': 0.0,
+                'finalize_handle': None,
+                'captured_ctx': ctx,
+                # Store the individual actions in the state
+                'tap_1_action': tap_1_action,
+                'tap_2_action': tap_2_action,
+                'tap_3_action': tap_3_action,
+                'tap_4_action': tap_4_action,
+                'tap_5_action': tap_5_action,
+            }
+
+        state = tap_states[action_key]
+        time_since_last = current_time - state['last_tap_time']
+
+        # Check if this tap is too soon (key repeat protection)
+        if state['count'] > 0 and time_since_last < min_tap_delay:
+            debug(  f"## isMultiTap: Ignoring repeat for {action_key} "
+                    f"(too soon: {time_since_last:.3f}s)")
+            return None
+
+        # Check if this tap is too late (start new sequence)
+        if state['count'] > 0 and time_since_last >= tap_interval:
+            debug(  f"## isMultiTap: Too late for {action_key} "
+                    f"(gap: {time_since_last:.3f}s), finalizing previous")
+            # Finalize the previous sequence with its captured context
+            finalize_taps(action_key, state['captured_ctx'])
+            # Start new sequence with current context
+            tap_states[action_key] = {
+                'count': 0,
+                'last_tap_time': 0.0,
+                'finalize_handle': None,
+                'captured_ctx': ctx,
+                # Store the individual actions in the state
+                'tap_1_action': tap_1_action,
+                'tap_2_action': tap_2_action,
+                'tap_3_action': tap_3_action,
+                'tap_4_action': tap_4_action,
+                'tap_5_action': tap_5_action,
+            }
+            state = tap_states[action_key]
+
+        # Cancel any pending finalization
+        finalize_handle: Optional[asyncio.Handle] = state['finalize_handle']
+        if finalize_handle is not None:
+            finalize_handle.cancel()
+            state['finalize_handle'] = None
+
+        # Increment tap count
+        state['count'] += 1
+        state['last_tap_time'] = current_time
+
+        debug(f"## isMultiTap: Tap #{state['count']} for {action_key}")
+
+        # If we've exceeded max taps (5), ignore subsequent taps
+        if state['count'] > 5:
+            debug(f"## isMultiTap: Ignoring tap beyond maximum (tap #{state['count']})")
+            return None
+
+        # Schedule finalization after the interval for all tap counts
+        if state['tap_1_action'] or state['count'] > 1:
+            captured_ctx = state['captured_ctx']
+            handle: asyncio.Handle = loop.call_later(
+                tap_interval,
+                lambda: finalize_taps(action_key, captured_ctx)  # Pass captured context
+            )
+            state['finalize_handle'] = handle
+            debug(f"## isMultiTap: Scheduled finalization for {action_key} in {tap_interval}s")
+
+        # Return None since we're handling actions asynchronously
+        return None
+
+    return _isMultiTap
+
+
+
 ###################################################################################################
 ###  SLICE_MARK_START: barebones_user_cfg  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 
@@ -990,8 +1327,41 @@ keymap("Currency character overlay", {
 
 ###  SLICE_MARK_END: barebones_user_cfg  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 ###################################################################################################
-keymap("Diagnostics", {
-    C("Shift-Super-Alt-i"):        isDoubleTap(notify_context),     # Diagnostic dialog (primary)
-    C("Shift-Super-Alt-h"):        isDoubleTap(notify_context),     # Diagnostic dialog (alternate)
-    C("Shift-Super-Alt-t"):        isDoubleTap(macro_tester),       # Type out test macro
-}, when = lambda ctx: ctx is ctx )
+
+
+keymap("Diagnostics (isMultiTap)", {
+
+    C("Shift-Alt-RC-i"): isMultiTap(
+                            # tap_1_action=None,  # Block single tap
+                            tap_1_action=C("Shift-Alt-C-i"),    # Keep original single-tap combo
+                            tap_2_action=notify_context,
+                        ),
+
+    C("Shift-Alt-RC-h"): isMultiTap(
+                            tap_1_action=C("Shift-Alt-RC-h"),   # Keep original single-tap combo
+                            tap_2_action=notify_context,
+                            tap_3_action=lambda: print("\nTriple tap!\n"),  # Shows in terminal
+                        ),
+
+    C("Shift-Alt-RC-t"): isMultiTap(
+                            tap_1_action=C("C-n"),          # Test single-tap by opening new window
+                            tap_2_action=macro_tester,      # Types out a long test macro text
+                            tap_3_action=[
+                                ST("You tapped Shift-Alt-C-t 3 times!!!"),
+                                C("Enter"), C("Enter")],
+                            tap_4_action=[
+                                ST("You tapped Shift-Alt-C-t 4 times!!!!"),
+                                C("Enter"), C("Enter")],
+                            tap_5_action=[
+                                ST("You tapped Shift-Alt-C-t 5 times!!!!!"),
+                                C("Enter"), C("Enter")],
+                        ),
+
+}, when = lambda ctx: ctx is ctx)
+
+
+# keymap("Diagnostics (isDoubleTap)", {
+#     C("Shift-Alt-RC-i"):        isDoubleTap(notify_context),    # Diagnostic dialog (primary)
+#     C("Shift-Alt-RC-h"):        isDoubleTap(notify_context),    # Diagnostic dialog (alternate)
+#     C("Shift-Alt-RC-t"):        isDoubleTap(macro_tester),      # Type out test macro
+# }, when = lambda ctx: ctx is ctx )
