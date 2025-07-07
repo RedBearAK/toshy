@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20250625'                        # CLI option "--version" will print this out.
+__version__ = '20250706'                        # CLI option "--version" will print this out.
 
 import os
 os.environ['PYTHONDONTWRITEBYTECODE'] = '1'     # prevent this script from creating cache files
@@ -22,7 +22,8 @@ import textwrap
 import subprocess
 
 from subprocess import DEVNULL, PIPE
-from typing import Dict, List, Tuple, Optional
+
+# from typing import Dict, List, Tuple, Optional
 
 # local imports
 from lib import logger
@@ -968,7 +969,7 @@ def elevate_privileges():
 #####################################################################################################
 
 
-distro_groups_map: Dict[str, List[str]] = {
+distro_groups_map = {
 
     # separate references for RHEL types versus Fedora types
     'fedora-based':             ["fedora", "fedoralinux", "nobara", "ultramarine"],
@@ -1024,7 +1025,7 @@ distro_groups_map: Dict[str, List[str]] = {
 # 
 
 
-pkg_groups_map: Dict[str, List[str]] = {
+pkg_groups_map = {
 
     # NOTE: Do not add 'gnome-shell-extension-appindicator' to Fedora/RHELs.
     #       This will install extension but requires logging out of GNOME to activate.
@@ -1278,9 +1279,9 @@ pip_pkgs   = [
 ]
 
 
-def get_supported_distro_ids_lst() -> List[str]:
+def get_supported_distro_ids_lst():
     """Helper function to return the full list of distro IDs."""
-    distro_list: List[str] = []
+    distro_list = []
 
     for group in distro_groups_map.values():
         distro_list.extend(group)
@@ -1290,12 +1291,12 @@ def get_supported_distro_ids_lst() -> List[str]:
 
 def get_supported_distro_ids_idx() -> str:
     """Utility function to return list of available distro names (IDs)"""
-    distro_list: List[str] = []
+    distro_list = []
 
     for group in distro_groups_map.values():
         distro_list.extend(group)
 
-    sorted_distro_list: List[str] = sorted(distro_list)
+    sorted_distro_list = sorted(distro_list)
     prev_char: str = sorted_distro_list[0][0]
     # start index with the initial letter
     distro_index = "\t" + prev_char.upper() + ": "
@@ -2534,9 +2535,9 @@ def is_barebones_config_file() -> bool:
         return False
 
 
-def extract_slices(data: str) -> Dict[str, str]:
+def extract_slices(data: str):
     """Utility function to store user content slices from existing config file data"""
-    slices_dct: Dict[str, str]  = {}
+    slices_dct = {}
     pattern_start               = r'###  SLICE_MARK_START: (\w+)  ###.*'
     pattern_end                 = r'###  SLICE_MARK_END: (\w+)  ###.*'
     matches_start               = list(re.finditer(pattern_start, data))
@@ -2618,7 +2619,7 @@ def extract_slices(data: str) -> Dict[str, str]:
     return slices_dct
 
 
-def merge_slices(data: str, slices: Dict[str, str]) -> str:
+def merge_slices(data: str, slices) -> str:
     """Utility function to merge stored slices into new config file data"""
     pattern_start   = r'###  SLICE_MARK_START: (\w+)  ###.*'
     pattern_end     = r'###  SLICE_MARK_END: (\w+)  ###.*'
@@ -3495,8 +3496,8 @@ def autostart_tray_icon():
             with sqlite3.connect(prefs_db_file_path) as cnxn:
                 cursor = cnxn.cursor()
                 cursor.execute(sql_query)
-                row: Optional[Tuple[str]] = cursor.fetchone()
-            
+                row = cursor.fetchone()
+
             if row is not None:
                 # Convert the string value to a boolean
                 autostart_preference = row[0].lower() == 'true'
