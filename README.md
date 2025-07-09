@@ -29,6 +29,8 @@ I don't really know many other places where it might be considered appropriate t
 
 # Current status: Stable Beta (Please Read)
 
+**2025-07-01 UPDATE**: Added experimental support for fully `asyncio` implementation of multi-tap functionality. Have a key or combo do different things based on how many times it's tapped within the time limit (25ms default). Does not affect other remaps that aren't marked as multi-tap. 
+
 **2025-06-15 UPDATE**: Added support for Mageia (similar to OpenMandriva and descended from Mandrake/Mandriva distros).
 
 **2025-06-13 UPDATE**: The window context provider KWin script component (for Plasma Wayland) has always had a significant defect in seeing window title changes, such as what happens in apps with a tabbed UI (browsers, file managers, terminals, code editors, etc.). That KWin script has been updated to follow the window title changes via the `captionChanged()` signal, from the KWin API. Now the window title (name) can be added to app class conditionals in the config file, to invoke custom remaps or actions on specific tabs or sub-dialogs with wonky titles. And it will work in Plasma just as reliably as in all other Wayland environments (and X11).
