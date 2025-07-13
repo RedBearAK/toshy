@@ -1,22 +1,45 @@
 #!/usr/bin/env bash
 
-# Last updated: 2025-06-19
+# Version is just most recent revision date
+VERSION="20250713"
+
+
+# This script is intended to be run with elevated privileges (root/superuser) on
+# Apple Intel Mac models. It uses 'efivar' to modify the volume or mute/unmute the 
+# Mac startup sound (aka, the "boot chime").
+
+# Author: https://github.com/RedBearAK/
+# Email:  64876997+RedBearAK@users.noreply.github.com
 
 
 echo    # blank line to start things off
-
-# Ensure that we are root
-if [ "$EUID" -ne 0 ]; then
-    echo "Please run as root"
-    echo
-    exit 1
-fi
 
 # Function to exit with a blank line for cleaner output
 clean_exit() {
     echo
     exit "${1:-0}"  # Default to exit code 0 if not specified
 }
+
+# Allow the version to print out without running as root/superuser
+if [ $# -eq 1 ]; then
+    case "${1,,}" in  # Convert to lowercase for case-insensitive matching
+
+        "--version"|"version")
+            echo "Script version: ${VERSION}"
+            echo 
+            echo "All other options/commands require elevated privileges (root/superuser)"
+            clean_exit 0
+            ;;
+
+    esac
+fi
+
+# Ensure that we are root/superuser so later commands will succeed
+if [ "$EUID" -ne 0 ]; then
+    echo "Please run as root/superuser"
+    echo
+    exit 1
+fi
 
 # Check if this is an Apple system
 if [ -f /sys/class/dmi/id/sys_vendor ]; then
@@ -67,6 +90,7 @@ Usage:
     $SCRIPT_NAME mute
     $SCRIPT_NAME unmute
     $SCRIPT_NAME reset
+    $SCRIPT_NAME --version | version
 
 Special commands:
     info:    Display current startup volume setting
@@ -88,6 +112,14 @@ Volume ranges:
 EOF
     clean_exit 1
 }
+
+# Notify user if 'bc' command is not available
+if ! command -v bc >/dev/null 2>&1; then
+    echo "There is no 'bc' (basic calculator) command on this system. Cannot continue."
+    echo
+    echo "Try installing 'bc' package. Exiting..."
+    clean_exit 0
+fi
 
 # Notify user if 'efivar' command is not available
 if ! command -v efivar >/dev/null 2>&1; then
