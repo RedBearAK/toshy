@@ -1,3 +1,5 @@
+__version__ = '20250710'
+
 import os
 import time
 import subprocess

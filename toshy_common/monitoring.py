@@ -1,4 +1,5 @@
-# import os
+__version__ = "20250710"
+
 import time
 import threading
 try:
