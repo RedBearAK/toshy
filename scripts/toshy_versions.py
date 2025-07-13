@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+__version__ = '20250710'
+
 
 # Script to get and print out the versions of various Toshy components. 
 
@@ -11,7 +13,7 @@ from xwaykeyz.version import __version__ as xwaykeyz_ver
 
 home_dir                = os.path.expanduser('~')
 toshy_dir_path          = os.path.join(home_dir, '.config', 'toshy')
-lib_dir_path            = os.path.join(toshy_dir_path, 'lib')
+toshy_common_dir_path   = os.path.join(toshy_dir_path, 'toshy_common')
 
 if not os.path.exists(toshy_dir_path):
     print(f"Looks like you haven't installed Toshy yet. This won't work.")
@@ -26,47 +28,106 @@ home_local_bin          = os.path.join(home_dir, '.local', 'bin')
 run_tmp_dir             = os.environ.get('XDG_RUNTIME_DIR') or '/tmp'
 
 sys.path.insert(0, toshy_dir_path)
-sys.path.insert(0, lib_dir_path)
+sys.path.insert(0, toshy_common_dir_path)
 # print(sys.path)
 
 
 # Files to parse for version info:
 
 # ~/.config/toshy/toshy_config.py
-# ~/.config/toshy/toshy_gui.py
+# ~/.config/toshy/toshy_gui/main_gtk4.py
+# ~/.config/toshy/toshy_gui/main_tkinter.py
 # ~/.config/toshy/toshy_tray.py
 
-# ~/.config/toshy/lib/env_context.py
-# ~/.config/toshy/lib/machine_context.py
-# ~/.config/toshy/lib/notification_manager.py
-# ~/.config/toshy/lib/settings_class.py
-# ~/.config/toshy/lib/shared_device_context.py
+# ~/.config/toshy/toshy_common/env_context.py
+# ~/.config/toshy/toshy_common/machine_context.py
+# ~/.config/toshy/toshy_common/monitoring.py            # Monitors settings and services
+# ~/.config/toshy/toshy_common/notification_manager.py
+# ~/.config/toshy/toshy_common/process_manager.py
+# ~/.config/toshy/toshy_common/runtime_utils.py
+# ~/.config/toshy/toshy_common/service_manager.py
+# ~/.config/toshy/toshy_common/settings_class.py
+# ~/.config/toshy/toshy_common/shared_device_context.py
 
 # ~/.config/toshy/cosmic-dbus-service/toshy_cosmic_dbus_service.py
 # ~/.config/toshy/kwin-dbus-service/toshy_kwin_dbus_service.py
 # ~/.config/toshy/wlroots-dbus-service/toshy_wlroots_dbus_service.py
 
+# ~/.config/toshy/kwin-dbus-service/toshy_kwin_script_setup.py
+# ~/.config/toshy/scripts/toshy_versions.py
 
-# 'None' used for printing a blank line between file groupings in terminal output
-file_paths = [
-    os.path.join(toshy_dir_path, 'toshy_config.py'),
-    os.path.join(toshy_dir_path, 'toshy_gui.py'),
-    os.path.join(toshy_dir_path, 'toshy_tray.py'),
-    None,
-    os.path.join(lib_dir_path, 'env_context.py'),
-    os.path.join(lib_dir_path, 'machine_context.py'),
-    os.path.join(lib_dir_path, 'notification_manager.py'),
-    os.path.join(lib_dir_path, 'settings_class.py'),
-    os.path.join(lib_dir_path, 'shared_device_context.py'),
-    None,
-    os.path.join(toshy_dir_path, 'cosmic-dbus-service', 'toshy_cosmic_dbus_service.py'),
-    os.path.join(toshy_dir_path, 'kwin-dbus-service', 'toshy_kwin_dbus_service.py'),
-    os.path.join(toshy_dir_path, 'wlroots-dbus-service', 'toshy_wlroots_dbus_service.py'),
+
+
+# Define all file paths as variables
+config_file_path        = os.path.join(toshy_dir_path,
+                            'toshy_config.py')
+preferences_app_gtk4    = os.path.join(toshy_dir_path,
+                            'toshy_gui', 'main_gtk4.py')
+preferences_app_tk      = os.path.join(toshy_dir_path,
+                            'toshy_gui', 'main_tkinter.py')
+tray_indicator_path     = os.path.join(toshy_dir_path,
+                            'toshy_tray.py')
+
+env_context_path        = os.path.join(toshy_dir_path,
+                            'toshy_common', 'env_context.py')
+machine_context_path    = os.path.join(toshy_dir_path,
+                            'toshy_common', 'machine_context.py')
+notification_mgr_path   = os.path.join(toshy_dir_path,
+                            'toshy_common', 'notification_manager.py')
+process_mgr_path        = os.path.join(toshy_dir_path,
+                            'toshy_common', 'process_manager.py')
+runtime_utils_path      = os.path.join(toshy_dir_path,
+                            'toshy_common', 'runtime_utils.py')
+service_mgr_path        = os.path.join(toshy_dir_path,
+                            'toshy_common', 'service_manager.py')
+settings_mgr_path       = os.path.join(toshy_dir_path,
+                            'toshy_common', 'settings_class.py')
+svc_settings_mon        = os.path.join(toshy_dir_path,
+                            'toshy_common', 'monitoring.py')
+shared_device_path      = os.path.join(toshy_dir_path,
+                            'toshy_common', 'shared_device_context.py')
+
+cosmic_dbus_path        = os.path.join(toshy_dir_path,
+                            'cosmic-dbus-service', 'toshy_cosmic_dbus_service.py')
+kwin_dbus_path          = os.path.join(toshy_dir_path,
+                            'kwin-dbus-service', 'toshy_kwin_dbus_service.py')
+wlroots_dbus_path       = os.path.join(toshy_dir_path,
+                            'wlroots-dbus-service', 'toshy_wlroots_dbus_service.py')
+
+kwin_script_path        = os.path.join(toshy_dir_path,
+                            'kwin-dbus-service', 'toshy_kwin_script_setup.py')
+versions_path           = os.path.join(toshy_dir_path,
+                            'scripts', 'toshy_versions.py')
+
+
+components = [
+    ("Config File",                 config_file_path),
+    ("Preferences App (GTK4)",      preferences_app_gtk4),
+    ("Preferences App (Tk)",        preferences_app_tk),
+    ("Tray Indicator",              tray_indicator_path),
+    (None, None),  # Spacing
+    ("Environment Context",         env_context_path),
+    ("Machine Context",             machine_context_path),
+    ("Notification Manager",        notification_mgr_path),
+    ("Process Manager",             process_mgr_path),
+    ("Runtime Utils",               runtime_utils_path),
+    ("Service Manager",             service_mgr_path),
+    ("Service/Settings Monitor",    svc_settings_mon),
+    ("Settings Manager",            settings_mgr_path),
+    ("Shared Device Context",       shared_device_path),
+    (None, None),  # Spacing
+    ("D-Bus Service: COSMIC",       cosmic_dbus_path),
+    ("D-Bus Service: KWin",         kwin_dbus_path),
+    ("D-Bus Service: Wlroots",      wlroots_dbus_path),
+    (None, None),  # Spacing
+    ("KWin Script Helper",          kwin_script_path),
+    (None, None),  # Spacing
+    ("Versions Script (Me)",        versions_path),
 ]
 
 
 # Helper function to extract version from file content
-def extract_version(file_path):
+def extract_version(file_path: str):
     try:
         with open(file_path, 'r') as file:
             for line in file:
@@ -85,28 +146,28 @@ def extract_version(file_path):
         return f"Error reading file: {str(e)}"
 
 
-# Calculate max file name length for formatting (watch out for NoneType error)
-max_file_name_length = max(len(os.path.basename(path)) for path in file_paths if path is not None)
 
-# Print header
-print()             # Blank line to start output
+# Update the formatting logic for tuples:
+max_component_name_length = max(len(name) for name, path in components if name is not None)
 
+print()     # separate from command
 # Print the keymapper info
-print(f"Keymapper version:  xwaykeyz {xwaykeyz_ver}")
+print(f"  Keymapper version:  xwaykeyz {xwaykeyz_ver}")
 print()             # Separation from Toshy files version output
-print(f"{'File Name'.ljust(max_file_name_length + 4)}Version")
-print('-' * (max_file_name_length + 14))
+print(f"  {'Component'.ljust(max_component_name_length + 4)}Version")
+print('  ' + '-' * (max_component_name_length + 14))
 
 # Print version information
-for path in file_paths:
-    if path is None:
-        print()     # Separate groupings in the list with a blank line
+for component_name, path in components:
+    if component_name is None:
+        print()  # Blank line for spacing
         continue
-    file_name = os.path.basename(path)
-    version = extract_version(path)
+    
+    version = extract_version(path) if path else "N/A"
     if version:
-        print(f"{file_name.ljust(max_file_name_length + 4)}{version}")
+        print(f"  {component_name.ljust(max_component_name_length + 4)}{version}")
     else:
-        print(f"{file_name.ljust(max_file_name_length + 4)}No version found or error reading file.")
+        print(f"  {component_name.ljust(max_component_name_length + 4)}"
+                "No version found or error reading file.")
 
-print()             # Blank line to separate from terminal prompt
+print()     # separate from next command prompt

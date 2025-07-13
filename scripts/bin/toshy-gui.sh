@@ -29,8 +29,13 @@ if [ ! -d "$VENV_PATH" ]; then
     exit 1
 fi
 
-# Activate the venv for complete environment setup
+# Activate the venv for complete environment setup (technically not needed for this app!)
 # shellcheck disable=SC1091
 source "${VENV_PATH}/bin/activate"
 
-exec "${VENV_PATH}/bin/python" "$HOME/.config/toshy/toshy_gui.py"
+# Original exec command before modularising toshy_gui app package:
+# exec "${VENV_PATH}/bin/python" "$HOME/.config/toshy/toshy_gui.py"
+
+# Launch GUI app as a Python "module":
+export PYTHONPATH="${HOME}/.config/toshy:${PYTHONPATH}"
+exec "${VENV_PATH}/bin/python" -m toshy_gui "$@"

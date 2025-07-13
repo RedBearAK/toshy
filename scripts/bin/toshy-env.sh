@@ -29,4 +29,7 @@ fi
 # shellcheck disable=SC1091
 source "${VENV_PATH}/bin/activate"
 
-"${VENV_PATH}/bin/python" "${HOME}/.config/toshy/lib/env_context.py"
+# Need PYTHONPATH update to allow absolute imports from "toshy_common" package
+export PYTHONPATH="${HOME}/.config/toshy:${PYTHONPATH}"
+
+"${VENV_PATH}/bin/python" "${HOME}/.config/toshy/toshy_common/env_context.py"

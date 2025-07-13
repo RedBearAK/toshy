@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+__version__ = '20250710'
 
 import os
 import re
@@ -8,33 +9,13 @@ import subprocess
 
 from typing import Dict
 
-# ENV_CONTEXT module version:
-__version__ = '20250407'
+from toshy_common import logger
+from toshy_common.logger import *
 
-VERBOSE = True
-FLUSH = True
 
-def debug(*args, ctx="DD"):
-    if not VERBOSE:
-        return
 
-    # allow blank lines without context
-    if len(args) == 0 or (len(args) == 1 and args[0] == ""):
-        print("", flush=FLUSH)
-        return
-    print(f"({ctx})", *args, flush=FLUSH)
-
-def warn(*args, ctx="WW"):
-    print(f"({ctx})", *args, flush=FLUSH)
-
-def error(*args, ctx="EE"):
-    print(f"({ctx})", *args, flush=FLUSH)
-
-def log(*args, ctx="--"):
-    print(f"({ctx})", *args, flush=FLUSH)
-
-def info(*args, ctx="--"):
-    log(*args, ctx=ctx)
+logger.VERBOSE = True
+logger.FLUSH = True
 
 
 

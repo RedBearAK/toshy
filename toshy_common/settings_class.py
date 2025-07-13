@@ -1,4 +1,4 @@
-__version__ = '20250226'
+__version__ = '20250710'
 
 import os
 import inspect
@@ -13,7 +13,7 @@ import xwaykeyz.lib.logger
 from xwaykeyz.lib.logger import debug, error
 
 # Import the SharedDeviceContext class
-from lib.shared_device_context import SharedDeviceContext
+from toshy_common.shared_device_context import SharedDeviceContext
 
 
 class Settings:

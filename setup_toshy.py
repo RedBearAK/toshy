@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20250706'                        # CLI option "--version" will print this out.
+__version__ = '20250710'                        # CLI option "--version" will print this out.
 
 import os
 os.environ['PYTHONDONTWRITEBYTECODE'] = '1'     # prevent this script from creating cache files
@@ -23,12 +23,14 @@ import subprocess
 
 from subprocess import DEVNULL, PIPE
 
+# Type hints are about to become a problem due to issues between <3.9 and >3.15 Python releases.
+# So we will have to remove many or most of them to retain 3.8-3.15+ compatibility.
 # from typing import Dict, List, Tuple, Optional
 
 # local imports
-from lib import logger
-from lib.env_context import EnvironmentInfo
-from lib.logger import debug, error, warn, info
+from toshy_common import logger
+from toshy_common.env_context import EnvironmentInfo
+from toshy_common.logger import debug, error, warn, info
 
 logger.FLUSH = True
 

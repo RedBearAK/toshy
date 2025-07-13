@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-__version__ = '20250616'
+__version__ = '20250710'
 
 # Preferences app for Toshy, using tkinter GUI and "Sun Valley" theme
 TOSHY_PART      = 'gui'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
@@ -10,172 +10,29 @@ APP_VERSION     = __version__
 # -------- COMMON COMPONENTS --------------------------------------------------
 
 import os
-import re
-import sys
-import time
-try:
-    import dbus
-except ModuleNotFoundError:
-    dbus = None
-import fcntl
 import queue
-import psutil
 import shutil
-import signal
-import threading
 import subprocess
+
 from subprocess import DEVNULL
 
+# Initialize Toshy runtime before other imports
+from toshy_common.runtime_utils import initialize_toshy_runtime
+runtime = initialize_toshy_runtime()
+
 # Local imports
-from lib.logger import *
-from lib import logger
-from lib.settings_class import Settings
+from toshy_common import logger
+from toshy_common.logger import *
+from toshy_common.settings_class import Settings
+from toshy_common.process_manager import ProcessManager
+from toshy_common.service_manager import ServiceManager
+from toshy_common.monitoring import SettingsMonitor, ServiceMonitor
+
+# Make process manager global
+process_mgr = None
 
 logger.FLUSH        = True
-logger.VERBOSE      = True
-
-if not str(sys.platform) == "linux":
-    raise OSError("This app is designed to be run only on Linux")
-
-# Add paths to avoid errors like ModuleNotFoundError or ImportError
-home_dir = os.path.expanduser("~")
-home_local_bin = os.path.join(home_dir, '.local', 'bin')
-local_site_packages_dir = os.path.join(home_dir, f".local/lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages")
-# parent_folder_path  = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-current_folder_path = os.path.abspath(os.path.dirname(__file__))
-
-def pattern_found_in_module(pattern, module_path):
-    try:
-        with open(module_path, 'r', encoding='utf-8') as file:
-            content = file.read()
-            return bool(re.search(pattern, content))
-    except FileNotFoundError as file_err:
-        print(f"Error: The file {module_path} was not found.\n\t {file_err}")
-        return False
-    except IOError as io_err:
-        print(f"Error: An issue occurred while reading the file {module_path}.\n\t {io_err}")
-        return False
-
-pattern = 'SLICE_MARK_START: barebones_user_cfg'
-module_path = os.path.abspath(os.path.join(current_folder_path, 'toshy_config.py'))
-
-# check if the config file is a "barebones" type
-if pattern_found_in_module(pattern, module_path):
-    barebones_config = True
-else:
-    barebones_config = False
-
-
-sys.path.insert(0, local_site_packages_dir)
-sys.path.insert(0, current_folder_path)
-
-existing_path = os.environ.get('PYTHONPATH', '')
-os.environ['PYTHONPATH'] = f'{current_folder_path}:{local_site_packages_dir}:{existing_path}'
-
-# Set the process name for the Toshy Preferences GUI app launcher process
-# echo "toshy-pref-stub" > /proc/$$/comm        # bash script version
-with open('/proc/self/comm', 'w') as f:
-    f.write('toshy-pref-app')
-
-
-#########################################################################
-def signal_handler(sig, frame):
-    if sig in (signal.SIGINT, signal.SIGQUIT):
-        # Perform any cleanup code here before exiting
-        # traceback.print_stack(frame)
-        remove_lockfile()
-        debug(f'\nSIGINT or SIGQUIT received. Exiting.\n')
-        sys.exit(0)
-
-signal.signal(signal.SIGINT,    signal_handler)
-signal.signal(signal.SIGQUIT,   signal_handler)
-# Stop each last child process from hanging on as a "zombie" after it quits.
-signal.signal(signal.SIGCHLD, signal.SIG_IGN)
-#########################################################################
-# Let signal handler be defined and called before other things ^^^^^^^
-
-
-USER_ID         = f'{os.getuid()}'
-# support multiple simultaneous users via per-user temp folder
-RUN_TMP_DIR                     = os.environ.get('XDG_RUNTIME_DIR', f'/tmp/toshy_uid{USER_ID}')
-TOSHY_RUN_TMP_DIR               = os.path.join(RUN_TMP_DIR, 'toshy_runtime_cache')
-
-LOCK_FILE_DIR                   = f'{TOSHY_RUN_TMP_DIR}/lock'
-LOCK_FILE_NAME                  = f'toshy_{TOSHY_PART}.lock'
-LOCK_FILE                       = os.path.join(LOCK_FILE_DIR, LOCK_FILE_NAME)
-
-if not os.path.exists(LOCK_FILE_DIR):
-    try:
-        os.makedirs(LOCK_FILE_DIR, mode=0o700, exist_ok=True)
-    except Exception as e:
-        error(f'NON-FATAL: Problem creating lockfile directory: {LOCK_FILE_DIR}')
-        error(e)
-
-# recursively set user's Toshy temp folder as only read/write by owner
-try:
-    chmod_cmd = shutil.which('chmod')
-    os.system(f'{chmod_cmd} 0700 {TOSHY_RUN_TMP_DIR}')
-except Exception as e:
-    error(f'NON-FATAL: Problem when setting permissions on temp folder.')
-    error(e)
-
-###############################################################################
-# START of functions dealing with the lockfile
-
-def get_pid_from_lockfile():
-    try:
-        with open(LOCK_FILE, 'r') as f:
-            fcntl.flock(f, fcntl.LOCK_SH | fcntl.LOCK_NB)
-            pid = int(f.read().strip())
-            fcntl.flock(f, fcntl.LOCK_UN)
-            return pid
-    except (IOError, ValueError, PermissionError) as e:
-        debug(f'NON-FATAL: No existing lockfile or lockfile could not be read:')
-        debug(e)
-        return None
-
-def write_pid_to_lockfile():
-    try:
-        with open(LOCK_FILE, 'w') as f:
-            fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            f.write(str(os.getpid()))
-            f.flush()
-            fcntl.flock(f, fcntl.LOCK_UN)
-    except (IOError, ValueError, PermissionError) as e:
-        error(f'NON-FATAL: Problem writing PID to lockfile:')
-        error(e)
-
-def remove_lockfile():
-    try:
-        os.unlink(LOCK_FILE)
-        debug(f'Lockfile removed.')
-    except Exception as e:
-        debug(f'NON-FATAL: Problem when trying to remove lockfile.')
-        debug(e)
-
-def terminate_process(pid):
-    for sig in [signal.SIGTERM, signal.SIGKILL]:
-        try:
-            process = psutil.Process(pid)
-        except psutil.NoSuchProcess:
-            time.sleep(0.5)
-            return None
-        if process.status() == psutil.STATUS_ZOMBIE:
-            time.sleep(0.5)
-            return None
-        os.kill(pid, sig)
-        time.sleep(0.5)
-    raise EnvironmentError(f'FATAL ERROR: Failed to close existing process with PID: {pid}')
-
-def handle_existing_process():
-    pid = get_pid_from_lockfile()
-    if pid:
-        terminate_process(pid)
-
-# END of functions dealing with the lockfile
-###############################################################################
-
-
+logger.VERBOSE      = False
 
 
 
@@ -198,52 +55,21 @@ icon_file_grayscale             = "toshy_app_icon_rainbow_inverse_grayscale"
 icon_file_inverse               = "toshy_app_icon_rainbow_inverse"
 
 
-config_dir_path = current_folder_path
+config_dir_path = runtime.config_dir
 cnfg = Settings(config_dir_path)
 cnfg.watch_database()
 debug("")
 debug(cnfg)   # prints out the __str__ method of Settings class
 
 # Notification handler object setup
-from lib.notification_manager import NotificationManager
+from toshy_common.notification_manager import NotificationManager
 ntfy = NotificationManager(icon_file_active, title='Toshy Alert (GUI)')
 
-
-def get_settings_list(settings_obj):
-    # get all attributes from the object
-    all_attributes = [attr for attr in dir(settings_obj) if not callable(getattr(settings_obj, attr)) and not attr.startswith("__")]
-    # filter out attributes that are not strings or booleans
-    filtered_attributes = [attr for attr in all_attributes if isinstance(getattr(settings_obj, attr), (str, bool, int))]
-    # create a list of tuples with attribute name and value pairs
-    settings_list = [(attr, getattr(settings_obj, attr)) for attr in filtered_attributes]
-    return settings_list
-
-
-# Store the settings as a list to see when they change.
-# Monitor from a separate thread.
-last_settings_list = get_settings_list(cnfg)
+# Service manager instance
+service_manager = ServiceManager(ntfy, icon_file_active, icon_file_inverse)
 
 # Prepare a queue for updates of the GUI (switches, radio buttons, labels)
 gui_update_queue = queue.Queue()
-
-
-def fn_monitor_internal_settings():
-    global last_settings_list
-
-    while True:
-        time.sleep(1)
-        current_settings = get_settings_list(cnfg)
-
-        if last_settings_list != current_settings:
-            debug(f"!!! Settings change detected in monitor thread !!!")
-            # Show changes
-            for (old_name, old_val), (new_name, new_val) in zip(last_settings_list, current_settings):
-                if old_val != new_val and old_name == new_name:
-                    debug(f"  {old_name}: {old_val} -> {new_val}")
-
-            # Queue the update
-            gui_update_queue.put("update_settings")
-            last_settings_list = current_settings
 
 
 # Process queue from main thread
@@ -277,131 +103,8 @@ def process_gui_queue():
 sysctl_cmd      = f"{shutil.which('systemctl')}"
 user_sysctl     = f'{sysctl_cmd} --user'
 
-toshy_svc_sessmon   = 'toshy-session-monitor.service'
-toshy_svc_config    = 'toshy-config.service'
-
 svc_status_sessmon          = 'Unknown '              # 'Undefined'
 svc_status_config           = 'Unknown '              # 'Undefined'
-
-svc_status_glyph_active     = 'Active  '              # 😀 ✅  #
-svc_status_glyph_inactive   = 'Inactive'              # ❌ ⏸ 🛑 #
-svc_status_glyph_unknown    = 'Unknown '              # ❔  #
-
-
-def fn_monitor_toshy_services():
-    if dbus is None:
-        error('The "dbus" module is not available. Cannot monitor services.')
-        return
-
-    # debug('')
-    # debug(f'Entering GUI monitoring function...')
-    global svc_status_config, svc_status_sessmon
-    toshy_svc_config_unit_state     = None
-    toshy_svc_config_unit_path      = None
-    toshy_svc_sessmon_unit_state    = None
-    toshy_svc_sessmon_unit_path     = None
-    last_svcs_state_tup             = (None, None)
-    _first_run = True
-
-    session_bus    = dbus.SessionBus()
-
-    systemd1_dbus_obj   = session_bus.get_object(
-        'org.freedesktop.systemd1', 
-        '/org/freedesktop/systemd1'
-    )
-    systemd1_mgr_iface  = dbus.Interface(
-        systemd1_dbus_obj, 
-        'org.freedesktop.systemd1.Manager'
-    )
-
-    # Deal with the possibility that the services are not installed
-    while not toshy_svc_sessmon_unit_path and not toshy_svc_config_unit_path:
-        try:
-            toshy_svc_config_unit_path = systemd1_mgr_iface.GetUnit(toshy_svc_config)
-            toshy_svc_sessmon_unit_path = systemd1_mgr_iface.GetUnit(toshy_svc_sessmon)
-        except dbus.exceptions.DBusException as e:
-            debug("DBusException: {}".format(str(e)))
-
-        if toshy_svc_sessmon_unit_path and toshy_svc_config_unit_path:
-            break
-        else:
-            time.sleep(5)
-
-
-    def get_svc_states_dbus():
-        nonlocal toshy_svc_config_unit_state, toshy_svc_sessmon_unit_state
-        toshy_svc_config_unit_obj = session_bus.get_object(
-            'org.freedesktop.systemd1', 
-            toshy_svc_config_unit_path)
-        toshy_svc_config_unit_iface = dbus.Interface(
-            toshy_svc_config_unit_obj, 
-            'org.freedesktop.DBus.Properties')
-        toshy_svc_config_unit_state = str(
-            toshy_svc_config_unit_iface.Get(
-                'org.freedesktop.systemd1.Unit', 'ActiveState'))
-
-        toshy_svc_sessmon_unit_obj = session_bus.get_object(
-            'org.freedesktop.systemd1', 
-            toshy_svc_sessmon_unit_path)
-        toshy_svc_sessmon_unit_iface = dbus.Interface(
-            toshy_svc_sessmon_unit_obj, 
-            'org.freedesktop.DBus.Properties')
-        toshy_svc_sessmon_unit_state = str(
-            toshy_svc_sessmon_unit_iface.Get(
-                'org.freedesktop.systemd1.Unit', 'ActiveState'))
-        return (toshy_svc_config_unit_state, toshy_svc_sessmon_unit_state)
-
-
-    time.sleep(0.1)   # wait a bit before starting the loop
-
-    while True:
-
-        curr_svcs_state_tup = get_svc_states_dbus()
-
-        if toshy_svc_config_unit_state == "active":
-            svc_status_config = svc_status_glyph_active
-        elif toshy_svc_config_unit_state == "inactive":
-            svc_status_config = svc_status_glyph_inactive
-        else:
-            svc_status_config = svc_status_glyph_unknown
-
-        if toshy_svc_sessmon_unit_state == "active":
-            svc_status_sessmon = svc_status_glyph_active
-        elif toshy_svc_sessmon_unit_state == "inactive":
-            svc_status_sessmon = svc_status_glyph_inactive
-        else:
-            svc_status_sessmon = svc_status_glyph_unknown
-
-        if curr_svcs_state_tup != last_svcs_state_tup:
-            # Queue the service status update
-            gui_update_queue.put(("service_status", svc_status_config, svc_status_sessmon))
-
-        last_svcs_state_tup = curr_svcs_state_tup
-
-        time.sleep(1)     # pause before next loop cycle
-
-
-def fn_restart_toshy_services():
-    """(Re)Start Toshy services with CLI command"""
-    toshy_svcs_restart_cmd = os.path.join(home_local_bin, 'toshy-services-restart')
-    subprocess.Popen([toshy_svcs_restart_cmd], stdout=DEVNULL, stderr=DEVNULL)
-    time.sleep(3)
-    _ntfy_icon_file = icon_file_active
-    # The keymapper's problem with ignoring the first modifier key press after startup
-    # was fixed in 'xwaykeyz' 1.5.4, so we don't need to have these reminders anymore!
-    # _ntfy_msg = 'Toshy systemd services (re)started.\nIn X11, tap a modifier key before trying shortcuts.'
-    _ntfy_msg = 'Toshy systemd services (re)started.'
-    ntfy.send_notification(_ntfy_msg, _ntfy_icon_file)
-
-
-def fn_stop_toshy_services():
-    """Stop Toshy services with CLI command"""
-    toshy_svcs_stop_cmd = os.path.join(home_local_bin, 'toshy-services-stop')
-    subprocess.Popen([toshy_svcs_stop_cmd], stdout=DEVNULL, stderr=DEVNULL)
-    time.sleep(3)
-    _ntfy_icon_file = icon_file_inverse
-    _ntfy_msg = 'Toshy systemd services stopped.'
-    ntfy.send_notification(_ntfy_msg, _ntfy_icon_file)
 
 
 ####################################################
@@ -439,7 +142,9 @@ root.config(padx=20, pady=20)
 
 # Give tkinter window a nice icon 
 # (desktop entry file shows nice icon in launcher but doesn't set icon in task switcher)
-icon_file = os.path.join(current_folder_path, 'assets', 'toshy_app_icon_rainbow_512px.png')
+# icon_file = os.path.join(TOSHY_CONFIG_DIR, 'assets', 'toshy_app_icon_rainbow_512px.png')
+resources_dir = os.path.join(os.path.dirname(__file__), 'resources')
+icon_file = os.path.join(resources_dir, 'toshy_app_icon_rainbow_512px.png')
 
 # app_icon_image_path = tk.PhotoImage(file = icon_file)
 # root.wm_iconphoto(False, app_icon_image_path)
@@ -466,50 +171,36 @@ btn_pady                        = 0
 wrap_len                        = 380
 
 
-# Monkey patch the Sun Valley theme to work with Tk 9.0 only if needed
+# Monkey patch the Sun Valley theme to work with Tk 9.0
 tk_version = root.tk.eval('info patchlevel')
 if tk_version.startswith('9.'):
-    # Check if patching is actually needed
-    sv_ttk_dir = os.path.dirname(sv_ttk.__file__)
-    tcl_path = os.path.join(sv_ttk_dir, "sv.tcl")
-
-    with open(tcl_path, 'r') as f:
-        tcl_content = f.read()
-
-    # Only monkey patch if the original exists and the patched version doesn't
-    if ('package require Tk 8.6-' not in tcl_content
-            and 'package require Tk 8.6' in tcl_content):
-
-        original_load_theme = sv_ttk._load_theme
-
-        def patched_load_theme(style):
-            if not isinstance(style.master, tk.Tk):
-                raise TypeError("root must be a `tkinter.Tk` instance!")
-
-            if not hasattr(style.master, "_sv_ttk_loaded"):
-                sv_ttk_dir = os.path.dirname(sv_ttk.__file__)
-                tcl_path = os.path.join(sv_ttk_dir, "sv.tcl")
-
-                with open(tcl_path, 'r') as f:
-                    tcl_content = f.read()
-
-                tcl_content = tcl_content.replace('package require Tk 8.6',
-                                                'package require Tk 8.6-')
-
-                # Fix relative paths
-                tcl_content = tcl_content.replace(
-                    '[file dirname [info script]]',
-                    f'"{sv_ttk_dir}"'
-                )
-
-                style.tk.eval(tcl_content)
-                style.master._sv_ttk_loaded = True
-
-        # Only replace if we actually need to patch
-        sv_ttk._load_theme = patched_load_theme
-        debug("Monkey-patched sv_ttk for Tk 9.0 compatibility")
-    else:
-        debug("sv_ttk already compatible with Tk 9.0, no patching needed")
+    original_load_theme = sv_ttk._load_theme
+    
+    def patched_load_theme(style):
+        if not isinstance(style.master, tk.Tk):
+            raise TypeError("root must be a `tkinter.Tk` instance!")
+        
+        if not hasattr(style.master, "_sv_ttk_loaded"):
+            sv_ttk_dir = os.path.dirname(sv_ttk.__file__)
+            tcl_path = os.path.join(sv_ttk_dir, "sv.tcl")
+            
+            with open(tcl_path, 'r') as f:
+                tcl_content = f.read()
+            
+            tcl_content = tcl_content.replace('package require Tk 8.6', 'package require Tk 8.6-')
+            
+            # Fix relative paths
+            tcl_content = tcl_content.replace(
+                '[file dirname [info script]]',
+                f'"{sv_ttk_dir}"'
+            )
+            
+            style.tk.eval(tcl_content)
+            style.master._sv_ttk_loaded = True
+    
+    # This line does the "magic" - replaces the function
+    sv_ttk._load_theme = patched_load_theme
+    debug("Monkey-patched sv_ttk for Tk 9.0 compatibility")
 
 
 ####################################################
@@ -630,7 +321,8 @@ svc_status_config_btn = ttk.Button(
     top_frame_right_column,
     width=25,
     text='(Re)Start Toshy Services',
-    command=fn_restart_toshy_services
+    # command=fn_restart_toshy_services
+    command=service_manager.restart_services
 )
 svc_status_config_btn.pack(anchor=tk.W, padx=sw_lbl_indent, pady=svc_btn_pady)
 
@@ -638,7 +330,8 @@ svc_status_sessmon_btn = ttk.Button(
     top_frame_right_column,
     width=25,
     text='Stop Toshy Services',
-    command=fn_stop_toshy_services
+    # command=fn_stop_toshy_services
+    command=service_manager.stop_services
 )
 svc_status_sessmon_btn.pack(anchor=tk.W, padx=sw_lbl_indent, pady=svc_btn_pady)
 
@@ -741,17 +434,17 @@ Enter2Ent_Cmd_label = tk.Label(
 )
 
 # Do not pack these items into left column if using "barebones" config file
-if not barebones_config:
-    multi_lang_switch.pack(anchor=tk.W, padx=sw_padx, pady=btn_pady)
-    multi_lang_label.pack(anchor=tk.W, padx=sw_lbl_indent, pady=btn_lbl_pady)
-    ST3_in_VSCode_switch.pack(anchor=tk.W, padx=sw_padx, pady=btn_pady)
-    ST3_in_VSCode_label.pack(anchor=tk.W, padx=sw_lbl_indent, pady=btn_lbl_pady)
-    Caps2Cmd_switch.pack(anchor=tk.W, padx=sw_padx, pady=btn_pady)
-    Caps2Cmd_label.pack(anchor=tk.W, padx=sw_lbl_indent, pady=btn_lbl_pady)
-    Caps2Esc_Cmd_switch.pack(anchor=tk.W, padx=sw_padx, pady=btn_pady)
-    Caps2Esc_Cmd_switch_label.pack(anchor=tk.W, padx=sw_lbl_indent, pady=btn_lbl_pady)
-    Enter2Enter_Cmd_switch.pack(anchor=tk.W, padx=sw_padx, pady=btn_pady)
-    Enter2Ent_Cmd_label.pack(anchor=tk.W, padx=sw_lbl_indent, pady=btn_lbl_pady)
+if not runtime.barebones_config:
+    multi_lang_switch.pack(         anchor=tk.W,    padx=sw_padx,          pady=btn_pady)
+    multi_lang_label.pack(          anchor=tk.W,    padx=sw_lbl_indent,    pady=btn_lbl_pady)
+    ST3_in_VSCode_switch.pack(      anchor=tk.W,    padx=sw_padx,          pady=btn_pady)
+    ST3_in_VSCode_label.pack(       anchor=tk.W,    padx=sw_lbl_indent,    pady=btn_lbl_pady)
+    Caps2Cmd_switch.pack(           anchor=tk.W,    padx=sw_padx,          pady=btn_pady)
+    Caps2Cmd_label.pack(            anchor=tk.W,    padx=sw_lbl_indent,    pady=btn_lbl_pady)
+    Caps2Esc_Cmd_switch.pack(       anchor=tk.W,    padx=sw_padx,          pady=btn_pady)
+    Caps2Esc_Cmd_switch_label.pack( anchor=tk.W,    padx=sw_lbl_indent,    pady=btn_lbl_pady)
+    Enter2Enter_Cmd_switch.pack(    anchor=tk.W,    padx=sw_padx,          pady=btn_pady)
+    Enter2Ent_Cmd_label.pack(       anchor=tk.W,    padx=sw_lbl_indent,    pady=btn_lbl_pady)
 
 
 ###############################################################################
@@ -914,7 +607,7 @@ optspec_label = tk.Label(
 )
 
 # Do not pack these items into right column if using "barebones" config file
-if not barebones_config:
+if not runtime.barebones_config:
     forced_numpad_switch.pack(anchor=tk.W, padx=sw_padx, pady=btn_pady)
     forced_numpad_label.pack(anchor=tk.W, padx=sw_lbl_indent, pady=btn_lbl_pady)
     media_arrows_fix_switch.pack(anchor=tk.W, padx=sw_padx, pady=btn_pady)
@@ -991,24 +684,23 @@ root.resizable(False, False)
 root.bind("<Control-w>", lambda event: root.destroy())
 
 
-def is_init_systemd():
-    try:
-        with open("/proc/1/comm", "r") as f:
-            return f.read().strip() == 'systemd'
-    except FileNotFoundError:
-        print("Toshy_GUI: The /proc/1/comm file does not exist.")
-        return False
-    except PermissionError:
-        print("Toshy_GUI: Permission denied when trying to read the /proc/1/comm file.")
-        return False
+def main():
+    global process_mgr
+    process_mgr = ProcessManager(TOSHY_PART, TOSHY_PART_NAME)
+    process_mgr.initialize()
 
+    def on_settings_changed():
+        """Callback for when settings change - queue GUI update."""
+        gui_update_queue.put("update_settings")
 
-if __name__ == "__main__":
+    def on_service_status_changed(config_status, session_monitor_status):
+        """Callback for when service status changes - queue GUI update."""
+        gui_update_queue.put(("service_status", config_status, session_monitor_status))
 
-    handle_existing_process()
-    write_pid_to_lockfile()
+    settings_monitor = SettingsMonitor(cnfg, on_settings_changed)
+    service_monitor = ServiceMonitor(on_service_status_changed)
 
-    if shutil.which('systemctl') and is_init_systemd():
+    if shutil.which('systemctl') and runtime.is_systemd:
         # help out the config file user service
         cmd_lst = [
             "systemctl", "--user", "import-environment",
@@ -1022,14 +714,9 @@ if __name__ == "__main__":
             "WAYLAND_DISPLAY",
         ]
         subprocess.run(cmd_lst)
-        monitor_toshy_settings_thread = threading.Thread(target=fn_monitor_toshy_services)
-        monitor_toshy_settings_thread.daemon = True
-        monitor_toshy_settings_thread.start()
+        service_monitor.start_monitoring()
 
-    # Start separate thread to watch the internal state of settings
-    monitor_internal_settings_thread = threading.Thread(target=fn_monitor_internal_settings)
-    monitor_internal_settings_thread.daemon = True
-    monitor_internal_settings_thread.start()
+    settings_monitor.start_monitoring()
 
     # Force the window to process pending tasks and calculate its dimensions
     root.update_idletasks()
@@ -1058,3 +745,7 @@ if __name__ == "__main__":
     root.mainloop()
 
 # debug(f'###  Exiting Toshy Preferences app.  ###')
+
+
+if __name__ == "__main__":
+    main()

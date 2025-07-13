@@ -1,188 +1,41 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-__version__ = '20250613'
+__version__ = '20250710'
 
 # Indicator tray icon menu app for Toshy, using pygobject/gi
 TOSHY_PART      = 'tray'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
-TOSHY_PART_NAME = 'Toshy Tray Icon app'
+TOSHY_PART_NAME = 'Toshy Tray Icon App'
 APP_VERSION     = __version__
 
 # -------- COMMON COMPONENTS --------------------------------------------------
 
 import os
-import re
 import sys
-try:
-    import dbus
-except ModuleNotFoundError:
-    dbus = None
 import time
-import fcntl
-import psutil
 import shutil
-import signal
 import threading
-# import traceback
 import subprocess
 
 from subprocess import DEVNULL, PIPE
-from typing import List, Dict, Tuple
+
+# Initialize Toshy runtime before other imports
+from toshy_common.runtime_utils import initialize_toshy_runtime
+runtime = initialize_toshy_runtime()
 
 # Local imports
-from lib.env_context import EnvironmentInfo
-from lib.logger import *
-from lib import logger
-from lib.settings_class import Settings
+from toshy_common.env_context import EnvironmentInfo
+from toshy_common.logger import *
+from toshy_common import logger
+from toshy_common.settings_class import Settings
+from toshy_common.process_manager import ProcessManager
+from toshy_common.service_manager import ServiceManager
+from toshy_common.monitoring import SettingsMonitor, ServiceMonitor
+
+# Make process manager global
+process_mgr = None
 
 logger.FLUSH        = True
-logger.VERBOSE      = True
-
-if not str(sys.platform) == "linux":
-    raise OSError("This app is designed to be run only on Linux")
-
-# Add paths to avoid errors like ModuleNotFoundError or ImportError
-home_dir = os.path.expanduser("~")
-home_local_bin = os.path.join(home_dir, '.local', 'bin')
-local_site_packages_dir = os.path.join(home_dir, f".local/lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages")
-# parent_folder_path  = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-current_folder_path = os.path.abspath(os.path.dirname(__file__))
-
-env = os.environ.copy()
-env['PATH'] = f"{home_local_bin}:{env.get('PATH', '')}"
-
-
-def pattern_found_in_module(pattern, module_path):
-    try:
-        with open(module_path, 'r', encoding='utf-8') as file:
-            content = file.read()
-            return bool(re.search(pattern, content))
-    except FileNotFoundError as file_err:
-        print(f"Error: The file {module_path} was not found.\n\t {file_err}")
-        return False
-    except IOError as io_err:
-        print(f"Error: An issue occurred while reading the file {module_path}.\n\t {io_err}")
-        return False
-
-
-pattern = 'SLICE_MARK_START: barebones_user_cfg'
-module_path = os.path.abspath(os.path.join(current_folder_path, 'toshy_config.py'))
-
-# check if the config file is a "barebones" type
-if pattern_found_in_module(pattern, module_path):
-    barebones_config = True
-else:
-    barebones_config = False
-
-
-sys.path.insert(0, local_site_packages_dir)
-sys.path.insert(0, current_folder_path)
-
-existing_path = os.environ.get('PYTHONPATH', '')
-os.environ['PYTHONPATH'] = f'{current_folder_path}:{local_site_packages_dir}:{existing_path}'
-os.environ['PATH'] = f"{home_local_bin}:{os.environ['PATH']}"
-
-# Set the process name for the Toshy Tray app main process
-# echo "toshy-tray-app" > /proc/$$/comm     # bash script version
-with open('/proc/self/comm', 'w') as f:
-    f.write('toshy-tray-app')
-
-
-#########################################################################
-def signal_handler(sig, frame):
-    if sig in (signal.SIGINT, signal.SIGQUIT):
-        # Perform any cleanup code here before exiting
-        # traceback.print_stack(frame)
-        remove_lockfile()
-        debug(f'\nSIGINT or SIGQUIT received. Exiting.\n')
-        sys.exit(0)
-
-signal.signal(signal.SIGINT,    signal_handler)
-signal.signal(signal.SIGQUIT,   signal_handler)
-# Stop each last child process from hanging on as a "zombie" after it quits.
-signal.signal(signal.SIGCHLD, signal.SIG_IGN)
-#########################################################################
-# Let signal handler be defined and called before other things ^^^^^^^
-
-
-USER_ID         = f'{os.getuid()}'
-# support multiple simultaneous users via per-user temp folder
-RUN_TMP_DIR                     = os.environ.get('XDG_RUNTIME_DIR', f'/tmp/toshy_uid{USER_ID}')
-TOSHY_RUN_TMP_DIR               = os.path.join(RUN_TMP_DIR, 'toshy_runtime_cache')
-
-LOCK_FILE_DIR                   = f'{TOSHY_RUN_TMP_DIR}/lock'
-LOCK_FILE_NAME                  = f'toshy_{TOSHY_PART}.lock'
-LOCK_FILE                       = os.path.join(LOCK_FILE_DIR, LOCK_FILE_NAME)
-
-if not os.path.exists(LOCK_FILE_DIR):
-    try:
-        os.makedirs(LOCK_FILE_DIR, mode=0o700, exist_ok=True)
-    except Exception as e:
-        error(f'NON-FATAL: Problem creating lockfile directory: {LOCK_FILE_DIR}')
-        error(e)
-
-# recursively set user's Toshy temp folder as only read/write by owner
-try:
-    chmod_cmd = shutil.which('chmod')
-    os.system(f'{chmod_cmd} 0700 {TOSHY_RUN_TMP_DIR}')
-except Exception as e:
-    error(f'NON-FATAL: Problem when setting permissions on temp folder.')
-    error(e)
-
-###############################################################################
-# START of functions dealing with the lockfile
-
-def get_pid_from_lockfile():
-    try:
-        with open(LOCK_FILE, 'r') as f:
-            fcntl.flock(f, fcntl.LOCK_SH | fcntl.LOCK_NB)
-            pid = int(f.read().strip())
-            fcntl.flock(f, fcntl.LOCK_UN)
-            return pid
-    except (IOError, ValueError, PermissionError) as e:
-        # debug(f'NON-FATAL: No existing lockfile or lockfile could not be read:')
-        # debug(e)
-        return None
-
-def write_pid_to_lockfile():
-    try:
-        with open(LOCK_FILE, 'w') as f:
-            fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            f.write(str(os.getpid()))
-            f.flush()
-            fcntl.flock(f, fcntl.LOCK_UN)
-    except (IOError, ValueError, PermissionError) as e:
-        debug(f'NON-FATAL: Problem writing PID to lockfile:')
-        debug(e)
-
-def remove_lockfile():
-    try:
-        os.unlink(LOCK_FILE)
-        # debug(f'Lockfile removed.')
-    except Exception as e:
-        debug(f'NON-FATAL: Problem when trying to remove lockfile.')
-        debug(e)
-
-def terminate_process(pid):
-    for sig in [signal.SIGTERM, signal.SIGKILL]:
-        try:
-            process = psutil.Process(pid)
-        except psutil.NoSuchProcess:
-            time.sleep(0.5)
-            return None
-        if process.status() == psutil.STATUS_ZOMBIE:
-            time.sleep(0.5)
-            return None
-        os.kill(pid, sig)
-        time.sleep(0.5)
-    raise EnvironmentError(f'FATAL ERROR: Failed to close existing process with PID: {pid}')
-
-def handle_existing_process():
-    pid = get_pid_from_lockfile()
-    if pid:
-        terminate_process(pid)
-
-# END of functions dealing with the lockfile
-###############################################################################
+logger.VERBOSE      = False
 
 
 
@@ -221,84 +74,20 @@ icon_file_inverse               = "toshy_app_icon_rainbow_inverse"
 loop = None
 
 # Settings class object setup
-config_dir_path = current_folder_path
+config_dir_path = runtime.config_dir
 cnfg = Settings(config_dir_path)
 cnfg.watch_database()   # start watching the preferences file for changes
 
 # Notification handler object setup
-from lib.notification_manager import NotificationManager
+from toshy_common.notification_manager import NotificationManager
 ntfy = NotificationManager(icon_file_active, title='Toshy Alert (Tray)')
 
-
-def is_init_systemd():
-    try:
-        with open("/proc/1/comm", "r") as f:
-            return f.read().strip() == 'systemd'
-    except FileNotFoundError:
-        print("Toshy_Tray: The /proc/1/comm file does not exist.")
-        return False
-    except PermissionError:
-        print("Toshy_Tray: Permission denied when trying to read the /proc/1/comm file.")
-        return False
-
-
-def get_settings_list(settings_obj):
-    # get all attributes from the object
-    all_attributes = [attr for attr in dir(settings_obj) if not callable(getattr(settings_obj, attr)) and not attr.startswith("__")]
-    # filter out attributes that are not strings or booleans
-    filtered_attributes = [attr for attr in all_attributes if isinstance(getattr(settings_obj, attr), (str, bool, int))]
-    # create a list of tuples with attribute name and value pairs
-    settings_list = [(attr, getattr(settings_obj, attr)) for attr in filtered_attributes]
-    return settings_list
-
-
-# Store the settings as a list to see when they change.
-# Monitor from a separate thread.
-last_settings_list = get_settings_list(cnfg)
-
-
-# def fn_monitor_internal_settings():
-#     global last_settings_list
-#     while True:
-#         time.sleep(1)
-#         if last_settings_list != get_settings_list(cnfg):
-#             # debug(f'settings list changed...')
-#             last_settings_list = get_settings_list(cnfg)
-#             load_prefs_submenu_settings()
-#             load_optspec_layout_submenu_settings()
-#             load_kbtype_submenu_settings()
-
-
-def fn_monitor_internal_settings():
-    global last_settings_list
-    while True:
-        time.sleep(1)
-        if last_settings_list != get_settings_list(cnfg):
-            last_settings_list = get_settings_list(cnfg)
-            
-            # Schedule GUI updates on main thread
-            GLib.idle_add(load_prefs_submenu_settings)
-            GLib.idle_add(load_optspec_layout_submenu_settings)
-            GLib.idle_add(load_kbtype_submenu_settings)
+# Service manager instance
+service_manager = ServiceManager(ntfy, icon_file_active, icon_file_inverse, icon_file_grayscale)
 
 
 sysctl_cmd      = f"{shutil.which('systemctl')}"
 user_sysctl     = f'{sysctl_cmd} --user'
-
-# Main service units
-toshy_svc_sessmon               = 'toshy-session-monitor.service'
-toshy_svc_config                = 'toshy-config.service'
-# DBus service units
-toshy_svc_cosmic_dbus           = 'toshy-cosmic-dbus.service'
-toshy_svc_kwin_dbus             = 'toshy-kwin-dbus.service'
-toshy_svc_wlroots_dbus          = 'toshy-wlroots-dbus.service'
-
-svc_status_sessmon              = '???'              #  ❓  # 'Undefined'
-svc_status_config               = '???'              #  ❓  # 'Undefined'
-
-svc_status_glyph_active         = 'Active'               #  ✅  #  😀  #
-svc_status_glyph_inactive       = 'Inactive'              #  ❌  #  ⏸  #  🛑  #
-svc_status_glyph_unknown        = 'Unknown'              #  ❓  #  ❔  #
 
 
 # -------- CREATE MENU --------------------------------------------------------
@@ -315,211 +104,8 @@ tray_indicator.set_menu(menu)
 tray_indicator.set_title("Toshy Status Indicator") # try to set what might show in tooltip
 
 
-def fn_monitor_toshy_services():
-    if dbus is None:
-        error('The "dbus" module is not available. Cannot monitor services.')
-        return
-
-    global svc_status_config, svc_status_sessmon
-    toshy_svc_config_unit_state = None
-    toshy_svc_sessmon_unit_state = None
-    last_svcs_state_tup = (None, None)
-    _first_run = True
-
-    session_bus    = dbus.SessionBus()
-
-    systemd1_dbus_obj   = session_bus.get_object(
-        'org.freedesktop.systemd1', 
-        '/org/freedesktop/systemd1'
-    )
-    systemd1_mgr_iface  = dbus.Interface(
-        systemd1_dbus_obj, 
-        'org.freedesktop.systemd1.Manager'
-    )
-
-    toshy_svc_config_unit_path  = None
-    toshy_svc_sessmon_unit_path = None
-
-    def get_svc_states_dbus():
-        nonlocal toshy_svc_config_unit_state, toshy_svc_sessmon_unit_state
-        toshy_svc_config_unit_obj = session_bus.get_object(
-            'org.freedesktop.systemd1', 
-            toshy_svc_config_unit_path)
-        toshy_svc_config_unit_iface = dbus.Interface(
-            toshy_svc_config_unit_obj, 
-            'org.freedesktop.DBus.Properties')
-        toshy_svc_config_unit_state = str(
-            toshy_svc_config_unit_iface.Get(
-                'org.freedesktop.systemd1.Unit', 'ActiveState'))
-
-        toshy_svc_sessmon_unit_obj = session_bus.get_object(
-            'org.freedesktop.systemd1', 
-            toshy_svc_sessmon_unit_path)
-        toshy_svc_sessmon_unit_iface = dbus.Interface(
-            toshy_svc_sessmon_unit_obj, 
-            'org.freedesktop.DBus.Properties')
-        toshy_svc_sessmon_unit_state = str(
-            toshy_svc_sessmon_unit_iface.Get(
-                'org.freedesktop.systemd1.Unit', 'ActiveState'))
-        return (toshy_svc_config_unit_state, toshy_svc_sessmon_unit_state)
-
-    time.sleep(0.6)   # wait a bit before starting the loop
-
-    while True:
-
-        if not toshy_svc_config_unit_path or not toshy_svc_sessmon_unit_path:
-            try:
-                toshy_svc_config_unit_path = systemd1_mgr_iface.GetUnit(toshy_svc_config)
-                toshy_svc_sessmon_unit_path = systemd1_mgr_iface.GetUnit(toshy_svc_sessmon)
-            except dbus.exceptions.DBusException as dbus_err:
-                # debug(f'TOSHY_TRAY: DBusException trying to get proxies:\n\t{dbus_err}')
-                time.sleep(3)
-                continue
-
-        try:
-            curr_svcs_state_tup = get_svc_states_dbus()
-        except dbus.exceptions.DBusException as dbus_err:
-            toshy_svc_config_unit_path  = None
-            toshy_svc_sessmon_unit_path = None
-            time.sleep(2)
-            continue
-
-        if toshy_svc_config_unit_state == "active":
-            svc_status_config = svc_status_glyph_active
-        elif toshy_svc_config_unit_state == "inactive":
-            svc_status_config = svc_status_glyph_inactive
-        else:
-            svc_status_config = svc_status_glyph_unknown
-
-        if toshy_svc_sessmon_unit_state == "active":
-            svc_status_sessmon = svc_status_glyph_active
-        elif toshy_svc_sessmon_unit_state == "inactive":
-            svc_status_sessmon = svc_status_glyph_inactive
-        else:
-            svc_status_sessmon = svc_status_glyph_unknown
-
-        time.sleep(0.1)
-
-        # curr_icon = tray_indicator.get_property('icon-name')
-        # if curr_svcs_state_tup == ('active', 'active') and curr_icon != icon_file_active:
-        #     # debug(f'Toshy services active, but active icon not set! Fixing.')
-        #     tray_indicator.set_icon_full(icon_file_active, "Toshy Tray Icon Active")
-        # elif curr_svcs_state_tup == ('inactive', 'inactive') and curr_icon != icon_file_inverse:
-        #     # debug(f'Toshy services inactive, but inactive icon not set! Fixing.')
-        #     tray_indicator.set_icon_full(icon_file_inverse, "Toshy Tray Icon Inactive")
-        # elif curr_svcs_state_tup not in [('active', 'active'), ('inactive', 'inactive')]:
-        #     # debug(f'\nToshy services status unknown. Setting grayscale/undefined icon.')
-        #     # debug(f'{curr_svcs_state_tup = }\n')
-        #     tray_indicator.set_icon_full(icon_file_grayscale, "Toshy Tray Icon Undefined")
-
-        curr_icon = tray_indicator.get_property('icon-name')
-        if curr_svcs_state_tup == ('active', 'active') and curr_icon != icon_file_active:
-            GLib.idle_add(tray_indicator.set_icon_full, icon_file_active, "Toshy Tray Icon Active")
-        elif curr_svcs_state_tup == ('inactive', 'inactive') and curr_icon != icon_file_inverse:
-            GLib.idle_add(tray_indicator.set_icon_full, icon_file_inverse, "Toshy Tray Icon Inactive")
-        elif curr_svcs_state_tup not in [('active', 'active'), ('inactive', 'inactive')]:
-            GLib.idle_add(tray_indicator.set_icon_full, icon_file_grayscale, "Toshy Tray Icon Undefined")
-
-        max_attempts = 5
-        
-        for attempt in range(max_attempts):
-            try:
-                _ = toshy_config_status_item.get_label()
-                _ = session_monitor_status_item.get_label()
-                break
-            except NameError:
-                time.sleep(0.01)  # Add a small delay between attempts
-                continue
-        else:
-            error(f"Error: Menu items not ready after {max_attempts} attempts")
-            time.sleep(2)
-            continue
-
-        # if curr_svcs_state_tup != last_svcs_state_tup:
-        #     config_label_text = f'       Config: {svc_status_config}'
-        #     sessmon_label_text = f'     SessMon: {svc_status_sessmon}'
-        #     for attempt in range(max_attempts):
-        #         try:
-        #             toshy_config_status_item.set_label(config_label_text)
-        #             time.sleep(0.05) # give the event loop time to complete set_label
-        #             if toshy_config_status_item.get_label() == config_label_text:
-        #                 break
-        #         except NameError: pass  # Let it pass if menu item not ready yet
-        #         time.sleep(0.01)  # Add a small delay between attempts
-        #     else:
-        #         error(f"Error: Failed to update Config label after {max_attempts} attempts")
-
-        #     for attempt in range(max_attempts):
-        #         try:
-        #             session_monitor_status_item.set_label(sessmon_label_text)
-        #             time.sleep(0.05) # give the event loop time to complete set_label
-        #             if session_monitor_status_item.get_label() == sessmon_label_text:
-        #                 break
-        #         except NameError: pass  # Let it pass if menu item not ready yet
-        #         time.sleep(0.01)  # Add a small delay between attempts
-        #     else:
-        #         error(f"Error: Failed to update SessMon label after {max_attempts} attempts")
-
-        if curr_svcs_state_tup != last_svcs_state_tup:
-            config_label_text = f'       Config: {svc_status_config}'
-            sessmon_label_text = f'     SessMon: {svc_status_sessmon}'
-            
-            # Schedule GUI updates on main thread
-            def update_labels():
-                try:
-                    toshy_config_status_item.set_label(config_label_text)
-                    session_monitor_status_item.set_label(sessmon_label_text)
-                    return False  # Don't repeat
-                except:
-                    return False
-            
-            GLib.idle_add(update_labels)
-
-        last_svcs_state_tup = curr_svcs_state_tup
-
-        time.sleep(2)
-
-
 
 # -------- MENU ACTION FUNCTIONS ----------------------------------------------
-
-def fn_restart_toshy_services(widget):
-    """(Re)Start Toshy services with CLI command"""
-    toshy_svcs_restart_cmd = os.path.join(home_local_bin, 'toshy-services-restart')
-    subprocess.Popen([toshy_svcs_restart_cmd], stdout=DEVNULL, stderr=DEVNULL)
-    time.sleep(3)
-    _ntfy_icon_file = icon_file_active
-    # The keymapper's problem with ignoring the first modifier key press after startup
-    # was fixed in 'xwaykeyz' 1.5.4, so we don't need to have these reminders anymore!
-    # _ntfy_msg = 'Toshy systemd services (re)started.\nIn X11, tap a modifier key before trying shortcuts.'
-    _ntfy_msg = 'Toshy systemd services (re)started.'
-    ntfy.send_notification(_ntfy_msg, _ntfy_icon_file)
-
-
-def fn_stop_toshy_services(widget):
-    """Stop Toshy services with CLI command"""
-    toshy_svcs_stop_cmd = os.path.join(home_local_bin, 'toshy-services-stop')
-    subprocess.Popen([toshy_svcs_stop_cmd], stdout=DEVNULL, stderr=DEVNULL)
-    time.sleep(3)
-    _ntfy_icon_file = icon_file_inverse
-    _ntfy_msg = 'Toshy systemd services stopped.'
-    ntfy.send_notification(_ntfy_msg, _ntfy_icon_file)
-
-
-def fn_restart_toshy_config_only(widget):
-    """Start the manual run config script"""
-    toshy_cfg_restart_cmd = os.path.join(home_local_bin, 'toshy-config-restart')
-    subprocess.Popen([toshy_cfg_restart_cmd], stdout=DEVNULL, stderr=DEVNULL)
-
-
-def fn_stop_toshy_config_only(widget):
-    """Stop the manual run config script"""
-    toshy_cfg_stop_cmd = os.path.join(home_local_bin, 'toshy-config-stop')
-    subprocess.Popen([toshy_cfg_stop_cmd], stdout=DEVNULL, stderr=DEVNULL)
-
-
-# def fn_open_preferences(widget):
-#     subprocess.Popen(['toshy-gui'])
 
 
 def fn_open_preferences(widget):
@@ -582,13 +168,13 @@ def fn_open_config_folder(widget):
         xdg_open_cmd = kde_open_cmd
 
     try:
-        subprocess.Popen([xdg_open_cmd, current_folder_path])
+        subprocess.Popen([xdg_open_cmd, runtime.config_dir])
     except FileNotFoundError as e:
         error('File not found. I have no idea how this error is possible.')
         error(e)
 
 
-def run_cmd_lst_in_terminal(command_list: List[str]):
+def run_cmd_lst_in_terminal(command_list):
     """Give a command composed of a list of strings to a terminal emulator app 
         that may be appropriate for the environment, using different techniques to 
         determine which terminal emulator app might be the most correct."""
@@ -603,7 +189,7 @@ def run_cmd_lst_in_terminal(command_list: List[str]):
     # (terminal command name, option used to pass a command to shell, DE list)
     # Each terminal app option can be associated with multiple DEs to 
     # somewhat intelligently use the "correct" terminal for a DE. 
-    terminal_apps_lst_of_tup: List[Tuple[str, List[str], List[str]]] = [
+    terminal_apps_lst_of_tup = [
         ('gnome-terminal',          ['--'],     ['gnome', 'unity', 'cinnamon']              ),
         ('ptyxis',                  ['--'],     ['gnome', 'unity', 'cinnamon']              ),
         ('konsole',                 ['-e'],     ['kde']                                     ),
@@ -624,20 +210,16 @@ def run_cmd_lst_in_terminal(command_list: List[str]):
         ('st',                      ['-e'],     []                                          ),
         # 'kgx' is short for "King's Cross" and represents GNOME Console
         ('kgx',                     ['-e'],     []                                          ),
-        # deepin-terminal is extremely buggy, including but not marking for 'dde'
-        # Using "-C" (--run-script) option instead of "-e" which FAILS!
-        ('deepin-terminal',         ['-C'],     []                                          ),
     ]
 
-    def _run_cmd_lst_in_term(term_app_cmd_path, term_app_args_lst, command_list: List[str]):
+    def _run_cmd_lst_in_term(term_app_cmd_path, term_app_args_lst, command_list):
         """Utility closure function to actually run the command in a specific terminal"""
         if term_app_cmd_path is None:
             return False
-        cmd_lst_for_Popen: List[str] = [term_app_cmd_path] + term_app_args_lst + command_list
+        cmd_lst_for_Popen = [term_app_cmd_path] + term_app_args_lst + command_list
         try:
             # run the terminal emulator and give it the provided command list argument
-            # Use the globally prepared environment with corrected PATH
-            subprocess.Popen(cmd_lst_for_Popen, env=env)
+            subprocess.Popen(cmd_lst_for_Popen)
             return True
         except subprocess.SubprocessError as proc_err:
             debug(f'Error opening terminal to run command list:\n\t{proc_err}')
@@ -673,26 +255,12 @@ def fn_show_services_log(widget):
 
 def fn_remove_tray_icon(widget):
     global loop
-    remove_lockfile()
+    process_mgr.remove_lockfile()
     loop.quit()
     pkill_cmd = shutil.which('pkill')
     os.system(f'{pkill_cmd} -f "toshy_tray.py"')
     # Gtk.main_quit()
     sys.exit(0)
-
-
-# def set_item_active_with_retry(menu_item, state=True, max_retries=5):
-#     """Attempt to set the menu item's active state with retries."""
-
-#     # This function is necessary to set the items active state when another app changes the setting.
-#     for _ in range(max_retries):
-#         menu_item.set_active(state)
-#         time.sleep(0.1)
-#         if menu_item.get_active() == state:
-#             return
-#         time.sleep(0.1)
-#     if not menu_item.get_active() == state:
-#         error(f"ERROR: Failed to set item '{menu_item.get_label()}' to state '{state}'.")
 
 
 def set_item_active_thread_safe(menu_item, state=True):
@@ -712,7 +280,7 @@ def set_item_active_thread_safe(menu_item, state=True):
 
 # -------- MENU ITEMS --------------------------------------------------
 
-if is_init_systemd():
+if runtime.is_systemd:
     services_label_item = Gtk.MenuItem(label=" ---- Services Status ---- ")
     services_label_item.set_sensitive(False)
     menu.append(services_label_item)
@@ -729,7 +297,7 @@ if is_init_systemd():
 def is_service_enabled(service_name):
     """Check if a user service is enabled using systemctl."""
 
-    if shutil.which('systemctl') and is_init_systemd():
+    if shutil.which('systemctl') and runtime.is_systemd:
         pass
     else:
         # If either 'systemctl' is missing or init is not 'systemd', just return False
@@ -753,7 +321,7 @@ def fn_toggle_toshy_svcs_autostart(widget):
     """Check the status of Toshy services, flip the status, change the menu item label"""
     global toshy_svc_config_unit_enabled, toshy_svc_sessmon_unit_enabled
 
-    if shutil.which('systemctl') and is_init_systemd():
+    if shutil.which('systemctl') and runtime.is_systemd:
         pass
     else:
         # If either 'systemctl' is missing or init is not 'systemd', immediately return
@@ -762,68 +330,52 @@ def fn_toggle_toshy_svcs_autostart(widget):
     try:
         if widget.get_active():
             # Enable user services
-            enable_cmd_lst = ["systemctl", "--user", "enable"]
-            subprocess.run(enable_cmd_lst + [toshy_svc_sessmon], check=True)
-            subprocess.run(enable_cmd_lst + [toshy_svc_cosmic_dbus], check=True)
-            subprocess.run(enable_cmd_lst + [toshy_svc_kwin_dbus], check=True)
-            subprocess.run(enable_cmd_lst + [toshy_svc_wlroots_dbus], check=True)
-            subprocess.run(enable_cmd_lst + [toshy_svc_config], check=True)
+            service_manager.enable_services()
             debug("Toshy systemd services enabled. Will autostart at login.")
-            _ntfy_icon_file = icon_file_active
-            _ntfy_msg = ('Toshy systemd services are ENABLED.\n'
-                            'Toshy will start at login.')
+            service_manager.send_services_enabled_notification()
         else:
-            # Disable user services
-            disable_cmd_lst = ["systemctl", "--user", "disable"]
-            subprocess.run(disable_cmd_lst + [toshy_svc_config], check=True)
-            subprocess.run(disable_cmd_lst + [toshy_svc_cosmic_dbus], check=True)
-            subprocess.run(disable_cmd_lst + [toshy_svc_kwin_dbus], check=True)
-            subprocess.run(disable_cmd_lst + [toshy_svc_wlroots_dbus], check=True)
-            subprocess.run(disable_cmd_lst + [toshy_svc_sessmon], check=True)
+            # Disable user services  
+            service_manager.disable_services()
             debug("Toshy systemd services disabled. Will NOT autostart at login.")
-            _ntfy_icon_file = icon_file_grayscale
-            _ntfy_msg = ('Toshy systemd services are DISABLED.\n'
-                            'Toshy will NOT start at login.')
+            service_manager.send_services_disabled_notification()
     except subprocess.CalledProcessError as proc_err:
         debug(f"Error toggling Toshy systemd user services: {proc_err}")
 
     time.sleep(0.5)
-    ntfy.send_notification(_ntfy_msg, _ntfy_icon_file)
 
 
-if is_init_systemd():
-    # autostart_toshy_svcs_item = Gtk.CheckMenuItem(label="Autostart Toshy Services")
-    # autostart_toshy_svcs_item.set_active(   toshy_svc_sessmon_unit_enabled and 
-    #                                         toshy_svc_config_unit_enabled       )
-    # autostart_toshy_svcs_item.connect("toggled", fn_toggle_toshy_svcs_autostart)
-    # menu.append(autostart_toshy_svcs_item)
+if runtime.is_systemd:
 
     separator_above_svcs_item = Gtk.SeparatorMenuItem()
     menu.append(separator_above_svcs_item)  #-------------------------------------#
 
     restart_toshy_svcs_item = Gtk.MenuItem(label="Re/Start Toshy Services")
-    restart_toshy_svcs_item.connect("activate", fn_restart_toshy_services)
+    # restart_toshy_svcs_item.connect("activate", fn_restart_toshy_services)
+    restart_toshy_svcs_item.connect("activate", lambda widget: service_manager.restart_services())
     menu.append(restart_toshy_svcs_item)
 
     quit_toshy_svcs_item = Gtk.MenuItem(label="Stop Toshy Services")
-    quit_toshy_svcs_item.connect("activate", fn_stop_toshy_services)
+    # quit_toshy_svcs_item.connect("activate", fn_stop_toshy_services)
+    quit_toshy_svcs_item.connect("activate", lambda widget: service_manager.stop_services())
     menu.append(quit_toshy_svcs_item)
 
     separator_below_svcs_item = Gtk.SeparatorMenuItem()
     menu.append(separator_below_svcs_item)  #-------------------------------------#
 
 restart_toshy_script_item = Gtk.MenuItem(label="Re/Start Config-Only")
-restart_toshy_script_item.connect("activate", fn_restart_toshy_config_only)
+# restart_toshy_script_item.connect("activate", fn_restart_toshy_config_only)
+restart_toshy_script_item.connect("activate", lambda widget: service_manager.restart_config_only())
 menu.append(restart_toshy_script_item)
 
 stop_toshy_script_item = Gtk.MenuItem(label="Stop Config-Only")
-stop_toshy_script_item.connect("activate", fn_stop_toshy_config_only)
+# stop_toshy_script_item.connect("activate", fn_stop_toshy_config_only)
+stop_toshy_script_item.connect("activate", lambda widget: service_manager.stop_config_only())
 menu.append(stop_toshy_script_item)
 
 separator_below_script_item = Gtk.SeparatorMenuItem()
 menu.append(separator_below_script_item)  #-------------------------------------#
 
-if not barebones_config:
+if not runtime.barebones_config:
 
     def load_prefs_submenu_settings():
         cnfg.load_settings()
@@ -994,7 +546,7 @@ open_config_folder_item = Gtk.MenuItem(label="Open Config Folder")
 open_config_folder_item.connect("activate", fn_open_config_folder)
 menu.append(open_config_folder_item)
 
-if is_init_systemd():
+if runtime.is_systemd:
     show_services_log_item = Gtk.MenuItem(label="Show Services Log")
     show_services_log_item.connect("activate", fn_show_services_log)
     menu.append(show_services_log_item)
@@ -1016,10 +568,10 @@ def fn_save_autostart_tray_icon_setting(widget):
     load_autostart_tray_icon_setting()
 
     tray_dt_file_name           = 'Toshy_Tray.desktop'
-    home_apps_path              = os.path.join(home_dir, '.local', 'share', 'applications')
+    home_apps_path              = os.path.join(runtime.home_dir, '.local', 'share', 'applications')
     tray_dt_file_path           = os.path.join(home_apps_path, tray_dt_file_name)
 
-    home_autostart_path         = os.path.join(home_dir, '.config', 'autostart')
+    home_autostart_path         = os.path.join(runtime.home_dir, '.config', 'autostart')
     tray_link_file_path         = os.path.join(home_autostart_path, tray_dt_file_name)
 
     if autostart_tray_icon_bool:
@@ -1043,22 +595,10 @@ def fn_save_autostart_tray_icon_setting(widget):
             error(f'Problem disabling tray icon autostart:\n\t{proc_err}')
 
 
-# if is_init_systemd():
-#     autostart_toshy_svcs_item = Gtk.CheckMenuItem(label="Autostart Toshy Services")
-#     autostart_toshy_svcs_item.set_active(   toshy_svc_sessmon_unit_enabled and 
-#                                             toshy_svc_config_unit_enabled       )
-#     autostart_toshy_svcs_item.connect("toggled", fn_toggle_toshy_svcs_autostart)
-#     menu.append(autostart_toshy_svcs_item)
-
-# autostart_tray_icon_item = Gtk.CheckMenuItem(label="Autoload Tray Icon")
-# autostart_tray_icon_item.set_active(cnfg.autostart_tray_icon)
-# autostart_tray_icon_item.connect("toggled", fn_save_autostart_tray_icon_setting)
-# menu.append(autostart_tray_icon_item)
-
 autostart_submenu_item = Gtk.MenuItem(label="Autostart Options")
 autostart_submenu = Gtk.Menu()
 
-if is_init_systemd():
+if runtime.is_systemd:
     autostart_toshy_svcs_item = Gtk.CheckMenuItem(label="Autostart Toshy Services")
     autostart_toshy_svcs_item.set_active(   toshy_svc_sessmon_unit_enabled and 
                                             toshy_svc_config_unit_enabled       )
@@ -1086,6 +626,11 @@ menu.show_all()
 
 def main():
 
+    global process_mgr
+
+    process_mgr = ProcessManager(TOSHY_PART, TOSHY_PART_NAME)
+    process_mgr.initialize()
+
     global loop
     global DISTRO_ID
     global DESKTOP_ENV
@@ -1107,10 +652,36 @@ def main():
         icon_file_inverse       = icon_file_grayscale
 
     # On distros known to not use 'systemd', use 'inverse' icon (except on COSMIC)
-    elif not DESKTOP_ENV == 'cosmic' and not is_init_systemd():
+    elif not DESKTOP_ENV == 'cosmic' and not runtime.is_systemd:
         tray_indicator.set_icon_full(icon_file_inverse, "Toshy Tray Icon Inactive")
 
-    if shutil.which('systemctl') and is_init_systemd():
+    def on_settings_changed():
+        """Callback for when settings change - update GTK UI."""
+        if not runtime.barebones_config:
+            GLib.idle_add(load_prefs_submenu_settings)
+            GLib.idle_add(load_optspec_layout_submenu_settings)
+            GLib.idle_add(load_kbtype_submenu_settings)
+
+    def on_service_status_changed(config_status, session_monitor_status):
+        """Callback for when service status changes - update tray icon and labels."""
+        # Update tray icon based on status
+        if config_status == 'Active' and session_monitor_status == 'Active':
+            GLib.idle_add(tray_indicator.set_icon_full, icon_file_active, "Toshy Tray Icon Active")
+        elif config_status == 'Inactive' and session_monitor_status == 'Inactive':
+            GLib.idle_add(tray_indicator.set_icon_full, icon_file_inverse, "Toshy Tray Icon Inactive") 
+        else:
+            GLib.idle_add(tray_indicator.set_icon_full, icon_file_grayscale, "Toshy Tray Icon Undefined")
+        
+        # Update menu labels
+        config_label = f'       Config: {config_status}'
+        sessmon_label = f'     SessMon: {session_monitor_status}'
+        GLib.idle_add(lambda: toshy_config_status_item.set_label(config_label))
+        GLib.idle_add(lambda: session_monitor_status_item.set_label(sessmon_label))
+
+    settings_monitor = SettingsMonitor(cnfg, on_settings_changed)
+    service_monitor = ServiceMonitor(on_service_status_changed)
+
+    if shutil.which('systemctl') and runtime.is_systemd:
         # help out the config file user service
         cmd_lst = [
             "systemctl", "--user", "import-environment",
@@ -1124,17 +695,11 @@ def main():
             "WAYLAND_DISPLAY",
         ]
         subprocess.run(cmd_lst)
-        # Start a separate thread to watch the status of Toshy systemd services (or script?)
-        monitor_toshy_services_thread = threading.Thread(target=fn_monitor_toshy_services)
-        monitor_toshy_services_thread.daemon = True
-        monitor_toshy_services_thread.start()
+        service_monitor.start_monitoring()
 
-    # Start separate thread to watch the internal state of settings
-    monitor_internal_settings_thread = threading.Thread(target=fn_monitor_internal_settings)
-    monitor_internal_settings_thread.daemon = True
-    monitor_internal_settings_thread.start()
+    settings_monitor.start_monitoring()
 
-    if not barebones_config:
+    if not runtime.barebones_config:
         # load the settings for the preferences submenu toggle items
         load_prefs_submenu_settings()
         # load the settings for the optspec layout submenu
@@ -1153,8 +718,4 @@ def main():
 if __name__ == "__main__":
     # debug("")
     # debug(cnfg)       # prints out the __str__ method of Settings class
-    handle_existing_process()
-    write_pid_to_lockfile()
     main()
-
-# debug(f'###  Exiting {TOSHY_PART_NAME}  ###\n')
