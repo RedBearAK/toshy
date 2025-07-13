@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20250210'
+__version__ = '20250710'
 
 print("(--) Starting Toshy D-Bus service to receive updates from KWin script...")
 
@@ -42,7 +42,7 @@ existing_path = os.environ.get('PYTHONPATH', '')
 os.environ['PYTHONPATH'] = f'{parent_folder_path}:{current_folder_path}:{existing_path}'
 
 # local imports now that path is prepped
-from lib.env_context import EnvironmentInfo
+from toshy_common.env_context import EnvironmentInfo
 
 if os.name == 'posix' and os.geteuid() == 0:
     error("This app should not be run as root/superuser.")

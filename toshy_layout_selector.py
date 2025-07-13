@@ -11,7 +11,7 @@ import xml.etree.ElementTree as ET
 
 from tkinter import font
 from tkinter import messagebox as MBX
-from lib.settings_class import Settings, debug
+from toshy_common.settings_class import Settings, debug
 
 
 #########################################################################

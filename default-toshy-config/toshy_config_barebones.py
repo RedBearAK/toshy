@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = '20250628'
+__version__ = '20250710'
 ###############################################################################
 ############################   Welcome to Toshy!   ############################
 ###
@@ -88,10 +88,10 @@ current_folder_path = os.path.dirname(os.path.abspath(config_globals["__config__
 sys.path.insert(0, current_folder_path)
 
 # Local imports after path has been set
-from lib.env_context import EnvironmentInfo
-from lib.machine_context import get_machine_id_hash
-from lib.notification_manager import NotificationManager
-from lib.settings_class import Settings
+from toshy_common.env_context import EnvironmentInfo
+from toshy_common.machine_context import get_machine_id_hash
+from toshy_common.notification_manager import NotificationManager
+from toshy_common.settings_class import Settings
 
 assets_path         = os.path.join(current_folder_path, 'assets')
 icon_file_active    = os.path.join(assets_path, "toshy_app_icon_rainbow.svg")

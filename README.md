@@ -29,6 +29,8 @@ I don't really know many other places where it might be considered appropriate t
 
 # Current status: Stable Beta (Please Read)
 
+**2025-07-10 UPDATE**: Substantial refactoring of multiple internal components has taken place. There should be very little obvious external sign of the changes, but submit issues if you run into problems. 
+
 **2025-07-01 UPDATE**: Added experimental support for fully `asyncio` implementation of multi-tap functionality. Have a key or combo do different things based on how many times it's tapped within the time limit (25ms default). Does not affect other remaps that aren't marked as multi-tap. 
 
 **2025-06-15 UPDATE**: Added support for Mageia (similar to OpenMandriva and descended from Mandrake/Mandriva distros).
@@ -662,9 +664,17 @@ Both of these apps will show the current status of the `systemd` services, and a
 If the desktop apps aren't working for some reason, it may be useful to try to launch them from a terminal and see if they have any error output:  
 
 ```
+# Run the newer GTK-4 version
 toshy-gui
+
+# Run the older Tkinter version
+toshy-gui --tk
+
+# Tray icon indicator app
 toshy-tray
 ```
+
+The GUI Preferences app started as a Tkinter app but has now been converted to GTK-4 in 25.07.1 or later, with some extra features to more closely match the tray indicator app menu.  Really only useful for those who can't use `AppIndicator` apps for some reason.  
 
 ◊  
 

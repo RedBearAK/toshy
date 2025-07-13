@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-__version__ = '20241221'
+__version__ = '20250710'
 
 import sys
 import hashlib
 
 from signal import signal, SIGINT
-from xwaykeyz.lib.logger import debug, error
+from toshy_common.logger import debug, error
 
 
 def handle_sigint(signum, frame):

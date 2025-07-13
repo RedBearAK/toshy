@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20250415'
+__version__ = '20250710'
 
 # NOTE: This new context module for monitoring keyboard-mouse sharing software was
 # originally produced by Claude 3.7 Sonnet, based on the window_context module in
@@ -16,7 +16,7 @@ import subprocess
 from typing import Dict, List, Optional, Set, Callable, Tuple
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler, FileSystemEvent
-from xwaykeyz.lib.logger import debug, error, warn
+from toshy_common.logger import debug, error, warn
 
 
 class SharedDeviceMonitorInterface(abc.ABC):
