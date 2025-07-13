@@ -41,7 +41,11 @@ sys.path.insert(0, toshy_common_dir_path)
 
 # ~/.config/toshy/toshy_common/env_context.py
 # ~/.config/toshy/toshy_common/machine_context.py
+# ~/.config/toshy/toshy_common/monitoring.py            # Monitors settings and services
 # ~/.config/toshy/toshy_common/notification_manager.py
+# ~/.config/toshy/toshy_common/process_manager.py
+# ~/.config/toshy/toshy_common/runtime_utils.py
+# ~/.config/toshy/toshy_common/service_manager.py
 # ~/.config/toshy/toshy_common/settings_class.py
 # ~/.config/toshy/toshy_common/shared_device_context.py
 
@@ -70,8 +74,16 @@ machine_context_path    = os.path.join(toshy_dir_path,
                             'toshy_common', 'machine_context.py')
 notification_mgr_path   = os.path.join(toshy_dir_path,
                             'toshy_common', 'notification_manager.py')
+process_mgr_path        = os.path.join(toshy_dir_path,
+                            'toshy_common', 'process_manager.py')
+runtime_utils_path      = os.path.join(toshy_dir_path,
+                            'toshy_common', 'runtime_utils.py')
+service_mgr_path        = os.path.join(toshy_dir_path,
+                            'toshy_common', 'service_manager.py')
 settings_mgr_path       = os.path.join(toshy_dir_path,
                             'toshy_common', 'settings_class.py')
+svc_settings_mon        = os.path.join(toshy_dir_path,
+                            'toshy_common', 'monitoring.py')
 shared_device_path      = os.path.join(toshy_dir_path,
                             'toshy_common', 'shared_device_context.py')
 
@@ -97,6 +109,10 @@ components = [
     ("Environment Context",         env_context_path),
     ("Machine Context",             machine_context_path),
     ("Notification Manager",        notification_mgr_path),
+    ("Process Manager",             process_mgr_path),
+    ("Runtime Utils",               runtime_utils_path),
+    ("Service Manager",             service_mgr_path),
+    ("Service/Settings Monitor",    svc_settings_mon),
     ("Settings Manager",            settings_mgr_path),
     ("Shared Device Context",       shared_device_path),
     (None, None),  # Spacing
