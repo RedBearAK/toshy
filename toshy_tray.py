@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-__version__ = '20250710'
+__version__ = '20250714'
 
 # Indicator tray icon menu app for Toshy, using pygobject/gi
 TOSHY_PART      = 'tray'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
@@ -23,9 +23,10 @@ from toshy_common.runtime_utils import initialize_toshy_runtime
 runtime = initialize_toshy_runtime()
 
 # Local imports
-from toshy_common.env_context import EnvironmentInfo
-from toshy_common.logger import *
+import toshy_common.terminal_utils as term_utils
 from toshy_common import logger
+from toshy_common.logger import *
+from toshy_common.env_context import EnvironmentInfo
 from toshy_common.settings_class import Settings
 from toshy_common.process_manager import ProcessManager
 from toshy_common.service_manager import ServiceManager
@@ -174,83 +175,15 @@ def fn_open_config_folder(widget):
         error(e)
 
 
-def run_cmd_lst_in_terminal(command_list):
-    """Give a command composed of a list of strings to a terminal emulator app 
-        that may be appropriate for the environment, using different techniques to 
-        determine which terminal emulator app might be the most correct."""
-
-    # Check if command_list is a list of strings
-    if not isinstance(command_list, list) or not all(isinstance(item, str) for item in command_list):
-        debug('The function run_cmd_lst_in_terminal() expects a list of strings.')
-        return
-
-    # List of common terminal emulators in descending order of commonness.
-    # Each element is a tuple composed of: 
-    # (terminal command name, option used to pass a command to shell, DE list)
-    # Each terminal app option can be associated with multiple DEs to 
-    # somewhat intelligently use the "correct" terminal for a DE. 
-    terminal_apps_lst_of_tup = [
-        ('gnome-terminal',          ['--'],     ['gnome', 'unity', 'cinnamon']              ),
-        ('ptyxis',                  ['--'],     ['gnome', 'unity', 'cinnamon']              ),
-        ('konsole',                 ['-e'],     ['kde']                                     ),
-        ('xfce4-terminal',          ['-e'],     ['xfce']                                    ),
-        ('mate-terminal',           ['-e'],     ['mate']                                    ),
-        ('qterminal',               ['-e'],     ['lxqt']                                    ),
-        ('lxterminal',              ['-e'],     ['lxde']                                    ),
-        ('terminology',             ['-e'],     ['enlightenment']                           ),
-        ('cosmic-term',             ['-e'],     ['cosmic']                                  ),
-        ('io.elementary.terminal',  ['-e'],     ['pantheon']                                ),
-        ('kitty',                   ['-e'],     []                                          ),
-        ('alacritty',               ['-e'],     []                                          ),
-        ('tilix',                   ['-e'],     []                                          ),
-        ('terminator',              ['-e'],     []                                          ),
-        ('xterm',                   ['-e'],     []                                          ),
-        ('rxvt',                    ['-e'],     []                                          ),
-        ('urxvt',                   ['-e'],     []                                          ),
-        ('st',                      ['-e'],     []                                          ),
-        # 'kgx' is short for "King's Cross" and represents GNOME Console
-        ('kgx',                     ['-e'],     []                                          ),
-    ]
-
-    def _run_cmd_lst_in_term(term_app_cmd_path, term_app_args_lst, command_list):
-        """Utility closure function to actually run the command in a specific terminal"""
-        if term_app_cmd_path is None:
-            return False
-        cmd_lst_for_Popen = [term_app_cmd_path] + term_app_args_lst + command_list
-        try:
-            # run the terminal emulator and give it the provided command list argument
-            subprocess.Popen(cmd_lst_for_Popen)
-            return True
-        except subprocess.SubprocessError as proc_err:
-            debug(f'Error opening terminal to run command list:\n\t{proc_err}')
-            return False
-
-    term_app_cmd_path = None
-
-    # Try to find a matching terminal for the current desktop environment first
-    for terminal_app_cmd, term_app_args_lst, *DE_lst in terminal_apps_lst_of_tup:
-        # DE list element will be inside another list due to the unpacking syntax!
-        desktop_env_lst = DE_lst[0] if DE_lst else ['no_specific_de']
-        if DESKTOP_ENV in desktop_env_lst:
-            term_app_cmd_path = shutil.which(terminal_app_cmd)
-        if _run_cmd_lst_in_term(term_app_cmd_path, term_app_args_lst, command_list):
-            return
-
-    # If no DE-specific terminal is found, iterate through the list again without DE consideration
-    for terminal_app_cmd, term_app_args_lst, *_ in terminal_apps_lst_of_tup:
-        term_app_cmd_path = shutil.which(terminal_app_cmd)
-        if _run_cmd_lst_in_term(term_app_cmd_path, term_app_args_lst, command_list):
-            return
-
-    # If we reach this, we failed to find a terminal app to use, so show a notification.
-    _ntfy_icon_file = icon_file_inverse  # predefined path to icon file
-    _ntfy_msg = "ERROR: No suitable terminal emulator could be opened."
-    ntfy.send_notification(_ntfy_msg, _ntfy_icon_file)
-    debug(f'{_ntfy_msg}')
-
-
 def fn_show_services_log(widget):
-    run_cmd_lst_in_terminal(['toshy-services-log'])
+    try:
+        term_utils.run_cmd_lst_in_terminal(['toshy-services-log'], desktop_env=DESKTOP_ENV)
+    except term_utils.TerminalNotFoundError as term_err:
+        # If we reach this, we failed to find a terminal app to use, so show a notification.
+        _ntfy_icon_file = icon_file_inverse  # predefined path to icon file
+        _ntfy_msg = term_err
+        ntfy.send_notification(_ntfy_msg, _ntfy_icon_file)
+
 
 
 def fn_remove_tray_icon(widget):
@@ -329,15 +262,9 @@ def fn_toggle_toshy_svcs_autostart(widget):
 
     try:
         if widget.get_active():
-            # Enable user services
             service_manager.enable_services()
-            debug("Toshy systemd services enabled. Will autostart at login.")
-            service_manager.send_services_enabled_notification()
         else:
-            # Disable user services  
             service_manager.disable_services()
-            debug("Toshy systemd services disabled. Will NOT autostart at login.")
-            service_manager.send_services_disabled_notification()
     except subprocess.CalledProcessError as proc_err:
         debug(f"Error toggling Toshy systemd user services: {proc_err}")
 
@@ -499,7 +426,7 @@ if not runtime.barebones_config:
 
         GLib.idle_add(load_kbtype_submenu_settings)
 
-        valid_kbtypes = ['IBM', 'Chromebook', 'Windows', 'Apple']
+        valid_kbtypes = ['Apple', 'Chromebook', 'IBM', 'Windows']
         if cnfg.override_kbtype in valid_kbtypes:
             message = ('Overriding keyboard type disables auto-adaptation.\r'
                     'This is meant as a temporary fix only! See README.')
@@ -555,17 +482,17 @@ separator_above_remove_icon_item = Gtk.SeparatorMenuItem()
 menu.append(separator_above_remove_icon_item)  #-------------------------------------#
 
 
-def load_autostart_tray_icon_setting():
+def load_autoload_tray_icon_setting():
     cnfg.load_settings()
-    # set_item_active_with_retry(autostart_tray_icon_item, cnfg.autostart_tray_icon)
+    set_item_active_thread_safe(autoload_tray_icon_item, cnfg.autoload_tray_icon)
 
 
-def fn_save_autostart_tray_icon_setting(widget):
-    autostart_tray_icon_bool    = widget.get_active()
-    # debug(f'{autostart_tray_icon_setting = }')
-    cnfg.autostart_tray_icon    = autostart_tray_icon_bool
+def fn_save_autoload_tray_icon_setting(widget):
+    autoload_tray_icon_bool    = widget.get_active()
+    # debug(f'{autoload_tray_icon_setting = }')
+    cnfg.autoload_tray_icon    = autoload_tray_icon_bool
     cnfg.save_settings()
-    load_autostart_tray_icon_setting()
+    load_autoload_tray_icon_setting()
 
     tray_dt_file_name           = 'Toshy_Tray.desktop'
     home_apps_path              = os.path.join(runtime.home_dir, '.local', 'share', 'applications')
@@ -574,7 +501,7 @@ def fn_save_autostart_tray_icon_setting(widget):
     home_autostart_path         = os.path.join(runtime.home_dir, '.config', 'autostart')
     tray_link_file_path         = os.path.join(home_autostart_path, tray_dt_file_name)
 
-    if autostart_tray_icon_bool:
+    if autoload_tray_icon_bool:
         # do the enabling of tray icon autostart:
         # create symlink file ~/.config/autostart/Toshy_Tray.desktop
         #   with target file ~/.local/share/applications/Toshy_Tray.desktop
@@ -583,7 +510,7 @@ def fn_save_autostart_tray_icon_setting(widget):
         try:
             subprocess.run(cmd_lst, check=True) #, stdout=DEVNULL, stderr=DEVNULL)
         except subprocess.CalledProcessError as proc_err:
-            error(f'Problem enabling tray icon autostart:\n\t{proc_err}')
+            error(f'Problem enabling tray icon autoload:\n\t{proc_err}')
     else:
         # do the disabling of tray icon autostart:
         # remove the symlink file ~/.config/autostart/Toshy_Tray.desktop
@@ -592,7 +519,7 @@ def fn_save_autostart_tray_icon_setting(widget):
         try:
             subprocess.run(cmd_lst, check=True) # , stdout=DEVNULL, stderr=DEVNULL)
         except subprocess.CalledProcessError as proc_err:
-            error(f'Problem disabling tray icon autostart:\n\t{proc_err}')
+            error(f'Problem disabling tray icon autoload:\n\t{proc_err}')
 
 
 autostart_submenu_item = Gtk.MenuItem(label="Autostart Options")
@@ -609,10 +536,10 @@ else:
     autostart_toshy_svcs_item.set_sensitive(False)  # Makes it dimmed/disabled
     autostart_submenu.append(autostart_toshy_svcs_item)
 
-autostart_tray_icon_item = Gtk.CheckMenuItem(label="Autoload Tray Icon")
-autostart_tray_icon_item.set_active(cnfg.autostart_tray_icon)
-autostart_tray_icon_item.connect("toggled", fn_save_autostart_tray_icon_setting)
-autostart_submenu.append(autostart_tray_icon_item)
+autoload_tray_icon_item = Gtk.CheckMenuItem(label="Autoload Tray Icon")
+autoload_tray_icon_item.set_active(cnfg.autoload_tray_icon)
+autoload_tray_icon_item.connect("toggled", fn_save_autoload_tray_icon_setting)
+autostart_submenu.append(autoload_tray_icon_item)
 
 autostart_submenu_item.set_submenu(autostart_submenu)
 menu.append(autostart_submenu_item)
@@ -661,6 +588,7 @@ def main():
             GLib.idle_add(load_prefs_submenu_settings)
             GLib.idle_add(load_optspec_layout_submenu_settings)
             GLib.idle_add(load_kbtype_submenu_settings)
+            GLib.idle_add(load_autoload_tray_icon_setting)
 
     def on_service_status_changed(config_status, session_monitor_status):
         """Callback for when service status changes - update tray icon and labels."""
@@ -707,7 +635,7 @@ def main():
         # load the settings for the keyboard type submenu
         load_kbtype_submenu_settings()
         # load the setting for the autostart tray icon item
-        load_autostart_tray_icon_setting()
+        load_autoload_tray_icon_setting()
 
     # GUI loop event
     loop = GLib.MainLoop()

@@ -3,6 +3,9 @@ gi.require_version('Gtk', '4.0')
 from gi.repository import Gtk, GLib
 
 from toshy_common.logger import debug
+from toshy_common.runtime_utils import ToshyRuntime
+from toshy_common.service_manager import ServiceManager
+
 
 # Configuration for help button appearance
 HELP_BUTTON_SIZE = 20  # Width and height in pixels - change here to resize all help buttons
@@ -26,18 +29,19 @@ class ServicePanel(Gtk.Box):
     - Config-only control (start/stop just the config service)
     """
     
-    def __init__(self, service_manager, parent_window=None):
+    def __init__(self, runtime: ToshyRuntime, service_manager: ServiceManager, parent_window=None):
         debug("=== ServicePanel.__init__ called ===")
         super().__init__(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)
-        self.service_manager = service_manager
-        self.parent_window = parent_window  # Store reference for help dialogs
+        self.runtime            = runtime
+        self.service_manager    = service_manager
+        self.parent_window      = parent_window  # Store reference for help dialogs
         
         debug(f"ServicePanel initialized with parent_window: {parent_window is not None}")
         debug(f"ServicePanel parent_window type: {type(parent_window)}")
         
         # Status tracking
-        self.config_status = "Unknown"
-        self.session_status = "Unknown"
+        self.config_status      = "Unknown"
+        self.session_status     = "Unknown"
         
         debug("About to call setup_ui()")
         # Set up the panel layout
@@ -165,8 +169,15 @@ class ServicePanel(Gtk.Box):
             help_text = (
                 'Shows the current status of Toshy services:\n\n'
                 '• Toshy Config: The main keymapping service that handles keyboard shortcuts\n'
-                '• Session Monitor: Tracks active applications and window focus\n\n'
-                'Both services should show "Active" for Toshy to work properly.'
+                '• Session Monitor: Stops keymapper if user session becomes inactive (to support '
+                'a multi-user environment). Handles "switch user" scenario, login screen, '
+                'and screensaver/lock screen.\n\n'
+                'When Toshy is working properly in its automatic mode on a distro that uses '
+                'systemd as the init system, both services should show a status of "Active". '
+                'An error in determining the service states will show as "Unknown", and if '
+                'the services are stopped the statuses will be "Inactive". If the "Config-Only" '
+                'option is used to run just the keymapper process manually, the service status '
+                'will show as "Inactive".'
             )
             
             # Connect to help dialog
@@ -252,6 +263,13 @@ class ServicePanel(Gtk.Box):
         start_button.add_css_class("suggested-action")
         start_button.set_tooltip_text("Start or restart both config and session monitor services")
         start_button.connect('clicked', self.on_start_services)
+        
+        # Disable button if not using systemd
+        if not self.runtime.is_systemd:
+            start_button.set_sensitive(False)
+            start_button.set_tooltip_text("Service controls not available (systemd not detected)")
+            debug("Re/Start Services button disabled - systemd not available")
+
         service_frame.append(start_button)
         
         # Full services stop button
@@ -262,6 +280,13 @@ class ServicePanel(Gtk.Box):
         stop_button.add_css_class("destructive-action")
         stop_button.set_tooltip_text("Stop both config and session monitor services")
         stop_button.connect('clicked', self.on_stop_services)
+
+        # Disable button if not using systemd
+        if not self.runtime.is_systemd:
+            stop_button.set_sensitive(False)
+            stop_button.set_tooltip_text("Service controls not available (systemd not detected)")
+            debug("Stop Services button disabled - systemd not available")
+
         service_frame.append(stop_button)
         
         controls_container.append(service_frame)

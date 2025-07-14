@@ -1,4 +1,4 @@
-__version__ = '20250710'
+__version__ = '20250714'
 
 import os
 import time
@@ -6,6 +6,7 @@ import subprocess
 from subprocess import DEVNULL
 
 from toshy_common.logger import debug, error
+from toshy_common.notification_manager import NotificationManager
 
 
 class ServiceManager:
@@ -16,7 +17,8 @@ class ServiceManager:
     GUI and tray applications.
     """
     
-    def __init__(self, notification_manager=None, icon_active=None, icon_inactive=None, icon_grayscale=None):
+    def __init__(self, notification_manager: NotificationManager=None, 
+                    icon_active=None, icon_inactive=None, icon_grayscale=None):
         """
         Initialize service manager.
         
@@ -26,20 +28,20 @@ class ServiceManager:
             icon_inactive: Icon to use for "services stopped" notifications
             icon_grayscale: Icon to use for "services disabled/unknown" notifications
         """
-        self.notification_manager = notification_manager
-        self.icon_active = icon_active
-        self.icon_inactive = icon_inactive
-        self.icon_grayscale = icon_grayscale
+        self.ntfy               = notification_manager
+        self.icon_active        = icon_active
+        self.icon_inactive      = icon_inactive
+        self.icon_grayscale     = icon_grayscale
         
         # Set up paths
         self.home_dir = os.path.expanduser("~")
         self.home_local_bin = os.path.join(self.home_dir, '.local', 'bin')
         
         # CLI command paths
-        self.toshy_svcs_restart_cmd = os.path.join(self.home_local_bin, 'toshy-services-restart')
-        self.toshy_svcs_stop_cmd = os.path.join(self.home_local_bin, 'toshy-services-stop')
-        self.toshy_cfg_restart_cmd = os.path.join(self.home_local_bin, 'toshy-config-restart')
-        self.toshy_cfg_stop_cmd = os.path.join(self.home_local_bin, 'toshy-config-stop')
+        self.toshy_svcs_restart_cmd     = os.path.join(self.home_local_bin, 'toshy-services-restart')
+        self.toshy_svcs_stop_cmd        = os.path.join(self.home_local_bin, 'toshy-services-stop')
+        self.toshy_cfg_restart_cmd      = os.path.join(self.home_local_bin, 'toshy-config-restart')
+        self.toshy_cfg_stop_cmd         = os.path.join(self.home_local_bin, 'toshy-config-stop')
 
     def restart_services(self):
         """
@@ -53,17 +55,17 @@ class ServiceManager:
             subprocess.Popen([self.toshy_svcs_restart_cmd], stdout=DEVNULL, stderr=DEVNULL)
             time.sleep(3)
             
-            if self.notification_manager:
-                # The keymapper's problem with ignoring the first modifier key press after startup
-                # was fixed in 'xwaykeyz' 1.5.4, so we don't need to have these reminders anymore!
-                # message = 'Toshy systemd services (re)started.\nIn X11, tap a modifier key before trying shortcuts.'
-                message = 'Toshy systemd services (re)started.'
-                self.notification_manager.send_notification(message, self.icon_active)
+            message = 'Toshy systemd services (re)started.'
+            if self.ntfy:
+                self.ntfy.send_notification(message, self.icon_active)
                 
-            debug("Toshy services started successfully")
+            debug(message)
             
         except Exception as e:
-            error(f"Failed to start Toshy services: {e}")
+            message = (f"Failed to start Toshy services: {e}")
+            error(message)
+            if self.ntfy:
+                self.ntfy.send_notification(message, self.icon_grayscale)
 
     def stop_services(self):
         """
@@ -77,14 +79,17 @@ class ServiceManager:
             subprocess.Popen([self.toshy_svcs_stop_cmd], stdout=DEVNULL, stderr=DEVNULL)
             time.sleep(3)
             
-            if self.notification_manager:
-                message = 'Toshy systemd services stopped.'
-                self.notification_manager.send_notification(message, self.icon_inactive)
+            message = 'Toshy systemd services stopped.'
+            if self.ntfy:
+                self.ntfy.send_notification(message, self.icon_inactive)
                 
-            debug("Toshy services stopped successfully")
+            debug(message)
             
         except Exception as e:
-            error(f"Failed to stop Toshy services: {e}")
+            message = (f"Failed to stop Toshy services: {e}")
+            error(message)
+            if self.ntfy:
+                self.ntfy.send_notification(message, self.icon_grayscale)
 
     def restart_config_only(self):
         """
@@ -96,10 +101,17 @@ class ServiceManager:
         try:
             debug("Starting Toshy config only...")
             subprocess.Popen([self.toshy_cfg_restart_cmd], stdout=DEVNULL, stderr=DEVNULL)
-            debug("Toshy config-only started successfully")
+            time.sleep(3)
+            message = 'Toshy config-only process (re)started.'
+            debug(message)
+            if self.ntfy:
+                self.ntfy.send_notification(message, self.icon_active)
             
         except Exception as e:
-            error(f"Failed to start Toshy config-only: {e}")
+            message = (f"Failed to start Toshy config-only: {e}")
+            error(message)
+            if self.ntfy:
+                self.ntfy.send_notification(message, self.icon_grayscale)
 
     def stop_config_only(self):
         """
@@ -108,12 +120,19 @@ class ServiceManager:
         This stops the config service without affecting other services.
         """
         try:
-            debug("Stopping Toshy config only...")
+            debug("Stopping Toshy config-only process...")
             subprocess.Popen([self.toshy_cfg_stop_cmd], stdout=DEVNULL, stderr=DEVNULL)
-            debug("Toshy config-only stopped successfully")
+            time.sleep(1)
+            message = 'Toshy config-only process stopped.'
+            debug(message)
+            if self.ntfy:
+                self.ntfy.send_notification(message, self.icon_inactive)
             
         except Exception as e:
-            error(f"Failed to stop Toshy config-only: {e}")
+            message = (f"Failed to stop Toshy config-only: {e}")
+            error(message)
+            if self.ntfy:
+                self.ntfy.send_notification(message, self.icon_grayscale)
 
     def enable_services(self):
         """
@@ -121,7 +140,7 @@ class ServiceManager:
         
         Enables services in the correct order:
         1. Session monitor
-        2. D-Bus services (COSMIC, KWin, Wlroots)  
+        2. D-Bus services (e.g., COSMIC, KWin, Wlroots)
         3. Config service (last, as it depends on others)
         
         Raises:
@@ -146,7 +165,11 @@ class ServiceManager:
                 error(f"Failed to enable service {service}: {e}")
                 raise  # Re-raise to let caller handle the error
                 
-        debug("All Toshy systemd services enabled for autostart")
+        time.sleep(1)
+        message = "Toshy services ENABLED. Will autostart at login."
+        debug(message)
+        if self.ntfy:
+            self.ntfy.send_notification(message, self.icon_active)
 
     def disable_services(self):
         """
@@ -154,7 +177,7 @@ class ServiceManager:
         
         Disables services in reverse order (config first, then dependencies):
         1. Config service (first, as others support it)
-        2. D-Bus services  
+        2. D-Bus services (e.g., COSMIC, KWin, Wlroots)
         3. Session monitor (last)
         
         Raises:
@@ -179,29 +202,11 @@ class ServiceManager:
                 error(f"Failed to disable service {service}: {e}")
                 raise  # Re-raise to let caller handle the error
                 
-        debug("All Toshy systemd services disabled from autostart")
-
-    def send_services_disabled_notification(self):
-        """
-        Send notification that services are disabled (won't autostart).
-        
-        Used primarily by the tray app's autostart toggle functionality.
-        """
-        if self.notification_manager:
-            message = ('Toshy systemd services are DISABLED.\n'
-                        'Toshy will NOT start at login.')
-            self.notification_manager.send_notification(message, self.icon_grayscale)
-
-    def send_services_enabled_notification(self):
-        """
-        Send notification that services are enabled (will autostart).
-        
-        Used primarily by the tray app's autostart toggle functionality.
-        """
-        if self.notification_manager:
-            message = ('Toshy systemd services are ENABLED.\n'
-                        'Toshy will start at login.')
-            self.notification_manager.send_notification(message, self.icon_active)
+        time.sleep(1)
+        message = "Toshy systemd services DISABLED. Will not autostart."
+        debug(message)
+        if self.ntfy:
+            self.ntfy.send_notification(message, self.icon_inactive)
 
     def check_commands_exist(self):
         """

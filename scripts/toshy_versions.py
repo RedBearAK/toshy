@@ -86,6 +86,8 @@ svc_settings_mon        = os.path.join(toshy_dir_path,
                             'toshy_common', 'monitoring.py')
 shared_device_path      = os.path.join(toshy_dir_path,
                             'toshy_common', 'shared_device_context.py')
+terminal_utils_path     = os.path.join(toshy_dir_path,
+                            'toshy_common', 'terminal_utils.py')
 
 cosmic_dbus_path        = os.path.join(toshy_dir_path,
                             'cosmic-dbus-service', 'toshy_cosmic_dbus_service.py')
@@ -115,6 +117,7 @@ components = [
     ("Service/Settings Monitor",    svc_settings_mon),
     ("Settings Manager",            settings_mgr_path),
     ("Shared Device Context",       shared_device_path),
+    ("Terminal Utils",              terminal_utils_path),
     (None, None),  # Spacing
     ("D-Bus Service: COSMIC",       cosmic_dbus_path),
     ("D-Bus Service: KWin",         kwin_dbus_path),
