@@ -269,8 +269,17 @@ class ToolsPanel(Gtk.Box):
         initial_services = getattr(self.cnfg, 'autostart_services', True)
         self.autostart_services_checkbox.set_active(initial_services)
         self.autostart_services_checkbox.connect('toggled', self.on_autostart_services_toggled)
-        checkboxes_container.append(self.autostart_services_checkbox)
-        
+
+        # Disable checkbox if not using systemd
+        if not self.runtime.is_systemd:
+            self.autostart_services_checkbox.set_sensitive(False)
+            self.autostart_services_checkbox.set_active(False)  # Uncheck it too
+            self.autostart_services_checkbox.set_tooltip_text("Service autostart not available (systemd not detected)")
+            debug("Autostart services checkbox disabled - systemd not available")
+        else:
+            self.autostart_services_checkbox.set_tooltip_text("Enable/disable Toshy services to start automatically at login")
+
+        checkboxes_container.append(self.autostart_services_checkbox)        
         # Tray icon autostart checkbox  
         self.autoload_tray_checkbox = Gtk.CheckButton(label="Autoload Tray Icon")
         initial_tray = getattr(self.cnfg, 'autoload_tray_icon', True)
@@ -490,10 +499,11 @@ class ToolsPanel(Gtk.Box):
         
         # Update autostart checkboxes
         if hasattr(self, 'autostart_services_checkbox'):
-            services_value = getattr(self.cnfg, 'autostart_services', True)
-            if self.autostart_services_checkbox.get_active() != services_value:
-                debug(f"Updating autostart services checkbox to {services_value}")
-                self.autostart_services_checkbox.set_active(services_value)
+            if self.runtime.is_systemd:
+                services_value = getattr(self.cnfg, 'autostart_services', True)
+                if self.autostart_services_checkbox.get_active() != services_value:
+                    debug(f"Updating autostart services checkbox to {services_value}")
+                    self.autostart_services_checkbox.set_active(services_value)
                 
         if hasattr(self, 'autoload_tray_checkbox'):
             tray_value = getattr(self.cnfg, 'autoload_tray_icon', True)
