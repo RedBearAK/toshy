@@ -1,11 +1,11 @@
-__version__ = '20250713'
+__version__ = '20250714'
 
 import os
 import inspect
 import sqlite3
 
 from pprint import pprint
-from typing import List, Dict, Optional, Tuple, Union
+from typing import Optional
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
 
@@ -30,9 +30,9 @@ class Settings:
         calling_module              = os.path.split(calling_file_path)[1]
         self.calling_module         = calling_module
         # settings defaults
-        self.autostart_tray_icon    = True              # Default: True
-        self.gui_dark_theme         = True              # Default: True     # Older GUI
-        self.gui_theme_mode         = 'auto'            # Default: True     # Older GUI
+        self.autoload_tray_icon    = True              # Default: True
+        self.gui_dark_theme         = True              # Default: True     # Older tkinter GUI
+        self.gui_theme_mode         = 'auto'            # Default: True     # Newer GTK-4 GUI
         self.override_kbtype        = 'Auto-Adapt'      # Default: 'Auto-Adapt'
             ###  Disable optspec_layout by default for performance, and international keyboard users
         self.optspec_layout         = 'Disabled'        # Default: 'Disabled'
@@ -131,7 +131,7 @@ class Settings:
     def _save_config_preferences(self, db_cursor: sqlite3.Cursor):
         sql_query = "INSERT OR REPLACE INTO config_preferences (name, value) VALUES (?, ?)"
         settings = [
-            ('autostart_tray_icon',     str(self.autostart_tray_icon)),
+            ('autoload_tray_icon',      str(self.autoload_tray_icon)),
             ('gui_dark_theme',          str(self.gui_dark_theme)),
             ('gui_theme_mode',          str(self.gui_theme_mode)),
             ('override_kbtype',         str(self.override_kbtype)),
@@ -171,12 +171,12 @@ class Settings:
 
             db_cursor.execute("SELECT * FROM config_preferences")
 
-            rows_prefs: List[Tuple[str, str]] = db_cursor.fetchall()
+            rows_prefs = db_cursor.fetchall()
             for row in rows_prefs:
                 # Convert the string value to a Python boolean correctly
                 setting_value       = row[1].lower() == 'true'
                 if True is False: pass  # dummy first `if` line so other rows line up (readability)
-                elif row[0] == 'autostart_tray_icon' : self.autostart_tray_icon = setting_value
+                elif row[0] == 'autoload_tray_icon'  : self.autoload_tray_icon  = setting_value
                 elif row[0] == 'gui_dark_theme'      : self.gui_dark_theme      = setting_value
                 elif row[0] == 'gui_theme_mode'      : self.gui_theme_mode      = row[1]
                 elif row[0] == 'override_kbtype'     : self.override_kbtype     = row[1]
@@ -301,7 +301,7 @@ class Settings:
         calling_module          = '{self.calling_module}'
         prefs_db_file_path      = '{self.prefs_db_file_path}'
         ------------------------------------------------------------------------------
-        autostart_tray_icon     = {self.autostart_tray_icon}
+        autoload_tray_icon      = {self.autoload_tray_icon}
         gui_dark_theme          = {self.gui_dark_theme}
         gui_theme_mode          = '{self.gui_theme_mode}'
         ------------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20250710'
+__version__ = '20250713'
 
 import os
 import re
@@ -58,13 +58,13 @@ class EnvironmentInfo:
 
         # Call methods to harvest environment info and populate the instance variables.
         # As of 2024-09-04 there are seven different bits of primary info to generate.
-        self.get_distro_id()
-        self.get_distro_version()
-        self.get_variant_id()
-        self.get_session_type()
-        self.get_desktop_environment()
-        self.get_desktop_env_version()
-        self.get_window_manager()
+        self._get_distro_id()
+        self._get_distro_version()
+        self._get_variant_id()
+        self._get_session_type()
+        self._get_desktop_environment()
+        self._get_desktop_env_version()
+        self._get_window_manager()
         # self.get_window_manager_version()                 # Just in case we need it later
 
         # Collect all info into a dictionary
@@ -145,7 +145,7 @@ class EnvironmentInfo:
 ##                                                                                                ##
 ####################################################################################################
 
-    def get_distro_id(self):
+    def _get_distro_id(self):
         """logic to set self.DISTRO_ID"""
         _distro_id          = ""
 
@@ -214,7 +214,7 @@ class EnvironmentInfo:
 ##                                                                                                ##
 ####################################################################################################
 
-    def get_distro_version(self):
+    def _get_distro_version(self):
         """logic to set self.DISTRO_VER"""
 
         if self.release_files['/etc/os-release']:
@@ -260,7 +260,7 @@ class EnvironmentInfo:
 ##                                                                                                ##
 ####################################################################################################
 
-    def get_variant_id(self):
+    def _get_variant_id(self):
         """logic to set self.VARIANT_ID, if variant info available"""
 
         if self.release_files['/etc/os-release']:
@@ -289,7 +289,7 @@ class EnvironmentInfo:
 ##                                                                                                ##
 ####################################################################################################
 
-    def get_session_type(self):
+    def _get_session_type(self):
         """logic to set self.SESSION_TYPE"""
         valid_session_types = ['x11', 'wayland']
         self.SESSION_TYPE   = os.environ.get("XDG_SESSION_TYPE") or None
@@ -362,7 +362,7 @@ class EnvironmentInfo:
 ##                                                                                                ##
 ####################################################################################################
 
-    def get_desktop_environment(self):
+    def _get_desktop_environment(self):
         """logic to set self.DESKTOP_ENV and self.DE_MAJ_VER"""
         _desktop_env        = ""
 
@@ -512,7 +512,7 @@ class EnvironmentInfo:
 ##                                                                                                ##
 ####################################################################################################
 
-    def get_desktop_env_version(self):
+    def _get_desktop_env_version(self):
         """logic to set self.DE_MAJ_VER"""
         # Desktop environments for which we need the major version:
         # - GNOME
@@ -579,7 +579,7 @@ class EnvironmentInfo:
 ##                                                                                                ##
 ####################################################################################################
 
-    def get_window_manager(self):
+    def _get_window_manager(self):
         """
         logic to set self.WINDOW_MGR
         Useful in environments like LXQt that can have various window managers.

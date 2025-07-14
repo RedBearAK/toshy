@@ -37,7 +37,7 @@ def main():
         from .main_tkinter import main as tkinter_main
         tkinter_main()
     else:
-        debug("Launching tkinter version...")
+        debug("Launching GTK-4 version...")
         from .main_gtk4 import main as gtk4_main
         gtk4_main()
 
