@@ -226,6 +226,22 @@ show_after_value() {
     fi
 }
 
+
+print_notice_of_low_volume_level() {
+    echo ""
+    echo "================================================================"
+    echo "                        ⚠️  NOTICE  ⚠️"
+    echo "================================================================"
+    echo ""
+    echo "  The restored volume level ($1) is below 40!"
+    echo ""
+    echo "  Depending on your Mac model, volume levels below 40 may be"
+    echo "  INAUDIBLE or VERY QUIET during startup."
+    echo ""
+    echo "================================================================"
+}
+
+
 # Check for special commands first
 if [ $# -eq 1 ]; then
     case "${1,,}" in  # Convert to lowercase for case-insensitive matching
@@ -325,17 +341,7 @@ if [ $# -eq 1 ]; then
 
             # Check if the restored volume is below 40 and show warning
             if [ "$PRESERVED_VOLUME" -lt 40 ]; then
-                echo ""
-                echo "================================================================"
-                echo "                        ⚠️  NOTICE  ⚠️"
-                echo "================================================================"
-                echo ""
-                echo "  The restored volume level ($PRESERVED_VOLUME) is below 40!"
-                echo ""
-                echo "  Depending on your Mac model, volume levels below 40 may be"
-                echo "  INAUDIBLE or VERY QUIET during startup."
-                echo ""
-                echo "================================================================"
+                print_notice_of_low_volume_level "$PRESERVED_VOLUME"
             fi
 
 
@@ -482,4 +488,9 @@ chattr +i "/sys/firmware/efi/efivars/SystemAudioVolume-7c436110-ab2a-4bbb-a880-f
 # echo "After: $(efivar -n "7c436110-ab2a-4bbb-a880-fe41995c9f82-SystemAudioVolume" -d)"
 show_after_value
 echo "----------------------------------------------------------------"
+
+if [ "$VOLUME" -lt 40 ]; then
+    print_notice_of_low_volume_level "$VOLUME"
+fi
+
 clean_exit 0
