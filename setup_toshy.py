@@ -1770,7 +1770,7 @@ def print_skipping_installed_pkg(pkg_name):
     skipping an already installed package. Used by multiple dispatched
     installer methods in PackageInstallDispatcher utility class.
     """
-    print(fancy_str(f"Skipping installed package:  {pkg_name}", "green"))
+    print(fancy_str(f"  Skipping installed package: {pkg_name}", "green"))
 
 
 class PackageInstallDispatcher:
