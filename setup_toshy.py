@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20250710'                        # CLI option "--version" will print this out.
+__version__ = '20250714'                        # CLI option "--version" will print this out.
 
 import os
 os.environ['PYTHONDONTWRITEBYTECODE'] = '1'     # prevent this script from creating cache files
@@ -2011,6 +2011,19 @@ class PackageInstallDispatcher:
         cmd_lst = [cnfg.priv_elev_cmd, 'xbps-install', '-Sy']
         native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
+    # ###########################################################################
+    # ###  APK DISTROS  #########################################################
+    # ###########################################################################
+    # @staticmethod
+    # def install_on_apk_distro():
+    #     """utility function that gets dispatched for distros that use APK package manager"""
+    #     native_pkg_installer.check_for_pkg_mgr_cmd('apk')
+    #     call_attn_to_pwd_prompt_if_needed()
+
+    #     # Install packages with --no-cache to avoid prompts about cache management
+    #     cmd_lst = [cnfg.priv_elev_cmd, 'apk', 'add', '--no-cache', '--no-interactive']
+    #     native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+
     ###########################################################################
     ###  APK DISTROS  #########################################################
     ###########################################################################
@@ -2020,18 +2033,36 @@ class PackageInstallDispatcher:
         native_pkg_installer.check_for_pkg_mgr_cmd('apk')
         call_attn_to_pwd_prompt_if_needed()
 
-        # # User is asked to update system before installing Toshy, so this is redundant:
-        # # First update the package index
-        # try:
-        #     subprocess.run([cnfg.priv_elev_cmd, 'apk', 'update'], check=True)
-        # except subprocess.CalledProcessError as proc_err:
-        #     error(f'ERROR: Problem updating package index:\n\t{proc_err}')
-        #     safe_shutdown(1)
+        def get_installed_packages_apk():
+            """Get set of installed package names from apk"""
+            try:
+                # Using universal_newlines for Python 3.6 compatibility
+                result = subprocess.run(['apk', 'list', '--installed', '--manifest'], 
+                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                        universal_newlines=True, check=True)
+                installed_packages = set()
+                for line in result.stdout.splitlines():
+                    if line.strip():
+                        # With --manifest, format is: package-name version
+                        pkg_name = line.split()[0]
+                        installed_packages.add(pkg_name)
+                return installed_packages
+            except subprocess.CalledProcessError:
+                return set()
 
-        # Install packages with --no-cache to avoid prompts about cache management
-        cmd_lst = [cnfg.priv_elev_cmd, 'apk', 'add', '--no-cache', '--no-interactive']
-        native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
+        installed_packages = get_installed_packages_apk()
+        pkgs_to_install = []
+        
+        for pkg in cnfg.pkgs_for_distro:
+            if pkg not in installed_packages:
+                pkgs_to_install.append(pkg)
+            else:
+                print(fancy_str(f"Package '{pkg}' is already installed. Skipping.", "green"))
 
+        if pkgs_to_install:
+            # Install packages with --no-cache to avoid prompts about cache management
+            cmd_lst = [cnfg.priv_elev_cmd, 'apk', 'add', '--no-cache', '--no-interactive']
+            native_pkg_installer.install_pkg_list(cmd_lst, pkgs_to_install)
 
 class PackageManagerGroups:
     """Container for package manager distro groupings and dispatch map"""

@@ -274,6 +274,7 @@ class ToolsPanel(Gtk.Box):
         if not self.runtime.is_systemd:
             self.autostart_services_checkbox.set_sensitive(False)
             self.autostart_services_checkbox.set_active(False)  # Uncheck it too
+            self.autostart_services_checkbox.set_label("Autostart Services (no systemctl/systemd)")
             self.autostart_services_checkbox.set_tooltip_text("Service autostart not available (systemd not detected)")
             debug("Autostart services checkbox disabled - systemd not available")
         else:
