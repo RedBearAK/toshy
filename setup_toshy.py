@@ -1764,6 +1764,15 @@ class NativePackageInstaller:
             self.exit_with_pkg_install_error(proc_err)
 
 
+def print_skipping_installed_pkg(pkg_name):
+    """
+    Utility function to print a formatted terminal message about 
+    skipping an already installed package. Used by multiple dispatched
+    installer methods in PackageInstallDispatcher utility class.
+    """
+    print(fancy_str(f"  Skipping installed package: {pkg_name}", "green"))
+
+
 class PackageInstallDispatcher:
     """
     Utility class to hold the static methods that will optionally invoke any necessary 
@@ -1801,7 +1810,7 @@ class PackageInstallDispatcher:
                 if result.returncode != 0:
                     filtered_pkg_lst.append(pkg)
                 else:
-                    print(fancy_str(f"Package '{pkg}' is already installed. Skipping.", "green"))
+                    print_skipping_installed_pkg(pkg)
 
             if filtered_pkg_lst:
                 print(f'Packages left to install:\n{filtered_pkg_lst}')
@@ -1834,7 +1843,7 @@ class PackageInstallDispatcher:
                 if result.returncode != 0:
                     filtered_pkg_lst.append(pkg)
                 else:
-                    print(fancy_str(f"Package '{pkg}' is already installed. Skipping.", "green"))
+                    print_skipping_installed_pkg(pkg)
 
             if filtered_pkg_lst:
                 cmd_lst = [cnfg.priv_elev_cmd, 'rpm-ostree', 'install', '--idempotent',
@@ -1978,7 +1987,7 @@ class PackageInstallDispatcher:
             if not is_pkg_installed_pacman(pkg):
                 pkgs_to_install.append(pkg)
             else:
-                print(fancy_str(f"Package '{pkg}' is already installed. Skipping.", "green"))
+                print_skipping_installed_pkg(pkg)
 
         if pkgs_to_install:
             cmd_lst = [cnfg.priv_elev_cmd, 'pacman', '-S', '--noconfirm']
@@ -2010,19 +2019,6 @@ class PackageInstallDispatcher:
 
         cmd_lst = [cnfg.priv_elev_cmd, 'xbps-install', '-Sy']
         native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
-
-    # ###########################################################################
-    # ###  APK DISTROS  #########################################################
-    # ###########################################################################
-    # @staticmethod
-    # def install_on_apk_distro():
-    #     """utility function that gets dispatched for distros that use APK package manager"""
-    #     native_pkg_installer.check_for_pkg_mgr_cmd('apk')
-    #     call_attn_to_pwd_prompt_if_needed()
-
-    #     # Install packages with --no-cache to avoid prompts about cache management
-    #     cmd_lst = [cnfg.priv_elev_cmd, 'apk', 'add', '--no-cache', '--no-interactive']
-    #     native_pkg_installer.install_pkg_list(cmd_lst, cnfg.pkgs_for_distro)
 
     ###########################################################################
     ###  APK DISTROS  #########################################################
@@ -2057,12 +2053,14 @@ class PackageInstallDispatcher:
             if pkg not in installed_packages:
                 pkgs_to_install.append(pkg)
             else:
-                print(fancy_str(f"Package '{pkg}' is already installed. Skipping.", "green"))
+                print_skipping_installed_pkg(pkg)
+                
 
         if pkgs_to_install:
             # Install packages with --no-cache to avoid prompts about cache management
             cmd_lst = [cnfg.priv_elev_cmd, 'apk', 'add', '--no-cache', '--no-interactive']
             native_pkg_installer.install_pkg_list(cmd_lst, pkgs_to_install)
+
 
 class PackageManagerGroups:
     """Container for package manager distro groupings and dispatch map"""
