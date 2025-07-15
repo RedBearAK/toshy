@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Version is just most recent revision date
-VERSION="20250713"
+VERSION="20250714"
 
 
 # This script is intended to be run with elevated privileges (root/superuser) on
@@ -321,6 +321,24 @@ if [ $# -eq 1 ]; then
             show_after_value
             echo "----------------------------------------------------------------"
             echo "Volume restored to: $PRESERVED_VOLUME"
+
+
+            # Check if the restored volume is below 40 and show warning
+            if [ "$PRESERVED_VOLUME" -lt 40 ]; then
+                echo ""
+                echo "================================================================"
+                echo "                        ⚠️  NOTICE  ⚠️"
+                echo "================================================================"
+                echo ""
+                echo "  The restored volume level ($PRESERVED_VOLUME) is below 40!"
+                echo ""
+                echo "  Depending on your Mac model, volume levels below 40 may be"
+                echo "  INAUDIBLE or VERY QUIET during startup."
+                echo ""
+                echo "================================================================"
+            fi
+
+
             clean_exit 0
             ;;
 
