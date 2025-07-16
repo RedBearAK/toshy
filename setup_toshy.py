@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20250714'                        # CLI option "--version" will print this out.
+__version__ = '20250716'                        # CLI option "--version" will print this out.
 
 import os
 os.environ['PYTHONDONTWRITEBYTECODE'] = '1'     # prevent this script from creating cache files
@@ -3171,6 +3171,8 @@ def install_desktop_apps():
         safe_shutdown(1)
 
     desktop_files_path  = os.path.join(home_dir, '.local', 'share', 'applications')
+
+    # Desktop file name must match app class for icon to work in Plasma
     tray_desktop_file   = os.path.join(desktop_files_path, 'Toshy_Tray.desktop')
     gui_desktop_file    = os.path.join(desktop_files_path, 'Toshy_GUI.desktop')
 
@@ -4023,8 +4025,8 @@ def uninstall_toshy():
         print(f'Problem stopping the tray icon process:\n\t{proc_err}')
 
     # remove the tray icon autostart file
-    tray_autostart_file = os.path.join(autostart_dir_path, 'Toshy_Tray.desktop')
-    tray_autostart_rm_cmd = ['rm', '-f', tray_autostart_file]
+    old_tray_autostart_file     = os.path.join(autostart_dir_path, 'Toshy_Tray.desktop')
+    tray_autostart_rm_cmd       = ['rm', '-f', old_tray_autostart_file]
     try:
         # do not pass as list (brackets) since it is already a list
         subprocess.run(tray_autostart_rm_cmd, check=True)

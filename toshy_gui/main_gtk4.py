@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-__version__ = '20250714'
+__version__ = '20250716'
 
 # Preferences app for Toshy, using GTK-4 and Adwaita
 TOSHY_PART      = 'gui-gtk4'  # Different from tkinter version to avoid lockfile conflicts
@@ -139,7 +139,7 @@ class ToshyPreferencesApp(Adw.Application):
     """Main application class for Toshy Preferences"""
 
     def __init__(self):
-        super().__init__(application_id='io.github.toshy.preferences')
+        super().__init__(application_id='app.toshy.preferences')
 
         # Set application name (fixes menu bar showing "Python")
         self.set_resource_base_path('/io/github/toshy/preferences')
