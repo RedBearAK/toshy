@@ -10,7 +10,8 @@ SyslogIdentifier=toshy-sessmon
 Environment=TERM=xterm
 # still no recovery from logging out/in
 # ExecStart=%h/.config/toshy/scripts/toshy-service-session-monitor-dbus.sh
-ExecStart=%h/.config/toshy/scripts/toshy-service-session-monitor.sh
+# ExecStart=%h/.config/toshy/scripts/toshy-service-session-monitor.sh
+ExecStart=%h/.config/toshy/scripts/tshysvc-sessmon
 Restart=always
 RestartSec=5
 

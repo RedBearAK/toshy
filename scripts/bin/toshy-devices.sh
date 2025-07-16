@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/bash
 
 
 # Show the devices that xwaykeyz or keyszer sees
@@ -22,11 +22,8 @@ source "$HOME/.config/toshy/.venv/bin/activate"
 echo -e "\nList of devices seen by the keymapper (xwaykeyz or keyszer): \n"
 
 if command -v xwaykeyz >/dev/null 2>&1; then
-    xwaykeyz --list-devices
-elif command -v keyszer >/dev/null 2>&1; then
-    keyszer --list-devices
+    exec xwaykeyz --list-devices
 else
-    echo -e "Neither \"xwaykeyz\" nor \"keyszer\" command was found in: \n$PATH."
-    echo "Toshy config cannot be loaded until one of these is installed."
+    echo -e "The \"xwaykeyz\" command was not found in: \n$PATH."
     exit 1
 fi

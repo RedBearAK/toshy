@@ -1,5 +1,9 @@
-#!/usr/bin/env bash
-
+#!/usr/bin/bash
+#
+# This script uses a custom bash alias in the shebang to show something
+# other than a generic "bash" program name in process list apps like `btop`. 
+# The alias(es) just point to /usr/bin/bash.
+#
 # Show the journalctl output of the Toshy systemd services (session monitor and config).
 
 # Check if the script is being run as root
@@ -40,10 +44,11 @@ trap 'clean_exit' SIGINT
 
 echo "Showing systemd journal messages for Toshy services (since last boot):"
 
-# Set the process name for the Toshy services log process.
-# We can do this here because this is just a direct launcher script.
-# This trick seems to confuse systemd as it tries to track "child" processes. 
-echo "toshy-svcs-log" > /proc/$$/comm
+# REMOVING IN FAVOR OF SWITCHING TO USING 'EXEC' TO LAUNCH THE FINAL COMMAND
+# # Set the process name for the Toshy services log process.
+# # We can do this here because this is just a direct launcher script.
+# # This trick seems to confuse systemd as it tries to track "child" processes. 
+# echo "toshy-svcs-log" > /proc/$$/comm
 
 # First get all the Toshy service names into an array
 if systemctl --user list-unit-files &>/dev/null; then
@@ -82,6 +87,15 @@ for service in "${toshy_services[@]}"; do
     cmd_units+=" --user-unit $service"
 done
 
-# Combine and execute the command (no exec, keep the renamed shell)
+# Combine and execute the command (switched from 'eval' to 'exec' for memory efficiency)
 full_cmd="${cmd_base}${cmd_units}"
-eval "$full_cmd"
+
+# DEPRECATED
+# # eval "$full_cmd"
+# # Can't use quotes on the full command with 'exec' because it will treat as single "command"
+# # exec $full_cmd
+
+# Put a 'trap' right in the command being execed.
+# Prevents a process crash when launched inside new terminal window with 
+# "-e" or "--" (from tray or GUI app) and we use Ctrl+C (SIGINT) to quit
+exec bash -c "trap 'exit 0' SIGINT SIGTERM; $full_cmd"
