@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/bash
 
 
 # Start the Toshy manual script
@@ -48,11 +48,9 @@ if command xhost &> /dev/null; then
 fi
 
 if command -v xwaykeyz >/dev/null 2>&1; then
-    xwaykeyz -w -c "$HOME/.config/toshy/toshy_config.py"
-elif command -v keyszer >/dev/null 2>&1; then
-    keyszer -w -c "$HOME/.config/toshy/toshy_config.py"
+    exec xwaykeyz -w -c "$HOME/.config/toshy/toshy_config.py"
 else
-    echo -e "Neither \"xwaykeyz\" nor \"keyszer\" command was found in: \n$PATH."
-    echo "Toshy config cannot be loaded until one of these is installed."
+    echo -e "The \"xwaykeyz\" command was not found in: \n$PATH."
+    echo "Toshy config cannot be loaded until \"xwaykeyz\" is available."
     exit 1
 fi

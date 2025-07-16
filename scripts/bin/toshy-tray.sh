@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/bash
 
 
 # Start Toshy GUI app after activating venv
@@ -33,4 +33,7 @@ fi
 # shellcheck disable=SC1091
 source "${VENV_PATH}/bin/activate"
 
+# Seems to be unreliable to get program name to become "toshy-tray-app" but
+# it works sometimes.
+# The 'exec' should at least reduce some RAM usage by replacing this shell.
 exec "${VENV_PATH}/bin/python" "$HOME/.config/toshy/toshy_tray.py"

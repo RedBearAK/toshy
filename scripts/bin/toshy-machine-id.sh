@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/bash
 
 
 # Run the Toshy machine context module to get the hashed machine ID, for
@@ -30,4 +30,7 @@ fi
 # shellcheck disable=SC1091
 source "${VENV_PATH}/bin/activate"
 
-"${VENV_PATH}/bin/python" "$HOME/.config/toshy/lib/machine_context.py"
+# Fix the PYTHONPATH so 'toshy_common' module is found (prevent ModuleNotFoundError)
+export PYTHONPATH="${HOME}/.config/toshy:${PYTHONPATH}"
+
+exec "${VENV_PATH}/bin/python" "$HOME/.config/toshy/toshy_common/machine_context.py"

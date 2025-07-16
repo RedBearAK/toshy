@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/bash
 
 
 # Start the Toshy manual script, with verbose output
@@ -50,10 +50,8 @@ fi
 # Start keymapper (xwaykeyz or keyszer) with verbose flag [-v] and anti-buffering flag [--flush]
 if command -v xwaykeyz >/dev/null 2>&1; then
     xwaykeyz --flush -w -v -c "$HOME/.config/toshy/toshy_config.py"
-elif command -v keyszer >/dev/null 2>&1; then
-    keyszer --flush -w -v -c "$HOME/.config/toshy/toshy_config.py"
 else
-    echo -e "Neither \"xwaykeyz\" nor \"keyszer\" command was found in: \n$PATH."
-    echo "Toshy config cannot be loaded until one of these is installed."
+    echo -e "The \"xwaykeyz\" command was not found in: \n$PATH."
+    echo "Toshy config cannot be loaded until \"xwaykeyz\" is available."
     exit 1
 fi

@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/bash
 
 
 # Run the Toshy environment module to show what it sees
@@ -32,4 +32,4 @@ source "${VENV_PATH}/bin/activate"
 # Need PYTHONPATH update to allow absolute imports from "toshy_common" package
 export PYTHONPATH="${HOME}/.config/toshy:${PYTHONPATH}"
 
-"${VENV_PATH}/bin/python" "${HOME}/.config/toshy/toshy_common/env_context.py"
+exec "${VENV_PATH}/bin/python" "${HOME}/.config/toshy/toshy_common/env_context.py"
