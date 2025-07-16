@@ -3147,7 +3147,11 @@ def install_bin_commands():
 
 
 def replace_home_in_file(filename):
-    """Utility function to replace '$HOME' in .desktop files with actual home path"""
+    """
+    Utility function to replace '$HOME' in '.desktop' files with actual home path. 
+    Shell script takes care of desktop app install, but this is still used in 
+    placing other '.desktop' files.
+    """
     # Read in the file
     with open(filename, 'r') as file:
         file_data = file.read()
@@ -3159,7 +3163,10 @@ def replace_home_in_file(filename):
 
 
 def install_desktop_apps():
-    """Install the convenient desktop apps to manage Toshy"""
+    """
+    Install the convenient desktop apps to manage Toshy. Script now also takes care of 
+    installing app icons, and replacing the '$HOME' placeholder in the desktop files.
+    """
     print(f'\n\n§  Installing Toshy desktop apps...\n{cnfg.separator}')
     script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'toshy-desktopapps-setup.sh')
 
@@ -3170,14 +3177,16 @@ def install_desktop_apps():
         error(f'Problem installing Toshy desktop apps:\n\t{proc_err}')
         safe_shutdown(1)
 
-    desktop_files_path  = os.path.join(home_dir, '.local', 'share', 'applications')
+    # SHELL SCRIPT NOW TAKES CARE OF THIS INTERNALLY:
+    # desktop_files_path  = os.path.join(home_dir, '.local', 'share', 'applications')
+    # tray_desktop_file   = os.path.join(desktop_files_path, 'Toshy_Tray.desktop')
+    # # DEPRECATED (name caused generic Wayland icon in Plasma)
+    # # gui_desktop_file    = os.path.join(desktop_files_path, 'Toshy_GUI.desktop')
+    # # Desktop file name must match app class for icon to work in Plasma
+    # gui_desktop_file    = os.path.join(desktop_files_path, 'app.toshy.preferences.desktop')
+    # replace_home_in_file(tray_desktop_file)
+    # replace_home_in_file(gui_desktop_file)
 
-    # Desktop file name must match app class for icon to work in Plasma
-    tray_desktop_file   = os.path.join(desktop_files_path, 'Toshy_Tray.desktop')
-    gui_desktop_file    = os.path.join(desktop_files_path, 'Toshy_GUI.desktop')
-
-    replace_home_in_file(tray_desktop_file)
-    replace_home_in_file(gui_desktop_file)
     show_task_completed_msg()
 
 

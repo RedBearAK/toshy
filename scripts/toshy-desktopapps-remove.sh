@@ -43,23 +43,33 @@ icon_files=(
     "toshy_app_icon_rainbow.svg"
 )
 
+
 # Remove desktop files
 for file in "${desktop_files[@]}"; do
-    rm -f "${LOCAL_SHARE_APPS}/${file}" || \
-        exit_w_error "Problem while removing the ${file} file."
+
+    err_msg_removing_desktop_file="Problem while removing the ${file} file."
+    rm -f "${LOCAL_SHARE_APPS}/${file}" || exit_w_error "$err_msg_removing_desktop_file"
+
 done
+
 
 # Remove icon files from new location (hicolor theme)
 for file in "${icon_files[@]}"; do
-    rm -f "${LOCAL_SHARE_ICONS}/${file}" || \
-        exit_w_error "Problem removing ${file} from hicolor theme location."
+
+    err_msg_removing_hicolor_icon_file="Problem removing ${file} from hicolor theme location."
+    rm -f "${LOCAL_SHARE_ICONS}/${file}" || exit_w_error "$err_msg_removing_hicolor_icon_file"
+
 done
+
 
 # Remove icon files from old location (legacy)
 for file in "${icon_files[@]}"; do
-    rm -f "${LOCAL_SHARE_ICONS_OLD}/${file}" || \
-        exit_w_error "Problem removing ${file} from legacy location."
+
+    err_msg_removing_legacy_icon_file="Problem removing ${file} from legacy location."
+    rm -f "${LOCAL_SHARE_ICONS_OLD}/${file}" || exit_w_error "$err_msg_removing_legacy_icon_file"
+
 done
+
 
 echo ""
 echo "Finished removing Toshy Preferences and Tray Icon app launchers."

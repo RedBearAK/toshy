@@ -3,7 +3,8 @@
 
 # "Install" the Toshy desktop entry files and icon files, so that app launchers, 
 # notification dialogs and menus can "see" them and use them. This means copying 
-# the ".desktop" files into ~/.local/share/applications/ folder. 
+# the ".desktop" files into '~/.local/share/applications/' folder and copying the 
+# icon files correctly into the "hicolor" theme folder in '~/.local/share/icons/'.
 
 
 exit_w_error() {
@@ -35,27 +36,32 @@ LOCAL_SHARE_ICONS="${LOCAL_SHARE}/icons/hicolor/scalable/apps"
 
 echo -e "\nInstalling Toshy Preferences and Tray Icon app launchers..."
 
-err_msg_apps_folder="Failed to create \"${LOCAL_SHARE_APPS}\" folder."
-mkdir -p "${LOCAL_SHARE_APPS}" || exit_w_error "$err_msg_apps_folder"
+err_creating_apps_folder="Failed to create \"${LOCAL_SHARE_APPS}\" folder."
+mkdir -p "${LOCAL_SHARE_APPS}" || exit_w_error "$err_creating_apps_folder"
 
-err_msg_icons_folder="Failed to create \"${LOCAL_SHARE_ICONS}\" folder."
-mkdir -p "${LOCAL_SHARE_ICONS}" || exit_w_error "$err_msg_icons_folder"
+err_creating_icons_folder="Failed to create \"${LOCAL_SHARE_ICONS}\" folder."
+mkdir -p "${LOCAL_SHARE_ICONS}" || exit_w_error "$err_creating_icons_folder"
 
 
 # Clean up any existing installations before installing new (possibly changed) files
-remove_script_paths=(
+removal_script_paths=(
     "./toshy-desktopapps-remove.sh"
     "${TOSHY_CFG_DIR}/scripts/toshy-desktopapps-remove.sh"
 )
 
-for script_path in "${remove_script_paths[@]}"; do
+
+for script_path in "${removal_script_paths[@]}"; do
+
     if [[ -f "$script_path" && -x "$script_path" ]]; then
+
         echo "Cleaning up existing installation..."
         "$script_path" || {
             echo "Warning: Cleanup script failed, but continuing with installation..."
         }
         break
+
     fi
+
 done
 
 
@@ -73,16 +79,26 @@ icon_files=(
     "toshy_app_icon_rainbow.svg"
 )
 
-# Copy desktop files
+
+# Copy desktop files and replace "$HOME" placeholder with user's actual home path
 for file in "${desktop_files[@]}"; do
+
     cp -f "${DESKTOP_DIR}/${file}" "${LOCAL_SHARE_APPS}" || \
         exit_w_error "Problem copying ${file}."
+
+    # Replace $HOME placeholder with actual user home directory path
+    err_sed_home_path="Problem updating ${file} with home directory path."
+    sed -i "s|\$HOME|${HOME}|g" "${LOCAL_SHARE_APPS}/${file}" || exit_w_error "$err_sed_home_path"
+
 done
+
 
 # Copy icon files to proper hicolor theme location
 for file in "${icon_files[@]}"; do
-    cp -f "${ASSETS_DIR}/${file}" "${LOCAL_SHARE_ICONS}/" || \
-        exit_w_error "Problem copying ${file}."
+
+    err_copying_icon_file="Problem copying ${file}."
+    cp -f "${ASSETS_DIR}/${file}" "${LOCAL_SHARE_ICONS}/" || exit_w_error "$err_copying_icon_file"
+
 done
 
 
