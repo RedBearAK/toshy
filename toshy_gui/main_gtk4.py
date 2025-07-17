@@ -11,6 +11,17 @@ APP_VERSION     = __version__
 import os
 import subprocess
 
+gtk4_config = os.path.expanduser("~/.config/gtk-4.0/settings.ini")
+if os.path.exists(gtk4_config):
+    try:
+        with open(gtk4_config, 'r') as f:
+            content = f.read()
+            if 'gtk-modules=' in content:
+                print("The 'gtk-modules' key in ~/.config/gtk-4.0/settings.ini causes a GTK warning.")
+                print("To prevent the warning, comment out or delete that line in 'settings.ini'.")
+                print()
+    except:
+        pass
 
 # Check for accessibility support before importing GTK
 def is_a11y_available():
