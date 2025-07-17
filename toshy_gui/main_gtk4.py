@@ -25,6 +25,7 @@ def is_a11y_available():
     except (subprocess.TimeoutExpired, FileNotFoundError):
         return False
 
+# Suppress an innocuous warning in the terminal about a11y support
 if not is_a11y_available():
     os.environ['GTK_A11Y'] = 'none'
 
@@ -33,6 +34,23 @@ import gi
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 from gi.repository import Gtk, Adw, GLib
+
+
+# Suppress GTK warnings about config file issues
+def null_log_handler(domain, level, message, user_data):
+    # Suppress specific annoying warnings that are config-related
+    if any(phrase in message for phrase in [
+        "Unknown key gtk-modules",
+        "gtk-application-prefer-dark-theme with libadwaita is unsupported"
+    ]):
+        return  # Suppress these
+    # Let other messages through (optional - remove this to suppress all)
+    print(f"({domain}): {message}")
+
+
+# Install the log handler for GTK and Adwaita domains
+GLib.log_set_handler("Gtk", GLib.LogLevelFlags.LEVEL_WARNING, null_log_handler, None)
+GLib.log_set_handler("Adwaita", GLib.LogLevelFlags.LEVEL_WARNING, null_log_handler, None)
 
 # Initialize Toshy runtime before other imports
 from toshy_common.runtime_utils import initialize_toshy_runtime
