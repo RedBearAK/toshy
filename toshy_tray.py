@@ -19,11 +19,14 @@ import subprocess
 from subprocess import DEVNULL, PIPE
 
 
+# Check for accessibility support before importing GTK
 def is_a11y_available():
     try:
+        # D-Bus query to check whether a11y support is present:
+        # gdbus introspect --session --dest org.a11y.Bus --object-path /org/a11y/bus
         result = subprocess.run([
             'gdbus', 'introspect', '--session',
-            '--dest', 'org.a11y.Bus', 
+            '--dest', 'org.a11y.Bus',
             '--object-path', '/org/a11y/bus'
         ], capture_output=True, timeout=2)
         return result.returncode == 0
@@ -33,6 +36,7 @@ def is_a11y_available():
 
 if not is_a11y_available():
     os.environ['GTK_A11Y'] = 'none'
+    os.environ['NO_AT_BRIDGE'] = '1'
 
 # Initialize Toshy runtime before other imports
 from toshy_common.runtime_utils import initialize_toshy_runtime
