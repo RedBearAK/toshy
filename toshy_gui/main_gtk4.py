@@ -1,11 +1,32 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-__version__ = '20250716'
+__version__ = '20250717'
 
 # Preferences app for Toshy, using GTK-4 and Adwaita
 TOSHY_PART      = 'gui-gtk4'  # Different from tkinter version to avoid lockfile conflicts
 TOSHY_PART_NAME = 'Toshy Preferences app (GTK-4)'
 APP_VERSION     = __version__
+
+# Basic imports for accessibility check
+import os
+import subprocess
+
+# Check for accessibility support before importing GTK
+def is_a11y_available():
+    try:
+        # D-Bus query to check whether a11y support is present:
+        # gdbus introspect --session --dest org.a11y.Bus --object-path /org/a11y/bus
+        result = subprocess.run([
+            'gdbus', 'introspect', '--session',
+            '--dest', 'org.a11y.Bus',
+            '--object-path', '/org/a11y/bus'
+        ], capture_output=True, timeout=2)
+        return result.returncode == 0
+    except (subprocess.TimeoutExpired, FileNotFoundError):
+        return False
+
+if not is_a11y_available():
+    os.environ['GTK_A11Y'] = 'none'
 
 # GTK-4 imports
 import gi
