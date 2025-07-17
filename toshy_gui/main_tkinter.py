@@ -187,6 +187,10 @@ if tk_version.startswith('9.'):
             with open(tcl_path, 'r') as f:
                 tcl_content = f.read()
             
+            # If already patched, skip the monkey patch entirely
+            if 'package require Tk 8.6-' in tcl_content:
+                return original_load_theme(style)
+            
             tcl_content = tcl_content.replace('package require Tk 8.6', 'package require Tk 8.6-')
             
             # Fix relative paths
