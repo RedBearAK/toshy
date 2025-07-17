@@ -2,6 +2,7 @@
 Type=Application
 Name=Toshy Preferences
 GenericName=Toshy Preferences
+StartupWMClass=app.toshy.preferences
 Exec=$HOME/.local/bin/toshy-gui
 Terminal=false
 NoDisplay=false

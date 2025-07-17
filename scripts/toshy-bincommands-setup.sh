@@ -45,8 +45,9 @@ ln -sf "${TOSHY_BIN}/toshy-venv.sh"                     "${LOCAL_BIN}/toshy-venv
 ln -sf "${TOSHY_BIN}/toshy-fnmode.sh"                   "${LOCAL_BIN}/toshy-fnmode"
 ln -sf "${TOSHY_BIN}/toshy-devices.sh"                  "${LOCAL_BIN}/toshy-devices"
 ln -sf "${TOSHY_BIN}/toshy-versions.sh"                 "${LOCAL_BIN}/toshy-versions"
+ln -sf "${TOSHY_BIN}/toshy-reinstall.sh"                "${LOCAL_BIN}/toshy-reinstall"
 ln -sf "${TOSHY_BIN}/toshy-machine-id.sh"               "${LOCAL_BIN}/toshy-machine-id"
-ln -sf "${TOSHY_BIN}/toshy-kwin-dbus-service.sh"         "${LOCAL_BIN}/toshy-kwin-dbus-service"
+ln -sf "${TOSHY_BIN}/toshy-kwin-dbus-service.sh"        "${LOCAL_BIN}/toshy-kwin-dbus-service"
 ln -sf "${TOSHY_BIN}/toshy-cosmic-dbus-service.sh"      "${LOCAL_BIN}/toshy-cosmic-dbus-service"
 ln -sf "${TOSHY_BIN}/toshy-wlroots-dbus-service.sh"     "${LOCAL_BIN}/toshy-wlroots-dbus-service"
 
@@ -76,6 +77,7 @@ echo "- toshy-venv"
 echo "- toshy-fnmode"
 echo "- toshy-devices"
 echo "- toshy-versions"
+echo "- toshy-reinstall"
 echo "- toshy-machine-id"
 echo "- toshy-kwin-dbus-service"
 echo "- toshy-cosmic-dbus-service"
@@ -306,120 +308,3 @@ fi
 check_rc_files
 
 exit 0
-
-####################################################################################################
-####################################################################################################
-####################################################################################################
-####################################################################################################
-# Previous code that tried to update shell RC files: 
-
-
-# if [[ -n "${XDG_RUNTIME_DIR}" ]]; then
-#     run_tmp_dir="${XDG_RUNTIME_DIR}"
-# else
-#     run_tmp_dir="/tmp"
-# fi
-
-# path_line=""
-# shell_rc=""
-
-# path_good_tmp_file="toshy_installer_says_path_is_good"
-# path_good_tmp_path="${run_tmp_dir}/${path_good_tmp_file}"
-
-# # echo "path_good_tmp_path: $path_good_tmp_path"
-
-# if [ -f "$path_good_tmp_path" ]; then
-#     exit 0
-# fi
-
-# path_fix_tmp_file="toshy_installer_says_fix_path"
-# path_fix_tmp_path="${run_tmp_dir}/${path_fix_tmp_file}"
-
-# # echo "path_fix_tmp_path: $path_fix_tmp_path"
-
-# toshy_installer_says_fix_path=0
-# if [ -f "$path_fix_tmp_path" ]; then
-#     toshy_installer_says_fix_path=1
-# fi
-
-
-# case "${SHELL}" in
-#     */bash)
-#         shell_rc="${HOME}/.bashrc"
-#         path_line="export PATH=\"${LOCAL_BIN}:\$PATH\""
-#         ;;
-#     */zsh)
-#         shell_rc="${HOME}/.zshrc"
-#         path_line="export PATH=\"${LOCAL_BIN}:\$PATH\""
-#         ;;
-#     */fish)
-#         shell_rc="${HOME}/.config/fish/config.fish"
-#         path_line="set -U fish_user_paths ${LOCAL_BIN} \$fish_user_paths"
-#         ;;
-#     *)
-#         shell_rc=""
-#         path_line=""
-#         ;;
-# esac
-
-
-# if [[ ${toshy_installer_says_fix_path} -eq 1 ]]; then
-
-#     if [[ -n "${shell_rc}" ]]; then
-#         echo -e "\nFixing path because Toshy installer said so..."
-#         echo -e "Appending the export path line to '${shell_rc}'..."
-#         echo -e "\n${path_line}\n" >> "${shell_rc}"
-#         echo -e "Done. Restart your shell or run 'source ${shell_rc}' to apply the changes."
-#         exit 0
-#     else
-#         echo -e "\nALERT: Toshy Installer said to fix path but shell not recognized."
-#         echo "Please add the appropriate line to your shell's RC file yourself."
-#         exit 0
-#     fi
-
-# fi
-
-
-# # Check if ~/.local/bin is in the user's PATH
-# if ! echo "${PATH}" | grep -q -E "(^|:)${LOCAL_BIN}(:|$)"; then
-#     echo -e "\nIt looks like '${LOCAL_BIN}' is not in your PATH."
-#     echo -e "To add it permanently, append the following line to your shell RC file:"
-
-#     case "${SHELL}" in
-#         */bash)
-#             echo "export PATH=\"${LOCAL_BIN}:\$PATH\""
-#             ;;
-#         */zsh)
-#             echo "export PATH=\"${LOCAL_BIN}:\$PATH\""
-#             ;;
-#         */fish)
-#             echo "set -U fish_user_paths ${LOCAL_BIN} \$fish_user_paths"
-#             ;;
-#         *)
-#             echo "ALERT: Shell not recognized."
-#             echo "Please add the appropriate line to your shell's RC file yourself."
-#             ;;
-#     esac
-
-#     if [[ -n "${shell_rc}" ]]; then
-
-#         # Check if the line already exists in the RC file
-#         if grep -Fxq "${path_line}" "${shell_rc}"; then
-#             echo "The line is already in your $shell_rc file."
-#         else
-#             read -r -p "Do you want to append the line to your ${shell_rc} file now? [Y/n] " yn
-#             case $yn in
-#                 [Nn]* )
-#                     echo -e "Skipping. Please add the line to your shell RC file manually."
-#                     ;;
-#                 * )
-#                     echo -e "\nAppending the line to ${shell_rc}..."
-#                     echo -e "\n${path_line}\n" >> "${shell_rc}"
-#                     echo -e "Done. Restart your shell or run 'source ${shell_rc}' to apply the changes."
-#                     ;;
-#             esac
-#         fi
-
-#     fi
-
-# fi

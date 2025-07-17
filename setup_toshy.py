@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '20250714'                        # CLI option "--version" will print this out.
+__version__ = '20250716'                        # CLI option "--version" will print this out.
 
 import os
 os.environ['PYTHONDONTWRITEBYTECODE'] = '1'     # prevent this script from creating cache files
@@ -489,25 +489,15 @@ def check_term_color_code_support():
     Determine if the terminal supports ANSI color codes.
     :return: True if color is probably supported, False otherwise.
     """
+    color_term_checks = [
+        bool(os.getenv('LS_COLORS', '')),                    # Most common - set on most Linux/Unix
+        "color" in os.getenv('TERM', '').lower(),            # Very common - xterm-256color, etc.
+        bool(os.getenv('COLORTERM', '')),                    # Modern terminals
+        "256" in os.getenv('TERM', '').lower(),              # 256-color terminals
+        os.getenv('TERM', '').lower().startswith("xterm")    # xterm variants
+    ]
 
-    # Retrieve environment variables and normalize strings where needed
-    colorterm_env               = os.getenv('COLORTERM', '')
-    ls_colors_env               = os.getenv('LS_COLORS', '')
-    term_env                    = os.getenv('TERM', '').lower()
-
-    # Check if COLORTERM environment variable is set and not empty
-    colorterm_set               = bool(colorterm_env)
-
-    # Check if LS_COLORS environment variable is set and not empty
-    ls_colors_set               = bool(ls_colors_env)
-
-    # Check if the TERM environment variable contains 'color'
-    term_is_color               = "color" in term_env
-
-    # If any variable is truthy, terminal probably supports color codes
-    color_supported = colorterm_set or ls_colors_set or term_is_color
-
-    return color_supported
+    return any(color_term_checks)
 
 
 # Global variable to indicate that terminal supports ANSI color codes
@@ -1124,10 +1114,11 @@ pkg_groups_map = {
 
     'mandriva-based':      ["cairo-devel",
                             "dbus-daemon", "dbus-devel",
-                            "git", "gobject-introspection-devel",
-                            "lib64ayatana-appindicator3_1", "lib64ayatana-appindicator3-gir0.1",
-                                "lib64cairo-gobject2", "lib64python-devel", "lib64systemd-devel",
-                                "lib64xkbcommon-devel", "libnotify",
+                            "git", "gobject-introspection-devel", "gtk4-devel",
+                            "lib64adwaita-devel", "lib64ayatana-appindicator3_1",
+                                "lib64ayatana-appindicator3-gir0.1", "lib64cairo-gobject2",
+                                "lib64python-devel", "lib64systemd-devel", "lib64xkbcommon-devel",
+                                "libnotify",
                             "python-dbus", "python-dbus-devel", "python-ensurepip", "python3-pip",
                             "task-devel", "tkinter",
                             "xset",
@@ -3147,7 +3138,11 @@ def install_bin_commands():
 
 
 def replace_home_in_file(filename):
-    """Utility function to replace '$HOME' in .desktop files with actual home path"""
+    """
+    Utility function to replace '$HOME' in '.desktop' files with actual home path. 
+    Shell script takes care of desktop app install, but this is still used in 
+    placing other '.desktop' files.
+    """
     # Read in the file
     with open(filename, 'r') as file:
         file_data = file.read()
@@ -3159,7 +3154,10 @@ def replace_home_in_file(filename):
 
 
 def install_desktop_apps():
-    """Install the convenient desktop apps to manage Toshy"""
+    """
+    Install the convenient desktop apps to manage Toshy. Script now also takes care of 
+    installing app icons, and replacing the '$HOME' placeholder in the desktop files.
+    """
     print(f'\n\n§  Installing Toshy desktop apps...\n{cnfg.separator}')
     script_path = os.path.join(cnfg.toshy_dir_path, 'scripts', 'toshy-desktopapps-setup.sh')
 
@@ -3170,12 +3168,16 @@ def install_desktop_apps():
         error(f'Problem installing Toshy desktop apps:\n\t{proc_err}')
         safe_shutdown(1)
 
-    desktop_files_path  = os.path.join(home_dir, '.local', 'share', 'applications')
-    tray_desktop_file   = os.path.join(desktop_files_path, 'Toshy_Tray.desktop')
-    gui_desktop_file    = os.path.join(desktop_files_path, 'Toshy_GUI.desktop')
+    # SHELL SCRIPT NOW TAKES CARE OF THIS INTERNALLY:
+    # desktop_files_path  = os.path.join(home_dir, '.local', 'share', 'applications')
+    # tray_desktop_file   = os.path.join(desktop_files_path, 'Toshy_Tray.desktop')
+    # # DEPRECATED (name caused generic Wayland icon in Plasma)
+    # # gui_desktop_file    = os.path.join(desktop_files_path, 'Toshy_GUI.desktop')
+    # # Desktop file name must match app class for icon to work in Plasma
+    # gui_desktop_file    = os.path.join(desktop_files_path, 'app.toshy.preferences.desktop')
+    # replace_home_in_file(tray_desktop_file)
+    # replace_home_in_file(gui_desktop_file)
 
-    replace_home_in_file(tray_desktop_file)
-    replace_home_in_file(gui_desktop_file)
     show_task_completed_msg()
 
 
@@ -4023,8 +4025,8 @@ def uninstall_toshy():
         print(f'Problem stopping the tray icon process:\n\t{proc_err}')
 
     # remove the tray icon autostart file
-    tray_autostart_file = os.path.join(autostart_dir_path, 'Toshy_Tray.desktop')
-    tray_autostart_rm_cmd = ['rm', '-f', tray_autostart_file]
+    old_tray_autostart_file     = os.path.join(autostart_dir_path, 'Toshy_Tray.desktop')
+    tray_autostart_rm_cmd       = ['rm', '-f', old_tray_autostart_file]
     try:
         # do not pass as list (brackets) since it is already a list
         subprocess.run(tray_autostart_rm_cmd, check=True)
