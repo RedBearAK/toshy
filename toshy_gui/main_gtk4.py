@@ -236,6 +236,24 @@ class ToshyPreferencesApp(Adw.Application):
         if runtime.is_systemd:
             import shutil
             if shutil.which('systemctl'):
+                # Help out the config file user service - only import existing env vars
+                env_vars_to_check = [
+                    "KDE_SESSION_VERSION",
+                    # "PATH",               # Might be causing problem with venv injection in PATH everywhere
+                    "XDG_SESSION_TYPE",
+                    "XDG_SESSION_DESKTOP",
+                    "XDG_CURRENT_DESKTOP", 
+                    "DESKTOP_SESSION",
+                    "DISPLAY",
+                    "WAYLAND_DISPLAY",
+                ]
+                
+                existing_vars = [var for var in env_vars_to_check if var in os.environ]
+                
+                if existing_vars:
+                    cmd_lst = ["systemctl", "--user", "import-environment"] + existing_vars
+                    subprocess.run(cmd_lst)
+                
                 self.service_monitor.start_monitoring()
                 debug("GTK-4: Service monitoring started")
 

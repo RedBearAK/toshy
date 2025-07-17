@@ -630,19 +630,24 @@ def main():
     service_monitor = ServiceMonitor(on_service_status_changed)
 
     if shutil.which('systemctl') and runtime.is_systemd:
-        # help out the config file user service
-        cmd_lst = [
-            "systemctl", "--user", "import-environment",
+        # Help out the config file user service - only import existing env vars
+        env_vars_to_check = [
             "KDE_SESSION_VERSION",
             # "PATH",               # Might be causing problem with venv injection in PATH everywhere
             "XDG_SESSION_TYPE",
             "XDG_SESSION_DESKTOP",
-            "XDG_CURRENT_DESKTOP",
+            "XDG_CURRENT_DESKTOP", 
             "DESKTOP_SESSION",
             "DISPLAY",
             "WAYLAND_DISPLAY",
         ]
-        subprocess.run(cmd_lst)
+        
+        existing_vars = [var for var in env_vars_to_check if var in os.environ]
+        
+        if existing_vars:
+            cmd_lst = ["systemctl", "--user", "import-environment"] + existing_vars
+            subprocess.run(cmd_lst)
+        
         service_monitor.start_monitoring()
 
     settings_monitor.start_monitoring()
