@@ -489,14 +489,15 @@ def check_term_color_code_support():
     Determine if the terminal supports ANSI color codes.
     :return: True if color is probably supported, False otherwise.
     """
-    
-    return any(
+    color_term_checks = [
         bool(os.getenv('LS_COLORS', '')),                    # Most common - set on most Linux/Unix
         "color" in os.getenv('TERM', '').lower(),            # Very common - xterm-256color, etc.
         bool(os.getenv('COLORTERM', '')),                    # Modern terminals
         "256" in os.getenv('TERM', '').lower(),              # 256-color terminals
         os.getenv('TERM', '').lower().startswith("xterm")    # xterm variants
-    )
+    ]
+
+    return any(color_term_checks)
 
 
 # Global variable to indicate that terminal supports ANSI color codes
