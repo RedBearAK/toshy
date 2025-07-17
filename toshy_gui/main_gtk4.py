@@ -33,11 +33,23 @@ if not is_a11y_available():
 os.environ['G_MESSAGES_PREFIXED'] = 'all'
 os.environ['G_MESSAGES_DEBUG'] = ''
 
+
 # GTK-4 imports
 import gi
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 from gi.repository import Gtk, Adw, GLib
+
+
+
+# Override problematic gtk-modules setting for this app only
+settings = Gtk.Settings.get_default()
+if settings:
+    try:
+        # Clear gtk-modules to avoid loading incompatible modules
+        settings.set_property('gtk-modules', '')
+    except Exception:
+        pass  # Ignore if property doesn't exist
 
 
 # Suppress GTK warnings about config file issues
