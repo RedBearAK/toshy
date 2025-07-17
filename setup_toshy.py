@@ -489,25 +489,14 @@ def check_term_color_code_support():
     Determine if the terminal supports ANSI color codes.
     :return: True if color is probably supported, False otherwise.
     """
-
-    # Retrieve environment variables and normalize strings where needed
-    colorterm_env               = os.getenv('COLORTERM', '')
-    ls_colors_env               = os.getenv('LS_COLORS', '')
-    term_env                    = os.getenv('TERM', '').lower()
-
-    # Check if COLORTERM environment variable is set and not empty
-    colorterm_set               = bool(colorterm_env)
-
-    # Check if LS_COLORS environment variable is set and not empty
-    ls_colors_set               = bool(ls_colors_env)
-
-    # Check if the TERM environment variable contains 'color'
-    term_is_color               = "color" in term_env
-
-    # If any variable is truthy, terminal probably supports color codes
-    color_supported = colorterm_set or ls_colors_set or term_is_color
-
-    return color_supported
+    
+    return any(
+        bool(os.getenv('LS_COLORS', '')),                    # Most common - set on most Linux/Unix
+        "color" in os.getenv('TERM', '').lower(),            # Very common - xterm-256color, etc.
+        bool(os.getenv('COLORTERM', '')),                    # Modern terminals
+        "256" in os.getenv('TERM', '').lower(),              # 256-color terminals
+        os.getenv('TERM', '').lower().startswith("xterm")    # xterm variants
+    )
 
 
 # Global variable to indicate that terminal supports ANSI color codes
