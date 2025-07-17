@@ -43,11 +43,11 @@ from gi.repository import Gtk, Adw, GLib
 
 
 # Override problematic gtk-modules setting for this app only
-settings = Gtk.Settings.get_default()
-if settings:
+gtk_settings = Gtk.Settings.get_default()
+if gtk_settings:
     try:
         # Clear gtk-modules to avoid loading incompatible modules
-        settings.set_property('gtk-modules', '')
+        gtk_settings.set_property('gtk-modules', '')
     except Exception:
         pass  # Ignore if property doesn't exist
 
