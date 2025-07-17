@@ -13,7 +13,7 @@ HELP_BUTTON_SIZE = 20  # Width and height in pixels - change here to resize all 
 # Import help system if available
 try:
     from toshy_gui.gui.help_dialog_gtk4 import HelpButton
-    debug("Successfully imported help dialog system")
+    # debug("Successfully imported help dialog system")
 except ImportError as e:
     # Fallback if help dialog module not available yet
     debug(f"Help dialog import failed: {e}")

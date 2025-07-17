@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-__version__ = '20250714'
+__version__ = '20250717'
 
 # Indicator tray icon menu app for Toshy, using pygobject/gi
 TOSHY_PART      = 'tray'   # CUSTOMIZE TO SPECIFIC TOSHY COMPONENT! (gui, tray, config)
@@ -17,6 +17,26 @@ import threading
 import subprocess
 
 from subprocess import DEVNULL, PIPE
+
+
+# Check for accessibility support before importing GTK
+def is_a11y_available():
+    try:
+        # D-Bus query to check whether a11y support is present:
+        # gdbus introspect --session --dest org.a11y.Bus --object-path /org/a11y/bus
+        result = subprocess.run([
+            'gdbus', 'introspect', '--session',
+            '--dest', 'org.a11y.Bus',
+            '--object-path', '/org/a11y/bus'
+        ], capture_output=True, timeout=2)
+        return result.returncode == 0
+    except (subprocess.TimeoutExpired, FileNotFoundError):
+        return False
+
+
+if not is_a11y_available():
+    os.environ['GTK_A11Y'] = 'none'
+    os.environ['NO_AT_BRIDGE'] = '1'
 
 # Initialize Toshy runtime before other imports
 from toshy_common.runtime_utils import initialize_toshy_runtime

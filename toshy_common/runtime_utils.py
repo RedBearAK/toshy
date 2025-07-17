@@ -125,7 +125,7 @@ def setup_python_paths(toshy_config_dir):
     # Always update PATH (both apps need CLI tools)
     os.environ['PATH'] = f"{home_local_bin}:{os.environ['PATH']}"
     
-    debug(f"Python paths configured with Toshy config dir: {toshy_config_dir}")
+    # debug(f"Python paths configured with Toshy config dir: {toshy_config_dir}")
 
 
 def initialize_toshy_runtime():
