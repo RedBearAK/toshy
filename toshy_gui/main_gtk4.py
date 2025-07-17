@@ -29,6 +29,10 @@ def is_a11y_available():
 if not is_a11y_available():
     os.environ['GTK_A11Y'] = 'none'
 
+# Suppress GTK config warnings that happen during import
+os.environ['G_MESSAGES_PREFIXED'] = 'all'
+os.environ['G_MESSAGES_DEBUG'] = ''
+
 # GTK-4 imports
 import gi
 gi.require_version('Gtk', '4.0')
