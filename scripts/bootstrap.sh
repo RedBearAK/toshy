@@ -108,7 +108,7 @@ if ! unzip -o "$FILE_NAME.zip" -d "$FILE_NAME"; then
 fi
 
 # Navigate to the setup directory
-cd "$FILE_NAME/toshy-$BRANCH"
+cd "$FILE_NAME/Toshy-$BRANCH"
 
 # Ask if additional options should be passed to the setup script
 echo_unbuffered
