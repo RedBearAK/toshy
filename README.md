@@ -282,7 +282,7 @@ Or get the zip you want manually, and run the setup script yourself (almost as e
 If you didn't open the terminal by right-clicking on the folder that was created when the archive was unzipped, you may have to do something like this first:  
 
 ```sh
-cd ~/Downloads/toshy[hit Tab to autocomplete the folder name, and Enter]
+cd ~/Downloads/Toshy[hit Tab to autocomplete the folder name, and Enter]
 ```
 
 You should now be in a folder called something like `toshy-main` or `toshy-dev_beta`, depending on which branch you downloaded the zip archive from, and you should be able to run the installation command from earlier (`./setup_toshy.py install`).  
