@@ -80,7 +80,7 @@ echo_unbuffered "Starting Toshy branch selection..."
 BRANCH=$(get_branch)
 
 URL="https://github.com/RedBearAK/toshy/archive/refs/heads/$BRANCH.zip"
-TOSHY_DIR="$DOWNLOAD_DIR/$FILE_NAME/toshy-$BRANCH"
+TOSHY_DIR="$DOWNLOAD_DIR/$FILE_NAME/Toshy-$BRANCH"
 
 echo_unbuffered "Starting Toshy download process..."
 echo_unbuffered "Using branch: $BRANCH"
