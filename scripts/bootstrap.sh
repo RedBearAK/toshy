@@ -80,7 +80,7 @@ echo_unbuffered "Starting Toshy branch selection..."
 BRANCH=$(get_branch)
 
 URL="https://github.com/RedBearAK/toshy/archive/refs/heads/$BRANCH.zip"
-TOSHY_DIR="$DOWNLOAD_DIR/$FILE_NAME/toshy-$BRANCH"
+TOSHY_DIR="$DOWNLOAD_DIR/$FILE_NAME/Toshy-$BRANCH"
 
 echo_unbuffered "Starting Toshy download process..."
 echo_unbuffered "Using branch: $BRANCH"
@@ -108,7 +108,7 @@ if ! unzip -o "$FILE_NAME.zip" -d "$FILE_NAME"; then
 fi
 
 # Navigate to the setup directory
-cd "$FILE_NAME/toshy-$BRANCH"
+cd "$FILE_NAME/Toshy-$BRANCH"
 
 # Ask if additional options should be passed to the setup script
 echo_unbuffered
