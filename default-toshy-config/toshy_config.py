@@ -732,11 +732,13 @@ keyboards_Windows = [
 ]
 keyboards_Apple = [
     # Add specific Apple/Mac keyboard device names to this list
-    'Mitsumi Electric Apple Extended USB Keyboard',
+    'HP TouchPad Wireless Keyboard',    # Missing some keys, but Apple type probably best default
     'Magic Keyboard with Numeric Keypad',
     'Magic Keyboard',
+    'Mitsumi Electric Apple Extended USB Keyboard',
     'MX Keys Mac Keyboard',
-    'HP TouchPad Wireless Keyboard',    # Missing some keys, but Apple type probably best default
+    'Griffin Technology, Inc. iMate, USB To ADB Adaptor',
+    '.*USB to ADB Adapt.*'  # ADB device is pretty much guaranteed to be an Apple (or NeXT) keyboard
 ]
 
 kbtype_lists = {
